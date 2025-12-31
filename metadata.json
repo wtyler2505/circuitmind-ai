@@ -1,0 +1,8 @@
+{
+  "name": "CircuitMind AI",
+  "description": "An intelligent, futuristic workspace for electronics prototyping. Features AI-generated wiring diagrams, interactive component inventory, and educational pinout exploration.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
