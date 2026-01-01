@@ -449,3 +449,42 @@ git commit -m "Normalize proactive suggestions"
 
 - Tests: `npm run test` (9 files, 43 tests) passed.
 - `services/geminiService.ts` had pre-existing uncommitted changes; this commit includes them.
+
+# Codex Completion Report
+
+**Task:** Deep-focus sidebar polish (assistant emphasis)
+**Status:** done
+
+## Changes Made
+
+- `components/ChatPanel.tsx` - added assistant header label, status chips, and a new conversation action
+- `components/AssistantSidebar.tsx` - added complementary landmark role and focus-visible resize handle ring
+- `components/Inventory.tsx` - added inventory stats, quick filters, search clear button, and sidebar semantics
+- `docs/screenshots/UI_AUDIT_REPORT.md` - documented sidebar polish pass
+
+## Commands Run
+
+```bash
+fd -e tsx -e ts -e css "AssistantSidebar|Inventory|ChatPanel|ConversationSwitcher" components
+tree -I 'node_modules|dist|.git' components -L 2
+scc components/AssistantSidebar.tsx components/ChatPanel.tsx components/ConversationSwitcher.tsx components/Inventory.tsx
+lizard components/AssistantSidebar.tsx components/ChatPanel.tsx components/ConversationSwitcher.tsx components/Inventory.tsx
+npm run test
+git status --short
+git add components/ChatPanel.tsx components/AssistantSidebar.tsx components/Inventory.tsx docs/screenshots/UI_AUDIT_REPORT.md
+git commit -m "Polish sidebar UX and assistant status"
+```
+
+## Next Steps
+
+- Recapture sidebar screenshots to confirm new header/status strip and inventory filter chips.
+- Consider adding layout sliders for sidebar widths in Settings.
+
+## Blockers (if any)
+
+- None.
+
+## Handoff Notes
+
+- Tests: `npm run test` (9 files, 43 tests) passed.
+- Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
