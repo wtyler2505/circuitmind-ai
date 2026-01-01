@@ -503,21 +503,28 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           >
             Clear Key
           </button>
-          <div className="flex gap-3">
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex gap-3">
             <button
               onClick={handleTest}
               disabled={!apiKey.trim() || testStatus === 'testing'}
-              className="px-4 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               Test Connection
             </button>
             <button
               onClick={handleSave}
               disabled={!apiKey.trim()}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed font-medium"
             >
               Save & Apply
             </button>
+            </div>
+            {!apiKey.trim() && (
+              <span className="text-[11px] text-gray-300">
+                Enter your Gemini API key to enable Test Connection.
+              </span>
+            )}
           </div>
         </div>
       </div>

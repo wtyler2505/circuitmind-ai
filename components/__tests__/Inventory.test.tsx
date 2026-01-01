@@ -46,4 +46,34 @@ describe('Inventory', () => {
       expect(within(thumbnail).getByText('M', { exact: true })).toBeInTheDocument();
     });
   });
+
+  it('inventory_bulkSelection_showsActionBar', () => {
+    const items: ElectronicComponent[] = [
+      {
+        id: 'item-1',
+        name: 'Test Board',
+        type: 'microcontroller',
+        description: 'Test item',
+        pins: [],
+        quantity: 1,
+      },
+    ];
+
+    render(
+      <Inventory
+        {...baseProps}
+        items={items}
+        isOpen={true}
+        onDeleteMany={vi.fn()}
+        onUpdateMany={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /select test board/i }));
+
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /export selected/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /mark selected low stock/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /delete selected/i })).toBeEnabled();
+  });
 });

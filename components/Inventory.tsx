@@ -479,7 +479,7 @@ const Inventory: React.FC<InventoryProps> = ({
             {/* --- LIST VIEW --- */}
             {activeTab === 'list' && (
                 <div className="p-4 space-y-4 pb-24 md:pb-20">
-                     <div className="relative">
+                    <div className="relative">
                         <input 
                             type="text" 
                             placeholder="Filter assets..." 
@@ -489,6 +489,50 @@ const Inventory: React.FC<InventoryProps> = ({
                         />
                         <svg className="w-4 h-4 text-slate-400 absolute left-3 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </div>
+
+                    {selectedIds.size > 0 && (
+                        <div className="bg-slate-900/70 border border-slate-800 rounded-lg px-3 py-2 text-[11px] text-slate-300 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="font-mono uppercase tracking-widest text-slate-400">{selectedIds.size} selected</span>
+                                <button
+                                    type="button"
+                                    onClick={clearSelection}
+                                    className="text-[10px] text-slate-300 hover:text-white transition-colors"
+                                    aria-label="Clear selection"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleBulkExport}
+                                    className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-200 hover:text-white hover:border-neon-cyan/60 transition-colors"
+                                    aria-label="Export selected"
+                                >
+                                    Export JSON
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleBulkLowStock}
+                                    disabled={!onUpdateMany}
+                                    className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-200 hover:text-white hover:border-amber-400/60 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                                    aria-label="Mark selected low stock"
+                                >
+                                    Mark Low Stock
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleBulkDelete}
+                                    disabled={!onDeleteMany}
+                                    className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-200 hover:text-white hover:border-red-400/60 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                                    aria-label="Delete selected"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {CATEGORIES.map(cat => {
                         const catItems = categorizedItems[cat] || [];

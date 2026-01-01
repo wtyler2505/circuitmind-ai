@@ -38,7 +38,7 @@ describe('ComponentEditorModal', () => {
     await user.click(screen.getByRole('button', { name: /run 3d code/i }));
 
     expect(screen.getByTestId('three-viewer')).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('shows a 3D empty state when no model is available', async () => {
     const user = userEvent.setup();

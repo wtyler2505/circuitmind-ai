@@ -146,3 +146,44 @@ git status --short
 
 ## Handoff Notes
 Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
+
+
+# Codex Completion Report
+
+**Task:** UI audit follow-up (inventory bulk actions, settings disabled helper)
+**Status:** done
+
+## Changes Made
+- `components/Inventory.tsx` - added bulk action bar for selections and clearer list affordances
+- `components/SettingsPanel.tsx` - added disabled-state explanation for Test Connection
+- `components/__tests__/Inventory.test.tsx` - added bulk selection action bar test
+- `components/__tests__/SettingsPanel.test.tsx` - added disabled helper test
+- `components/__tests__/ComponentEditorModal.test.tsx` - increased timeout to reduce flakiness
+
+## Commands Run
+```bash
+fd -e tsx -e ts -e css "Inventory|SettingsPanel" components
+tree -I 'node_modules|dist|.git' components -L 2
+scc components
+tokei components
+lizard components/Inventory.tsx components/SettingsPanel.tsx
+madge --circular components
+madge --image /tmp/focus-deps.svg components
+depcheck --ignore-patterns=dist
+ast-grep --pattern 'useState($$$)' --lang tsx components/Inventory.tsx components/SettingsPanel.tsx
+git log --oneline -20 -- components/Inventory.tsx components/SettingsPanel.tsx
+git shortlog -sn -- components/Inventory.tsx components/SettingsPanel.tsx
+git log --format=format: --name-only -- components/Inventory.tsx components/SettingsPanel.tsx | sort | uniq -c | sort -rn | head -20
+git diff HEAD~2 -- components/Inventory.tsx components/SettingsPanel.tsx
+npm run test
+```
+
+## Next Steps
+- Consider adding select-all or category-level bulk selection affordances.
+- Revisit header CTA hierarchy if you want a stricter primary/secondary system.
+
+## Blockers (if any)
+- Chrome DevTools MCP still blocked by missing X server; visual forensics skipped.
+
+## Handoff Notes
+Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
