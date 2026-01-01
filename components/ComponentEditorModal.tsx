@@ -82,6 +82,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [is3DCodeApproved, setIs3DCodeApproved] = useState(false);
   
   // AI Chat Assistant State
   const [showAiChat, setShowAiChat] = useState(false);
@@ -101,6 +102,10 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
     setEditedImageUrl(component.imageUrl || '');
     setEditedQuantity(component.quantity || 1);
   }, [component]);
+
+  useEffect(() => {
+    setIs3DCodeApproved(false);
+  }, [component.id, component.threeCode]);
 
   // Track changes for Save button state
   useEffect(() => {
@@ -141,6 +146,16 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
     setHasChanges(false);
     setActiveTab('info');
   };
+
+  const has3DCode = Boolean(component.threeCode);
+  const has3DModel = Boolean(component.threeDModelUrl);
+  const canRenderThreeCode = has3DCode && is3DCodeApproved;
+  const codePreview = component.threeCode
+    ? component.threeCode.split('\n').slice(0, 16).join('\n')
+    : '';
+  const isCodeTruncated = component.threeCode
+    ? component.threeCode.split('\n').length > 16
+    : false;
 
   const handleGenerateThumbnail = async () => {
       setIsGeneratingImage(true);
@@ -261,7 +276,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
             {editedImageUrl ? (
                 <img src={editedImageUrl} alt="Thumbnail" className="w-10 h-10 md:w-12 md:h-12 rounded border border-slate-600 object-cover" />
             ) : (
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded border border-slate-600 bg-black flex items-center justify-center text-slate-500 font-mono font-bold text-xl">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded border border-slate-600 bg-black flex items-center justify-center text-slate-300 font-mono font-bold text-xl">
                     {editedType.charAt(0).toUpperCase()}
                 </div>
             )}
@@ -289,7 +304,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
             {activeTab === 'info' && (
                 <>
                 <div className="prose prose-invert prose-sm max-w-none">
-                    <p className="text-slate-400 italic mb-4">{component.description}</p>
+                    <p className="text-slate-300 italic mb-4">{component.description}</p>
                     
                     {component.datasheetUrl && (
                         <a 
@@ -306,162 +321,213 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                     <div className="whitespace-pre-wrap font-sans leading-relaxed text-slate-200">{explanation}</div>
                 </div>
                 <div className="mt-6 pt-6 border-t border-slate-800">
-                    <h4 className="text-xs font-bold text-neon-cyan mb-3 font-mono">PINS</h4>
+                    <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-xs font-bold text-neon-cyan font-mono">PINS</h4>
+                        <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Optional</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mb-3">
+                        Pin list shown in wiring suggestions and label callouts.
+                    </p>
                     <div className="flex flex-wrap gap-2">
                         {component.pins && component.pins.length > 0 ? component.pins.map(pin => (
                         <span key={pin} className="px-2 py-1 bg-slate-800 border border-slate-600 rounded text-xs font-mono text-slate-300">{pin}</span>
-                        )) : <span className="text-slate-500 text-xs italic">No pins defined</span>}
+                        )) : <span className="text-slate-400 text-xs italic">No pins defined</span>}
                     </div>
                 </div>
                 </>
             )}
 
             {activeTab === 'edit' && (
-                <div className="space-y-5">
-                    {/* NAME + AI ASSIST */}
-                    <div>
-                        <div className="flex justify-between items-center mb-1">
-                            <label className="text-xs font-mono text-slate-500">NAME</label>
-                            <div className="flex gap-2">
-                                <button 
-                                    onClick={handleAiAssist} 
-                                    disabled={isAiThinking || !editedName}
-                                    className="text-[10px] font-bold text-neon-cyan hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50 border border-neon-cyan/30 px-2 py-0.5 rounded bg-neon-cyan/5"
+                <div className="space-y-6">
+                    <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">Basics</h4>
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Required</span>
+                        </div>
+
+                        {/* NAME + AI ASSIST */}
+                        <div>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-xs font-mono text-slate-300">
+                                    NAME
+                                    <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Required</span>
+                                </label>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={handleAiAssist} 
+                                        disabled={isAiThinking || !editedName}
+                                        className="text-[10px] font-bold text-neon-cyan hover:text-white flex items-center gap-1 transition-colors disabled:opacity-70 border border-neon-cyan/30 px-2 py-0.5 rounded bg-neon-cyan/5"
+                                    >
+                                        {isAiThinking ? (
+                                            <span className="animate-pulse">ANALYZING...</span>
+                                        ) : (
+                                            <>
+                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                                AUTO-FILL
+                                            </>
+                                        )}
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowAiChat(!showAiChat)} 
+                                        className={`text-[10px] font-bold flex items-center gap-1 transition-colors border px-2 py-0.5 rounded ${showAiChat ? 'bg-neon-purple text-white border-neon-purple' : 'text-neon-purple hover:text-white border-neon-purple/30 bg-neon-purple/5'}`}
+                                    >
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                                        AI ASSISTANT
+                                    </button>
+                                </div>
+                            </div>
+                            <input 
+                            type="text" 
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-400 focus:border-neon-green focus:outline-none focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
+                        />
+                        </div>
+
+                        {/* TYPE & QUANTITY */}
+                        <div className="flex gap-4">
+                            <div className="flex-1">
+                                <label className="block text-xs font-mono text-slate-300 mb-1">
+                                    TYPE
+                                    <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Required</span>
+                                </label>
+                                <select 
+                                    value={editedType}
+                                    onChange={(e) => setEditedType(e.target.value as any)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-white focus:border-neon-green focus:outline-none"
                                 >
-                                    {isAiThinking ? (
-                                        <span className="animate-pulse">ANALYZING...</span>
-                                    ) : (
-                                        <>
-                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                            AUTO-FILL
-                                        </>
-                                    )}
-                                </button>
-                                <button 
-                                    onClick={() => setShowAiChat(!showAiChat)} 
-                                    className={`text-[10px] font-bold flex items-center gap-1 transition-colors border px-2 py-0.5 rounded ${showAiChat ? 'bg-neon-purple text-white border-neon-purple' : 'text-neon-purple hover:text-white border-neon-purple/30 bg-neon-purple/5'}`}
-                                >
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                                    AI ASSISTANT
-                                </button>
+                                    <option value="microcontroller">Microcontroller</option>
+                                    <option value="sensor">Sensor</option>
+                                    <option value="actuator">Actuator</option>
+                                    <option value="power">Power</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div className="w-28">
+                                <label className="block text-xs font-mono text-slate-300 mb-1">
+                                    QUANTITY
+                                    <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Required</span>
+                                </label>
+                                <input 
+                                type="number"
+                                min="0"
+                                value={editedQuantity}
+                                onChange={(e) => setEditedQuantity(parseInt(e.target.value) || 0)}
+                                className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none"
+                                />
                             </div>
                         </div>
-                        <input 
-                        type="text" 
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
-                    />
                     </div>
 
-                    {/* TYPE & QUANTITY */}
-                    <div className="flex gap-4">
-                        <div className="flex-1">
-                            <label className="block text-xs font-mono text-slate-500 mb-1">TYPE</label>
-                            <select 
-                                value={editedType}
-                                onChange={(e) => setEditedType(e.target.value as any)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-white focus:border-neon-green focus:outline-none"
-                            >
-                                <option value="microcontroller">Microcontroller</option>
-                                <option value="sensor">Sensor</option>
-                                <option value="actuator">Actuator</option>
-                                <option value="power">Power</option>
-                                <option value="other">Other</option>
-                            </select>
+                    <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">Details</h4>
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Optional</span>
                         </div>
-                        <div className="w-28">
-                            <label className="block text-xs font-mono text-slate-500 mb-1">QUANTITY</label>
-                            <input 
-                            type="number"
-                            min="0"
-                            value={editedQuantity}
-                            onChange={(e) => setEditedQuantity(parseInt(e.target.value) || 0)}
-                            className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none"
-                            />
+
+                        {/* DESCRIPTION */}
+                        <div>
+                        <label className="block text-xs font-mono text-slate-300 mb-1">
+                            DESCRIPTION
+                            <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Optional</span>
+                        </label>
+                        <textarea 
+                            value={editedDescription}
+                            onChange={(e) => setEditedDescription(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-400 focus:border-neon-green focus:outline-none h-24 resize-none transition-all"
+                            placeholder="Enter a short description for this component..."
+                        />
                         </div>
-                    </div>
 
-                    {/* DESCRIPTION */}
-                    <div>
-                    <label className="block text-xs font-mono text-slate-500 mb-1">DESCRIPTION</label>
-                    <textarea 
-                        value={editedDescription}
-                        onChange={(e) => setEditedDescription(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none h-24 resize-none transition-all"
-                        placeholder="Enter a description for this component..."
-                    />
-                    </div>
-
-                    {/* PINS */}
-                    <div>
-                    <label className="block text-xs font-mono text-slate-500 mb-1">PINS (Comma separated)</label>
-                    <input 
-                        type="text" 
-                        value={editedPins}
-                        onChange={(e) => setEditedPins(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none font-mono text-sm"
-                        placeholder="VCC, GND, D1, D2..."
-                    />
-                    </div>
-
-                    {/* IMAGE URL */}
-                    <div>
-                    <label className="block text-xs font-mono text-slate-500 mb-1">IMAGE URL</label>
-                    <div className="flex gap-2">
+                        {/* PINS */}
+                        <div>
+                        <label className="block text-xs font-mono text-slate-300 mb-1">
+                            PINS
+                            <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Optional</span>
+                        </label>
                         <input 
                             type="text" 
-                            value={editedImageUrl}
-                            onChange={(e) => setEditedImageUrl(e.target.value)}
-                            className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none"
-                            placeholder="https://example.com/image.png"
+                            value={editedPins}
+                            onChange={(e) => setEditedPins(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-400 focus:border-neon-green focus:outline-none font-mono text-sm"
+                            placeholder="Comma separated: VCC, GND, D1, D2..."
                         />
-                        <button 
-                            onClick={handleGenerateThumbnail}
-                            disabled={isGeneratingImage || !editedName}
-                            className="bg-neon-amber/10 border border-neon-amber/50 text-neon-amber w-10 h-full rounded hover:bg-neon-amber hover:text-black disabled:opacity-50 transition-colors flex items-center justify-center shrink-0"
-                            title="Auto-generate AI Thumbnail"
-                        >
-                            {isGeneratingImage ? (
-                                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                            )}
-                        </button>
-                    </div>
+                        </div>
                     </div>
 
-                    {/* DATASHEET URL */}
-                    <div>
-                    <label className="block text-xs font-mono text-slate-500 mb-1">DATASHEET URL</label>
-                    <input 
-                        type="url" 
-                        value={editedDatasheetUrl}
-                        onChange={(e) => setEditedDatasheetUrl(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none"
-                        placeholder="https://example.com/datasheet.pdf"
-                    />
+                    <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">Media</h4>
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Optional</span>
+                        </div>
+
+                        {/* IMAGE URL */}
+                        <div>
+                        <label className="block text-xs font-mono text-slate-300 mb-1">
+                            IMAGE URL
+                            <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Optional</span>
+                        </label>
+                        <div className="flex gap-2">
+                            <input 
+                                type="text" 
+                                value={editedImageUrl}
+                                onChange={(e) => setEditedImageUrl(e.target.value)}
+                                className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-400 focus:border-neon-green focus:outline-none"
+                                placeholder="https://example.com/image.png"
+                            />
+                            <button 
+                                onClick={handleGenerateThumbnail}
+                                disabled={isGeneratingImage || !editedName}
+                                className="bg-neon-amber/10 border border-neon-amber/50 text-neon-amber w-10 h-full rounded hover:bg-neon-amber hover:text-black disabled:opacity-70 transition-colors flex items-center justify-center shrink-0"
+                                title="Auto-generate AI Thumbnail"
+                            >
+                                {isGeneratingImage ? (
+                                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                )}
+                            </button>
+                        </div>
+                        </div>
+
+                        {/* DATASHEET URL */}
+                        <div>
+                        <label className="block text-xs font-mono text-slate-300 mb-1">
+                            DATASHEET URL
+                            <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Optional</span>
+                        </label>
+                        <input 
+                            type="url" 
+                            value={editedDatasheetUrl}
+                            onChange={(e) => setEditedDatasheetUrl(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-400 focus:border-neon-green focus:outline-none"
+                            placeholder="https://example.com/datasheet.pdf"
+                        />
+                        </div>
+
+                        {/* 3D MODEL URL */}
+                        <div>
+                        <label className="block text-xs font-mono text-slate-300 mb-1">
+                            3D MODEL URL (GLB/GLTF)
+                            <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Optional</span>
+                        </label>
+                        <input 
+                            type="url" 
+                            value={editedThreeDModelUrl}
+                            onChange={(e) => setEditedThreeDModelUrl(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-400 focus:border-neon-green focus:outline-none"
+                            placeholder="https://example.com/model.glb"
+                        />
+                        </div>
                     </div>
 
-                    {/* 3D MODEL URL */}
-                    <div>
-                    <label className="block text-xs font-mono text-slate-500 mb-1">3D MODEL URL (GLB/GLTF)</label>
-                    <input 
-                        type="url" 
-                        value={editedThreeDModelUrl}
-                        onChange={(e) => setEditedThreeDModelUrl(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none"
-                        placeholder="https://example.com/model.glb"
-                    />
-                    </div>
-
-                    <div className="pt-4">
+                    <div className="pt-2">
                         <button 
                         onClick={handleSave}
                         disabled={!hasChanges}
                         className={`w-full font-bold py-3 rounded transition-all shadow-lg transform active:scale-[0.98] ${hasChanges 
                             ? 'bg-neon-green text-black hover:bg-green-400 shadow-[0_0_15px_rgba(0,255,157,0.3)] hover:shadow-[0_0_25px_rgba(0,255,157,0.5)]' 
-                            : 'bg-slate-700 text-slate-400 cursor-not-allowed opacity-70'}`}
+                            : 'bg-slate-700 text-slate-300 cursor-not-allowed opacity-80'}`}
                         >
                         {hasChanges ? 'SAVE CHANGES' : 'NO CHANGES'}
                         </button>
@@ -475,7 +541,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                         {editedImageUrl ? (
                             <img src={editedImageUrl} alt="Preview" className="w-full h-full object-contain" />
                         ) : (
-                            <div className="text-slate-600 text-center p-4">
+                            <div className="text-slate-400 text-center p-4">
                                 <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 <p className="text-sm">No Image Available</p>
                             </div>
@@ -483,7 +549,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                     </div>
 
                     <div className="space-y-3">
-                        <p className="text-xs text-slate-400 text-center">
+                        <p className="text-xs text-slate-300 text-center">
                             Upload an image or generate one using AI for "<strong>{editedName}</strong>".
                         </p>
                         
@@ -506,7 +572,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                             <button 
                                 onClick={handleGenerateThumbnail}
                                 disabled={isGeneratingImage || !editedName}
-                                className="bg-neon-amber text-black font-bold py-3 rounded hover:bg-white transition-colors uppercase tracking-widest text-xs shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="bg-neon-amber text-black font-bold py-3 rounded hover:bg-white transition-colors uppercase tracking-widest text-xs shadow-lg disabled:opacity-70 flex items-center justify-center gap-2"
                             >
                                 {isGeneratingImage ? (
                                     <>
@@ -532,24 +598,71 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                     <button 
                         onClick={onGenerate3D}
                         disabled={isGenerating3D}
-                        className="text-xs bg-slate-800 border border-slate-600 hover:border-neon-purple hover:text-neon-purple px-3 py-1 rounded transition-colors disabled:opacity-50"
+                        className="text-xs bg-slate-800 border border-slate-600 hover:border-neon-purple hover:text-neon-purple px-3 py-1 rounded transition-colors disabled:opacity-70"
                     >
                         {isGenerating3D ? 'GENERATING...' : component.threeCode ? 'REGENERATE' : 'GENERATE 3D MODEL'}
                     </button>
                 </div>
                 <div className="flex-1 bg-black rounded-xl overflow-hidden border border-slate-700 relative">
-                    {(component.threeCode || component.threeDModelUrl) && !isGenerating3D ? (
-                        <ThreeViewer code={component.threeCode} modelUrl={component.threeDModelUrl} />
+                    {(has3DModel || canRenderThreeCode) && !isGenerating3D ? (
+                        <>
+                            <ThreeViewer
+                              code={canRenderThreeCode ? component.threeCode : undefined}
+                              modelUrl={component.threeDModelUrl}
+                            />
+                            {has3DCode && !is3DCodeApproved && (
+                                <div className="absolute left-3 right-3 bottom-3 bg-slate-950/90 border border-slate-700 rounded-lg p-3 text-[11px] text-slate-300">
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span>AI 3D code is blocked until you run it.</span>
+                                            <button
+                                              onClick={() => setIs3DCodeApproved(true)}
+                                              className="bg-neon-purple text-black px-3 py-1 rounded text-[10px] font-bold hover:bg-purple-300 transition-colors"
+                                            >
+                                              RUN 3D CODE
+                                            </button>
+                                        </div>
+                                        <details>
+                                            <summary className="cursor-pointer text-slate-300">Preview code</summary>
+                                            <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[10px] text-slate-200">{codePreview}{isCodeTruncated ? '\n...' : ''}</pre>
+                                        </details>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     ) : (
-                        <div className="absolute inset-0 flex items-center justify-center flex-col gap-3 text-slate-600 p-4 text-center">
+                        <div className="absolute inset-0 flex items-center justify-center flex-col gap-3 text-slate-400 p-4 text-center">
                             {isGenerating3D ? (
                             <>
                                 <div className="w-8 h-8 border-4 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
                                 <span className="text-xs text-neon-purple font-mono animate-pulse">Constructing Geometry...</span>
                             </>
+                            ) : has3DCode ? (
+                            <>
+                                <p className="text-sm text-slate-300">AI-generated 3D code is ready.</p>
+                                <p className="text-[11px] text-slate-400 max-w-xs">
+                                  Review the code and run it when you are ready.
+                                </p>
+                                <div className="w-full max-w-md bg-slate-950/80 border border-slate-700 rounded p-3 text-[10px] font-mono text-slate-200 max-h-32 overflow-auto whitespace-pre-wrap">
+                                  {codePreview}{isCodeTruncated ? '\n...' : ''}
+                                </div>
+                                <button
+                                  onClick={() => setIs3DCodeApproved(true)}
+                                  className="bg-neon-purple text-black px-4 py-2 rounded text-xs font-bold hover:bg-purple-300 transition-colors"
+                                >
+                                  RUN 3D CODE
+                                </button>
+                            </>
                             ) : (
                             <>
-                                <p className="text-sm">Click GENERATE to build a 3D model</p>
+                                <p className="text-sm text-slate-200">No 3D model yet.</p>
+                                <p className="text-[11px] text-slate-400 max-w-xs">
+                                    Generate a model with AI or paste a GLB/GLTF URL in the Edit tab.
+                                </p>
+                                <div className="flex flex-col gap-1 text-[11px] text-slate-300">
+                                    <span>• Use Generate 3D Model for instant geometry.</span>
+                                    <span>• Add a 3D model URL to load a real asset.</span>
+                                </div>
                             </>
                             )}
                         </div>
@@ -567,7 +680,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                              <div className="w-2 h-2 bg-neon-purple rounded-full animate-pulse"></div>
                              AI ASSISTANT
                         </h4>
-                        <button onClick={() => setShowAiChat(false)} className="text-slate-500 hover:text-white">
+                        <button onClick={() => setShowAiChat(false)} className="text-slate-300 hover:text-white">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>

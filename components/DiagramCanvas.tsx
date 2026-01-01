@@ -479,23 +479,46 @@ const DiagramCanvas = forwardRef<DiagramCanvasRef, DiagramCanvasProps>(({ diagra
     </div>
   );
 
+  const isDiagramEmpty = Boolean(diagram && diagram.components.length === 0);
+  const emptyDiagramOverlay = isDiagramEmpty && (
+    <div className="absolute inset-0 flex items-center justify-center flex-col gap-3 text-center text-slate-300 pointer-events-none">
+      <div className="w-16 h-16 rounded-full border border-neon-cyan/40 flex items-center justify-center text-neon-cyan/80">
+        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7h16M4 12h16M4 17h10" />
+        </svg>
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-lg font-bold text-slate-100">Canvas is ready.</h3>
+        <p className="text-[11px] text-slate-400 max-w-xs">
+          Drag parts from the Asset Manager or ask chat to generate a wiring diagram.
+        </p>
+      </div>
+      <div className="text-[11px] text-slate-400">
+        Tip: Hold space to pan, scroll to zoom.
+      </div>
+    </div>
+  );
+
   if (!diagram) {
     return (
       <div 
         ref={containerRef}
-        className="w-full h-full flex items-center justify-center text-slate-500 font-mono flex-col relative"
+        className="w-full h-full flex items-center justify-center text-slate-300 font-mono flex-col relative"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {dropZoneOverlay}
-        <svg className="w-24 h-24 mb-6 opacity-20 animate-pulse text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-24 h-24 mb-6 opacity-30 animate-pulse text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
-        <h3 className="text-xl font-bold text-slate-300 mb-2">Awaiting Circuit Generation</h3>
-        <p className="max-w-md text-center text-sm opacity-60">
-            Use the chat below or <b>Drag & Drop</b> items from the inventory to start manually.
+        <h3 className="text-xl font-bold text-slate-100 mb-2">Awaiting Circuit Generation</h3>
+        <p className="max-w-md text-center text-sm text-slate-400">
+            Use chat to generate a wiring diagram, or <b>drag & drop</b> parts from the inventory.
         </p>
+        <div className="text-[11px] text-slate-400 mt-3">
+            Tip: You can search parts and filter by type once components are placed.
+        </div>
       </div>
     );
   }
@@ -513,8 +536,9 @@ const DiagramCanvas = forwardRef<DiagramCanvasRef, DiagramCanvasProps>(({ diagra
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         style={{ touchAction: 'none' }}
-    >
+    > 
       {dropZoneOverlay}
+      {emptyDiagramOverlay}
       
       {/* Zoom Controls (Mobile Friendly) */}
       <div className="absolute top-16 right-4 md:top-4 md:right-4 flex flex-col gap-2 z-10 pointer-events-auto">
@@ -554,7 +578,7 @@ const DiagramCanvas = forwardRef<DiagramCanvasRef, DiagramCanvasProps>(({ diagra
             placeholder="Locate part..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-slate-900/90 backdrop-blur border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-neon-cyan shadow-lg"
+            className="bg-slate-900/90 backdrop-blur border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-neon-cyan shadow-lg"
           />
       </div>
 

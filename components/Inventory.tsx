@@ -467,9 +467,9 @@ const Inventory: React.FC<InventoryProps> = ({
 
             {/* Tabs */}
             <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800">
-                <button onClick={() => setActiveTab('list')} className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'list' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-500 hover:text-white'}`}>LIST</button>
-                <button onClick={() => setActiveTab('add')} className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'add' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-500 hover:text-white'}`}>ADD NEW</button>
-                <button onClick={() => setActiveTab('tools')} className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'tools' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-500 hover:text-white'}`}>TOOLS</button>
+                <button onClick={() => setActiveTab('list')} className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'list' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}>LIST</button>
+                <button onClick={() => setActiveTab('add')} className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'add' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}>ADD NEW</button>
+                <button onClick={() => setActiveTab('tools')} className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'tools' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}>TOOLS</button>
             </div>
         </div>
 
@@ -487,7 +487,7 @@ const Inventory: React.FC<InventoryProps> = ({
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-neon-cyan transition-colors"
                         />
-                        <svg className="w-4 h-4 text-slate-500 absolute left-3 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <svg className="w-4 h-4 text-slate-400 absolute left-3 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </div>
 
                     {CATEGORIES.map(cat => {
@@ -496,7 +496,7 @@ const Inventory: React.FC<InventoryProps> = ({
                         
                         return (
                             <div key={cat} className="animate-fade-in">
-                                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-slate-800 pb-1 sticky top-0 bg-cyber-dark/95 backdrop-blur z-10 flex justify-between">
+                                <h3 className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-2 border-b border-slate-800 pb-1 sticky top-0 bg-cyber-dark/95 backdrop-blur z-10 flex justify-between">
                                     {cat} <span className="text-neon-cyan">{catItems.length}</span>
                                 </h3>
                                 <div className="space-y-2">
@@ -543,7 +543,7 @@ const Inventory: React.FC<InventoryProps> = ({
                                                           <span className="text-[8px] bg-red-500/20 text-red-400 px-1 rounded border border-red-500/50 shrink-0" title="Low Stock">LOW</span>
                                                         )}
                                                     </div>
-                                                    <div className="text-[10px] text-slate-500 mt-0.5 truncate">{item.description}</div>
+                                                    <div className="text-[10px] text-slate-300 mt-0.5 truncate">{item.description}</div>
                                                     <div className="flex gap-2 mt-2">
                                                         {item.pins && item.pins.length > 0 && (
                                                             <span className="text-[9px] bg-black/40 px-1.5 py-0.5 rounded text-slate-400 border border-slate-700">{item.pins.length} PINS</span>
@@ -646,12 +646,12 @@ const Inventory: React.FC<InventoryProps> = ({
                                 onChange={(e) => setFinderQuery(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleFinderSearch()}
                                 placeholder="Describe part (e.g., 'wemos d1' or 'temp sensor')"
-                                className="flex-1 bg-black border border-slate-700 rounded px-3 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none"
+                                className="flex-1 bg-black border border-slate-700 rounded px-3 py-2 text-xs text-white placeholder-slate-400 focus:border-neon-cyan focus:outline-none"
                             />
                             <button 
                                 onClick={handleFinderSearch}
                                 disabled={isFinderLoading || !finderQuery}
-                                className="bg-neon-cyan text-black font-bold px-3 py-2 rounded text-xs hover:bg-white disabled:opacity-50"
+                                className="bg-neon-cyan text-black font-bold px-3 py-2 rounded text-xs hover:bg-white disabled:opacity-70"
                             >
                                 {isFinderLoading ? '...' : 'FIND'}
                             </button>
@@ -660,7 +660,7 @@ const Inventory: React.FC<InventoryProps> = ({
                         {/* Finder Results */}
                         {finderResults.length > 0 && (
                             <div className="mt-2 space-y-1 max-h-40 overflow-y-auto custom-scrollbar border-t border-slate-800 pt-2">
-                                <p className="text-[10px] text-slate-500 mb-1">Select a match to auto-fill:</p>
+                                <p className="text-[10px] text-slate-300 mb-1">Select a match to auto-fill:</p>
                                 {finderResults.map((result, idx) => (
                                     <button 
                                         key={idx}
@@ -669,9 +669,9 @@ const Inventory: React.FC<InventoryProps> = ({
                                     >
                                         <div className="flex justify-between items-center">
                                             <span className="font-bold text-xs text-white group-hover:text-neon-cyan">{result.name}</span>
-                                            <span className="text-[9px] uppercase text-slate-500 bg-black/30 px-1 rounded">{result.type}</span>
+                                            <span className="text-[9px] uppercase text-slate-300 bg-black/30 px-1 rounded">{result.type}</span>
                                         </div>
-                                        <div className="text-[10px] text-slate-400 truncate">{result.description}</div>
+                                        <div className="text-[10px] text-slate-300 truncate">{result.description}</div>
                                     </button>
                                 ))}
                             </div>
@@ -694,7 +694,7 @@ const Inventory: React.FC<InventoryProps> = ({
                          <button 
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isAiLoading}
-                            className="w-full py-4 flex flex-col items-center gap-2 text-slate-400 hover:text-neon-cyan transition-colors relative z-10"
+                            className="w-full py-4 flex flex-col items-center gap-2 text-slate-300 hover:text-neon-cyan transition-colors relative z-10"
                          >
                             {isAiLoading ? (
                                 <div className="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
@@ -703,83 +703,124 @@ const Inventory: React.FC<InventoryProps> = ({
                             )}
                             <span className="text-xs font-bold uppercase tracking-wider shadow-black drop-shadow-md">{isAiLoading ? 'ANALYZING...' : newItemImage ? 'RETAKE PHOTO' : 'SCAN COMPONENT PHOTO'}</span>
                          </button>
+                         <p className="text-[11px] text-slate-300 mt-2 relative z-10">
+                             Tip: A clear top-down photo helps auto-fill name, type, and pins.
+                         </p>
                     </div>
                     
-                    <div>
-                        <label className="block text-xs font-mono text-slate-500 mb-1">COMPONENT NAME</label>
+                    <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">Basics</h4>
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Required</span>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-mono text-slate-300 mb-1">
+                                COMPONENT NAME
+                                <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Required</span>
+                            </label>
+                            <div className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    value={newItemName}
+                                    onChange={(e) => setNewItemName(e.target.value)}
+                                    placeholder="e.g., NE555 Timer"
+                                    className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-sm text-white placeholder-slate-400 focus:border-neon-cyan focus:outline-none"
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={handleAutoGenerateImage}
+                                    disabled={!newItemName || isGeneratingImage}
+                                    title="Auto-generate product image"
+                                    aria-label="Auto-generate product image"
+                                    className="h-11 w-11 inline-flex items-center justify-center bg-slate-800 border border-slate-600 text-neon-purple rounded hover:bg-slate-700 hover:border-neon-purple disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-purple/50"
+                                >
+                                    {isGeneratingImage ? (
+                                        <div className="w-4 h-4 border-2 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="flex gap-2">
-                            <input 
-                                type="text" 
-                                value={newItemName}
-                                onChange={(e) => setNewItemName(e.target.value)}
-                                placeholder="e.g., NE555 Timer"
-                                className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:border-neon-cyan focus:outline-none"
-                            />
-                            <button 
-                                type="button"
-                                onClick={handleAutoGenerateImage}
-                                disabled={!newItemName || isGeneratingImage}
-                                title="Auto-generate product image"
-                                aria-label="Auto-generate product image"
-                                className="h-11 w-11 inline-flex items-center justify-center bg-slate-800 border border-slate-600 text-neon-purple rounded hover:bg-slate-700 hover:border-neon-purple disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-purple/50"
-                            >
-                                {isGeneratingImage ? (
-                                    <div className="w-4 h-4 border-2 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                )}
-                            </button>
+                             <div className="flex-1">
+                                <label className="block text-xs font-mono text-slate-300 mb-1">
+                                    TYPE
+                                    <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Required</span>
+                                </label>
+                                <select 
+                                    value={newItemType}
+                                    onChange={(e) => setNewItemType(e.target.value as any)}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none"
+                                >
+                                    {CATEGORIES.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
+                                </select>
+                             </div>
+                             <div className="w-20">
+                                <label className="block text-xs font-mono text-slate-300 mb-1">
+                                    QTY
+                                    <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Required</span>
+                                </label>
+                                <input 
+                                    type="number" 
+                                    min="1"
+                                    value={newItemQty}
+                                    onChange={(e) => setNewItemQty(parseInt(e.target.value))}
+                                    className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none"
+                                />
+                             </div>
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
-                         <div className="flex-1">
-                            <label className="block text-xs font-mono text-slate-500 mb-1">TYPE</label>
-                            <select 
-                                value={newItemType}
-                                onChange={(e) => setNewItemType(e.target.value as any)}
-                                className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none"
-                            >
-                                {CATEGORIES.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
-                            </select>
-                         </div>
-                         <div className="w-20">
-                            <label className="block text-xs font-mono text-slate-500 mb-1">QTY</label>
-                            <input 
-                                type="number" 
-                                min="1"
-                                value={newItemQty}
-                                onChange={(e) => setNewItemQty(parseInt(e.target.value))}
-                                className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none"
+                    <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">Details</h4>
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Optional</span>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-mono text-slate-300 mb-1">
+                                DESCRIPTION
+                                <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Optional</span>
+                            </label>
+                            <textarea 
+                                value={newItemDesc}
+                                onChange={(e) => setNewItemDesc(e.target.value)}
+                                rows={2}
+                                placeholder="Short summary for inventory and AI suggestions..."
+                                className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white placeholder-slate-400 focus:border-neon-cyan focus:outline-none resize-none"
                             />
-                         </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-mono text-slate-500 mb-1">DESCRIPTION</label>
-                        <textarea 
-                            value={newItemDesc}
-                            onChange={(e) => setNewItemDesc(e.target.value)}
-                            rows={2}
-                            className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none resize-none"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-mono text-slate-500 mb-1">PINS (COMMA SEPARATED)</label>
-                        <input 
-                            type="text" 
-                            value={newItemPins}
-                            onChange={(e) => setNewItemPins(e.target.value)}
-                            placeholder="VCC, GND, OUT..."
-                            className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none font-mono"
-                        />
+                    <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">Pins</h4>
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Optional</span>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-mono text-slate-300 mb-1">
+                                PINS
+                                <span className="ml-2 text-[9px] text-slate-400 uppercase tracking-widest">Optional</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                value={newItemPins}
+                                onChange={(e) => setNewItemPins(e.target.value)}
+                                placeholder="Comma separated: VCC, GND, OUT..."
+                                className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white placeholder-slate-400 focus:border-neon-cyan focus:outline-none font-mono"
+                            />
+                            <p className="text-[11px] text-slate-400 mt-2">
+                                Pin labels surface on the wiring canvas and AI suggestions.
+                            </p>
+                        </div>
                     </div>
 
                     <button 
                         onClick={handleAdd}
                         disabled={!newItemName}
-                        className="w-full bg-neon-cyan text-black font-bold py-3 rounded hover:bg-white transition-colors uppercase tracking-widest text-xs shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-neon-cyan text-black font-bold py-3 rounded hover:bg-white transition-colors uppercase tracking-widest text-xs shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         ADD TO INVENTORY
                     </button>
@@ -824,7 +865,7 @@ const Inventory: React.FC<InventoryProps> = ({
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
                                 {isSuggesting ? 'THINKING...' : 'WHAT CAN I BUILD?'}
                             </div>
-                            <div className="text-[10px] text-slate-500 group-hover:text-slate-300">
+                            <div className="text-[10px] text-slate-300 group-hover:text-white">
                                 Ask Gemini to suggest projects based on your current inventory.
                             </div>
                         </button>
@@ -833,7 +874,7 @@ const Inventory: React.FC<InventoryProps> = ({
                             <div className="mt-4 p-3 bg-slate-900 border border-slate-700 rounded text-xs text-slate-300 markdown prose prose-invert max-w-none">
                                 <div className="flex justify-between items-start mb-2">
                                      <span className="text-[10px] text-neon-purple font-mono uppercase">Ideas</span>
-                                     <button onClick={() => setSuggestions('')} className="text-slate-500 hover:text-white">&times;</button>
+                                     <button onClick={() => setSuggestions('')} className="text-slate-300 hover:text-white">&times;</button>
                                 </div>
                                 <div className="whitespace-pre-wrap leading-relaxed">{suggestions}</div>
                             </div>

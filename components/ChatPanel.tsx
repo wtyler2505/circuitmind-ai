@@ -402,7 +402,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 ? 'Describe the image to generate...'
                 : 'Describe the video to generate...'
             }
-            className="flex-1 px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="flex-1 px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             rows={1}
             style={{ minHeight: '42px', maxHeight: '120px' }}
             onInput={(e) => {
