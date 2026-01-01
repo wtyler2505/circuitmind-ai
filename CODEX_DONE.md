@@ -312,3 +312,37 @@ git commit -m "Redesign layout with right assistant sidebar"
 ## Handoff Notes
 
 - Test run: `npm run test` (8 files, 13 tests) passed.
+
+# Codex Completion Report
+
+**Task:** Add resizable sidebars and refine assistant UI/toolbar
+**Status:** done
+
+## Changes Made
+
+- `App.tsx` - persisted sidebar widths, applied CSS variables for layout margins, refreshed toolbar CTA hierarchy
+- `components/Inventory.tsx` - added resize handle and width props for adjustable left sidebar
+- `components/AssistantSidebar.tsx` - added resize handle and width props for adjustable right sidebar
+- `components/ChatPanel.tsx` - refined assistant styling, mode accents, and empty-state guidance
+
+## Commands Run
+
+```bash
+rg -n "localStorage" App.tsx components services hooks
+npm run test
+git status -sb
+git commit -m "Add resizable sidebars and refine assistant UI"
+```
+
+## Next Steps
+
+- Consider a settings toggle for default auto-hide vs pinned sidebars on startup.
+- Re-run screenshot capture when you want the UI audit images refreshed.
+
+## Blockers (if any)
+
+- None.
+
+## Handoff Notes
+
+- Tests: `npm run test` (8 files, 13 tests) passed.
