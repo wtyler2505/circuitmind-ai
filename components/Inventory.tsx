@@ -518,6 +518,7 @@ const Inventory: React.FC<InventoryProps> = ({
                                                     onChange={() => toggleSelection(item.id)}
                                                     className="mt-1 w-4 h-4 rounded border-slate-600 text-neon-cyan focus:ring-neon-cyan bg-slate-900 cursor-pointer shrink-0"
                                                     onClick={(e) => e.stopPropagation()}
+                                                    aria-label={`Select ${item.name}`}
                                                 />
                                                 
                                                 {/* Component Image/Thumbnail */}
@@ -532,21 +533,21 @@ const Inventory: React.FC<InventoryProps> = ({
                                                             onError={() => markBrokenImage(item.id, item.imageUrl)}
                                                         />
                                                     ) : (
-                                                        <span className="text-slate-600 font-mono font-bold">{getTypeIcon(item.type)}</span>
+                                                        <span className="text-slate-400 font-mono font-bold">{getTypeIcon(item.type)}</span>
                                                     )}
                                                 </div>
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="font-bold text-slate-200 text-sm group-hover:text-neon-cyan transition-colors flex items-center gap-2">
-                                                        <span className="truncate">{item.name}</span>
+                                                        <span className="truncate" title={item.name}>{item.name}</span>
                                                         {item.lowStock && (
                                                           <span className="text-[8px] bg-red-500/20 text-red-400 px-1 rounded border border-red-500/50 shrink-0" title="Low Stock">LOW</span>
                                                         )}
                                                     </div>
-                                                    <div className="text-[10px] text-slate-300 mt-0.5 truncate">{item.description}</div>
+                                                    <div className="text-[10px] text-slate-300 mt-0.5 truncate" title={item.description}>{item.description}</div>
                                                     <div className="flex gap-2 mt-2">
                                                         {item.pins && item.pins.length > 0 && (
-                                                            <span className="text-[9px] bg-black/40 px-1.5 py-0.5 rounded text-slate-400 border border-slate-700">{item.pins.length} PINS</span>
+                                                            <span className="text-[9px] bg-black/40 px-1.5 py-0.5 rounded text-slate-300 border border-slate-700">{item.pins.length} PINS</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -554,7 +555,7 @@ const Inventory: React.FC<InventoryProps> = ({
                                             <div className="flex flex-col items-end gap-2 ml-2 shrink-0">
                                                 <div className="flex items-center gap-0.5 bg-slate-950 border border-slate-700 rounded overflow-hidden" onClick={(e) => e.stopPropagation()}>
                                                     <button 
-                                                        className="text-slate-500 hover:text-white hover:bg-slate-800 px-1.5 py-0.5 text-[10px] transition-colors"
+                                                        className="text-slate-300 hover:text-white hover:bg-slate-800 px-1.5 py-0.5 text-[10px] transition-colors"
                                                         onClick={() => {
                                                             const newQty = (item.quantity || 0) - 1;
                                                             if (newQty >= 0) onUpdateItem({ ...item, quantity: newQty });
@@ -564,7 +565,7 @@ const Inventory: React.FC<InventoryProps> = ({
                                                         {item.quantity || 0}
                                                     </span>
                                                     <button 
-                                                        className="text-slate-500 hover:text-white hover:bg-slate-800 px-1.5 py-0.5 text-[10px] transition-colors"
+                                                        className="text-slate-300 hover:text-white hover:bg-slate-800 px-1.5 py-0.5 text-[10px] transition-colors"
                                                         onClick={() => onUpdateItem({ ...item, quantity: (item.quantity || 0) + 1 })}
                                                     >+</button>
                                                 </div>

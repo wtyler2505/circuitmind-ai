@@ -660,8 +660,8 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                                     Generate a model with AI or paste a GLB/GLTF URL in the Edit tab.
                                 </p>
                                 <div className="flex flex-col gap-1 text-[11px] text-slate-300">
-                                    <span>• Use Generate 3D Model for instant geometry.</span>
-                                    <span>• Add a 3D model URL to load a real asset.</span>
+                                    <span>- Use Generate 3D Model for instant geometry.</span>
+                                    <span>- Add a 3D model URL to load a real asset.</span>
                                 </div>
                             </>
                             )}
