@@ -9,29 +9,94 @@ interface SettingsPanelProps {
 }
 
 // Human-readable labels for action types
-const ACTION_LABELS: Record<ActionType, { label: string; description: string; category: string }> = {
-  // Canvas actions
-  highlight: { label: 'Highlight Component', description: 'Add visual glow to a component', category: 'Canvas' },
-  centerOn: { label: 'Center View', description: 'Pan canvas to focus on component', category: 'Canvas' },
-  zoomTo: { label: 'Zoom', description: 'Change zoom level', category: 'Canvas' },
-  resetView: { label: 'Reset View', description: 'Reset pan and zoom to default', category: 'Canvas' },
-  highlightWire: { label: 'Highlight Wire', description: 'Add visual glow to a connection', category: 'Canvas' },
-  // Navigation actions
-  openInventory: { label: 'Open Inventory', description: 'Show component library sidebar', category: 'Navigation' },
-  closeInventory: { label: 'Close Inventory', description: 'Hide component library sidebar', category: 'Navigation' },
-  openSettings: { label: 'Open Settings', description: 'Show settings panel', category: 'Navigation' },
-  closeSettings: { label: 'Close Settings', description: 'Hide settings panel', category: 'Navigation' },
-  openComponentEditor: { label: 'Open Editor', description: 'Open component detail editor', category: 'Navigation' },
-  switchGenerationMode: { label: 'Switch Mode', description: 'Change AI generation mode', category: 'Navigation' },
-  // Diagram modification actions
-  addComponent: { label: 'Add Component', description: 'Insert new component into diagram', category: 'Diagram' },
-  removeComponent: { label: 'Remove Component', description: 'Delete component from diagram', category: 'Diagram' },
-  createConnection: { label: 'Create Connection', description: 'Wire two components together', category: 'Diagram' },
-  removeConnection: { label: 'Remove Connection', description: 'Delete wire from diagram', category: 'Diagram' },
-  // Form actions
-  fillField: { label: 'Fill Form Field', description: 'Auto-populate form input', category: 'Forms' },
-  saveComponent: { label: 'Save Component', description: 'Save component changes', category: 'Forms' },
-};
+const ACTION_LABELS: Record<ActionType, { label: string; description: string; category: string }> =
+  {
+    // Canvas actions
+    highlight: {
+      label: 'Highlight Component',
+      description: 'Add visual glow to a component',
+      category: 'Canvas',
+    },
+    centerOn: {
+      label: 'Center View',
+      description: 'Pan canvas to focus on component',
+      category: 'Canvas',
+    },
+    zoomTo: { label: 'Zoom', description: 'Change zoom level', category: 'Canvas' },
+    resetView: {
+      label: 'Reset View',
+      description: 'Reset pan and zoom to default',
+      category: 'Canvas',
+    },
+    highlightWire: {
+      label: 'Highlight Wire',
+      description: 'Add visual glow to a connection',
+      category: 'Canvas',
+    },
+    // Navigation actions
+    openInventory: {
+      label: 'Open Inventory',
+      description: 'Show component library sidebar',
+      category: 'Navigation',
+    },
+    closeInventory: {
+      label: 'Close Inventory',
+      description: 'Hide component library sidebar',
+      category: 'Navigation',
+    },
+    openSettings: {
+      label: 'Open Settings',
+      description: 'Show settings panel',
+      category: 'Navigation',
+    },
+    closeSettings: {
+      label: 'Close Settings',
+      description: 'Hide settings panel',
+      category: 'Navigation',
+    },
+    openComponentEditor: {
+      label: 'Open Editor',
+      description: 'Open component detail editor',
+      category: 'Navigation',
+    },
+    switchGenerationMode: {
+      label: 'Switch Mode',
+      description: 'Change AI generation mode',
+      category: 'Navigation',
+    },
+    // Diagram modification actions
+    addComponent: {
+      label: 'Add Component',
+      description: 'Insert new component into diagram',
+      category: 'Diagram',
+    },
+    removeComponent: {
+      label: 'Remove Component',
+      description: 'Delete component from diagram',
+      category: 'Diagram',
+    },
+    createConnection: {
+      label: 'Create Connection',
+      description: 'Wire two components together',
+      category: 'Diagram',
+    },
+    removeConnection: {
+      label: 'Remove Connection',
+      description: 'Delete wire from diagram',
+      category: 'Diagram',
+    },
+    // Form actions
+    fillField: {
+      label: 'Fill Form Field',
+      description: 'Auto-populate form input',
+      category: 'Forms',
+    },
+    saveComponent: {
+      label: 'Save Component',
+      description: 'Save component changes',
+      category: 'Forms',
+    },
+  };
 
 const CATEGORIES = ['Canvas', 'Navigation', 'Diagram', 'Forms'] as const;
 
@@ -89,7 +154,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'api' | 'ai'>('api');
 
   // Local autonomy settings state (if not controlled externally)
-  const [localAutonomy, setLocalAutonomy] = useState<AIAutonomySettings>(getDefaultAutonomySettings);
+  const [localAutonomy, setLocalAutonomy] = useState<AIAutonomySettings>(
+    getDefaultAutonomySettings
+  );
 
   // Use external settings if provided, otherwise use local state
   const currentAutonomy = autonomySettings || localAutonomy;
@@ -141,7 +208,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         // Default is safe, add to customUnsafe
         updateAutonomy({
           customSafeActions: currentAutonomy.customSafeActions.filter((a) => a !== actionType),
-          customUnsafeActions: [...currentAutonomy.customUnsafeActions.filter((a) => a !== actionType), actionType],
+          customUnsafeActions: [
+            ...currentAutonomy.customUnsafeActions.filter((a) => a !== actionType),
+            actionType,
+          ],
         });
       } else {
         // Default is unsafe, remove from customSafe
@@ -159,7 +229,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       } else {
         // Default is unsafe, add to customSafe
         updateAutonomy({
-          customSafeActions: [...currentAutonomy.customSafeActions.filter((a) => a !== actionType), actionType],
+          customSafeActions: [
+            ...currentAutonomy.customSafeActions.filter((a) => a !== actionType),
+            actionType,
+          ],
           customUnsafeActions: currentAutonomy.customUnsafeActions.filter((a) => a !== actionType),
         });
       }
@@ -220,18 +293,38 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <div className="flex items-center gap-3">
-            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <svg
+              className="w-6 h-6 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
             <h2 className="text-xl font-semibold text-white">Settings</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-gray-800"
+            className="text-gray-300 hover:text-white transition-colors p-1 rounded-lg hover:bg-gray-800"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -241,9 +334,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <button
             onClick={() => setActiveTab('api')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'api'
-                ? 'text-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
+              activeTab === 'api' ? 'text-blue-400' : 'text-gray-400 hover:text-gray-300'
             }`}
           >
             API Key
@@ -254,9 +345,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <button
             onClick={() => setActiveTab('ai')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'ai'
-                ? 'text-cyan-400'
-                : 'text-gray-400 hover:text-gray-300'
+              activeTab === 'ai' ? 'text-cyan-400' : 'text-gray-400 hover:text-gray-300'
             }`}
           >
             AI Autonomy
@@ -273,30 +362,58 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             <>
               {/* API Key Section */}
               <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-300">
-                  Gemini API Key
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-300">Gemini API Key</label>
+                  <span className="text-[10px] text-gray-300 uppercase tracking-widest">
+                    Required
+                  </span>
+                </div>
                 <div className="relative">
                   <input
                     type={showKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                     placeholder="Enter your Gemini API key..."
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                   />
                   <button
                     type="button"
                     onClick={() => setShowKey(!showKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white"
                   >
                     {showKey ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
                       </svg>
                     ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
                       </svg>
                     )}
                   </button>
@@ -316,32 +433,67 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
               {/* Test Status */}
               {testStatus !== 'idle' && (
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm ${
-                  testStatus === 'testing' ? 'bg-blue-900/30 text-blue-300' :
-                  testStatus === 'success' ? 'bg-green-900/30 text-green-300' :
-                  'bg-red-900/30 text-red-300'
-                }`}>
+                <div
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm ${
+                    testStatus === 'testing'
+                      ? 'bg-blue-900/30 text-blue-300'
+                      : testStatus === 'success'
+                        ? 'bg-green-900/30 text-green-300'
+                        : 'bg-red-900/30 text-red-300'
+                  }`}
+                >
                   {testStatus === 'testing' && (
                     <>
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
                       </svg>
                       Testing connection...
                     </>
                   )}
                   {testStatus === 'success' && (
                     <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       API key is valid!
                     </>
                   )}
                   {testStatus === 'error' && (
                     <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       Invalid API key or connection error
                     </>
@@ -353,7 +505,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               {saved && (
                 <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-900/30 text-green-300 text-sm">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   Settings saved! Reloading...
                 </div>
@@ -362,11 +519,24 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               {/* Info box */}
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
                 <div className="flex gap-3">
-                  <svg className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
-                  <div className="text-sm text-gray-400">
-                    <p>Your API key is stored locally in your browser and never sent to any server except Google's Gemini API.</p>
+                  <div className="text-sm text-gray-300">
+                    <p>
+                      Your API key is stored locally in your browser and never sent to any server
+                      except Google's Gemini API.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -383,12 +553,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     <label className="block text-sm font-medium text-gray-300">
                       Auto-Execute Safe Actions
                     </label>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-300 mt-1">
                       AI will automatically perform safe actions without asking
                     </p>
                   </div>
                   <button
-                    onClick={() => updateAutonomy({ autoExecuteSafeActions: !currentAutonomy.autoExecuteSafeActions })}
+                    onClick={() =>
+                      updateAutonomy({
+                        autoExecuteSafeActions: !currentAutonomy.autoExecuteSafeActions,
+                      })
+                    }
                     className={`relative w-12 h-6 rounded-full transition-colors ${
                       currentAutonomy.autoExecuteSafeActions ? 'bg-cyan-500' : 'bg-gray-600'
                     }`}
@@ -408,7 +582,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   <h3 className="text-sm font-medium text-gray-300">Action Permissions</h3>
                   <button
                     onClick={resetAutonomyToDefaults}
-                    className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                    className="text-xs text-gray-300 hover:text-gray-200 transition-colors"
                   >
                     Reset to defaults
                   </button>
@@ -422,15 +596,21 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   return (
                     <div key={category} className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold uppercase tracking-wider ${
-                          category === 'Canvas' || category === 'Navigation'
-                            ? 'text-green-400'
-                            : 'text-amber-400'
-                        }`}>
+                        <span
+                          className={`text-xs font-semibold uppercase tracking-wider ${
+                            category === 'Canvas' || category === 'Navigation'
+                              ? 'text-green-400'
+                              : 'text-amber-400'
+                          }`}
+                        >
                           {category}
                         </span>
-                        <span className="text-xs text-gray-500">
-                          ({category === 'Canvas' || category === 'Navigation' ? 'safe by default' : 'requires confirmation'})
+                        <span className="text-xs text-gray-300">
+                          (
+                          {category === 'Canvas' || category === 'Navigation'
+                            ? 'safe by default'
+                            : 'requires confirmation'}
+                          )
                         </span>
                       </div>
 
@@ -458,7 +638,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-gray-500 truncate">{description}</p>
+                                <p className="text-xs text-gray-300 truncate">{description}</p>
                               </div>
                               <button
                                 onClick={() => toggleActionSafe(actionType)}
@@ -482,12 +662,28 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
               {/* Info box */}
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
                 <div className="flex gap-3">
-                  <svg className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  <svg
+                    className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
                   </svg>
-                  <div className="text-sm text-gray-400 space-y-2">
-                    <p><strong className="text-cyan-300">Auto</strong> = AI executes immediately without asking</p>
-                    <p><strong className="text-amber-300">Ask</strong> = AI shows action button for you to confirm</p>
+                  <div className="text-sm text-gray-300 space-y-2">
+                    <p>
+                      <strong className="text-cyan-300">Auto</strong> = AI executes immediately
+                      without asking
+                    </p>
+                    <p>
+                      <strong className="text-amber-300">Ask</strong> = AI shows action button for
+                      you to confirm
+                    </p>
                   </div>
                 </div>
               </div>
@@ -499,26 +695,26 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700 bg-gray-800/50 rounded-b-xl">
           <button
             onClick={handleClear}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-red-400 transition-colors"
+            className="px-4 py-2 text-sm text-gray-300 hover:text-red-400 transition-colors"
           >
             Clear Key
           </button>
           <div className="flex flex-col items-end gap-1">
             <div className="flex gap-3">
-            <button
-              onClick={handleTest}
-              disabled={!apiKey.trim() || testStatus === 'testing'}
-              className="px-4 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              Test Connection
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={!apiKey.trim()}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed font-medium"
-            >
-              Save & Apply
-            </button>
+              <button
+                onClick={handleTest}
+                disabled={!apiKey.trim() || testStatus === 'testing'}
+                className="px-4 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
+              >
+                Test Connection
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!apiKey.trim()}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-80 disabled:cursor-not-allowed font-medium"
+              >
+                Save & Apply
+              </button>
             </div>
             {!apiKey.trim() && (
               <span className="text-[11px] text-gray-300">

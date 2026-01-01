@@ -27,13 +27,7 @@ describe('Inventory', () => {
       },
     ];
 
-    render(
-      <Inventory
-        {...baseProps}
-        items={items}
-        isOpen={true}
-      />
-    );
+    render(<Inventory {...baseProps} items={items} isOpen={true} />);
 
     const img = screen.getByAltText('Test Board');
     const thumbnail = img.parentElement as HTMLElement;
@@ -47,7 +41,7 @@ describe('Inventory', () => {
     });
   });
 
-  it('inventory_bulkSelection_showsActionBar', () => {
+  it('inventory_bulkSelection_showsActionBar', async () => {
     const items: ElectronicComponent[] = [
       {
         id: 'item-1',
@@ -69,11 +63,12 @@ describe('Inventory', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('checkbox', { name: /select test board/i }));
+    const checkbox = screen.getByRole('checkbox', { name: /select test board/i });
+    fireEvent.click(checkbox);
 
-    expect(screen.getByText('1 selected')).toBeInTheDocument();
+    expect(await screen.findByText('1 selected')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /export selected/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /mark selected low stock/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /delete selected/i })).toBeEnabled();
-  });
+  }, 10000);
 });

@@ -4,10 +4,12 @@
 **Status:** done
 
 ## Changes Made
+
 - `AGENTS.md` - added repository guidelines for contributors
 - `CODEX_DONE.md` - recorded completion report
 
 ## Commands Run
+
 ```bash
 ls
 rg --files -g 'README.md' -g 'CLAUDE.md' -g 'docs/**' -g 'package.json' -g '*.md'
@@ -29,15 +31,17 @@ git status -sb
 ```
 
 ## Next Steps
+
 - Review `AGENTS.md` for wording preferences.
 - Add a test runner and scripts if automated tests are desired.
 
 ## Blockers (if any)
+
 - None.
 
 ## Handoff Notes
-Repository has pre-existing uncommitted changes; only new docs were added here.
 
+Repository has pre-existing uncommitted changes; only new docs were added here.
 
 # Codex Completion Report
 
@@ -45,6 +49,7 @@ Repository has pre-existing uncommitted changes; only new docs were added here.
 **Status:** done
 
 ## Changes Made
+
 - `App.tsx` - expanded toolbar icon targets, added aria-labels, and focus rings
 - `components/DiagramCanvas.tsx` - enlarged zoom/reset controls with labels and focus rings
 - `components/ChatPanel.tsx` - added aria labels, focus rings, and 44px targets for chat controls
@@ -53,6 +58,7 @@ Repository has pre-existing uncommitted changes; only new docs were added here.
 - `components/__tests__/Inventory.test.tsx` - added thumbnail fallback test
 
 ## Commands Run
+
 ```bash
 ls
 rg -n "header" App.tsx
@@ -66,14 +72,16 @@ git ls-files App.tsx components/DiagramCanvas.tsx components/Inventory.tsx compo
 ```
 
 ## Next Steps
+
 - Review remaining UI audit items (contrast, forms grouping, empty states).
 
 ## Blockers (if any)
+
 - None.
 
 ## Handoff Notes
-Large number of unrelated untracked/modified files existed prior to this change; only listed files were updated.
 
+Large number of unrelated untracked/modified files existed prior to this change; only listed files were updated.
 
 # Codex Completion Report
 
@@ -81,6 +89,7 @@ Large number of unrelated untracked/modified files existed prior to this change;
 **Status:** done
 
 ## Changes Made
+
 - `components/ComponentEditorModal.tsx` - grouped edit form sections, added required/optional markers, improved 3D empty state, boosted microcopy contrast
 - `components/DiagramCanvas.tsx` - added empty diagram overlay guidance, improved no-diagram empty state, and placeholder contrast
 - `components/Inventory.tsx` - grouped add form, added required/optional markers, improved microcopy contrast and helper text
@@ -90,6 +99,7 @@ Large number of unrelated untracked/modified files existed prior to this change;
 - `components/__tests__/DiagramCanvas.test.tsx` - added empty diagram overlay test
 
 ## Commands Run
+
 ```bash
 fd -e tsx -e ts -e css -e md "ComponentEditor|DiagramCanvas|ThreeViewer|ModelViewer|Inventory" .
 tree -I 'node_modules|dist|.git' components -L 2
@@ -111,15 +121,17 @@ git commit -m "Improve form grouping and empty states"
 ```
 
 ## Next Steps
+
 - Review remaining UI audit items (contrast in other panels, hover/focus parity, and list truncation).
 - Run a live visual pass if/when the dev server is up.
 
 ## Blockers (if any)
+
 - Chrome DevTools MCP could not start due to missing X server; visual forensics were skipped.
 
 ## Handoff Notes
-Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
 
+Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
 
 # Codex Completion Report
 
@@ -127,10 +139,12 @@ Unrelated modified/untracked files existed in the repo; only listed files were s
 **Status:** done
 
 ## Changes Made
+
 - `components/ComponentEditorModal.tsx` - replaced non-ASCII bullets in 3D empty state, minor contrast polish
 - `components/Inventory.tsx` - added checkbox aria labels, tooltips for truncated name/description, and stronger contrast for quantity controls + pin badge
 
 ## Commands Run
+
 ```bash
 rg -n "item.name|item.description|truncate" components/Inventory.tsx
 npm run test
@@ -138,15 +152,17 @@ git status --short
 ```
 
 ## Next Steps
+
 - Review remaining UI audit items around list truncation tooltips and selection headers.
 - Run live visual audit when a headless browser is available.
 
 ## Blockers (if any)
+
 - None.
 
 ## Handoff Notes
-Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
 
+Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
 
 # Codex Completion Report
 
@@ -154,6 +170,7 @@ Unrelated modified/untracked files existed in the repo; only listed files were s
 **Status:** done
 
 ## Changes Made
+
 - `components/Inventory.tsx` - added bulk action bar for selections and clearer list affordances
 - `components/SettingsPanel.tsx` - added disabled-state explanation for Test Connection
 - `components/__tests__/Inventory.test.tsx` - added bulk selection action bar test
@@ -161,6 +178,7 @@ Unrelated modified/untracked files existed in the repo; only listed files were s
 - `components/__tests__/ComponentEditorModal.test.tsx` - increased timeout to reduce flakiness
 
 ## Commands Run
+
 ```bash
 fd -e tsx -e ts -e css "Inventory|SettingsPanel" components
 tree -I 'node_modules|dist|.git' components -L 2
@@ -179,11 +197,53 @@ npm run test
 ```
 
 ## Next Steps
+
 - Consider adding select-all or category-level bulk selection affordances.
 - Revisit header CTA hierarchy if you want a stricter primary/secondary system.
 
 ## Blockers (if any)
+
 - Chrome DevTools MCP still blocked by missing X server; visual forensics skipped.
 
 ## Handoff Notes
+
 Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
+
+
+# Codex Completion Report
+
+**Task:** UI audit follow-up (contrast polish + optional markers)
+**Status:** done
+
+## Changes Made
+- `components/ChatPanel.tsx` - boosted microcopy/icon contrast and disabled opacity
+- `components/ChatMessage.tsx` - improved microcopy contrast for sources, previews, timestamps
+- `components/ConversationSwitcher.tsx` - improved metadata/icon/empty-state contrast
+- `components/SettingsPanel.tsx` - raised microcopy/required/aux text contrast
+- `components/ErrorBoundary.tsx` - improved error message contrast
+- `components/Inventory.tsx` - added optional markers for Part Finder + Photo Scan
+- `components/ComponentEditorModal.tsx` - raised disabled icon contrast for AI chat send
+- `components/DiagramCanvas.tsx` - fixed filterType state reference
+- `components/__tests__/ComponentEditorModal.test.tsx` - switched to fireEvent to avoid timeouts
+- `components/__tests__/Inventory.test.tsx` - simplified bulk selection assertion
+- `docs/screenshots/UI_AUDIT_REPORT.md` - updated issue ledger status for UI-004/UI-005
+
+## Commands Run
+```bash
+rg -n "placeholder|disabled|text-(gray|slate|zinc)-[34]00|opacity-50|opacity-40" components
+rg -n "Issue Ledger|UI-" docs/screenshots/UI_AUDIT_REPORT.md
+rg -n "filterType" components/DiagramCanvas.tsx
+rg -n "selectedIds" components/Inventory.tsx
+npm run test
+git status -sb
+```
+
+## Next Steps
+- Re-run screenshot catalog to recapture updated contrast/grouping (UI-004/UI-005).
+- Decide whether to stage/commit untracked core files (ChatMessage/ConversationSwitcher/UI audit artifacts).
+
+## Blockers (if any)
+- Chrome DevTools MCP could not start due to missing X server for headful browser.
+
+## Handoff Notes
+Unrelated modified/untracked files existed in the repo; only listed files were updated in this pass.
