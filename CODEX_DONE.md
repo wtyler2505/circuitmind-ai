@@ -346,3 +346,37 @@ git commit -m "Add resizable sidebars and refine assistant UI"
 ## Handoff Notes
 
 - Tests: `npm run test` (8 files, 13 tests) passed.
+
+# Codex Completion Report
+
+**Task:** Add layout defaults in Settings + sync sidebar pinned/open preferences
+**Status:** done
+
+## Changes Made
+
+- `App.tsx` - persisted sidebar open/pin defaults and wired Settings layout controls
+- `components/Inventory.tsx` - synced pinned state with defaults and exposed pinned callbacks
+- `components/SettingsPanel.tsx` - added Layout tab with sidebar defaults
+- `components/__tests__/SettingsPanel.test.tsx` - added coverage for layout toggles
+
+## Commands Run
+
+```bash
+rg -n "localStorage" App.tsx components services hooks
+npm run test
+git status -sb
+git commit -m "Add layout defaults in settings"
+```
+
+## Next Steps
+
+- Decide if sidebar width should be adjustable inside Settings (slider input).
+- Re-run screenshot capture when you want updated audit images.
+
+## Blockers (if any)
+
+- None.
+
+## Handoff Notes
+
+- Tests: `npm run test` (8 files, 14 tests) passed.
