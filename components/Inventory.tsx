@@ -29,6 +29,8 @@ interface InventoryProps {
   onSidebarWidthChange?: (width: number) => void;
   minSidebarWidth?: number;
   maxSidebarWidth?: number;
+  defaultPinned?: boolean;
+  onPinnedChange?: (pinned: boolean) => void;
 }
 
 const CATEGORIES = ['microcontroller', 'sensor', 'actuator', 'power', 'other'] as const;
@@ -104,6 +106,8 @@ const Inventory: React.FC<InventoryProps> = ({
   onSidebarWidthChange,
   minSidebarWidth = 280,
   maxSidebarWidth = 520,
+  defaultPinned = false,
+  onPinnedChange,
 }) => {
   // Refs for click outside detection
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -113,7 +117,7 @@ const Inventory: React.FC<InventoryProps> = ({
   const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
 
   // Pin State for "Locking" the sidebar
-  const [isPinned, setIsPinned] = useState(false);
+  const [isPinned, setIsPinned] = useState(defaultPinned);
 
   // Tabs: 'list', 'add', 'tools'
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'tools'>('list');
@@ -164,15 +168,20 @@ const Inventory: React.FC<InventoryProps> = ({
     }
   };
 
+  const updatePinned = (pinned: boolean) => {
+    setIsPinned(pinned);
+    onPinnedChange?.(pinned);
+  };
+
   const handleButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isPinned) {
       // If locked open -> Unlock and Close
-      setIsPinned(false);
+      updatePinned(false);
       onClose();
     } else {
       // If not locked -> Lock and Open
-      setIsPinned(true);
+      updatePinned(true);
       onOpen();
     }
   };
@@ -206,6 +215,13 @@ const Inventory: React.FC<InventoryProps> = ({
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     };
   }, [isOpen, onClose, isPinned]);
+
+  useEffect(() => {
+    setIsPinned(defaultPinned);
+    if (defaultPinned) {
+      onOpen();
+    }
+  }, [defaultPinned, onOpen]);
 
   const clampSidebarWidth = (value: number) =>
     Math.min(maxSidebarWidth, Math.max(minSidebarWidth, value));
@@ -514,7 +530,7 @@ const Inventory: React.FC<InventoryProps> = ({
         {/* Header */}
         <div className="p-4 md:p-5 border-b border-slate-800 bg-gradient-to-b from-slate-900 to-transparent flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold font-sans text-white mb-1 flex items-center gap-2">
+            <h2 className="text-lg font-bold font-sans text-white mb-1 flex items-center gap-2 uppercase tracking-[0.3em]">
               <svg
                 className="w-5 h-5 text-neon-cyan"
                 fill="none"
@@ -550,7 +566,7 @@ const Inventory: React.FC<InventoryProps> = ({
             {/* Desktop Pin Button inside header */}
             <button
               type="button"
-              onClick={() => setIsPinned(!isPinned)}
+              onClick={() => updatePinned(!isPinned)}
               className="hidden md:inline-flex h-11 w-11 items-center justify-center text-slate-500 hover:text-neon-cyan transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
               title={isPinned ? 'Unlock sidebar' : 'Lock sidebar open'}
               aria-label={isPinned ? 'Unlock sidebar' : 'Lock sidebar open'}
@@ -576,27 +592,27 @@ const Inventory: React.FC<InventoryProps> = ({
             </button>
           </div>
 
-          <p className="text-[10px] text-slate-300 font-mono tracking-widest uppercase mb-2">
+          <p className="text-[10px] text-slate-400 font-mono tracking-[0.3em] uppercase mb-2">
             Total Assets: {items.reduce((acc, curr) => acc + (curr.quantity || 1), 0)} Units
           </p>
 
           {/* Tabs */}
-          <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800">
+          <div className="flex bg-slate-950/70 p-1 rounded-lg border border-slate-800/80">
             <button
               onClick={() => setActiveTab('list')}
-              className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'list' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
+              className={`flex-1 py-1.5 text-[11px] font-bold rounded transition-all tracking-[0.2em] ${activeTab === 'list' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
             >
               LIST
             </button>
             <button
               onClick={() => setActiveTab('add')}
-              className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'add' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
+              className={`flex-1 py-1.5 text-[11px] font-bold rounded transition-all tracking-[0.2em] ${activeTab === 'add' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
             >
               ADD NEW
             </button>
             <button
               onClick={() => setActiveTab('tools')}
-              className={`flex-1 py-1.5 text-xs font-bold rounded transition-all ${activeTab === 'tools' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
+              className={`flex-1 py-1.5 text-[11px] font-bold rounded transition-all tracking-[0.2em] ${activeTab === 'tools' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
             >
               TOOLS
             </button>

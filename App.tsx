@@ -758,7 +758,20 @@ export default function App() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [_loadingText, setLoadingText] = useState('Processing...'); // Text used in _stopRecording
-  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isInventoryOpen, setIsInventoryOpen] = useState(() => {
+    try {
+      return localStorage.getItem('cm_inventory_open_default') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [inventoryPinnedDefault, setInventoryPinnedDefault] = useState(() => {
+    try {
+      return localStorage.getItem('cm_inventory_pinned_default') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState<ElectronicComponent | null>(null);
   const [modalContent, setModalContent] = useState<string>('');
@@ -809,8 +822,22 @@ export default function App() {
   // AI context state
   const [aiContext, setAIContext] = useState<AIContext | null>(null);
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
-  const [isAssistantOpen, setIsAssistantOpen] = useState(true);
-  const [isAssistantPinned, setIsAssistantPinned] = useState(true);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(() => {
+    try {
+      const stored = localStorage.getItem('cm_assistant_open_default');
+      return stored ? stored === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+  const [isAssistantPinned, setIsAssistantPinned] = useState(() => {
+    try {
+      const stored = localStorage.getItem('cm_assistant_pinned_default');
+      return stored ? stored === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
   const [inventoryWidth, setInventoryWidth] = useState(() => {
     try {
       const saved = localStorage.getItem('cm_inventory_width');
@@ -855,6 +882,38 @@ export default function App() {
       console.error('Failed to save autonomy settings:', e);
     }
   }, [autonomySettings]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cm_inventory_open_default', String(isInventoryOpen));
+    } catch (e) {
+      console.error('Failed to save inventory open default:', e);
+    }
+  }, [isInventoryOpen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cm_inventory_pinned_default', String(inventoryPinnedDefault));
+    } catch (e) {
+      console.error('Failed to save inventory pinned default:', e);
+    }
+  }, [inventoryPinnedDefault]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cm_assistant_open_default', String(isAssistantOpen));
+    } catch (e) {
+      console.error('Failed to save assistant open default:', e);
+    }
+  }, [isAssistantOpen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cm_assistant_pinned_default', String(isAssistantPinned));
+    } catch (e) {
+      console.error('Failed to save assistant pinned default:', e);
+    }
+  }, [isAssistantPinned]);
 
   useEffect(() => {
     try {
@@ -1366,6 +1425,8 @@ export default function App() {
         }}
         sidebarWidth={inventoryWidth}
         onSidebarWidthChange={setInventoryWidth}
+        defaultPinned={inventoryPinnedDefault}
+        onPinnedChange={(pinned) => setInventoryPinnedDefault(pinned)}
       />
 
       {/* Main Area */}
@@ -1657,6 +1718,27 @@ export default function App() {
           onClose={() => setIsSettingsOpen(false)}
           autonomySettings={autonomySettings}
           onAutonomySettingsChange={setAutonomySettings}
+          layoutSettings={{
+            inventoryOpen: isInventoryOpen,
+            inventoryPinned: inventoryPinnedDefault,
+            assistantOpen: isAssistantOpen,
+            assistantPinned: isAssistantPinned,
+          }}
+          onLayoutSettingsChange={(updates) => {
+            if (updates.inventoryOpen !== undefined) {
+              setIsInventoryOpen(updates.inventoryOpen);
+            }
+            if (updates.inventoryPinned !== undefined) {
+              setInventoryPinnedDefault(updates.inventoryPinned);
+            }
+            if (updates.assistantOpen !== undefined) {
+              setIsAssistantOpen(updates.assistantOpen);
+            }
+            if (updates.assistantPinned !== undefined) {
+              setIsAssistantPinned(updates.assistantPinned);
+              if (updates.assistantPinned) setIsAssistantOpen(true);
+            }
+          }}
         />
       </Suspense>
     </div>

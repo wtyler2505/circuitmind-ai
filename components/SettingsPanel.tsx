@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { ActionType, ACTION_SAFETY, AIAutonomySettings } from '../types';
+import { getStoredApiKey, setStoredApiKey } from '../services/apiKeyStorage';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   autonomySettings?: AIAutonomySettings;
   onAutonomySettingsChange?: (settings: AIAutonomySettings) => void;
+  layoutSettings?: {
+    inventoryOpen: boolean;
+    inventoryPinned: boolean;
+    assistantOpen: boolean;
+    assistantPinned: boolean;
+  };
+  onLayoutSettingsChange?: (updates: {
+    inventoryOpen?: boolean;
+    inventoryPinned?: boolean;
+    assistantOpen?: boolean;
+    assistantPinned?: boolean;
+  }) => void;
 }
 
 // Human-readable labels for action types
@@ -100,33 +113,6 @@ const ACTION_LABELS: Record<ActionType, { label: string; description: string; ca
 
 const CATEGORIES = ['Canvas', 'Navigation', 'Diagram', 'Forms'] as const;
 
-const STORAGE_KEY = 'cm_gemini_api_key';
-
-export const getStoredApiKey = (): string | null => {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
-};
-
-export const setStoredApiKey = (key: string): void => {
-  try {
-    if (key.trim()) {
-      localStorage.setItem(STORAGE_KEY, key.trim());
-      // Verify the save worked
-      const verified = localStorage.getItem(STORAGE_KEY);
-      if (verified !== key.trim()) {
-        console.error('API key save verification failed');
-      }
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  } catch (e) {
-    console.error('Failed to save API key:', e);
-  }
-};
-
 // Default autonomy settings
 const getDefaultAutonomySettings = (): AIAutonomySettings => ({
   autoExecuteSafeActions: true,
@@ -146,12 +132,14 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onClose,
   autonomySettings,
   onAutonomySettingsChange,
+  layoutSettings,
+  onLayoutSettingsChange,
 }) => {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [activeTab, setActiveTab] = useState<'api' | 'ai'>('api');
+  const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout'>('api');
 
   // Local autonomy settings state (if not controlled externally)
   const [localAutonomy, setLocalAutonomy] = useState<AIAutonomySettings>(
@@ -289,12 +277,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-lg mx-4 border border-gray-700">
+      <div className="bg-slate-950 rounded-xl shadow-2xl w-full max-w-lg mx-4 border border-slate-800/80">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-slate-950/70">
           <div className="flex items-center gap-3">
             <svg
-              className="w-6 h-6 text-blue-400"
+              className="w-6 h-6 text-neon-cyan"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -312,11 +300,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            <h2 className="text-xl font-semibold text-white">Settings</h2>
+            <h2 className="text-lg font-semibold text-white uppercase tracking-[0.3em]">Settings</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-300 hover:text-white transition-colors p-1 rounded-lg hover:bg-gray-800"
+            className="text-slate-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800/80 border border-slate-800/70"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -330,33 +318,44 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700">
+        <div className="flex border-b border-slate-800/80 bg-slate-950/60">
           <button
             onClick={() => setActiveTab('api')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'api' ? 'text-blue-400' : 'text-gray-400 hover:text-gray-300'
+              activeTab === 'api' ? 'text-neon-cyan' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             API Key
             {activeTab === 'api' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-cyan" />
             )}
           </button>
           <button
             onClick={() => setActiveTab('ai')}
             className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'ai' ? 'text-cyan-400' : 'text-gray-400 hover:text-gray-300'
+              activeTab === 'ai' ? 'text-neon-purple' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             AI Autonomy
             {activeTab === 'ai' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('layout')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === 'layout' ? 'text-neon-amber' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Layout
+            {activeTab === 'layout' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-amber" />
             )}
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+        <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-950/60">
           {/* API Key Tab */}
           {activeTab === 'api' && (
             <>
@@ -688,6 +687,98 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
               </div>
             </>
+          )}
+
+          {/* Layout Tab */}
+          {activeTab === 'layout' && (
+            <div className="space-y-5">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-200">Sidebar Defaults</h3>
+                <p className="text-xs text-slate-400">
+                  Set how the sidebars behave on launch. Changes apply immediately.
+                </p>
+              </div>
+
+              {!layoutSettings && (
+                <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
+                  Layout settings are currently unavailable.
+                </div>
+              )}
+
+              {layoutSettings && (
+                <div className="grid gap-4">
+                  <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-200">Inventory Sidebar</p>
+                        <p className="text-xs text-slate-400">Component library on the left.</p>
+                      </div>
+                    </div>
+                    <label className="flex items-center justify-between text-xs text-slate-300">
+                      <span>Open on launch</span>
+                      <input
+                        type="checkbox"
+                        checked={layoutSettings.inventoryOpen}
+                        onChange={(event) =>
+                          onLayoutSettingsChange?.({ inventoryOpen: event.target.checked })
+                        }
+                        className="h-4 w-4"
+                        style={{ accentColor: '#00f3ff' }}
+                        aria-label="Inventory open on launch"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between text-xs text-slate-300">
+                      <span>Pinned by default (disable auto-hide)</span>
+                      <input
+                        type="checkbox"
+                        checked={layoutSettings.inventoryPinned}
+                        onChange={(event) =>
+                          onLayoutSettingsChange?.({ inventoryPinned: event.target.checked })
+                        }
+                        className="h-4 w-4"
+                        style={{ accentColor: '#00f3ff' }}
+                        aria-label="Inventory pinned by default"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-200">Assistant Sidebar</p>
+                        <p className="text-xs text-slate-400">AI assistant and chat on the right.</p>
+                      </div>
+                    </div>
+                    <label className="flex items-center justify-between text-xs text-slate-300">
+                      <span>Open on launch</span>
+                      <input
+                        type="checkbox"
+                        checked={layoutSettings.assistantOpen}
+                        onChange={(event) =>
+                          onLayoutSettingsChange?.({ assistantOpen: event.target.checked })
+                        }
+                        className="h-4 w-4"
+                        style={{ accentColor: '#ffaa00' }}
+                        aria-label="Assistant open on launch"
+                      />
+                    </label>
+                    <label className="flex items-center justify-between text-xs text-slate-300">
+                      <span>Pinned by default (disable auto-hide)</span>
+                      <input
+                        type="checkbox"
+                        checked={layoutSettings.assistantPinned}
+                        onChange={(event) =>
+                          onLayoutSettingsChange?.({ assistantPinned: event.target.checked })
+                        }
+                        className="h-4 w-4"
+                        style={{ accentColor: '#ffaa00' }}
+                        aria-label="Assistant pinned by default"
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
