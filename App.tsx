@@ -811,6 +811,24 @@ export default function App() {
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
   const [isAssistantOpen, setIsAssistantOpen] = useState(true);
   const [isAssistantPinned, setIsAssistantPinned] = useState(true);
+  const [inventoryWidth, setInventoryWidth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cm_inventory_width');
+      const parsed = saved ? Number.parseInt(saved, 10) : 360;
+      return Number.isFinite(parsed) ? parsed : 360;
+    } catch {
+      return 360;
+    }
+  });
+  const [assistantWidth, setAssistantWidth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cm_assistant_width');
+      const parsed = saved ? Number.parseInt(saved, 10) : 380;
+      return Number.isFinite(parsed) ? parsed : 380;
+    } catch {
+      return 380;
+    }
+  });
 
   // AI autonomy settings with localStorage persistence
   const [autonomySettings, setAutonomySettings] = useState<AIAutonomySettings>(() => {
@@ -837,6 +855,22 @@ export default function App() {
       console.error('Failed to save autonomy settings:', e);
     }
   }, [autonomySettings]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cm_inventory_width', String(inventoryWidth));
+    } catch (e) {
+      console.error('Failed to save inventory width:', e);
+    }
+  }, [inventoryWidth]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cm_assistant_width', String(assistantWidth));
+    } catch (e) {
+      console.error('Failed to save assistant width:', e);
+    }
+  }, [assistantWidth]);
 
   // Update AI context when state changes
   useEffect(() => {
@@ -1330,30 +1364,36 @@ export default function App() {
           const updates = new Map(items.map((i) => [i.id, i]));
           setInventory(inventory.map((i) => updates.get(i.id) || i));
         }}
+        sidebarWidth={inventoryWidth}
+        onSidebarWidthChange={setInventoryWidth}
       />
 
       {/* Main Area */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ml-0 mr-0 ${
-          isInventoryOpen ? 'md:ml-[360px]' : ''
-        } ${isAssistantOpen ? 'md:mr-[380px]' : ''}`}
+        className="flex-1 flex flex-col transition-all duration-300 ml-0 mr-0 md:ml-[var(--inventory-width)] md:mr-[var(--assistant-width)]"
+        style={
+          {
+            '--inventory-width': isInventoryOpen ? `${inventoryWidth}px` : '0px',
+            '--assistant-width': isAssistantOpen ? `${assistantWidth}px` : '0px',
+          } as React.CSSProperties
+        }
       >
         {/* Toolbar */}
-        <div className="h-14 bg-slate-900/80 backdrop-blur border-b border-slate-700 flex items-center justify-between px-4 shrink-0 z-20">
+        <div className="h-16 bg-gradient-to-r from-slate-950/90 via-slate-900/80 to-slate-950/90 backdrop-blur border-b border-slate-800/80 flex items-center justify-between px-5 shrink-0 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-[0.15em] text-white flex items-center gap-2">
               <span className="text-neon-cyan text-2xl">⚡</span>
               CIRCUIT<span className="text-neon-cyan">MIND</span>
             </h1>
 
-            <div className="h-6 w-px bg-slate-700 mx-2"></div>
+            <div className="h-6 w-px bg-slate-800/80 mx-2"></div>
 
             <div className="flex gap-1">
               <button
                 type="button"
                 onClick={handleUndo}
                 disabled={history.past.length === 0}
-                className="h-11 w-11 inline-flex items-center justify-center hover:bg-slate-700 rounded text-slate-300 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                className="h-11 w-11 inline-flex items-center justify-center rounded-lg bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
                 title="Undo"
                 aria-label="Undo"
               >
@@ -1370,7 +1410,7 @@ export default function App() {
                 type="button"
                 onClick={handleRedo}
                 disabled={history.future.length === 0}
-                className="h-11 w-11 inline-flex items-center justify-center hover:bg-slate-700 rounded text-slate-300 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                className="h-11 w-11 inline-flex items-center justify-center rounded-lg bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
                 title="Redo"
                 aria-label="Redo"
               >
@@ -1385,18 +1425,18 @@ export default function App() {
               </button>
             </div>
 
-            <div className="h-6 w-px bg-slate-700 mx-2"></div>
+            <div className="h-6 w-px bg-slate-800/80 mx-2"></div>
 
             <div className="flex gap-2">
               <button
                 onClick={saveDiagram}
-                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs font-bold text-neon-green"
+                className="px-4 py-2 bg-neon-cyan text-black rounded-lg text-xs font-bold tracking-[0.2em] hover:bg-white transition-colors shadow-[0_0_14px_rgba(0,243,255,0.35)]"
               >
                 SAVE
               </button>
               <button
                 onClick={loadDiagram}
-                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded text-xs font-bold text-neon-purple"
+                className="px-4 py-2 border border-neon-purple/60 rounded-lg text-xs font-bold tracking-[0.2em] text-neon-purple hover:bg-neon-purple/10 transition-colors"
               >
                 LOAD
               </button>
@@ -1413,7 +1453,7 @@ export default function App() {
             <button
               type="button"
               onClick={toggleLiveMode}
-              className={`h-11 w-11 inline-flex items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-800 text-slate-400 border-slate-600 hover:text-white'}`}
+              className={`h-11 w-11 inline-flex items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60'}`}
               title="Live Voice Mode"
               aria-label="Toggle live voice mode"
             >
@@ -1429,7 +1469,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
-              className="h-11 w-11 inline-flex items-center justify-center rounded-full border bg-slate-800 text-slate-400 border-slate-600 hover:text-white hover:border-slate-500 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+              className="h-11 w-11 inline-flex items-center justify-center rounded-full border bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
               title="Settings"
               aria-label="Open settings"
             >
@@ -1493,6 +1533,8 @@ export default function App() {
           setIsAssistantPinned(pinned);
           if (pinned) setIsAssistantOpen(true);
         }}
+        sidebarWidth={assistantWidth}
+        onSidebarWidthChange={setAssistantWidth}
       >
         <ChatPanel
           conversations={conversationManager.conversations}

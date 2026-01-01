@@ -1,5 +1,9 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { ElectronicComponent } from '../types';
+
+// Type alias for component types
+type ComponentType = ElectronicComponent['type'];
+
 import {
   identifyComponentFromImage,
   suggestProjectsFromInventory,
@@ -21,6 +25,10 @@ interface InventoryProps {
   onUpdateMany?: (items: ElectronicComponent[]) => void;
   onReset?: () => void;
   onAddToCanvas?: (item: ElectronicComponent) => void;
+  sidebarWidth?: number;
+  onSidebarWidthChange?: (width: number) => void;
+  minSidebarWidth?: number;
+  maxSidebarWidth?: number;
 }
 
 const CATEGORIES = ['microcontroller', 'sensor', 'actuator', 'power', 'other'] as const;
@@ -92,12 +100,17 @@ const Inventory: React.FC<InventoryProps> = ({
   onUpdateMany,
   onReset,
   onAddToCanvas,
+  sidebarWidth = 360,
+  onSidebarWidthChange,
+  minSidebarWidth = 280,
+  maxSidebarWidth = 520,
 }) => {
   // Refs for click outside detection
   const sidebarRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   // Timer for hover delay
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
 
   // Pin State for "Locking" the sidebar
   const [isPinned, setIsPinned] = useState(false);
@@ -194,6 +207,32 @@ const Inventory: React.FC<InventoryProps> = ({
     };
   }, [isOpen, onClose, isPinned]);
 
+  const clampSidebarWidth = (value: number) =>
+    Math.min(maxSidebarWidth, Math.max(minSidebarWidth, value));
+
+  const handleResizeStart = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!onSidebarWidthChange) return;
+    event.preventDefault();
+    resizeStartRef.current = { x: event.clientX, width: sidebarWidth };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!resizeStartRef.current) return;
+      const nextWidth = clampSidebarWidth(
+        resizeStartRef.current.width + (moveEvent.clientX - resizeStartRef.current.x)
+      );
+      onSidebarWidthChange(nextWidth);
+    };
+
+    const handleMouseUp = () => {
+      resizeStartRef.current = null;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
   // Drag State
   const handleDragStart = (e: React.DragEvent, item: ElectronicComponent) => {
     e.dataTransfer.setData('application/react-component-id', item.id);
@@ -269,7 +308,7 @@ const Inventory: React.FC<InventoryProps> = ({
 
   const handleSelectFinderResult = (result: Partial<ElectronicComponent>) => {
     if (result.name) setNewItemName(result.name);
-    if (result.type) setNewItemType(result.type as any);
+    if (result.type) setNewItemType(result.type as ComponentType);
     if (result.description) setNewItemDesc(result.description);
     if (result.pins) setNewItemPins(result.pins.join(', '));
     setFinderResults([]); // Clear results after selection
@@ -424,7 +463,8 @@ const Inventory: React.FC<InventoryProps> = ({
         onClick={handleButtonClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`hidden md:flex flex-col items-center justify-center fixed left-0 top-1/2 transform -translate-y-1/2 z-50 bg-cyber-card border-r border-y border-neon-cyan/30 h-16 w-11 rounded-r-lg text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${isOpen ? 'translate-x-[360px]' : 'translate-x-0'}`}
+        className="hidden md:flex flex-col items-center justify-center fixed left-0 top-1/2 z-50 bg-cyber-card border-r border-y border-neon-cyan/30 h-16 w-11 rounded-r-lg text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+        style={{ transform: `translate(${isOpen ? sidebarWidth : 0}px, -50%)` }}
         title={isPinned ? 'Unlock Inventory' : 'Inventory'}
         aria-label={isPinned ? 'Unlock inventory' : 'Open inventory'}
       >
@@ -459,8 +499,18 @@ const Inventory: React.FC<InventoryProps> = ({
         ref={sidebarRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`fixed inset-y-0 left-0 w-full md:w-[360px] bg-cyber-dark/95 backdrop-blur-xl border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.5)]`}
+        className={`fixed inset-y-0 left-0 w-full md:w-[var(--inventory-width)] bg-cyber-dark/95 backdrop-blur-xl border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.5)]`}
+        style={{ '--inventory-width': `${sidebarWidth}px` } as React.CSSProperties}
       >
+        <div
+          className="group absolute right-0 top-0 hidden h-full w-2 cursor-ew-resize md:block"
+          onMouseDown={handleResizeStart}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize inventory sidebar"
+        >
+          <div className="h-full w-[3px] bg-neon-cyan/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+        </div>
         {/* Header */}
         <div className="p-4 md:p-5 border-b border-slate-800 bg-gradient-to-b from-slate-900 to-transparent flex flex-col gap-2">
           <div className="flex justify-between items-center">
@@ -1038,7 +1088,7 @@ const Inventory: React.FC<InventoryProps> = ({
                     </label>
                     <select
                       value={newItemType}
-                      onChange={(e) => setNewItemType(e.target.value as any)}
+                      onChange={(e) => setNewItemType(e.target.value as ComponentType)}
                       className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none"
                     >
                       {CATEGORIES.map((c) => (

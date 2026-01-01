@@ -172,7 +172,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       <button
         type="button"
         onClick={onToggleExpand}
-        className="fixed bottom-4 right-4 h-11 w-11 inline-flex items-center justify-center bg-cyan-600 hover:bg-cyan-500 text-white rounded-full shadow-lg transition-all z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+        className="fixed bottom-4 right-4 h-11 w-11 inline-flex items-center justify-center bg-neon-cyan text-black rounded-full shadow-[0_0_18px_rgba(0,243,255,0.45)] transition-all z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 hover:bg-white"
         title="Open chat"
         aria-label="Open chat"
       >
@@ -188,7 +188,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     );
   }
 
-  const containerClassName = `relative flex flex-col h-full bg-gray-900 rounded-t-xl border border-gray-700 border-b-0 ${className}`.trim();
+  const modeAccent =
+    generationMode === 'chat'
+      ? 'bg-neon-cyan text-black'
+      : generationMode === 'image'
+        ? 'bg-neon-amber text-black'
+        : 'bg-neon-purple text-black';
+  const containerClassName = `relative flex flex-col h-full bg-slate-950/80 rounded-t-xl border border-slate-800/80 border-b-0 ${className}`.trim();
 
   return (
     <div
@@ -198,7 +204,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-900/60 rounded-t-xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/80 bg-slate-950/70 rounded-t-xl">
         <div className="flex items-center gap-3">
           {/* Conversation Switcher */}
           <ConversationSwitcher
@@ -212,7 +218,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
           {/* Context Indicator */}
           {context && (
-            <div className="hidden sm:flex items-center gap-2 px-2 py-1 bg-gray-700/50 rounded text-[10px] text-gray-300">
+            <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded text-[10px] text-slate-300 border border-slate-700/70 bg-slate-900/70">
               {context.currentDiagramTitle && (
                 <span className="flex items-center gap-1">
                   <svg
@@ -246,10 +252,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             <button
               type="button"
               onClick={() => onDeepThinkingChange(!useDeepThinking)}
-              className={`h-11 w-11 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 ${
+              className={`h-11 w-11 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/60 ${
                 useDeepThinking
                   ? 'bg-amber-500/20 text-amber-300'
-                  : 'text-gray-300 hover:text-white'
+                  : 'text-slate-300 hover:text-white'
               }`}
               title={useDeepThinking ? 'Deep thinking enabled' : 'Enable deep thinking'}
               aria-label={useDeepThinking ? 'Disable deep thinking' : 'Enable deep thinking'}
@@ -306,16 +312,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
               />
             </svg>
-            <h3 className="text-gray-100 font-semibold mb-2 tracking-wide">CircuitMind Assistant</h3>
-            <p className="text-gray-400 text-sm max-w-xs">
+            <h3 className="text-slate-100 font-semibold mb-2 tracking-wide">CircuitMind Assistant</h3>
+            <p className="text-slate-400 text-sm max-w-xs">
               I can see your diagram, inventory, and context. Start with a wiring goal or a parts
               question.
             </p>
-            <div className="mt-4 flex flex-col gap-2 text-xs text-gray-400">
-              <span className="px-3 py-1 rounded-full border border-gray-700 bg-gray-800/60">
+            <div className="mt-4 flex flex-col gap-2 text-xs text-slate-400">
+              <span className="px-3 py-1 rounded-full border border-slate-700 bg-slate-900/70">
                 Try: “Wire an ESP32 to a DHT11 sensor.”
               </span>
-              <span className="px-3 py-1 rounded-full border border-gray-700 bg-gray-800/60">
+              <span className="px-3 py-1 rounded-full border border-slate-700 bg-slate-900/70">
                 Try: “Show safe pins for this board.”
               </span>
             </div>
@@ -335,7 +341,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         {/* Loading Indicator */}
         {isLoading && (
           <div className="flex justify-start mb-3">
-            <div className="bg-gray-800 rounded-2xl rounded-bl-md px-4 py-3">
+            <div className="bg-slate-900 rounded-2xl rounded-bl-md px-4 py-3 border border-slate-800/70">
               <div className="flex items-center gap-1.5">
                 <div className="typing-dot w-2 h-2 bg-cyan-400 rounded-full" />
                 <div className="typing-dot w-2 h-2 bg-cyan-400 rounded-full" />
@@ -350,13 +356,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Proactive Suggestions */}
       {proactiveSuggestions.length > 0 && (
-        <div className="px-4 py-2 border-t border-gray-700/50">
+        <div className="px-4 py-2 border-t border-slate-800/70">
           <div className="flex flex-wrap gap-2">
             {proactiveSuggestions.map((suggestion, idx) => (
               <button
                 key={idx}
                 onClick={() => onSuggestionClick?.(suggestion)}
-                className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded-full border border-gray-600 transition-colors"
+                className="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-800 text-slate-300 text-xs rounded-full border border-slate-700 transition-colors"
               >
                 💡 {suggestion}
               </button>
@@ -367,18 +373,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Attachment Preview */}
       {attachment && (
-        <div className="px-4 py-2 border-t border-gray-700">
+        <div className="px-4 py-2 border-t border-slate-800">
           <div className="relative inline-block">
             {attachment.type === 'image' ? (
               <img
                 src={attachment.base64}
                 alt="Attachment"
-                className="max-h-20 rounded-lg border border-gray-600"
+                className="max-h-20 rounded-lg border border-slate-700"
               />
             ) : (
               <video
                 src={attachment.base64}
-                className="max-h-20 rounded-lg border border-gray-600"
+                className="max-h-20 rounded-lg border border-slate-700"
               />
             )}
             <button
@@ -409,13 +415,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
 
       {/* Input Area */}
-      <div className="p-3 border-t border-gray-700 bg-gray-800/50">
+      <div className="p-3 border-t border-slate-800 bg-slate-950/70">
         <div className="flex items-end gap-2">
           {/* File Upload Button */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="h-11 w-11 inline-flex items-center justify-center text-gray-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            className="h-11 w-11 inline-flex items-center justify-center text-slate-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
             title="Attach image or video"
             aria-label="Attach image or video"
           >
@@ -438,16 +444,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
           {/* Mode Selector */}
           {onModeChange && (
-            <div className="flex items-center bg-gray-700 rounded-lg p-0.5">
+            <div className="flex items-center bg-slate-900 rounded-lg p-0.5 border border-slate-700/80">
               {(['chat', 'image', 'video'] as const).map((mode) => (
                 <button
                   key={mode}
                   type="button"
                   onClick={() => onModeChange(mode)}
-                  className={`h-11 w-11 inline-flex items-center justify-center text-xs rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                  className={`h-11 w-11 inline-flex items-center justify-center text-xs rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${
                     generationMode === mode
-                      ? 'bg-cyan-500 text-white'
-                      : 'text-gray-300 hover:text-white'
+                      ? modeAccent
+                      : 'text-slate-300 hover:text-white'
                   }`}
                   title={
                     mode === 'chat' ? 'Chat mode' : mode === 'image' ? 'Image mode' : 'Video mode'
@@ -475,7 +481,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   ? 'Describe the image to generate...'
                   : 'Describe the video to generate...'
             }
-            className="flex-1 px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-300 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="flex-1 px-4 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-neon-cyan/60 focus:border-transparent"
             rows={1}
             style={{ minHeight: '42px', maxHeight: '120px' }}
             onInput={(e) => {
@@ -490,7 +496,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             type="button"
             onClick={handleSend}
             disabled={(!inputValue.trim() && !attachment) || isLoading}
-            className="h-11 w-11 inline-flex items-center justify-center bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-colors disabled:opacity-80 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            className="h-11 w-11 inline-flex items-center justify-center bg-neon-cyan text-black rounded-xl transition-colors hover:bg-white disabled:opacity-80 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 shadow-[0_0_12px_rgba(0,243,255,0.35)]"
             title="Send message"
             aria-label="Send message"
           >
