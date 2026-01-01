@@ -380,3 +380,39 @@ git commit -m "Add layout defaults in settings"
 ## Handoff Notes
 
 - Tests: `npm run test` (8 files, 14 tests) passed.
+
+# Codex Completion Report
+
+**Task:** Add keyboard-accessible sidebar resizing + document in UI audit
+**Status:** done
+
+## Changes Made
+
+- `App.tsx` - centralized default sidebar widths and passed them into sidebars for reset behavior
+- `components/Inventory.tsx` - added keyboard resizing, ARIA values, and double-click reset on resize handle
+- `components/AssistantSidebar.tsx` - added keyboard resizing, ARIA values, and double-click reset on resize handle
+- `docs/screenshots/UI_AUDIT_REPORT.md` - added sidebar deep-focus log and issue ledger entry
+
+## Commands Run
+
+```bash
+rg -n "resize|sidebarWidth" components/Inventory.tsx components/AssistantSidebar.tsx App.tsx
+npm run test
+git status --short
+git add App.tsx components/Inventory.tsx components/AssistantSidebar.tsx docs/screenshots/UI_AUDIT_REPORT.md
+git commit -m "Add accessible sidebar resize controls"
+```
+
+## Next Steps
+
+- Recapture sidebar screenshots to validate focus ring visibility and resize affordance clarity.
+- Consider adding a polite ARIA live region for width changes if needed.
+
+## Blockers (if any)
+
+- None.
+
+## Handoff Notes
+
+- Tests: `npm run test` (8 files, 40 tests) passed.
+- Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
