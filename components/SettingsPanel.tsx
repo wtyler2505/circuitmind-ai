@@ -12,12 +12,16 @@ interface SettingsPanelProps {
     inventoryPinned: boolean;
     assistantOpen: boolean;
     assistantPinned: boolean;
+    inventoryWidth?: number;
+    assistantWidth?: number;
   };
   onLayoutSettingsChange?: (updates: {
     inventoryOpen?: boolean;
     inventoryPinned?: boolean;
     assistantOpen?: boolean;
     assistantPinned?: boolean;
+    inventoryWidth?: number;
+    assistantWidth?: number;
   }) => void;
 }
 
@@ -112,6 +116,8 @@ const ACTION_LABELS: Record<ActionType, { label: string; description: string; ca
   };
 
 const CATEGORIES = ['Canvas', 'Navigation', 'Diagram', 'Forms'] as const;
+const INVENTORY_WIDTH_RANGE = { min: 280, max: 520, default: 360 };
+const ASSISTANT_WIDTH_RANGE = { min: 300, max: 560, default: 380 };
 
 // Default autonomy settings
 const getDefaultAutonomySettings = (): AIAutonomySettings => ({
@@ -148,6 +154,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   // Use external settings if provided, otherwise use local state
   const currentAutonomy = autonomySettings || localAutonomy;
+  const inventoryWidthValue = layoutSettings?.inventoryWidth ?? INVENTORY_WIDTH_RANGE.default;
+  const assistantWidthValue = layoutSettings?.assistantWidth ?? ASSISTANT_WIDTH_RANGE.default;
 
   useEffect(() => {
     if (isOpen) {
@@ -740,6 +748,41 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         aria-label="Inventory pinned by default"
                       />
                     </label>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-slate-300">
+                        <span>Width</span>
+                        <span className="text-slate-400">{inventoryWidthValue}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={INVENTORY_WIDTH_RANGE.min}
+                        max={INVENTORY_WIDTH_RANGE.max}
+                        step={10}
+                        value={inventoryWidthValue}
+                        onChange={(event) =>
+                          onLayoutSettingsChange?.({
+                            inventoryWidth: Number(event.target.value),
+                          })
+                        }
+                        className="w-full accent-cyan-400"
+                        aria-label="Inventory sidebar width"
+                      />
+                      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                        <span>{INVENTORY_WIDTH_RANGE.min}px</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onLayoutSettingsChange?.({
+                              inventoryWidth: INVENTORY_WIDTH_RANGE.default,
+                            })
+                          }
+                          className="text-slate-400 hover:text-neon-cyan transition-colors"
+                        >
+                          Reset
+                        </button>
+                        <span>{INVENTORY_WIDTH_RANGE.max}px</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 space-y-3">
@@ -775,6 +818,41 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         aria-label="Assistant pinned by default"
                       />
                     </label>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-slate-300">
+                        <span>Width</span>
+                        <span className="text-slate-400">{assistantWidthValue}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={ASSISTANT_WIDTH_RANGE.min}
+                        max={ASSISTANT_WIDTH_RANGE.max}
+                        step={10}
+                        value={assistantWidthValue}
+                        onChange={(event) =>
+                          onLayoutSettingsChange?.({
+                            assistantWidth: Number(event.target.value),
+                          })
+                        }
+                        className="w-full accent-amber-400"
+                        aria-label="Assistant sidebar width"
+                      />
+                      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                        <span>{ASSISTANT_WIDTH_RANGE.min}px</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onLayoutSettingsChange?.({
+                              assistantWidth: ASSISTANT_WIDTH_RANGE.default,
+                            })
+                          }
+                          className="text-slate-400 hover:text-neon-amber transition-colors"
+                        >
+                          Reset
+                        </button>
+                        <span>{ASSISTANT_WIDTH_RANGE.max}px</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

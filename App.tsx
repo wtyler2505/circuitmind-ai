@@ -824,6 +824,9 @@ export default function App() {
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
   const inventoryDefaultWidth = 360;
   const assistantDefaultWidth = 380;
+  const inventoryWidthRange = { min: 280, max: 520 };
+  const assistantWidthRange = { min: 300, max: 560 };
+  const clampWidth = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
   const [isAssistantOpen, setIsAssistantOpen] = useState(() => {
     try {
@@ -845,7 +848,8 @@ export default function App() {
     try {
       const saved = localStorage.getItem('cm_inventory_width');
       const parsed = saved ? Number.parseInt(saved, 10) : inventoryDefaultWidth;
-      return Number.isFinite(parsed) ? parsed : inventoryDefaultWidth;
+      if (!Number.isFinite(parsed)) return inventoryDefaultWidth;
+      return clampWidth(parsed, inventoryWidthRange.min, inventoryWidthRange.max);
     } catch {
       return inventoryDefaultWidth;
     }
@@ -854,7 +858,8 @@ export default function App() {
     try {
       const saved = localStorage.getItem('cm_assistant_width');
       const parsed = saved ? Number.parseInt(saved, 10) : assistantDefaultWidth;
-      return Number.isFinite(parsed) ? parsed : assistantDefaultWidth;
+      if (!Number.isFinite(parsed)) return assistantDefaultWidth;
+      return clampWidth(parsed, assistantWidthRange.min, assistantWidthRange.max);
     } catch {
       return assistantDefaultWidth;
     }
@@ -1728,6 +1733,8 @@ export default function App() {
             inventoryPinned: inventoryPinnedDefault,
             assistantOpen: isAssistantOpen,
             assistantPinned: isAssistantPinned,
+            inventoryWidth,
+            assistantWidth,
           }}
           onLayoutSettingsChange={(updates) => {
             if (updates.inventoryOpen !== undefined) {
@@ -1742,6 +1749,16 @@ export default function App() {
             if (updates.assistantPinned !== undefined) {
               setIsAssistantPinned(updates.assistantPinned);
               if (updates.assistantPinned) setIsAssistantOpen(true);
+            }
+            if (updates.inventoryWidth !== undefined) {
+              setInventoryWidth(
+                clampWidth(updates.inventoryWidth, inventoryWidthRange.min, inventoryWidthRange.max)
+              );
+            }
+            if (updates.assistantWidth !== undefined) {
+              setAssistantWidth(
+                clampWidth(updates.assistantWidth, assistantWidthRange.min, assistantWidthRange.max)
+              );
             }
           }}
         />

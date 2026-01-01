@@ -2373,6 +2373,13 @@ Actions applied:
 - Added a context snapshot drawer for diagram, view, inventory summary, selected component, and recent actions.
 - Grouped message history by day with date separators for scanability.
 
+### Layout Controls Pass
+Scope:
+- Settings layout tab: adjustable sidebar widths.
+
+Actions applied:
+- Added width sliders with min/max bounds and reset buttons for inventory and assistant sidebars.
+
 ## Code Examples
 ```css
 /* Icon-only button accessibility */
