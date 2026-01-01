@@ -2307,8 +2307,8 @@ pHash: 9fc78f7bea688040 | Baseline diff: Unavailable (no BASELINE_DIR)
 | UI-001 | High | `02-header/03-btn-undo.png` | Add tooltip/label + 44px hit area for icon controls | S | In progress |
 | UI-002 | High | `04-components/01-arduino-uno-r35v-arduino-.png` | Add thumbnail fallback and alt text | M | Not started |
 | UI-003 | High | `04-components/*-hover.png` | Provide keyboard-focus actions and delete confirmation | M | Not started |
-| UI-004 | Medium | `07-chat/01-panel-full.png` | Raise contrast for timestamps/secondary text | S | Addressed (needs recapture) |
-| UI-005 | Medium | `05-modals/02-editor-tab-edit.png` | Add required-field indicators and grouping | M | Addressed (needs recapture) |
+| UI-004 | Medium | `07-chat/01-panel-full.png` | Raise contrast for timestamps/secondary text | S | Addressed (recaptured) |
+| UI-005 | Medium | `05-modals/02-editor-tab-edit.png` | Add required-field indicators and grouping | M | Addressed (recaptured) |
 | UI-006 | Medium | `05-modals/02-editor-tab-3d-model.png` | Improve empty state and clarify primary action | M | Addressed (recaptured) |
 | UI-007 | Medium | `06-settings/01-settings-full.png` | Add disabled-state explanation for Test Connection | S | Addressed (needs recapture) |
 | UI-008 | Medium | `03-inventory/04-tab-list-view.png` | Expose full names or tooltips for truncated items | S | Addressed (needs recapture) |
