@@ -1,34 +1,91 @@
-import React, { useState, useEffect, useRef } from 'react';
-import DiagramCanvas from './components/DiagramCanvas';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import DiagramCanvas, { DiagramCanvasRef } from './components/DiagramCanvas';
 import Inventory from './components/Inventory';
 import ComponentEditorModal from './components/ComponentEditorModal';
-import { ElectronicComponent, WiringDiagram, ChatMessage } from './types';
-import { 
-  generateWiringDiagram, 
-  explainComponent, 
-  generateEditedImage, 
-  generateCircuitVideo, 
-  chatWithAI, 
+import SettingsPanel from './components/SettingsPanel';
+import ChatPanel from './components/ChatPanel';
+import { ElectronicComponent, WiringDiagram, EnhancedChatMessage, ActionIntent, AIContext, AIAutonomySettings, ACTION_SAFETY } from './types';
+import {
+  generateWiringDiagram,
+  explainComponent,
+  generateEditedImage,
+  generateCircuitVideo,
+  chatWithAI,
+  chatWithContext,
   generateConceptImage,
   transcribeAudio,
-  generateSpeech,
-  generateComponent3DCode
+  generateComponent3DCode,
+  generateProactiveSuggestions
 } from './services/geminiService';
 import { LiveSession } from './services/liveAudio';
+import { useConversations } from './hooks/useConversations';
+import { useAIActions } from './hooks/useAIActions';
+import { buildAIContext } from './services/aiContextBuilder';
 
+// Auto-generated from electronics_inventory_tier5.json - 63 components
 const INITIAL_INVENTORY: ElectronicComponent[] = [
-  { id: '1', name: 'ESP32 DevKit V1', type: 'microcontroller', description: 'Powerful WiFi+BT MCU', pins: ['GND', 'VCC', 'D2', 'D4', 'RX', 'TX', 'D5', 'D18', 'D19', 'D21', 'D22', 'D23'], quantity: 2 },
-  { 
-    id: '2', 
-    name: 'Arduino Uno', 
-    type: 'microcontroller', 
-    description: 'Classic beginner board', 
-    pins: ['GND', '5V', '3.3V', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13'], 
-    quantity: 1,
-    threeDModelUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb'
-  },
-  { id: '3', name: 'DHT11', type: 'sensor', description: 'Temp & Humidity', pins: ['VCC', 'GND', 'DATA'], quantity: 5 },
-  { id: '4', name: 'SG90 Servo', type: 'actuator', description: 'Micro servo motor', pins: ['GND', 'VCC', 'PWM'], quantity: 3 },
+  { id: '1', name: 'Arduino Uno R3', type: 'microcontroller', description: '5V Arduino microcontroller with ATmega328P, 14 digital I/O (6 PWM), 6 analog inputs. Most widely supported, beginner-friendly.', pins: ['SDA','SCL','MOSI','MISO','SCK','SS','TX','RX','VCC','GND','D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5'], quantity: 2, datasheetUrl: 'https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf', imageUrl: 'https://store.arduino.cc/cdn/shop/products/A000066_03.front_934x700.jpg' },
+  { id: '2', name: 'Arduino Mega 2560 R3', type: 'microcontroller', description: '5V Arduino with ATmega2560, 54 digital I/O (15 PWM), 16 analog inputs, 4 hardware serial ports.', pins: ['SDA','SCL','MOSI','MISO','SCK','SS','VCC','GND','D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','A11','A12','A13','A14','A15'], quantity: 1, datasheetUrl: 'https://docs.arduino.cc/resources/datasheets/A000067-datasheet.pdf', imageUrl: 'https://store.arduino.cc/cdn/shop/products/A000067_03.front_934x700.jpg' },
+  { id: '3', name: 'ESP32 DevKit 38-Pin', type: 'microcontroller', description: '3.3V dual-core WiFi+Bluetooth MCU. NOT 5V tolerant - requires level shifter for 5V sensors.', pins: ['SDA','SCL','MOSI','MISO','SCK','SS','VCC','GND'], quantity: 1, datasheetUrl: 'https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32_datasheet_en.pdf', imageUrl: 'https://docs.espressif.com/projects/esp-idf/en/latest/esp32/_images/esp32-devkitc-functional-overview.jpg' },
+  { id: '4', name: 'NodeMCU ESP8266 Amica V2', type: 'microcontroller', description: '3.3V WiFi MCU, breadboard-friendly. NOT 5V tolerant. Safe pins: D1/D2/D5/D6/D7.', pins: ['SDA','SCL','MOSI','MISO','SCK','SS','VCC','GND'], quantity: 2, datasheetUrl: 'https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf', imageUrl: 'https://cdn.shopify.com/s/files/1/0672/9409/products/NodeMCU_ESP8266_Board_1024x1024.jpg' },
+  { id: '5', name: 'SparkFun Blynk Board', type: 'microcontroller', description: 'ESP8266 board with pre-loaded Blynk firmware, onboard WS2812 RGB LED and 10K thermistor.', pins: ['VCC','GND'], quantity: 2, datasheetUrl: 'https://cdn.sparkfun.com/assets/learn_tutorials/4/9/4/Blynk_Board_Graphical_Datasheet_v01.png', imageUrl: 'https://cdn.sparkfun.com/assets/parts/1/1/2/4/5/13794-01.jpg' },
+  { id: '6', name: 'DCCduino Nano', type: 'microcontroller', description: 'Arduino Nano clone with CH340G USB chip. Requires CH340 driver. 5V logic, breadboard-friendly.', pins: ['VCC','GND','D0','D1','D2','D3','D4','D5','D6','D7','D8','D9','D10','D11','D12','D13','A0','A1','A2','A3','A4','A5','A6','A7'], quantity: 1, datasheetUrl: 'https://docs.arduino.cc/resources/datasheets/A000005-datasheet.pdf', imageUrl: 'https://www.electronicshub.org/wp-content/uploads/2021/01/Arduino-Nano-Pinout-1.jpg' },
+  { id: '7', name: 'HC-SR04 Ultrasonic Sensor', type: 'sensor', description: '5V ultrasonic distance sensor, 2-400cm range. Requires 2 digital pins (Trig output, Echo input).', pins: ['VCC','GND','TRIG','ECHO'], quantity: 2, datasheetUrl: 'https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf', imageUrl: 'https://cdn.sparkfun.com/assets/parts/6/4/6/4/11308-01.jpg' },
+  { id: '8', name: 'HC-SR501 PIR Motion Sensor', type: 'sensor', description: 'PIR motion sensor, 3-7m adjustable range. Output is 3.3V safe. Requires 60s warmup.', pins: ['VCC','GND','OUT'], quantity: 1, datasheetUrl: 'https://www.mpja.com/download/31227sc.pdf', imageUrl: 'https://lastminuteengineers.com/wp-content/uploads/arduino/HC-SR501-PIR-Motion-Sensor-Module.jpg' },
+  { id: '9', name: 'DHT11 Temperature & Humidity', type: 'sensor', description: 'Temperature (0-50°C ±2°C) and humidity (20-90% ±5%) sensor. Single-wire protocol.', pins: ['VCC','GND','DATA'], quantity: 1, datasheetUrl: 'https://www.mouser.com/datasheet/2/758/DHT11-Technical-Data-Sheet-1143054.pdf', imageUrl: 'https://components101.com/sites/default/files/components/DHT11-Module.jpg' },
+  { id: '10', name: 'GY-521 MPU6050 6-DOF IMU', type: 'sensor', description: '6-axis IMU (3-axis accel + 3-axis gyro) on I2C bus. Address 0x68 or 0x69.', pins: ['VCC','GND','SDA','SCL'], quantity: 1, datasheetUrl: 'https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf', imageUrl: 'https://components101.com/sites/default/files/components/GY-521-MPU6050-Module.jpg' },
+  { id: '11', name: 'DS3231 RTC Module', type: 'sensor', description: 'Precision RTC (±2ppm) with I2C at 0x68. Includes 4KB EEPROM and CR2032 backup.', pins: ['VCC','GND','SDA','SCL'], quantity: 1, datasheetUrl: 'https://datasheets.maximintegrated.com/en/ds/DS3231.pdf', imageUrl: 'https://lastminuteengineers.com/wp-content/uploads/arduino/DS3231-RTC-Module.jpg' },
+  { id: '12', name: 'RC522 RFID Module', type: 'sensor', description: '13.56MHz RFID reader on SPI bus. 3.3V ONLY - will be damaged by 5V!', pins: ['VCC','GND','MOSI','MISO','SCK','SS','RST'], quantity: 1, datasheetUrl: 'https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf', imageUrl: 'https://components101.com/sites/default/files/components/RFID-Reader-Module.jpg' },
+  { id: '13', name: 'KY-023 Joystick Module', type: 'sensor', description: 'Dual-axis analog joystick with center button. Uses 2 analog pins + 1 digital.', pins: ['VCC','GND','VRX','VRY','SW'], quantity: 2, imageUrl: 'https://components101.com/sites/default/files/components/KY023-Joystick-Module.jpg' },
+  { id: '14', name: 'KY-040 Rotary Encoder', type: 'sensor', description: '20-detent rotary encoder with quadrature output and push button.', pins: ['VCC','GND','CLK','DT','SW'], quantity: 1, imageUrl: 'https://components101.com/sites/default/files/components/KY040-Rotary-Encoder.jpg' },
+  { id: '15', name: 'Photoresistor (LDR)', type: 'sensor', description: 'Light sensor using voltage divider. Use 10K resistor to GND.', pins: ['VCC','GND','SIG'], quantity: 5, imageUrl: 'https://components101.com/sites/default/files/components/LDR.jpg' },
+  { id: '16', name: 'Soil Moisture Sensor', type: 'sensor', description: 'Capacitive soil sensor. A0 gives analog reading (lower = wetter).', pins: ['VCC','GND','A0'], quantity: 1, imageUrl: 'https://components101.com/sites/default/files/component_pin/Soil-Moisture-Sensor-Pinout.png' },
+  { id: '17', name: 'Flame Sensor Module', type: 'sensor', description: 'IR flame sensor. D0 for threshold detection, A0 for intensity.', pins: ['VCC','GND','D0','A0'], quantity: 1, imageUrl: 'https://components101.com/sites/default/files/component_pin/Flame-Sensor-Module-Pinout.png' },
+  { id: '18', name: 'Water Level Sensor', type: 'sensor', description: 'Conductive water level sensor. Power intermittently to reduce electrolysis.', pins: ['VCC','GND','SIG'], quantity: 1 },
+  { id: '19', name: 'KY-038 Sound Sensor', type: 'sensor', description: 'Sound detection module. A0 for analog level, D0 for threshold detection.', pins: ['VCC','GND','A0','D0'], quantity: 1, imageUrl: 'https://components101.com/sites/default/files/component_pin/KY-038-Sound-Sensor-Module.jpg' },
+  { id: '20', name: 'IR Obstacle Avoidance Sensor', type: 'sensor', description: 'IR proximity sensor. Output LOW when obstacle in range. 2-30cm range.', pins: ['VCC','GND','OUT'], quantity: 2, imageUrl: 'https://components101.com/sites/default/files/component_pin/IR-Sensor-Module-Pinout.jpg' },
+  { id: '21', name: 'SW-520D Tilt Switch', type: 'sensor', description: 'Ball-type tilt switch. Use INPUT_PULLUP, reads LOW when tilted.', pins: ['VCC','GND'], quantity: 3 },
+  { id: '22', name: 'SG90 Micro Servo', type: 'actuator', description: '180° micro servo, 9g. PWM control. Brown=GND, Red=VCC, Orange=Signal.', pins: ['VCC','GND','PWM'], quantity: 1, datasheetUrl: 'http://www.ee.ic.ac.uk/pcheung/teaching/DE1_EE/stores/sg90_datasheet.pdf', imageUrl: 'https://components101.com/sites/default/files/components/Servo-Motor-SG90.jpg' },
+  { id: '23', name: '28BYJ-48 Stepper + ULN2003', type: 'actuator', description: '5V geared stepper, 4096 steps/rev. Requires 4 digital pins + driver.', pins: ['VCC','GND','IN1','IN2','IN3','IN4'], quantity: 1, datasheetUrl: 'https://components101.com/sites/default/files/component_datasheet/28byj48-stepper-motor-datasheet.pdf', imageUrl: 'https://lastminuteengineers.com/wp-content/uploads/arduino/28BYJ-48-Stepper-Motor-With-ULN2003-Driver.jpg' },
+  { id: '24', name: 'L293D Motor Driver IC', type: 'actuator', description: 'Dual H-bridge motor driver IC. 600mA/channel. Gets hot - add heatsink.', pins: ['VCC','GND','EN1','IN1','IN2','OUT1','OUT2','EN2','IN3','IN4','OUT3','OUT4'], quantity: 4, datasheetUrl: 'https://www.ti.com/lit/ds/symlink/l293d.pdf', imageUrl: 'https://components101.com/sites/default/files/component_pin/L293D-Pinout.gif' },
+  { id: '25', name: '5V Relay Module', type: 'actuator', description: '5V relay with optocoupler isolation. Active LOW trigger. COM/NO/NC terminals.', pins: ['VCC','GND','IN','COM','NO','NC'], quantity: 1, imageUrl: 'https://components101.com/sites/default/files/components/5V-Relay-Module.jpg' },
+  { id: '26', name: 'LCD 1602 Module', type: 'other', description: '16x2 character LCD. I2C backpack needs only SDA/SCL. Adjust contrast pot.', pins: ['VCC','GND','SDA','SCL'], quantity: 2, datasheetUrl: 'https://www.sparkfun.com/datasheets/LCD/HD44780.pdf', imageUrl: 'https://components101.com/sites/default/files/components/16x2-LCD-Module.jpg' },
+  { id: '27', name: 'MAX7219 8x8 LED Matrix', type: 'other', description: '8x8 LED matrix with MAX7219 driver. SPI interface, cascadable.', pins: ['VCC','GND','DIN','CS','CLK'], quantity: 1, datasheetUrl: 'https://datasheets.maximintegrated.com/en/ds/MAX7219-MAX7221.pdf', imageUrl: 'https://components101.com/sites/default/files/component_pin/MAX7219-LED-Dot-Matrix.jpg' },
+  { id: '28', name: 'HW-221 Logic Level Converter', type: 'other', description: '4-channel bidirectional level shifter. LV=3.3V, HV=5V, share GND.', pins: ['LV','HV','GND','LV1','LV2','LV3','LV4','HV1','HV2','HV3','HV4'], quantity: 2, imageUrl: 'https://components101.com/sites/default/files/component_pin/Logic-Level-Converter-Pinout.png' },
+  { id: '29', name: '74HC595 Shift Register', type: 'other', description: '8-bit serial-to-parallel shift register. Expands 3 pins to 8 outputs.', pins: ['VCC','GND','DS','SHCP','STCP','Q0','Q1','Q2','Q3','Q4','Q5','Q6','Q7'], quantity: 1, datasheetUrl: 'https://www.ti.com/lit/ds/symlink/sn74hc595.pdf', imageUrl: 'https://components101.com/sites/default/files/component_pin/74HC595-Pinout.png' },
+  { id: '30', name: 'MB102 Breadboard Power Supply', type: 'power', description: 'Breadboard power module with 3.3V/5V rails. Input: 6.5-12V or USB.', pins: ['VIN','GND','3V3','5V'], quantity: 2, imageUrl: 'https://components101.com/sites/default/files/components/Breadboard-Power-Supply-Module.jpg' },
+  { id: '31', name: '830-Point Breadboard', type: 'other', description: 'Standard 830-point breadboard. 4 power rails. Check rail continuity.', pins: [], quantity: 2, imageUrl: 'https://components101.com/sites/default/files/components/Breadboard.jpg' },
+  { id: '32', name: '400-Point Mini Breadboard', type: 'other', description: 'Half-size 400-point breadboard for small circuits.', pins: [], quantity: 2, imageUrl: 'https://components101.com/sites/default/files/components/mini-breadboard.jpg' },
+  { id: '33', name: 'Jumper Wire Assortment', type: 'other', description: 'M-M, M-F, and F-F jumper wires for prototyping.', pins: [], quantity: 1 },
+  { id: '34', name: '9V Battery Barrel Jack Adapter', type: 'power', description: '9V battery clip with 2.1mm barrel plug. Center positive.', pins: ['VCC','GND'], quantity: 1 },
+  { id: '35', name: 'L293D Motor Shield', type: 'other', description: 'Arduino motor shield. Drives 4 DC motors OR 2 steppers + 2 servos.', pins: [], quantity: 1, imageUrl: 'https://components101.com/sites/default/files/component_pin/L293D-Motor-Driver-Shield.png' },
+  { id: '36', name: 'CNC Shield V3 (GRBL)', type: 'other', description: 'GRBL CNC shield for 3-4 axis control. Accepts A4988/DRV8825 drivers.', pins: [], quantity: 1, imageUrl: 'https://blog.protoneer.co.nz/wp-content/uploads/2013/07/Arduino-CNC-Shield-V3.0-Parts.jpg' },
+  { id: '37', name: 'Arduino Prototyping Shield', type: 'other', description: 'Proto shield with breadboard area for custom circuits.', pins: [], quantity: 1 },
+  { id: '38', name: 'Screw Terminal Shield', type: 'other', description: 'Breaks out all Arduino Uno pins to screw terminals.', pins: [], quantity: 1 },
+  { id: '39', name: '2.8" TFT LCD Shield (ILI9341)', type: 'other', description: '2.8" 240x320 color TFT. SPI interface. Touch + SD card optional.', pins: ['VCC','GND','CS','RST','DC','MOSI','SCK','LED','MISO'], quantity: 1, datasheetUrl: 'https://cdn-shop.adafruit.com/datasheets/ILI9341.pdf', imageUrl: 'https://cdn-shop.adafruit.com/970x728/1770-00.jpg' },
+  { id: '40', name: 'Piezo Buzzer', type: 'other', description: 'Passive piezo buzzer. Use tone(pin, frequency) to play sounds.', pins: ['VCC','GND'], quantity: 3, imageUrl: 'https://components101.com/sites/default/files/components/Piezo-Buzzer.jpg' },
+  { id: '41', name: '8Ω Mini Speaker', type: 'other', description: '8Ω 0.5W speaker. Requires amplifier - do NOT connect directly to MCU.', pins: ['VCC','GND'], quantity: 1 },
+  { id: '42', name: 'TIP120 Darlington Transistor', type: 'other', description: 'NPN Darlington, 5A/60V. ALWAYS use flyback diode with motors.', pins: ['B','C','E'], quantity: 4, datasheetUrl: 'https://www.onsemi.com/pdf/datasheet/tip120-d.pdf', imageUrl: 'https://components101.com/sites/default/files/component_pin/TIP120-Pinout.png' },
+  { id: '43', name: '2N2222 NPN Transistor', type: 'other', description: 'General purpose NPN transistor. TO-92 pinout: E-B-C.', pins: ['E','B','C'], quantity: 10, datasheetUrl: 'https://www.onsemi.com/pdf/datasheet/p2n2222a-d.pdf' },
+  { id: '44', name: 'IRF520 MOSFET Module', type: 'other', description: 'MOSFET module for PWM control of high-current loads up to 9A.', pins: ['VCC','GND','SIG'], quantity: 2, datasheetUrl: 'https://www.vishay.com/docs/91017/91017.pdf', imageUrl: 'https://components101.com/sites/default/files/component_pin/IRF520-MOSFET-Driver-Module.jpg' },
+  { id: '45', name: 'Electrolytic Capacitor Assortment', type: 'other', description: 'Electrolytic caps 1-470uF. POLARIZED - long leg is positive.', pins: [], quantity: 1 },
+  { id: '46', name: 'Ceramic Capacitor Assortment', type: 'other', description: 'Ceramic caps. Non-polarized. 100nF most useful for decoupling.', pins: [], quantity: 1 },
+  { id: '47', name: '5mm LED Assortment', type: 'other', description: '5mm LEDs. Long leg = positive. Use 150Ω for red/yellow/green at 5V.', pins: ['ANODE','CATHODE'], quantity: 1 },
+  { id: '48', name: 'WS2812B LED Strip (60 LEDs/m)', type: 'other', description: 'Addressable RGB strip. 5V, 60mA per LED. Use FastLED library.', pins: ['VCC','GND','DIN'], quantity: 1, datasheetUrl: 'https://cdn-shop.adafruit.com/datasheets/WS2812B.pdf' },
+  { id: '49', name: 'RGB LED (Common Cathode)', type: 'other', description: '4-pin RGB LED. Longest leg = common cathode (GND). PWM each color.', pins: ['R','GND','G','B'], quantity: 5 },
+  { id: '50', name: 'Resistor Assortment Kit', type: 'other', description: '1/4W resistor kit. Most used: 220Ω, 1K-10K, 4.7K.', pins: [], quantity: 1 },
+  { id: '51', name: '10K Potentiometer', type: 'other', description: '10K linear pot. Outer pins to GND/VCC, wiper to analog pin.', pins: ['VCC','GND','SIG'], quantity: 5 },
+  { id: '52', name: 'Tactile Pushbutton Assortment', type: 'other', description: 'Tactile buttons. Use INPUT_PULLUP, connect other side to GND.', pins: ['1','2'], quantity: 1 },
+  { id: '53', name: 'Header Pin Assortment', type: 'other', description: '2.54mm pitch headers. Break to length needed.', pins: [], quantity: 1 },
+  { id: '54', name: 'Dupont Jumper Wires', type: 'other', description: 'Dupont jumper kit. M-M, M-F, F-F connectors.', pins: [], quantity: 1 },
+  { id: '55', name: 'USB Cable Set', type: 'other', description: 'USB cables for programming. USB-B, Mini-USB, Micro-USB.', pins: [], quantity: 1 },
+  { id: '56', name: 'DC Barrel Jack Connectors', type: 'other', description: '2.1mm barrel jacks. Center positive standard.', pins: ['VCC','GND'], quantity: 10 },
+  { id: '57', name: 'Heat Shrink Tubing Assortment', type: 'other', description: 'Heat shrink tubing for insulating solder joints.', pins: [], quantity: 1 },
+  { id: '58', name: 'M3 Standoff/Spacer Kit', type: 'other', description: 'M3 standoffs for mounting Arduino/PCBs.', pins: [], quantity: 1 },
+  { id: '59', name: 'Prototype PCB Assortment', type: 'other', description: 'Perfboard PCBs for permanent projects. 2.54mm pitch.', pins: [], quantity: 1 },
+  { id: '60', name: 'PCB Screw Terminal Blocks', type: 'other', description: 'Screw terminals for power and motor connections.', pins: [], quantity: 20 },
+  { id: '61', name: 'Alligator Clip Test Leads', type: 'other', description: 'Alligator clips for temporary connections and testing.', pins: [], quantity: 10 },
+  { id: '62', name: 'Multimeter Test Probes', type: 'other', description: 'Replacement/upgrade multimeter probes.', pins: [], quantity: 1 },
 ];
 
 export default function App() {
@@ -74,11 +131,10 @@ export default function App() {
     }
   }, [history.present]);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('Processing...');
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState<ElectronicComponent | null>(null);
   const [modalContent, setModalContent] = useState<string>('');
   
@@ -86,8 +142,6 @@ export default function App() {
   const [isGenerating3D, setIsGenerating3D] = useState(false);
   const [generate3DError, setGenerate3DError] = useState<string | null>(null);
   
-  // Attachments
-  const [attachment, setAttachment] = useState<{data: string, type: 'image' | 'video'} | null>(null);
   
   // New State for Mode and Configuration
   const [generationMode, setGenerationMode] = useState<'chat' | 'image' | 'video'>('chat');
@@ -107,29 +161,78 @@ export default function App() {
   const [liveStatus, setLiveStatus] = useState('disconnected');
   const liveSessionRef = useRef<LiveSession | null>(null);
   
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // Initial welcome message
-    if (messages.length === 0) {
-      setMessages([{
-        id: 'welcome',
-        role: 'model',
-        content: "System Online. I am CircuitMind AI. \n\nI can generate wiring diagrams, create concept art, analyze your circuit photos/videos, or answer complex questions.",
-        timestamp: Date.now()
-      }]);
+  // Canvas ref for AI control
+  const canvasRef = useRef<DiagramCanvasRef>(null);
+
+  // Conversation management with persistent storage
+  const conversationManager = useConversations();
+
+  // AI context state
+  const [aiContext, setAIContext] = useState<AIContext | null>(null);
+  const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
+  const [isChatExpanded, setIsChatExpanded] = useState(true);
+
+  // AI autonomy settings with localStorage persistence
+  const [autonomySettings, setAutonomySettings] = useState<AIAutonomySettings>(() => {
+    try {
+      const saved = localStorage.getItem('cm_autonomy_settings');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Failed to load autonomy settings:', e);
     }
-  }, [messages.length]);
+    return {
+      autoExecuteSafeActions: true,
+      customSafeActions: [],
+      customUnsafeActions: [],
+    };
+  });
 
+  // Persist autonomy settings
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth'
+    try {
+      localStorage.setItem('cm_autonomy_settings', JSON.stringify(autonomySettings));
+    } catch (e) {
+      console.error('Failed to save autonomy settings:', e);
+    }
+  }, [autonomySettings]);
+
+  // Update AI context when state changes
+  useEffect(() => {
+    const updateContext = async () => {
+      const context = await buildAIContext({
+        diagram: history.present,
+        inventory,
+        selectedComponentId: selectedComponent?.id,
+        activeView: selectedComponent ? 'component-editor' : isInventoryOpen ? 'inventory' : isSettingsOpen ? 'settings' : 'canvas',
       });
-    }
-  }, [messages, isLoading]);
+      setAIContext(context);
+    };
+    updateContext();
+  }, [history.present, inventory, selectedComponent, isInventoryOpen, isSettingsOpen]);
+
+  // Generate proactive suggestions periodically
+  useEffect(() => {
+    const generateSuggestions = async () => {
+      if (!aiContext || !history.present) return;
+      try {
+        const suggestions = await generateProactiveSuggestions(
+          aiContext,
+          history.present.components,
+          history.present.connections
+        );
+        setProactiveSuggestions(suggestions);
+      } catch {
+        // Ignore errors
+      }
+    };
+
+    // Generate suggestions after diagram changes
+    const timeout = setTimeout(generateSuggestions, 2000);
+    return () => clearTimeout(timeout);
+  }, [aiContext, history.present]);
 
   // Clean up live session on unmount
   useEffect(() => {
@@ -156,7 +259,7 @@ export default function App() {
     }
   };
 
-  const updateDiagram = (newDiagram: WiringDiagram | null) => {
+  const updateDiagram = useCallback((newDiagram: WiringDiagram | null) => {
     setHistory(curr => {
         if (curr.present === newDiagram) return curr;
         return {
@@ -165,7 +268,21 @@ export default function App() {
             future: []
         };
     });
-  };
+  }, []);
+
+  // AI actions system - must be after updateDiagram definition
+  const aiActions = useAIActions({
+    canvasRef,
+    inventory,
+    diagram: history.present,
+    setInventory,
+    setIsInventoryOpen,
+    setIsSettingsOpen,
+    setSelectedComponent,
+    setGenerationMode,
+    updateDiagram,
+    activeConversationId: conversationManager.activeConversationId,
+  });
 
   const handleDiagramChange = (updatedDiagram: WiringDiagram) => {
     updateDiagram(updatedDiagram);
@@ -285,22 +402,6 @@ export default function App() {
     }
   };
 
-  const playTTS = async (msg: ChatMessage) => {
-    try {
-      if (msg.audioResponse) {
-        const audio = new Audio("data:audio/mp3;base64," + msg.audioResponse);
-        audio.play();
-      } else {
-        const audioBase64 = await generateSpeech(msg.content);
-        msg.audioResponse = audioBase64; 
-        const audio = new Audio("data:audio/mp3;base64," + audioBase64);
-        audio.play();
-      }
-    } catch (e: any) {
-      console.error(e.message);
-    }
-  };
-
   const saveDiagram = () => {
     if (!history.present) return;
     const data = {
@@ -309,12 +410,12 @@ export default function App() {
     };
     // Manual save still uses the 'savedDiagram' key as a "Quick Save" slot
     localStorage.setItem('savedDiagram', JSON.stringify(data));
-    setMessages(prev => [...prev, {
-      id: Date.now().toString(),
+    conversationManager.addMessage({
       role: 'system',
       content: '✅ Diagram saved to Quick Save slot.',
-      timestamp: Date.now()
-    }]);
+      linkedComponents: [],
+      suggestedActions: [],
+    });
   };
 
   const loadDiagram = () => {
@@ -324,112 +425,16 @@ export default function App() {
         const parsed = JSON.parse(saved);
         if (parsed.diagram) {
             updateDiagram(parsed.diagram);
-            setMessages(prev => [...prev, {
-                id: Date.now().toString(),
-                role: 'system',
-                content: `✅ Loaded diagram from ${new Date(parsed.timestamp).toLocaleTimeString()}`,
-                timestamp: Date.now()
-            }]);
+            conversationManager.addMessage({
+              role: 'system',
+              content: `✅ Loaded diagram from ${new Date(parsed.timestamp).toLocaleTimeString()}`,
+              linkedComponents: [],
+              suggestedActions: [],
+            });
         }
       } catch (e) {
         console.error("Failed to load", e);
       }
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if ((!input.trim() && !attachment) || isLoading) return;
-
-    const userMsg: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input,
-      timestamp: Date.now(),
-      image: attachment?.type === 'image' ? attachment.data : undefined,
-      video: attachment?.type === 'video' ? attachment.data : undefined
-    };
-
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setAttachment(null);
-    setIsLoading(true);
-    setLoadingText('Thinking...');
-
-    try {
-        if (generationMode === 'image') {
-            setLoadingText('Generating Image...');
-            let imgData = "";
-            if (userMsg.image) {
-                imgData = await generateEditedImage(userMsg.image, userMsg.content);
-            } else {
-                imgData = await generateConceptImage(userMsg.content, imageSize, aspectRatio);
-            }
-            
-            setMessages(prev => [...prev, {
-                id: Date.now().toString(),
-                role: 'model',
-                content: `Generated image for "${userMsg.content}"`,
-                timestamp: Date.now(),
-                image: imgData
-            }]);
-        } 
-        else if (generationMode === 'video') {
-            setLoadingText('Generating Video...');
-            const videoUrl = await generateCircuitVideo(userMsg.content, aspectRatio as any, userMsg.image);
-            
-            setMessages(prev => [...prev, {
-                id: Date.now().toString(),
-                role: 'model',
-                content: `Video generated for "${userMsg.content}"`,
-                timestamp: Date.now(),
-                video: videoUrl
-            }]);
-        }
-        else {
-            const isDiagramRequest = userMsg.content.toLowerCase().includes('diagram') || userMsg.content.toLowerCase().includes('circuit');
-            
-            if (isDiagramRequest) {
-                 setLoadingText('Designing Circuit...');
-                 const diagram = await generateWiringDiagram(userMsg.content, inventory);
-                 updateDiagram(diagram);
-                 
-                 setMessages(prev => [...prev, {
-                    id: Date.now().toString(),
-                    role: 'model',
-                    content: `Here is the wiring diagram for: ${diagram.title}.`,
-                    timestamp: Date.now(),
-                    diagramData: diagram
-                 }]);
-            } else {
-                 setLoadingText('Analyzing...');
-                 const { text, groundingSources } = await chatWithAI(
-                     userMsg.content, 
-                     messages.map(m => ({ role: m.role, parts: [{ text: m.content }] })),
-                     userMsg.image || userMsg.video,
-                     userMsg.video ? 'video' : 'image',
-                     useDeepThinking
-                 );
-                 
-                 setMessages(prev => [...prev, {
-                    id: Date.now().toString(),
-                    role: 'model',
-                    content: text,
-                    timestamp: Date.now(),
-                    groundingSources
-                 }]);
-            }
-        }
-    } catch (error: any) {
-        console.error(error);
-        setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            role: 'system',
-            content: `Error: ${error.message}`,
-            timestamp: Date.now()
-        }]);
-    } finally {
-        setIsLoading(false);
-        setLoadingText('');
     }
   };
 
@@ -454,6 +459,198 @@ export default function App() {
       } finally {
           setIsGenerating3D(false);
       }
+  };
+
+  // Handle sending messages through the enhanced chat system
+  const handleSendEnhancedMessage = async (
+    content: string,
+    attachment?: { base64: string; type: 'image' | 'video' }
+  ) => {
+    if ((!content.trim() && !attachment) || isLoading) return;
+
+    // Normalize attachment format
+    const attachmentData = attachment?.base64;
+
+    // Create user message for conversation
+    const userEnhancedMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
+      role: 'user',
+      content,
+      linkedComponents: [],
+      suggestedActions: [],
+      image: attachment?.type === 'image' ? attachmentData : undefined,
+      video: attachment?.type === 'video' ? attachmentData : undefined,
+    };
+
+    // Add to conversation
+    const sentUserMessage = await conversationManager.addMessage(userEnhancedMsg);
+
+    setIsLoading(true);
+    setLoadingText('Thinking...');
+
+    try {
+      const conversationMessages = conversationManager.messages.filter(
+        (msg) => msg.conversationId === sentUserMessage.conversationId
+      );
+      const historyMessages = conversationMessages.some((msg) => msg.id === sentUserMessage.id)
+        ? conversationMessages
+        : [...conversationMessages, sentUserMessage];
+      const chatHistory = historyMessages
+        .filter((msg) => msg.role === 'user' || msg.role === 'model')
+        .map((msg) => ({
+          role: msg.role as 'user' | 'model',
+          parts: [{ text: msg.content }],
+        }));
+
+      // Handle based on generation mode
+      if (generationMode === 'image') {
+        setLoadingText('Generating Image...');
+        let imgData = "";
+        if (attachment?.type === 'image' && attachmentData) {
+          imgData = await generateEditedImage(attachmentData, content);
+        } else {
+          imgData = await generateConceptImage(content, imageSize, aspectRatio);
+        }
+
+        const modelMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
+          role: 'model',
+          content: `Generated image for "${content}"`,
+          linkedComponents: [],
+          suggestedActions: [],
+          image: imgData,
+        };
+        await conversationManager.addMessage(modelMsg);
+      } else if (generationMode === 'video') {
+        setLoadingText('Generating Video...');
+        const videoUrl = await generateCircuitVideo(content, aspectRatio as any, attachmentData);
+
+        const modelMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
+          role: 'model',
+          content: `Video generated for "${content}"`,
+          linkedComponents: [],
+          suggestedActions: [],
+          video: videoUrl,
+        };
+        await conversationManager.addMessage(modelMsg);
+      } else {
+        // Chat mode - use context-aware chat if context available
+        const isDiagramRequest = content.toLowerCase().includes('diagram') || content.toLowerCase().includes('circuit');
+
+        if (isDiagramRequest) {
+          setLoadingText('Designing Circuit...');
+          const diagram = await generateWiringDiagram(content, inventory);
+          updateDiagram(diagram);
+
+          const modelMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
+            role: 'model',
+            content: `Here is the wiring diagram for: ${diagram.title}.`,
+            linkedComponents: diagram.components.map(c => ({
+              componentId: c.id,
+              componentName: c.name,
+              mentionStart: 0,
+              mentionEnd: 0,
+            })),
+            suggestedActions: [
+              { type: 'highlight', payload: {}, label: 'Highlight all components', safe: true },
+              { type: 'zoomTo', payload: { level: 1 }, label: 'Fit diagram to view', safe: true },
+            ],
+            diagramData: diagram,
+          };
+          await conversationManager.addMessage(modelMsg);
+        } else if (aiContext) {
+          // Use context-aware chat
+          setLoadingText('Analyzing...');
+          const response = await chatWithContext(
+            content,
+            chatHistory,
+            aiContext,
+            {
+              enableProactive: true,
+              attachmentBase64: attachmentData,
+              attachmentType: attachment?.type,
+            }
+          );
+
+          const modelMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
+            role: 'model',
+            content: response.text,
+            linkedComponents: response.componentMentions,
+            suggestedActions: response.suggestedActions,
+            groundingSources: response.groundingSources,
+          };
+          await conversationManager.addMessage(modelMsg);
+
+          // Auto-execute safe actions if enabled in settings
+          if (autonomySettings.autoExecuteSafeActions) {
+            for (const action of response.suggestedActions) {
+              // Determine if action is safe based on settings
+              const isSafe = autonomySettings.customSafeActions.includes(action.type)
+                ? true
+                : autonomySettings.customUnsafeActions.includes(action.type)
+                  ? false
+                  : ACTION_SAFETY[action.type] ?? false;
+
+              if (isSafe) {
+                await aiActions.execute(action);
+              }
+            }
+          }
+        } else {
+          // Fallback to regular chat
+          setLoadingText('Analyzing...');
+          const { text, groundingSources } = await chatWithAI(
+            content,
+            chatHistory,
+            attachmentData,
+            attachment?.type === 'video' ? 'video' : 'image',
+            useDeepThinking
+          );
+
+          const modelMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
+            role: 'model',
+            content: text,
+            linkedComponents: [],
+            suggestedActions: [],
+            groundingSources,
+          };
+          await conversationManager.addMessage(modelMsg);
+        }
+      }
+    } catch (error: any) {
+      console.error(error);
+      const errorMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
+        role: 'system',
+        content: `Error: ${error.message}`,
+        linkedComponents: [],
+        suggestedActions: [],
+      };
+      await conversationManager.addMessage(errorMsg);
+    } finally {
+      setIsLoading(false);
+      setLoadingText('');
+    }
+  };
+
+  // Handle component click from chat messages
+  const handleChatComponentClick = (componentId: string) => {
+    // Highlight the component on canvas
+    canvasRef.current?.highlightComponent(componentId, { color: '#00f3ff', duration: 3000, pulse: true });
+    canvasRef.current?.centerOnComponent(componentId, 1.2);
+
+    // Also find and select the component
+    const component = inventory.find(c => c.id === componentId) ||
+      history.present?.components.find(c => c.id === componentId);
+    if (component) {
+      setSelectedComponent(component);
+    }
+  };
+
+  // Handle action click from chat messages
+  const handleChatActionClick = async (action: ActionIntent) => {
+    try {
+      await aiActions.execute(action);
+    } catch (error: any) {
+      console.error('Action failed:', error.message);
+    }
   };
 
   return (
@@ -491,10 +688,24 @@ export default function App() {
                  <div className="h-6 w-px bg-slate-700 mx-2"></div>
 
                  <div className="flex gap-1">
-                     <button onClick={handleUndo} disabled={history.past.length === 0} className="p-2 hover:bg-slate-700 rounded text-slate-400 disabled:opacity-30" title="Undo">
+                     <button
+                        type="button"
+                        onClick={handleUndo}
+                        disabled={history.past.length === 0}
+                        className="h-11 w-11 inline-flex items-center justify-center hover:bg-slate-700 rounded text-slate-400 disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                        title="Undo"
+                        aria-label="Undo"
+                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                      </button>
-                     <button onClick={handleRedo} disabled={history.future.length === 0} className="p-2 hover:bg-slate-700 rounded text-slate-400 disabled:opacity-30" title="Redo">
+                     <button
+                        type="button"
+                        onClick={handleRedo}
+                        disabled={history.future.length === 0}
+                        className="h-11 w-11 inline-flex items-center justify-center hover:bg-slate-700 rounded text-slate-400 disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                        title="Redo"
+                        aria-label="Redo"
+                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" /></svg>
                      </button>
                  </div>
@@ -514,129 +725,65 @@ export default function App() {
                          <span className="text-xs font-bold uppercase tracking-widest">{liveStatus}</span>
                      </div>
                  )}
-                 <button 
+                 <button
+                    type="button"
                     onClick={toggleLiveMode}
-                    className={`p-2 rounded-full border transition-all ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-800 text-slate-400 border-slate-600 hover:text-white'}`}
+                    className={`h-11 w-11 inline-flex items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-800 text-slate-400 border-slate-600 hover:text-white'}`}
                     title="Live Voice Mode"
+                    aria-label="Toggle live voice mode"
                  >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                 </button>
+                 <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="h-11 w-11 inline-flex items-center justify-center rounded-full border bg-slate-800 text-slate-400 border-slate-600 hover:text-white hover:border-slate-500 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                    title="Settings"
+                    aria-label="Open settings"
+                 >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                  </button>
              </div>
         </div>
 
         {/* Diagram Canvas */}
         <div className="flex-1 relative bg-slate-950 overflow-hidden">
-            <DiagramCanvas 
-                diagram={history.present} 
+            <DiagramCanvas
+                ref={canvasRef}
+                diagram={history.present}
                 onComponentClick={handleComponentClick}
                 onDiagramUpdate={handleDiagramChange}
                 onComponentDrop={handleComponentDrop}
             />
         </div>
 
-        {/* Chat / Controls Overlay */}
-        <div className="h-[320px] bg-slate-900 border-t border-neon-cyan/30 flex flex-col shrink-0 relative z-30 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" ref={scrollRef}>
-                {messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] rounded-xl p-3 ${msg.role === 'user' ? 'bg-neon-cyan/10 border border-neon-cyan/30 text-slate-200' : 'bg-slate-800 border border-slate-700 text-slate-300'}`}>
-                            {msg.image && (
-                                <img src={msg.image} alt="attachment" className="max-w-[200px] rounded mb-2 border border-slate-600" />
-                            )}
-                            {msg.video && (
-                                <video src={msg.video} controls className="max-w-[300px] rounded mb-2 border border-slate-600" />
-                            )}
-                            <div className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</div>
-                            {msg.groundingSources && msg.groundingSources.length > 0 && (
-                                <div className="mt-2 pt-2 border-t border-slate-700/50 flex flex-wrap gap-2">
-                                    {msg.groundingSources.map((source, idx) => (
-                                        <a key={idx} href={source.uri} target="_blank" rel="noopener noreferrer" className="text-[10px] bg-black/30 px-2 py-1 rounded text-neon-cyan hover:underline truncate max-w-[150px]">
-                                            {source.title}
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
-                            {msg.role === 'model' && (
-                                <div className="mt-2 flex gap-2 justify-end opacity-50 hover:opacity-100 transition-opacity">
-                                    <button onClick={() => playTTS(msg)} className="text-slate-400 hover:text-neon-cyan"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg></button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ))}
-                {isLoading && (
-                    <div className="flex justify-start">
-                        <div className="bg-slate-800/50 rounded-xl p-3 flex items-center gap-3 border border-slate-700">
-                             <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce"></div>
-                             <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce delay-75"></div>
-                             <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce delay-150"></div>
-                             <span className="text-xs text-neon-cyan font-mono animate-pulse">{loadingText}</span>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Input Area */}
-            <div className="p-3 bg-slate-950 border-t border-slate-800 flex gap-2 items-end">
-                {/* Mode Selector */}
-                <div className="flex flex-col gap-1 shrink-0">
-                    <select 
-                        value={generationMode} 
-                        onChange={(e) => setGenerationMode(e.target.value as any)}
-                        className="bg-slate-900 text-xs text-slate-300 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-neon-cyan"
-                    >
-                        <option value="chat">CHAT / DIAGRAM</option>
-                        <option value="image">GENERATE IMAGE</option>
-                        <option value="video">GENERATE VIDEO</option>
-                    </select>
-                    {generationMode === 'chat' && (
-                       <label className="flex items-center gap-1 cursor-pointer">
-                           <input type="checkbox" checked={useDeepThinking} onChange={e => setUseDeepThinking(e.target.checked)} className="rounded border-slate-700 bg-slate-900 text-neon-cyan" />
-                           <span className="text-[10px] text-slate-500 uppercase font-bold">Deep Think</span>
-                       </label>
-                    )}
-                </div>
-
-                <button onClick={() => fileInputRef.current?.click()} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded relative">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                    {attachment && <span className="absolute top-1 right-1 w-2 h-2 bg-neon-cyan rounded-full"></span>}
-                </button>
-                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} accept="image/*,video/*" />
-                
-                <button 
-                    onMouseDown={startRecording} 
-                    onMouseUp={stopRecording} 
-                    onMouseLeave={stopRecording}
-                    className={`p-2 rounded transition-colors ${isRecording ? 'bg-red-500 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                >
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                </button>
-
-                <div className="flex-1 relative">
-                    <textarea 
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSendMessage();
-                            }
-                        }}
-                        placeholder={generationMode === 'image' ? "Describe the component image..." : generationMode === 'video' ? "Describe the circuit video..." : "Ask about electronics or describe a circuit..."}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-10 py-2 text-sm text-white focus:outline-none focus:border-neon-cyan resize-none h-10 min-h-[40px] max-h-[100px]"
-                    />
-                </div>
-                
-                <button 
-                    onClick={handleSendMessage}
-                    disabled={isLoading || (!input.trim() && !attachment)}
-                    className="bg-neon-cyan text-black p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                </button>
-            </div>
-        </div>
+        {/* Chat Panel - Unified chat with conversation management */}
+        <ChatPanel
+          conversations={conversationManager.conversations}
+          activeConversationId={conversationManager.activeConversationId}
+          messages={conversationManager.messages.map(m => ({
+            ...m,
+            linkedComponents: m.linkedComponents || [],
+            suggestedActions: m.suggestedActions || [],
+          }))}
+          onSwitchConversation={conversationManager.switchConversation}
+          onCreateConversation={conversationManager.createConversation}
+          onDeleteConversation={conversationManager.deleteConversation}
+          onRenameConversation={conversationManager.renameConversation}
+          onSendMessage={handleSendEnhancedMessage}
+          isLoading={isLoading}
+          onComponentClick={handleChatComponentClick}
+          onActionClick={handleChatActionClick}
+          context={aiContext || undefined}
+          proactiveSuggestions={proactiveSuggestions}
+          onSuggestionClick={(suggestion) => handleSendEnhancedMessage(suggestion)}
+          generationMode={generationMode}
+          onModeChange={setGenerationMode}
+          useDeepThinking={useDeepThinking}
+          onDeepThinkingChange={setUseDeepThinking}
+          isExpanded={isChatExpanded}
+          onToggleExpand={() => setIsChatExpanded(!isChatExpanded)}
+        />
 
         {/* Modal */}
         {selectedComponent && (
@@ -656,6 +803,14 @@ export default function App() {
                 onGenerate3D={handleGenerate3D}
             />
         )}
+
+        {/* Settings Panel */}
+        <SettingsPanel
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          autonomySettings={autonomySettings}
+          onAutonomySettingsChange={setAutonomySettings}
+        />
       </div>
     </div>
   );

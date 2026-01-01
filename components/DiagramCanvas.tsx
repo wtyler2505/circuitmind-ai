@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { WiringDiagram, ElectronicComponent, WireConnection } from '../types';
 
 interface DiagramCanvasProps {
@@ -8,10 +8,50 @@ interface DiagramCanvasProps {
   onComponentDrop?: (component: ElectronicComponent, x: number, y: number) => void;
 }
 
+// Highlight options for AI control
+export interface HighlightOptions {
+  color?: string;
+  duration?: number; // Auto-clear after ms (0 = permanent until cleared)
+  pulse?: boolean;
+}
+
+// State for a highlighted component
+interface HighlightState {
+  color: string;
+  pulse: boolean;
+  timerId?: ReturnType<typeof setTimeout>;
+}
+
+// Ref API exposed to parent for AI control
+export interface DiagramCanvasRef {
+  // View Controls
+  setZoom: (level: number) => void;
+  getZoom: () => number;
+  setPan: (x: number, y: number) => void;
+  getPan: () => { x: number; y: number };
+  resetView: () => void;
+
+  // Component Focus
+  centerOnComponent: (componentId: string, zoom?: number) => void;
+  highlightComponent: (componentId: string, options?: HighlightOptions) => void;
+  clearHighlight: (componentId?: string) => void;
+
+  // Wire Controls
+  highlightWire: (wireIndex: number, options?: HighlightOptions) => void;
+  clearWireHighlight: (wireIndex?: number) => void;
+
+  // Positioning
+  getComponentPosition: (componentId: string) => { x: number; y: number } | null;
+  setComponentPosition: (componentId: string, x: number, y: number) => void;
+
+  // State queries
+  getAllComponentPositions: () => Map<string, { x: number; y: number }>;
+}
+
 const COMPONENT_WIDTH = 140;
 const COMPONENT_HEIGHT = 100;
 
-const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ diagram, onComponentClick, onDiagramUpdate, onComponentDrop }) => {
+const DiagramCanvas = forwardRef<DiagramCanvasRef, DiagramCanvasProps>(({ diagram, onComponentClick, onDiagramUpdate, onComponentDrop }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
   // View State
@@ -38,6 +78,145 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ diagram, onComponentClick
   
   // Drag Over State
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // AI Highlight State
+  const [highlightedComponents, setHighlightedComponents] = useState<Map<string, HighlightState>>(new Map());
+  const [highlightedWires, setHighlightedWires] = useState<Map<number, HighlightState>>(new Map());
+
+  // Expose imperative API to parent via ref
+  useImperativeHandle(ref, () => ({
+    // View Controls
+    setZoom: (level: number) => setZoom(Math.max(0.2, Math.min(4, level))),
+    getZoom: () => zoom,
+    setPan: (x: number, y: number) => setPan({ x, y }),
+    getPan: () => pan,
+    resetView: () => {
+      setPan({ x: 0, y: 0 });
+      setZoom(1);
+    },
+
+    // Component Focus
+    centerOnComponent: (componentId: string, targetZoom?: number) => {
+      const pos = nodePositions.get(componentId);
+      if (pos && containerRef.current) {
+        const newZoom = targetZoom ?? zoom;
+        setZoom(newZoom);
+        setPan({
+          x: (containerRef.current.clientWidth / 2) - (pos.x + COMPONENT_WIDTH / 2) * newZoom,
+          y: (containerRef.current.clientHeight / 2) - (pos.y + COMPONENT_HEIGHT / 2) * newZoom
+        });
+      }
+    },
+
+    highlightComponent: (componentId: string, options?: HighlightOptions) => {
+      const { color = '#00f3ff', duration = 3000, pulse = true } = options || {};
+
+      // Clear existing timer if any
+      const existing = highlightedComponents.get(componentId);
+      if (existing?.timerId) {
+        clearTimeout(existing.timerId);
+      }
+
+      // Set up auto-clear timer
+      let timerId: ReturnType<typeof setTimeout> | undefined;
+      if (duration > 0) {
+        timerId = setTimeout(() => {
+          setHighlightedComponents(prev => {
+            const next = new Map(prev);
+            next.delete(componentId);
+            return next;
+          });
+        }, duration);
+      }
+
+      setHighlightedComponents(prev => {
+        const next = new Map(prev);
+        next.set(componentId, { color, pulse, timerId });
+        return next;
+      });
+    },
+
+    clearHighlight: (componentId?: string) => {
+      if (componentId) {
+        const existing = highlightedComponents.get(componentId);
+        if (existing?.timerId) {
+          clearTimeout(existing.timerId);
+        }
+        setHighlightedComponents(prev => {
+          const next = new Map(prev);
+          next.delete(componentId);
+          return next;
+        });
+      } else {
+        // Clear all
+        highlightedComponents.forEach(state => {
+          if (state.timerId) clearTimeout(state.timerId);
+        });
+        setHighlightedComponents(new Map());
+      }
+    },
+
+    // Wire Controls
+    highlightWire: (wireIndex: number, options?: HighlightOptions) => {
+      const { color = '#ff00ff', duration = 3000, pulse = true } = options || {};
+
+      const existing = highlightedWires.get(wireIndex);
+      if (existing?.timerId) {
+        clearTimeout(existing.timerId);
+      }
+
+      let timerId: ReturnType<typeof setTimeout> | undefined;
+      if (duration > 0) {
+        timerId = setTimeout(() => {
+          setHighlightedWires(prev => {
+            const next = new Map(prev);
+            next.delete(wireIndex);
+            return next;
+          });
+        }, duration);
+      }
+
+      setHighlightedWires(prev => {
+        const next = new Map(prev);
+        next.set(wireIndex, { color, pulse, timerId });
+        return next;
+      });
+    },
+
+    clearWireHighlight: (wireIndex?: number) => {
+      if (wireIndex !== undefined) {
+        const existing = highlightedWires.get(wireIndex);
+        if (existing?.timerId) {
+          clearTimeout(existing.timerId);
+        }
+        setHighlightedWires(prev => {
+          const next = new Map(prev);
+          next.delete(wireIndex);
+          return next;
+        });
+      } else {
+        highlightedWires.forEach(state => {
+          if (state.timerId) clearTimeout(state.timerId);
+        });
+        setHighlightedWires(new Map());
+      }
+    },
+
+    // Positioning
+    getComponentPosition: (componentId: string) => {
+      return nodePositions.get(componentId) || null;
+    },
+
+    setComponentPosition: (componentId: string, x: number, y: number) => {
+      setNodePositions(prev => {
+        const next = new Map(prev);
+        next.set(componentId, { x, y });
+        return next;
+      });
+    },
+
+    getAllComponentPositions: () => new Map(nodePositions),
+  }), [zoom, pan, nodePositions, highlightedComponents, highlightedWires]);
 
   // Extract unique colors for markers
   const uniqueColors = useMemo(() => {
@@ -339,24 +518,30 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ diagram, onComponentClick
       
       {/* Zoom Controls (Mobile Friendly) */}
       <div className="absolute top-16 right-4 md:top-4 md:right-4 flex flex-col gap-2 z-10 pointer-events-auto">
-          <button 
-             onClick={() => handleZoom(0.2)} 
-             className="bg-slate-800 text-white p-2 rounded-full shadow-lg border border-slate-600 hover:bg-slate-700 active:bg-slate-600"
+          <button
+             type="button"
+             onClick={() => handleZoom(0.2)}
+             className="h-11 w-11 inline-flex items-center justify-center bg-slate-800 text-white rounded-full shadow-lg border border-slate-600 hover:bg-slate-700 active:bg-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
              title="Zoom In"
+             aria-label="Zoom in"
           >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
           </button>
-          <button 
-             onClick={() => handleZoom(-0.2)} 
-             className="bg-slate-800 text-white p-2 rounded-full shadow-lg border border-slate-600 hover:bg-slate-700 active:bg-slate-600"
+          <button
+             type="button"
+             onClick={() => handleZoom(-0.2)}
+             className="h-11 w-11 inline-flex items-center justify-center bg-slate-800 text-white rounded-full shadow-lg border border-slate-600 hover:bg-slate-700 active:bg-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
              title="Zoom Out"
+             aria-label="Zoom out"
           >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
           </button>
-          <button 
+          <button
+             type="button"
              onClick={handleCenterView}
-             className="bg-slate-800 text-white p-2 rounded-full shadow-lg border border-slate-600 hover:bg-slate-700 active:bg-slate-600"
+             className="h-11 w-11 inline-flex items-center justify-center bg-slate-800 text-white rounded-full shadow-lg border border-slate-600 hover:bg-slate-700 active:bg-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
              title="Reset View"
+             aria-label="Reset view"
           >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
           </button>
@@ -402,10 +587,10 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ diagram, onComponentClick
                 const startPos = nodePositions.get(conn.fromComponentId);
                 const endPos = nodePositions.get(conn.toComponentId);
                 if (!startPos || !endPos) return null;
-                
+
                 const startComp = diagram.components.find(c => c.id === conn.fromComponentId);
                 const endComp = diagram.components.find(c => c.id === conn.toComponentId);
-                
+
                 let startX = startPos.x;
                 let startY = startPos.y;
                 const startPinIdx = (startComp?.pins || []).indexOf(conn.fromPin);
@@ -415,7 +600,7 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ diagram, onComponentClick
                     startY += 40 + (startPinIdx * 15);
                 } else {
                     startX += COMPONENT_WIDTH/2;
-                    startY += COMPONENT_HEIGHT + 10; 
+                    startY += COMPONENT_HEIGHT + 10;
                 }
 
                 let endX = endPos.x;
@@ -431,20 +616,33 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ diagram, onComponentClick
                 }
 
                 const pathD = getSmartPath(startX, startY, endX, endY);
-                const color = conn.color || '#00f3ff';
+                const wireHighlight = highlightedWires.get(idx);
+                const isWireHighlighted = !!wireHighlight;
+                const color = isWireHighlighted ? wireHighlight.color : (conn.color || '#00f3ff');
                 const midX = (startX + endX) / 2;
                 const midY = (startY + endY) / 2;
 
                 return (
                     <g key={idx} className="pointer-events-auto group" onClick={(e) => { e.stopPropagation(); setEditingWireIndex(idx); }}>
                         <path d={pathD} stroke="transparent" strokeWidth="20" fill="none" />
-                        <path 
-                            d={pathD} 
-                            stroke={color} 
-                            strokeWidth="2" 
-                            fill="none" 
-                            className="transition-all duration-300 drop-shadow-[0_0_2px_rgba(0,0,0,0.8)] group-hover:stroke-white"
-                            markerEnd={`url(#arrow-${color.replace('#', '')})`}
+                        {/* Glow effect for highlighted wires */}
+                        {isWireHighlighted && (
+                          <path
+                            d={pathD}
+                            stroke={wireHighlight.color}
+                            strokeWidth="8"
+                            fill="none"
+                            opacity="0.3"
+                            className={wireHighlight.pulse ? 'animate-pulse' : ''}
+                          />
+                        )}
+                        <path
+                            d={pathD}
+                            stroke={color}
+                            strokeWidth={isWireHighlighted ? 4 : 2}
+                            fill="none"
+                            className={`transition-all duration-300 drop-shadow-[0_0_2px_rgba(0,0,0,0.8)] group-hover:stroke-white ${isWireHighlighted && wireHighlight.pulse ? 'animate-pulse' : ''}`}
+                            markerEnd={`url(#arrow-${(conn.color || '#00f3ff').replace('#', '')})`}
                         />
                         <text x={midX} y={midY - 5} textAnchor="middle" fill={color} fontSize="10" className="opacity-0 group-hover:opacity-100 bg-black">{conn.description}</text>
                     </g>
@@ -468,22 +666,40 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ diagram, onComponentClick
                 const pos = nodePositions.get(comp.id);
                 if (!pos) return null;
                 const isHovered = hoveredNodeId === comp.id;
-                
+                const highlight = highlightedComponents.get(comp.id);
+                const isHighlighted = !!highlight;
+
                 return (
-                    <g 
-                        key={comp.id} 
+                    <g
+                        key={comp.id}
                         transform={`translate(${pos.x}, ${pos.y})`}
-                        className="pointer-events-auto cursor-grab active:cursor-grabbing"
+                        className={`pointer-events-auto cursor-grab active:cursor-grabbing ${isHighlighted && highlight.pulse ? 'component-highlighted' : ''}`}
+                        style={isHighlighted ? { '--highlight-color': highlight.color } as React.CSSProperties : undefined}
                         onPointerDown={(e) => handlePointerDown(e, comp.id)}
                         onClick={(e) => { e.stopPropagation(); onComponentClick(comp); }}
                     >
-                        <rect 
-                            width={COMPONENT_WIDTH} 
-                            height={COMPONENT_HEIGHT} 
-                            rx="6" 
-                            fill="#0f172a" 
-                            stroke={isHovered ? '#00f3ff' : '#334155'} 
-                            strokeWidth={isHovered ? 2 : 1}
+                        {/* Glow effect for highlighted components */}
+                        {isHighlighted && (
+                          <rect
+                            x="-4"
+                            y="-4"
+                            width={COMPONENT_WIDTH + 8}
+                            height={COMPONENT_HEIGHT + 8}
+                            rx="10"
+                            fill="none"
+                            stroke={highlight.color}
+                            strokeWidth="3"
+                            opacity="0.6"
+                            className={highlight.pulse ? 'animate-pulse' : ''}
+                          />
+                        )}
+                        <rect
+                            width={COMPONENT_WIDTH}
+                            height={COMPONENT_HEIGHT}
+                            rx="6"
+                            fill="#0f172a"
+                            stroke={isHighlighted ? highlight.color : (isHovered ? '#00f3ff' : '#334155')}
+                            strokeWidth={isHighlighted ? 3 : (isHovered ? 2 : 1)}
                             className="transition-colors shadow-lg"
                         />
                         <rect width={COMPONENT_WIDTH} height="24" rx="6" fill="#1e293b" />
@@ -530,6 +746,9 @@ const DiagramCanvas: React.FC<DiagramCanvasProps> = ({ diagram, onComponentClick
       </svg>
     </div>
   );
-};
+});
+
+// Add display name for debugging
+DiagramCanvas.displayName = 'DiagramCanvas';
 
 export default DiagramCanvas;

@@ -98,6 +98,7 @@ const Inventory: React.FC<InventoryProps> = ({
   
   // Selection State
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [brokenImages, setBrokenImages] = useState<Record<string, string>>({});
 
   // Add Item State
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -198,6 +199,11 @@ const Inventory: React.FC<InventoryProps> = ({
   };
 
   const clearSelection = () => setSelectedIds(new Set());
+
+  const markBrokenImage = (id: string, url?: string) => {
+    if (!url) return;
+    setBrokenImages(prev => (prev[id] === url ? prev : { ...prev, [id]: url }));
+  };
 
   // --- Bulk Actions ---
 
@@ -397,13 +403,15 @@ const Inventory: React.FC<InventoryProps> = ({
   return (
     <>
       {/* Desktop Toggle Button - Hidden on mobile */}
-      <button 
+      <button
         ref={buttonRef}
+        type="button"
         onClick={handleButtonClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`hidden md:flex flex-col items-center justify-center fixed left-0 top-1/2 transform -translate-y-1/2 z-50 bg-cyber-card border-r border-y border-neon-cyan/30 py-3 px-1 rounded-r-lg text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] ${isOpen ? 'translate-x-[360px]' : 'translate-x-0'}`}
+        className={`hidden md:flex flex-col items-center justify-center fixed left-0 top-1/2 transform -translate-y-1/2 z-50 bg-cyber-card border-r border-y border-neon-cyan/30 h-16 w-11 rounded-r-lg text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${isOpen ? 'translate-x-[360px]' : 'translate-x-0'}`}
         title={isPinned ? 'Unlock Inventory' : 'Inventory'}
+        aria-label={isPinned ? 'Unlock inventory' : 'Open inventory'}
       >
         {isPinned ? (
             <svg className="w-5 h-5 text-neon-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
@@ -428,11 +436,23 @@ const Inventory: React.FC<InventoryProps> = ({
                     ASSET MANAGER
                 </h2>
                 {/* Mobile Close Button */}
-                <button onClick={onClose} className="md:hidden p-2 text-slate-400 hover:text-white">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="md:hidden h-11 w-11 inline-flex items-center justify-center text-slate-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                    title="Close inventory"
+                    aria-label="Close inventory"
+                >
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
                 {/* Desktop Pin Button inside header */}
-                <button onClick={() => setIsPinned(!isPinned)} className="hidden md:block p-1 text-slate-500 hover:text-neon-cyan transition-colors" title={isPinned ? "Unlock Sidebar" : "Lock Sidebar Open"}>
+                <button
+                    type="button"
+                    onClick={() => setIsPinned(!isPinned)}
+                    className="hidden md:inline-flex h-11 w-11 items-center justify-center text-slate-500 hover:text-neon-cyan transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                    title={isPinned ? 'Unlock sidebar' : 'Lock sidebar open'}
+                    aria-label={isPinned ? 'Unlock sidebar' : 'Lock sidebar open'}
+                >
                     {isPinned ? (
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
                     ) : (
@@ -480,7 +500,10 @@ const Inventory: React.FC<InventoryProps> = ({
                                     {cat} <span className="text-neon-cyan">{catItems.length}</span>
                                 </h3>
                                 <div className="space-y-2">
-                                    {catItems.map(item => (
+                                    {catItems.map(item => {
+                                        const isThumbnailBroken = !!item.imageUrl && brokenImages[item.id] === item.imageUrl;
+
+                                        return (
                                         <div 
                                             key={item.id}
                                             draggable
@@ -499,8 +522,15 @@ const Inventory: React.FC<InventoryProps> = ({
                                                 
                                                 {/* Component Image/Thumbnail */}
                                                 <div className="w-10 h-10 rounded bg-black/50 border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
-                                                    {item.imageUrl ? (
-                                                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                                                    {item.imageUrl && !isThumbnailBroken ? (
+                                                        <img
+                                                            src={item.imageUrl}
+                                                            alt={item.name}
+                                                            className="w-full h-full object-cover"
+                                                            loading="lazy"
+                                                            decoding="async"
+                                                            onError={() => markBrokenImage(item.id, item.imageUrl)}
+                                                        />
                                                     ) : (
                                                         <span className="text-slate-600 font-mono font-bold">{getTypeIcon(item.type)}</span>
                                                     )}
@@ -539,43 +569,51 @@ const Inventory: React.FC<InventoryProps> = ({
                                                     >+</button>
                                                 </div>
                                                 {/* Action Buttons - Always visible on mobile, hover on desktop */}
-                                                <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                                                     <button 
+                                                        type="button"
                                                         onClick={(e) => { 
                                                             e.stopPropagation(); 
                                                             onAddToCanvas?.(item);
                                                         }}
-                                                        className="text-neon-green hover:text-white bg-neon-green/10 hover:bg-neon-green/20 p-1.5 rounded"
-                                                        title="Add to Diagram"
+                                                        className="h-11 w-11 inline-flex items-center justify-center text-neon-green hover:text-white bg-neon-green/10 hover:bg-neon-green/20 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-green/50"
+                                                        title="Add to diagram"
+                                                        aria-label="Add to diagram"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                                                     </button>
                                                     <button 
+                                                        type="button"
                                                         onClick={(e) => { 
                                                             e.stopPropagation(); 
                                                             handleQuickThumbnail(item);
                                                         }}
-                                                        className="text-slate-500 hover:text-neon-amber p-1.5 rounded hover:bg-slate-800"
+                                                        className="h-11 w-11 inline-flex items-center justify-center text-slate-500 hover:text-neon-amber rounded hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/50"
                                                         title="Generate Thumbnail"
+                                                        aria-label="Generate thumbnail"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                                     </button>
                                                     <button 
+                                                        type="button"
                                                         onClick={(e) => { e.stopPropagation(); onSelect(item); }}
-                                                        className="text-slate-500 hover:text-neon-cyan p-1.5 rounded hover:bg-slate-800"
-                                                        title="Edit Details"
+                                                        className="h-11 w-11 inline-flex items-center justify-center text-slate-500 hover:text-neon-cyan rounded hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
+                                                        title="Edit details"
+                                                        aria-label="Edit details"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                                     </button>
                                                     <button 
+                                                        type="button"
                                                         onClick={(e) => { 
                                                             e.stopPropagation(); 
                                                             if (window.confirm("Are you sure you want to delete this item?")) {
                                                                 onRemoveItem(item.id); 
                                                             }
                                                         }}
-                                                        className="text-slate-500 hover:text-red-400 p-1.5 rounded hover:bg-slate-800"
-                                                        title="Delete Item"
+                                                        className="h-11 w-11 inline-flex items-center justify-center text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+                                                        title="Delete item"
+                                                        aria-label="Delete item"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                     </button>
@@ -584,7 +622,7 @@ const Inventory: React.FC<InventoryProps> = ({
                                             {/* Drag Handle Indicator */}
                                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-neon-cyan/0 group-hover:bg-neon-cyan/50 rounded-l transition-colors"></div>
                                         </div>
-                                    ))}
+                                    )})}
                                 </div>
                             </div>
                         )
@@ -678,10 +716,12 @@ const Inventory: React.FC<InventoryProps> = ({
                                 className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-sm text-white focus:border-neon-cyan focus:outline-none"
                             />
                             <button 
+                                type="button"
                                 onClick={handleAutoGenerateImage}
                                 disabled={!newItemName || isGeneratingImage}
                                 title="Auto-generate product image"
-                                className="bg-slate-800 border border-slate-600 text-neon-purple p-2 rounded hover:bg-slate-700 hover:border-neon-purple disabled:opacity-50"
+                                aria-label="Auto-generate product image"
+                                className="h-11 w-11 inline-flex items-center justify-center bg-slate-800 border border-slate-600 text-neon-purple rounded hover:bg-slate-700 hover:border-neon-purple disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-purple/50"
                             >
                                 {isGeneratingImage ? (
                                     <div className="w-4 h-4 border-2 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
