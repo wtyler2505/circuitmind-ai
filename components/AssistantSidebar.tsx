@@ -10,6 +10,7 @@ interface AssistantSidebarProps {
   onSidebarWidthChange?: (width: number) => void;
   minSidebarWidth?: number;
   maxSidebarWidth?: number;
+  defaultSidebarWidth?: number;
   children: React.ReactNode;
 }
 
@@ -23,6 +24,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
   onSidebarWidthChange,
   minSidebarWidth = 300,
   maxSidebarWidth = 560,
+  defaultSidebarWidth = 380,
   children,
 }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -81,6 +83,23 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleResizeKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onSidebarWidthChange) return;
+    const step = event.shiftKey ? 40 : 16;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      onSidebarWidthChange(clampSidebarWidth(sidebarWidth + step));
+    }
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      onSidebarWidthChange(clampSidebarWidth(sidebarWidth - step));
+    }
+    if (event.key === 'Home') {
+      event.preventDefault();
+      onSidebarWidthChange(clampSidebarWidth(defaultSidebarWidth));
+    }
   };
 
   useEffect(() => {
@@ -154,9 +173,17 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
         <div
           className="group absolute left-0 top-0 hidden h-full w-2 cursor-ew-resize md:block"
           onMouseDown={handleResizeStart}
+          onKeyDown={handleResizeKeyDown}
+          onDoubleClick={() => onSidebarWidthChange?.(clampSidebarWidth(defaultSidebarWidth))}
           role="separator"
+          tabIndex={0}
           aria-orientation="vertical"
           aria-label="Resize assistant sidebar"
+          aria-valuemin={minSidebarWidth}
+          aria-valuemax={maxSidebarWidth}
+          aria-valuenow={sidebarWidth}
+          aria-valuetext={`${sidebarWidth}px`}
+          title="Drag or use arrow keys to resize. Double-click to reset."
         >
           <div className="h-full w-[3px] bg-neon-amber/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         </div>

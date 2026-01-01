@@ -9,6 +9,7 @@
 - Coverage Matrix
 - Issue Ledger
 - Action Plan
+- Deep Focus Log
 - Code Examples
 - Mockups
 - Design Token Harvest
@@ -2314,6 +2315,7 @@ pHash: 9fc78f7bea688040 | Baseline diff: Unavailable (no BASELINE_DIR)
 | UI-008 | Medium | `03-inventory/04-tab-list-view.png` | Expose full names or tooltips for truncated items | S | Addressed (needs recapture) |
 | UI-009 | Low | `08-canvas/06-full-workspace.png` | Add grid/empty-state guidance for canvas | S | Addressed (recaptured) |
 | UI-010 | Low | `02-header/05-btn-save.png` | Establish primary/secondary CTA style system | M | Not started |
+| UI-011 | High | Sidebar resize handles (left/right) | Add keyboard resizing + ARIA values + reset to default width | S | Addressed (needs recapture) |
 
 ## Action Plan
 **Quick Wins (High impact, low effort)**
@@ -2329,6 +2331,28 @@ pHash: 9fc78f7bea688040 | Baseline diff: Unavailable (no BASELINE_DIR)
 **Long-Term Enhancements**
 - Add structured empty states (canvas, 3D model, chat).
 - Implement a full component design system with tokens and usage rules.
+
+## Deep Focus Log
+### Left/Right Sidebars (Inventory + Assistant)
+Scope:
+- Inventory (left) and AI assistant (right) sidebars, resizing behavior, and auto-hide/pin interactions.
+
+Findings:
+- Resize handles were mouse-only and lacked keyboard support and ARIA value metadata.
+- No reset affordance for width meant users had to drag precisely to return to defaults.
+
+Actions applied:
+- Added keyboard resizing (Arrow keys with Shift for larger step) and reset (Home key + double-click).
+- Added `role="separator"` metadata with `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and `aria-valuetext`.
+- Centralized default widths in `App.tsx` and passed them into sidebars for consistent reset behavior.
+
+Evidence:
+- `components/Inventory.tsx`
+- `components/AssistantSidebar.tsx`
+- `App.tsx`
+
+Follow-up:
+- Recapture sidebar screenshots to verify focus ring visibility and resize affordance clarity.
 
 ## Code Examples
 ```css

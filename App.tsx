@@ -822,6 +822,9 @@ export default function App() {
   // AI context state
   const [aiContext, setAIContext] = useState<AIContext | null>(null);
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
+  const inventoryDefaultWidth = 360;
+  const assistantDefaultWidth = 380;
+
   const [isAssistantOpen, setIsAssistantOpen] = useState(() => {
     try {
       const stored = localStorage.getItem('cm_assistant_open_default');
@@ -841,19 +844,19 @@ export default function App() {
   const [inventoryWidth, setInventoryWidth] = useState(() => {
     try {
       const saved = localStorage.getItem('cm_inventory_width');
-      const parsed = saved ? Number.parseInt(saved, 10) : 360;
-      return Number.isFinite(parsed) ? parsed : 360;
+      const parsed = saved ? Number.parseInt(saved, 10) : inventoryDefaultWidth;
+      return Number.isFinite(parsed) ? parsed : inventoryDefaultWidth;
     } catch {
-      return 360;
+      return inventoryDefaultWidth;
     }
   });
   const [assistantWidth, setAssistantWidth] = useState(() => {
     try {
       const saved = localStorage.getItem('cm_assistant_width');
-      const parsed = saved ? Number.parseInt(saved, 10) : 380;
-      return Number.isFinite(parsed) ? parsed : 380;
+      const parsed = saved ? Number.parseInt(saved, 10) : assistantDefaultWidth;
+      return Number.isFinite(parsed) ? parsed : assistantDefaultWidth;
     } catch {
-      return 380;
+      return assistantDefaultWidth;
     }
   });
 
@@ -1425,6 +1428,7 @@ export default function App() {
         }}
         sidebarWidth={inventoryWidth}
         onSidebarWidthChange={setInventoryWidth}
+        defaultSidebarWidth={inventoryDefaultWidth}
         defaultPinned={inventoryPinnedDefault}
         onPinnedChange={(pinned) => setInventoryPinnedDefault(pinned)}
       />
@@ -1596,6 +1600,7 @@ export default function App() {
         }}
         sidebarWidth={assistantWidth}
         onSidebarWidthChange={setAssistantWidth}
+        defaultSidebarWidth={assistantDefaultWidth}
       >
         <ChatPanel
           conversations={conversationManager.conversations}

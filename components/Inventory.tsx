@@ -31,6 +31,7 @@ interface InventoryProps {
   maxSidebarWidth?: number;
   defaultPinned?: boolean;
   onPinnedChange?: (pinned: boolean) => void;
+  defaultSidebarWidth?: number;
 }
 
 const CATEGORIES = ['microcontroller', 'sensor', 'actuator', 'power', 'other'] as const;
@@ -108,6 +109,7 @@ const Inventory: React.FC<InventoryProps> = ({
   maxSidebarWidth = 520,
   defaultPinned = false,
   onPinnedChange,
+  defaultSidebarWidth = 360,
 }) => {
   // Refs for click outside detection
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -247,6 +249,23 @@ const Inventory: React.FC<InventoryProps> = ({
 
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleResizeKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onSidebarWidthChange) return;
+    const step = event.shiftKey ? 40 : 16;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      onSidebarWidthChange(clampSidebarWidth(sidebarWidth + step));
+    }
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      onSidebarWidthChange(clampSidebarWidth(sidebarWidth - step));
+    }
+    if (event.key === 'Home') {
+      event.preventDefault();
+      onSidebarWidthChange(clampSidebarWidth(defaultSidebarWidth));
+    }
   };
 
   // Drag State
@@ -521,9 +540,17 @@ const Inventory: React.FC<InventoryProps> = ({
         <div
           className="group absolute right-0 top-0 hidden h-full w-2 cursor-ew-resize md:block"
           onMouseDown={handleResizeStart}
+          onKeyDown={handleResizeKeyDown}
+          onDoubleClick={() => onSidebarWidthChange?.(clampSidebarWidth(defaultSidebarWidth))}
           role="separator"
+          tabIndex={0}
           aria-orientation="vertical"
           aria-label="Resize inventory sidebar"
+          aria-valuemin={minSidebarWidth}
+          aria-valuemax={maxSidebarWidth}
+          aria-valuenow={sidebarWidth}
+          aria-valuetext={`${sidebarWidth}px`}
+          title="Drag or use arrow keys to resize. Double-click to reset."
         >
           <div className="h-full w-[3px] bg-neon-cyan/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         </div>
