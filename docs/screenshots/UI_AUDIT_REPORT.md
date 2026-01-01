@@ -15,7 +15,7 @@
 - Appendix
 
 ## Executive Summary
-- Strong, cohesive dark theme with consistent card styling and clear separation between inventory, canvas, and chat zones.
+- Strong, cohesive dark theme with clear separation between inventory (left), canvas (center), and AI assistant (right) plus a thin status rail.
 - Discoverability suffers from icon-only controls (header, canvas, chat) and hover-only actions that are hard for keyboard users.
 - Multiple views show broken-image placeholders for component thumbnails, which reduces trust and visual recognition.
 - Low-contrast microcopy (timestamps, placeholders) risks WCAG AA failures for small text.
@@ -44,7 +44,7 @@
 - **Recommendation:** Define a primary CTA color and reserve accent colors for secondary or AI actions.
 
 ### 2) Information Architecture Analysis
-- **Strength:** Clear separation of inventory (left), main workspace (center), and chat (bottom). (References: `03-inventory/01-panel-open.png`, `01-app-shell/01-default.png`)
+- **Strength:** Clear separation of inventory (left), main workspace (center), AI assistant (right), and a thin status rail. (References: `03-inventory/01-panel-open.png`, `01-app-shell/01-default.png`)
 - **Issue (Medium):** Session metadata and chip controls are small and visually light, which can reduce findability. (Reference: `07-chat/01-panel-full.png`)
 - **Recommendation:** Increase visibility of session context and provide clearer “current mode” labeling.
 

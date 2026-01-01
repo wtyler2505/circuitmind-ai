@@ -53,6 +53,10 @@ interface ChatPanelProps {
   // Panel visibility
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+
+  // Layout overrides
+  className?: string;
+  headerActions?: React.ReactNode;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -76,6 +80,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   onDeepThinkingChange,
   isExpanded = true,
   onToggleExpand,
+  className = '',
+  headerActions,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [attachment, setAttachment] = useState<{ base64: string; type: 'image' | 'video' } | null>(
@@ -182,15 +188,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     );
   }
 
+  const containerClassName = `relative flex flex-col h-full bg-gray-900 rounded-t-xl border border-gray-700 border-b-0 ${className}`.trim();
+
   return (
     <div
-      className="flex flex-col h-full bg-gray-900 rounded-t-xl border border-gray-700 border-b-0"
+      className={containerClassName}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-800/50 rounded-t-xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 bg-gray-900/60 rounded-t-xl">
         <div className="flex items-center gap-3">
           {/* Conversation Switcher */}
           <ConversationSwitcher
@@ -238,9 +246,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             <button
               type="button"
               onClick={() => onDeepThinkingChange(!useDeepThinking)}
-              className={`h-11 w-11 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+              className={`h-11 w-11 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 ${
                 useDeepThinking
-                  ? 'bg-purple-500/20 text-purple-400'
+                  ? 'bg-amber-500/20 text-amber-300'
                   : 'text-gray-300 hover:text-white'
               }`}
               title={useDeepThinking ? 'Deep thinking enabled' : 'Enable deep thinking'}
@@ -256,6 +264,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               </svg>
             </button>
           )}
+
+          {headerActions}
 
           {/* Collapse Button */}
           {onToggleExpand && (
@@ -296,11 +306,19 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
               />
             </svg>
-            <h3 className="text-gray-300 font-medium mb-1">CircuitMind AI</h3>
-            <p className="text-gray-300 text-sm max-w-xs">
-              Ask me about electronics, wiring diagrams, or components. I can see your diagram and
-              inventory.
+            <h3 className="text-gray-100 font-semibold mb-2 tracking-wide">CircuitMind Assistant</h3>
+            <p className="text-gray-400 text-sm max-w-xs">
+              I can see your diagram, inventory, and context. Start with a wiring goal or a parts
+              question.
             </p>
+            <div className="mt-4 flex flex-col gap-2 text-xs text-gray-400">
+              <span className="px-3 py-1 rounded-full border border-gray-700 bg-gray-800/60">
+                Try: “Wire an ESP32 to a DHT11 sensor.”
+              </span>
+              <span className="px-3 py-1 rounded-full border border-gray-700 bg-gray-800/60">
+                Try: “Show safe pins for this board.”
+              </span>
+            </div>
           </div>
         ) : (
           messages.map((msg) => (
