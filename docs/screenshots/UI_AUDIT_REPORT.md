@@ -2354,6 +2354,16 @@ Evidence:
 Follow-up:
 - Recapture sidebar screenshots to verify focus ring visibility and resize affordance clarity.
 
+### Sidebar Polish Pass
+Scope:
+- Assistant sidebar header clarity, status visibility, and quick actions.
+- Inventory sidebar scanability and filtering.
+
+Actions applied:
+- Added assistant header label, status chips for mode/deep thinking/context, and a “New” conversation action.
+- Added inventory quick-filter chips, search clear button, and top-of-panel stats.
+- Added `role="complementary"` to both sidebars and focus-visible rings on resize handles.
+
 ## Code Examples
 ```css
 /* Icon-only button accessibility */

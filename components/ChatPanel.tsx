@@ -194,6 +194,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       : generationMode === 'image'
         ? 'bg-neon-amber text-black'
         : 'bg-neon-purple text-black';
+  const modeLabel = generationMode === 'chat' ? 'Chat' : generationMode === 'image' ? 'Image' : 'Video';
   const containerClassName = `relative flex flex-col h-full bg-slate-950/80 rounded-t-xl border border-slate-800/80 border-b-0 ${className}`.trim();
 
   return (
@@ -205,48 +206,64 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/80 bg-slate-950/70 rounded-t-xl">
-        <div className="flex items-center gap-3">
-          {/* Conversation Switcher */}
-          <ConversationSwitcher
-            conversations={conversations}
-            activeConversationId={activeConversationId}
-            onSwitchConversation={onSwitchConversation}
-            onCreateConversation={onCreateConversation}
-            onDeleteConversation={onDeleteConversation}
-            onRenameConversation={onRenameConversation}
-          />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-slate-400">
+            <span>AI Assistant</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan shadow-[0_0_8px_rgba(0,243,255,0.65)]" />
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Conversation Switcher */}
+            <ConversationSwitcher
+              conversations={conversations}
+              activeConversationId={activeConversationId}
+              onSwitchConversation={onSwitchConversation}
+              onCreateConversation={onCreateConversation}
+              onDeleteConversation={onDeleteConversation}
+              onRenameConversation={onRenameConversation}
+            />
 
-          {/* Context Indicator */}
-          {context && (
-            <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded text-[10px] text-slate-300 border border-slate-700/70 bg-slate-900/70">
-              {context.currentDiagramTitle && (
-                <span className="flex items-center gap-1">
-                  <svg
-                    className="w-3 h-3 text-cyan-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
-                    />
-                  </svg>
-                  {context.componentCount}c / {context.connectionCount}w
-                </span>
-              )}
-              {context.selectedComponentName && (
-                <span className="flex items-center gap-1 text-cyan-300">
-                  → {context.selectedComponentName}
-                </span>
-              )}
-            </div>
-          )}
+            {/* Context Indicator */}
+            {context && (
+              <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded text-[10px] text-slate-300 border border-slate-700/70 bg-slate-900/70">
+                {context.currentDiagramTitle && (
+                  <span className="flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3 text-cyan-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                      />
+                    </svg>
+                    {context.componentCount}c / {context.connectionCount}w
+                  </span>
+                )}
+                {context.selectedComponentName && (
+                  <span className="flex items-center gap-1 text-cyan-300">
+                    → {context.selectedComponentName}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCreateConversation}
+            className="hidden sm:inline-flex items-center gap-2 px-3 py-2 text-[10px] uppercase tracking-[0.2em] rounded-lg border border-slate-700 bg-slate-900/70 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+            title="Start a new conversation"
+            aria-label="Create new conversation"
+          >
+            <span className="text-neon-cyan">+</span>
+            New
+          </button>
           {/* Deep Thinking Toggle */}
           {onDeepThinkingChange && (
             <button
@@ -291,6 +308,46 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 />
               </svg>
             </button>
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 py-2 border-b border-slate-800/70 bg-slate-950/60">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400">
+          <span className={`px-2 py-1 rounded-full ${modeAccent}`}>
+            Mode: {modeLabel}
+          </span>
+          {onDeepThinkingChange && (
+            <span
+              className={`px-2 py-1 rounded-full border ${
+                useDeepThinking
+                  ? 'border-amber-400/60 text-amber-300'
+                  : 'border-slate-700 text-slate-400'
+              }`}
+            >
+              Deep: {useDeepThinking ? 'On' : 'Off'}
+            </span>
+          )}
+          {context && (
+            <>
+              <span
+                className="px-2 py-1 rounded-full border border-slate-700 text-slate-300"
+                title={context.inventorySummary}
+              >
+                Inv: {context.componentCount}c / {context.connectionCount}w
+              </span>
+              <span className="px-2 py-1 rounded-full border border-slate-700 text-slate-300">
+                View: {context.activeView.replace('-', ' ')}
+              </span>
+              {context.selectedComponentName && (
+                <span
+                  className="px-2 py-1 rounded-full border border-slate-700 text-slate-300 max-w-[180px] truncate"
+                  title={context.selectedComponentName}
+                >
+                  Selected: {context.selectedComponentName}
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -357,6 +414,10 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Proactive Suggestions */}
       {proactiveSuggestions.length > 0 && (
         <div className="px-4 py-2 border-t border-slate-800/70">
+          <div className="flex items-center justify-between mb-2 text-[10px] uppercase tracking-[0.3em] text-slate-400">
+            Suggestions
+            <span className="text-slate-500">tap to send</span>
+          </div>
           <div className="flex flex-wrap gap-2">
             {proactiveSuggestions.map((suggestion, idx) => (
               <button

@@ -124,6 +124,7 @@ const Inventory: React.FC<InventoryProps> = ({
   // Tabs: 'list', 'add', 'tools'
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'tools'>('list');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<ComponentType | 'all'>('all');
 
   // Selection State
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -472,13 +473,45 @@ const Inventory: React.FC<InventoryProps> = ({
     reader.readAsText(file);
   };
 
+  const inventoryStats = useMemo(() => {
+    const categoryCounts: Record<ComponentType, number> = {
+      microcontroller: 0,
+      sensor: 0,
+      actuator: 0,
+      power: 0,
+      other: 0,
+    };
+    let totalUnits = 0;
+    let lowStockCount = 0;
+
+    items.forEach((item) => {
+      totalUnits += item.quantity || 1;
+      if (item.lowStock) lowStockCount += 1;
+      if (categoryCounts[item.type] !== undefined) {
+        categoryCounts[item.type] += 1;
+      } else {
+        categoryCounts.other += 1;
+      }
+    });
+
+    return {
+      totalUnits,
+      uniqueCount: items.length,
+      lowStockCount,
+      categoryCounts,
+    };
+  }, [items]);
+
   // --- Categorization Logic ---
   const categorizedItems = useMemo(() => {
     const groups: Record<string, ElectronicComponent[]> = {};
     CATEGORIES.forEach((c) => (groups[c] = []));
 
     items.forEach((item) => {
-      if (item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (activeCategory === 'all' || item.type === activeCategory)
+      ) {
         if (groups[item.type]) {
           groups[item.type].push(item);
         } else {
@@ -487,7 +520,7 @@ const Inventory: React.FC<InventoryProps> = ({
       }
     });
     return groups;
-  }, [items, searchQuery]);
+  }, [items, searchQuery, activeCategory]);
 
   return (
     <>
@@ -534,11 +567,13 @@ const Inventory: React.FC<InventoryProps> = ({
         ref={sidebarRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        role="complementary"
+        aria-label="Inventory sidebar"
         className={`fixed inset-y-0 left-0 w-full md:w-[var(--inventory-width)] bg-cyber-dark/95 backdrop-blur-xl border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.5)]`}
         style={{ '--inventory-width': `${sidebarWidth}px` } as React.CSSProperties}
       >
         <div
-          className="group absolute right-0 top-0 hidden h-full w-2 cursor-ew-resize md:block"
+          className="group absolute right-0 top-0 hidden h-full w-2 cursor-ew-resize md:block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
           onMouseDown={handleResizeStart}
           onKeyDown={handleResizeKeyDown}
           onDoubleClick={() => onSidebarWidthChange?.(clampSidebarWidth(defaultSidebarWidth))}
@@ -620,8 +655,20 @@ const Inventory: React.FC<InventoryProps> = ({
           </div>
 
           <p className="text-[10px] text-slate-400 font-mono tracking-[0.3em] uppercase mb-2">
-            Total Assets: {items.reduce((acc, curr) => acc + (curr.quantity || 1), 0)} Units
+            Total Units: {inventoryStats.totalUnits}
           </p>
+          <div className="grid grid-cols-2 gap-2 mb-3 text-[10px] uppercase tracking-[0.25em]">
+            <div className="rounded-lg border border-slate-800 bg-slate-900/60 px-2 py-1 flex items-center justify-between">
+              <span className="text-slate-500">Unique</span>
+              <span className="text-slate-200">{inventoryStats.uniqueCount}</span>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-900/60 px-2 py-1 flex items-center justify-between">
+              <span className="text-slate-500">Low</span>
+              <span className={inventoryStats.lowStockCount > 0 ? 'text-amber-300' : 'text-slate-200'}>
+                {inventoryStats.lowStockCount}
+              </span>
+            </div>
+          </div>
 
           {/* Tabs */}
           <div className="flex bg-slate-950/70 p-1 rounded-lg border border-slate-800/80">
@@ -651,6 +698,39 @@ const Inventory: React.FC<InventoryProps> = ({
           {/* --- LIST VIEW --- */}
           {activeTab === 'list' && (
             <div className="p-4 space-y-4 pb-24 md:pb-20">
+              <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.2em]">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('all')}
+                  className={`px-3 py-1 rounded-full border transition-colors ${
+                    activeCategory === 'all'
+                      ? 'border-neon-cyan text-neon-cyan bg-neon-cyan/10'
+                      : 'border-slate-700 text-slate-400 hover:text-slate-200'
+                  }`}
+                  aria-label="Filter: all categories"
+                >
+                  All <span className="text-slate-300">{inventoryStats.uniqueCount}</span>
+                </button>
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-3 py-1 rounded-full border transition-colors ${
+                      activeCategory === cat
+                        ? 'border-neon-cyan text-neon-cyan bg-neon-cyan/10'
+                        : 'border-slate-700 text-slate-400 hover:text-slate-200'
+                    }`}
+                    aria-label={`Filter: ${cat}`}
+                  >
+                    {cat}{' '}
+                    <span className="text-slate-300">
+                      {inventoryStats.categoryCounts[cat]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               <div className="relative">
                 <input
                   type="text"
@@ -672,6 +752,23 @@ const Inventory: React.FC<InventoryProps> = ({
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1.5 h-7 w-7 inline-flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
               </div>
 
               {selectedIds.size > 0 && (

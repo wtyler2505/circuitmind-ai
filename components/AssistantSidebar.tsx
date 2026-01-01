@@ -167,11 +167,13 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
         ref={sidebarRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        role="complementary"
+        aria-label="AI assistant sidebar"
         className={`fixed inset-y-0 right-0 w-full md:w-[var(--assistant-width)] bg-cyber-dark/95 backdrop-blur-xl border-l border-slate-800 z-40 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)]`}
         style={{ '--assistant-width': `${sidebarWidth}px` } as React.CSSProperties}
       >
         <div
-          className="group absolute left-0 top-0 hidden h-full w-2 cursor-ew-resize md:block"
+          className="group absolute left-0 top-0 hidden h-full w-2 cursor-ew-resize md:block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/60"
           onMouseDown={handleResizeStart}
           onKeyDown={handleResizeKeyDown}
           onDoubleClick={() => onSidebarWidthChange?.(clampSidebarWidth(defaultSidebarWidth))}
