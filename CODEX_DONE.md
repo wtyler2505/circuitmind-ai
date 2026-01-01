@@ -416,3 +416,36 @@ git commit -m "Add accessible sidebar resize controls"
 
 - Tests: `npm run test` (8 files, 40 tests) passed.
 - Unrelated modified/untracked files existed in the repo; only listed files were staged and committed.
+
+# Codex Completion Report
+
+**Task:** Fix crash rendering proactive suggestions as objects
+**Status:** done
+
+## Changes Made
+
+- `services/geminiService.ts` - normalize proactive suggestions to strings (accept `{label}` objects)
+- `services/__tests__/geminiService.test.ts` - added normalization coverage
+
+## Commands Run
+
+```bash
+rg -n "generateProactiveSuggestions|suggestions" services/geminiService.ts App.tsx components/ChatPanel.tsx
+npm run test
+git status --short
+git add services/geminiService.ts services/__tests__/geminiService.test.ts
+git commit -m "Normalize proactive suggestions"
+```
+
+## Next Steps
+
+- Refresh the app to confirm proactive suggestion chips render as strings.
+
+## Blockers (if any)
+
+- None.
+
+## Handoff Notes
+
+- Tests: `npm run test` (9 files, 43 tests) passed.
+- `services/geminiService.ts` had pre-existing uncommitted changes; this commit includes them.
