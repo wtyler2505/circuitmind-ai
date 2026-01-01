@@ -1,8 +1,114 @@
 import { GoogleGenAI, Type, Schema, Modality } from "@google/genai";
-import { WiringDiagram, ElectronicComponent, GroundingSource } from "../types";
+import {
+  WiringDiagram,
+  ElectronicComponent,
+  GroundingSource,
+  AIContext,
+  ActionIntent,
+  ActionType,
+  ComponentReference,
+  WireConnection,
+} from "../types";
+import { buildContextPrompt } from './aiContextBuilder';
+
+// =====================================
+// Gemini SDK Type Definitions
+// =====================================
+
+/** Content part with text */
+interface GeminiTextPart {
+  text: string;
+}
+
+/** Content part with inline data (images/videos) */
+interface GeminiInlineDataPart {
+  inlineData: {
+    mimeType: string;
+    data: string;
+  };
+}
+
+/** Union type for content parts */
+type GeminiPart = GeminiTextPart | GeminiInlineDataPart;
+
+/** Chat message for conversation history */
+interface GeminiChatMessage {
+  role: 'user' | 'model';
+  parts: GeminiPart[];
+}
+
+/** Tool configuration for Gemini */
+interface GeminiTool {
+  googleSearch?: Record<string, unknown>;
+  codeExecution?: Record<string, unknown>;
+}
+
+/** Generation configuration */
+interface GeminiConfig {
+  systemInstruction?: string;
+  tools?: GeminiTool[];
+  thinkingConfig?: { thinkingBudget: number };
+  responseMimeType?: string;
+  responseSchema?: Schema;
+  imageConfig?: {
+    imageSize: string;
+    aspectRatio: string;
+  };
+}
+
+/** Grounding chunk from Gemini response */
+interface GeminiGroundingChunk {
+  web?: {
+    title: string;
+    uri: string;
+  };
+}
+
+/** Component mention from AI response */
+interface AIComponentMention {
+  componentId: string;
+  componentName?: string;
+  reason?: string;
+  status?: string;
+}
+
+/** Suggested action from AI response */
+interface AISuggestedAction {
+  type: ActionType;
+  payload?: Record<string, unknown>;
+  payloadJson?: string;
+  label?: string;
+  safe?: boolean;
+  description?: string;
+}
+
+/** Parsed structured response from AI */
+interface ParsedAIResponse {
+  message?: string;
+  componentMentions?: AIComponentMention[];
+  suggestedActions?: AISuggestedAction[];
+}
+
+/** API error with status code */
+interface APIError extends Error {
+  status?: number;
+}
+
+// Get API key from localStorage or environment variable
+const getApiKey = (): string => {
+  // Try localStorage first (user-configured)
+  try {
+    const stored = localStorage.getItem('cm_gemini_api_key');
+    if (stored) return stored;
+  } catch {
+    // localStorage not available (SSR or error)
+  }
+  // Fall back to environment variable
+  return process.env.API_KEY || '';
+};
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 const WIRING_SCHEMA: Schema = {
   type: Type.OBJECT,
@@ -23,7 +129,7 @@ const WIRING_SCHEMA: Schema = {
             description: "List of relevant pins used in this circuit"
           }
         },
-        required: ["id", "name", "type", "pins"]
+        required: ["id", "name", "type", "description", "pins"]
       }
     },
     connections: {
@@ -124,7 +230,7 @@ export const explainComponent = async (componentName: string): Promise<string> =
       contents: `Explain the component "${componentName}" to a hobbyist. Include common pinouts, voltage levels, and typical use cases. Keep it under 200 words. Format with Markdown.`,
     });
     return response.text || "Could not retrieve explanation.";
-  } catch (error) {
+  } catch (_error) {
     return "Error retrieving component details.";
   }
 };
@@ -331,23 +437,23 @@ export const suggestProjectsFromInventory = async (inventory: ElectronicComponen
        Mention if I need extra common parts (like resistors/wires).`,
      });
      return response.text || "No ideas generated.";
-   } catch (error) {
+   } catch (_error) {
      return "Could not generate suggestions.";
    }
 };
 
 export const chatWithAI = async (
-  message: string, 
-  history: any[], 
+  message: string,
+  history: GeminiChatMessage[],
   attachmentBase64?: string,
   attachmentType?: 'image' | 'video',
   useDeepThinking: boolean = false
 ): Promise<{ text: string, groundingSources: GroundingSource[] }> => {
    try {
     let model = 'gemini-3-flash-preview';
-    let parts: any[] = [{ text: message }];
-    let tools: any[] = [];
-    let config: any = {
+    let parts: GeminiPart[] = [{ text: message }];
+    let tools: GeminiTool[] = [];
+    const config: GeminiConfig = {
       systemInstruction: "You are CircuitMind, a helpful electronics AI. Use Google Search to provide up-to-date and accurate information about components, datasheets, and new technologies. Keep answers concise, technical but accessible."
     };
     
@@ -391,10 +497,10 @@ export const chatWithAI = async (
       config: config
     });
 
-    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const chunks = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || []) as GeminiGroundingChunk[];
     const groundingSources: GroundingSource[] = chunks
-      .map((c: any) => c.web ? { title: c.web.title, uri: c.web.uri } : null)
-      .filter((c: any) => c !== null);
+      .map((c) => c.web ? { title: c.web.title, uri: c.web.uri } : null)
+      .filter((c): c is GroundingSource => c !== null);
 
     return { 
       text: response.text || "...", 
@@ -515,12 +621,13 @@ export const generateConceptImage = async (
 
   // Helper to execute request with error handling/retry
   const executeRequest = async () => {
-    const aiClient = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = getApiKey();
+    const aiClient = new GoogleGenAI({ apiKey });
     
-    const config: any = {
+    const config: GeminiConfig = {
         imageConfig: {
           imageSize: size,
-          aspectRatio: aspectRatio as any
+          aspectRatio: aspectRatio,
         },
     };
     
@@ -540,9 +647,10 @@ export const generateConceptImage = async (
 
   try {
     return (await executeRequest()).candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || "";
-  } catch (error: any) {
+  } catch (error: unknown) {
      // Handle Permission Denied (403) or Not Found
-    if (error.status === 403 || (error.message && (error.message.includes('403') || error.message.includes('PERMISSION_DENIED') || error.message.includes('not found')))) {
+    const apiError = error as APIError;
+    if (apiError.status === 403 || (apiError.message && (apiError.message.includes('403') || apiError.message.includes('PERMISSION_DENIED') || apiError.message.includes('not found')))) {
       if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
         await window.aistudio.openSelectKey();
         const retryResponse = await executeRequest();
@@ -566,7 +674,8 @@ export const generateCircuitVideo = async (
   }
 
   const executeVideoRequest = async () => {
-    const aiClient = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = getApiKey();
+    const aiClient = new GoogleGenAI({ apiKey });
     let imageParam = undefined;
     if (imageBase64) {
       const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
@@ -595,13 +704,14 @@ export const generateCircuitVideo = async (
     const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
     if (!videoUri) throw new Error("Video generation failed to return a URI");
 
-    return `${videoUri}&key=${process.env.API_KEY}`;
+    return `${videoUri}&key=${apiKey}`;
   };
   
   try {
     return await executeVideoRequest();
-  } catch (error: any) {
-    if (error.status === 403 || (error.message && (error.message.includes('403') || error.message.includes('PERMISSION_DENIED')))) {
+  } catch (error: unknown) {
+    const apiError = error as APIError;
+    if (apiError.status === 403 || (apiError.message && (apiError.message.includes('403') || apiError.message.includes('PERMISSION_DENIED')))) {
       if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
         await window.aistudio.openSelectKey();
         return await executeVideoRequest();
@@ -654,10 +764,282 @@ export const generateComponent3DCode = async (componentName: string, componentTy
     code = code.trim();
     
     if (code.length < 20) throw new Error("Generated code is too short");
-    
+
     return code;
   } catch (error) {
     console.error("3D Generation Error:", error);
     throw error;
   }
+};
+
+// =====================================
+// Context-Aware AI Chat (Phase 4)
+// =====================================
+
+// Schema for structured AI response with actions
+const STRUCTURED_RESPONSE_SCHEMA: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    message: { type: Type.STRING, description: "The response text to show the user" },
+    componentMentions: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          componentId: { type: Type.STRING, description: "ID of mentioned component" },
+          componentName: { type: Type.STRING, description: "Name of mentioned component" },
+        },
+        required: ["componentId", "componentName"]
+      },
+      description: "Components referenced in the response"
+    },
+    suggestedActions: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          type: { type: Type.STRING, description: "Action type: highlight, centerOn, zoomTo, openInventory, addComponent, etc." },
+          label: { type: Type.STRING, description: "Button label for user" },
+          payloadJson: { type: Type.STRING, description: "JSON-encoded action parameters (e.g. {\"componentId\":\"xyz\"})" },
+          safe: { type: Type.BOOLEAN, description: "Whether this action auto-executes (true) or needs confirmation (false)" }
+        },
+        required: ["type", "label"]
+      },
+      description: "Actions the user can take"
+    },
+    proactiveSuggestion: { type: Type.STRING, description: "Optional proactive tip or suggestion" }
+  },
+  required: ["message"]
+};
+
+// Response type for context-aware chat
+export interface ContextAwareChatResponse {
+  text: string;
+  componentMentions: ComponentReference[];
+  suggestedActions: ActionIntent[];
+  proactiveSuggestion?: string;
+  groundingSources: GroundingSource[];
+}
+
+/**
+ * Context-aware chat function that understands app state
+ * and can suggest actions
+ */
+export const chatWithContext = async (
+  message: string,
+  history: { role: 'user' | 'model'; parts: { text: string }[] }[],
+  context: AIContext,
+  options?: {
+    attachmentBase64?: string;
+    attachmentType?: 'image' | 'video';
+    useDeepThinking?: boolean;
+    enableProactive?: boolean;
+  }
+): Promise<ContextAwareChatResponse> => {
+  const { attachmentBase64, attachmentType, useDeepThinking = false, enableProactive = true } = options || {};
+
+  try {
+    // Build context prompt section
+    const contextSection = buildContextPrompt(context);
+
+    // Build system instruction with context
+    const systemInstruction = `You are CircuitMind, an expert electronics AI assistant integrated into a wiring diagram tool.
+
+${contextSection}
+
+CAPABILITIES:
+- You can see the current diagram, selected components, and user's inventory
+- You can suggest actions for the user to take (highlight components, zoom, add parts, etc.)
+- When mentioning components, include their IDs so they can be highlighted
+- Be proactive: if you notice issues or opportunities, mention them
+
+RESPONSE GUIDELINES:
+- Be concise and technical but friendly
+- When referencing components in the diagram, use their exact names and IDs
+- Suggest relevant actions as buttons the user can click
+- Actions marked 'safe: true' will auto-execute; 'safe: false' requires confirmation
+- Use Google Search for technical specs, datasheets, and current info
+
+ACTION TYPES you can suggest:
+- highlight: Highlight a component (payload: {componentId, color?, duration?})
+- centerOn: Pan to component (payload: {componentId})
+- zoomTo: Change zoom (payload: {level})
+- openInventory: Open component library
+- openSettings: Open settings panel
+- addComponent: Add to diagram (payload: {component})
+- createConnection: Wire components (payload: {fromComponentId, fromPin, toComponentId, toPin})
+
+${enableProactive ? 'PROACTIVE MODE: Actively suggest improvements, point out issues, recommend next steps.' : ''}
+`;
+
+    let model = 'gemini-3-flash-preview';
+    let parts: GeminiPart[] = [{ text: message }];
+    let tools: GeminiTool[] = [];
+    const config: GeminiConfig = { systemInstruction };
+
+    const isAttachment = !!attachmentBase64;
+    const isComplexQuery = message.length > 50 ||
+      message.toLowerCase().includes('search') ||
+      message.toLowerCase().includes('find') ||
+      message.toLowerCase().includes('diagram') ||
+      message.toLowerCase().includes('component');
+
+    // Model selection based on query type
+    if (isAttachment && attachmentType === 'video') {
+      model = 'gemini-3-pro-preview';
+      const cleanBase64 = attachmentBase64?.replace(/^data:video\/(mp4|webm|quicktime);base64,/, '') || '';
+      parts = [
+        { inlineData: { mimeType: 'video/mp4', data: cleanBase64 } },
+        { text: message || "Analyze this video." }
+      ];
+    } else if (isAttachment && attachmentType === 'image') {
+      model = 'gemini-3-pro-preview';
+      const cleanBase64 = attachmentBase64?.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '') || '';
+      parts = [
+        { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
+        { text: message || "Analyze this electronic component/circuit." }
+      ];
+    } else if (useDeepThinking) {
+      model = 'gemini-3-pro-preview';
+      config.thinkingConfig = { thinkingBudget: 32768 };
+    } else if (isComplexQuery) {
+      model = 'gemini-3-pro-preview';
+      tools = [{ googleSearch: {} }];
+    }
+
+    config.tools = tools.length > 0 ? tools : undefined;
+    config.responseMimeType = "application/json";
+    config.responseSchema = STRUCTURED_RESPONSE_SCHEMA;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: [...history, { role: 'user', parts }],
+      config
+    });
+
+    // Parse grounding sources
+    const chunks = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || []) as GeminiGroundingChunk[];
+    const groundingSources: GroundingSource[] = chunks
+      .map((c) => c.web ? { title: c.web.title, uri: c.web.uri } : null)
+      .filter((c): c is GroundingSource => c !== null);
+
+    // Parse structured response
+    let parsed: ParsedAIResponse = {};
+    try {
+      parsed = JSON.parse(response.text || '{}') as ParsedAIResponse;
+    } catch {
+      // Fallback to plain text response
+      parsed = { message: response.text || "..." };
+    }
+
+    const messageText = parsed.message || response.text || '';
+
+    // Convert component mentions to ComponentReference format
+    const componentMentions: ComponentReference[] = (parsed.componentMentions || []).map((m) => {
+      const name = m.componentName || '';
+      const lowerMessage = messageText.toLowerCase();
+      const lowerName = name.toLowerCase();
+      const idx = lowerName ? lowerMessage.indexOf(lowerName) : -1;
+      return {
+        componentId: m.componentId,
+        componentName: name,
+        mentionStart: idx >= 0 ? idx : 0,
+        mentionEnd: idx >= 0 ? idx + name.length : 0,
+      };
+    });
+
+    // Convert suggested actions (payloadJson is JSON string)
+    const suggestedActions: ActionIntent[] = (parsed.suggestedActions || []).map((a) => {
+      let payload = {};
+      if (a.payloadJson) {
+        try {
+          payload = JSON.parse(a.payloadJson);
+        } catch (_e) {
+          console.warn('Failed to parse payloadJson:', a.payloadJson);
+        }
+      } else if (a.payload) {
+        // Fallback for legacy format
+        payload = a.payload;
+      }
+      return {
+        type: a.type as ActionType,
+        label: a.label,
+        payload,
+        safe: a.safe ?? false,
+      };
+    });
+
+    return {
+      text: parsed.message || "...",
+      componentMentions,
+      suggestedActions,
+      proactiveSuggestion: parsed.proactiveSuggestion,
+      groundingSources,
+    };
+  } catch (error) {
+    console.error("Context Chat Error:", error);
+    return {
+      text: "Connection error. Please try again.",
+      componentMentions: [],
+      suggestedActions: [],
+      groundingSources: [],
+    };
+  }
+};
+
+/**
+ * Generate proactive suggestions based on current state
+ */
+export const generateProactiveSuggestions = async (
+  context: AIContext,
+  diagramComponents?: ElectronicComponent[],
+  diagramConnections?: WireConnection[]
+): Promise<string[]> => {
+  try {
+    const contextSection = buildContextPrompt(context);
+
+    const prompt = `Based on this electronics project state, suggest 1-3 brief, actionable improvements:
+
+${contextSection}
+
+${diagramComponents ? `Components: ${diagramComponents.map(c => c.name).join(', ')}` : ''}
+${diagramConnections ? `Connections: ${diagramConnections.length}` : ''}
+
+Return a JSON array of suggestion strings. Keep each under 100 characters.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    });
+
+    const suggestions = JSON.parse(response.text || '[]');
+    return normalizeProactiveSuggestions(suggestions);
+  } catch (error) {
+    console.error("Proactive suggestions error:", error);
+    return [];
+  }
+};
+
+export const normalizeProactiveSuggestions = (input: unknown): string[] => {
+  if (!Array.isArray(input)) return [];
+
+  const normalized = input
+    .map((item) => {
+      if (typeof item === 'string') return item.trim();
+      if (item && typeof item === 'object' && 'label' in item) {
+        const label = (item as { label?: unknown }).label;
+        if (typeof label === 'string') return label.trim();
+      }
+      return null;
+    })
+    .filter((item): item is string => Boolean(item && item.length > 0));
+
+  return normalized.slice(0, 3);
 };
