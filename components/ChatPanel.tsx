@@ -88,6 +88,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     null
   );
   const [isDragging, setIsDragging] = useState(false);
+  const [showContextDetails, setShowContextDetails] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -196,6 +197,114 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         : 'bg-neon-purple text-black';
   const modeLabel = generationMode === 'chat' ? 'Chat' : generationMode === 'image' ? 'Image' : 'Video';
   const containerClassName = `relative flex flex-col h-full bg-slate-950/80 rounded-t-xl border border-slate-800/80 border-b-0 ${className}`.trim();
+  const quickActions = [
+    {
+      id: 'draft-wiring',
+      label: 'Draft wiring',
+      description: 'Propose a safe wiring plan.',
+      prompt: 'Draft a safe wiring plan based on my current diagram and inventory.',
+      style:
+        'border-cyan-400/50 text-cyan-200 bg-cyan-500/10 hover:bg-cyan-500/20 hover:text-white',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+          />
+        </svg>
+      ),
+    },
+    {
+      id: 'check-pins',
+      label: 'Check pins',
+      description: 'Find conflicts and unsafe pins.',
+      prompt: 'Check for pin conflicts or unsafe connections in this diagram.',
+      style:
+        'border-amber-400/50 text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 hover:text-white',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.74-3L13.74 4c-.77-1.33-2.7-1.33-3.47 0L3.33 16c-.77 1.33.2 3 1.74 3z"
+          />
+        </svg>
+      ),
+    },
+    {
+      id: 'inventory-audit',
+      label: 'Inventory gaps',
+      description: 'Highlight missing parts.',
+      prompt: 'Identify missing parts or substitutions needed for this design.',
+      style:
+        'border-emerald-400/50 text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-white',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 7h18M5 7l2 12h10l2-12M9 7V5a3 3 0 016 0v2"
+          />
+        </svg>
+      ),
+    },
+    {
+      id: 'layout-tidy',
+      label: 'Tidy layout',
+      description: 'Suggest layout improvements.',
+      prompt: 'Suggest layout improvements and cleaner routing for the current diagram.',
+      style:
+        'border-purple-400/50 text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 hover:text-white',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h10M4 18h7"
+          />
+        </svg>
+      ),
+    },
+  ];
+  const handleQuickAction = async (prompt: string) => {
+    if (isLoading) return;
+    if (onSuggestionClick) {
+      onSuggestionClick(prompt);
+      return;
+    }
+    await onSendMessage(prompt);
+  };
+  const groupedMessages = messages.reduce(
+    (groups, message) => {
+      const dateKey = new Date(message.timestamp).toDateString();
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup.dateKey === dateKey) {
+        lastGroup.items.push(message);
+      } else {
+        groups.push({ dateKey, items: [message] });
+      }
+      return groups;
+    },
+    [] as { dateKey: string; items: EnhancedChatMessage[] }[]
+  );
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  const formatGroupLabel = (dateKey: string) => {
+    const date = new Date(dateKey);
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    }
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  };
 
   return (
     <div
@@ -287,6 +396,29 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               </svg>
             </button>
           )}
+          {context && (
+            <button
+              type="button"
+              onClick={() => setShowContextDetails((prev) => !prev)}
+              className={`h-11 w-11 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${
+                showContextDetails
+                  ? 'bg-cyan-500/20 text-cyan-200'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title={showContextDetails ? 'Hide context snapshot' : 'Show context snapshot'}
+              aria-label={showContextDetails ? 'Hide context snapshot' : 'Show context snapshot'}
+              aria-pressed={showContextDetails}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 110-16 8 8 0 010 16z"
+                />
+              </svg>
+            </button>
+          )}
 
           {headerActions}
 
@@ -352,6 +484,88 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
+      {context && showContextDetails && (
+        <div className="px-4 py-3 border-b border-slate-800/70 bg-slate-950/70">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-slate-400">
+            Context snapshot
+            <span className="text-slate-500">live</span>
+          </div>
+          <div className="mt-3 grid gap-2 text-xs text-slate-200">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Diagram</span>
+              <span className="max-w-[220px] truncate text-slate-200">
+                {context.currentDiagramTitle || 'Untitled diagram'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Active view</span>
+              <span className="text-slate-200">{context.activeView.replace('-', ' ')}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Inventory</span>
+              <span className="max-w-[220px] truncate text-slate-200" title={context.inventorySummary}>
+                {context.inventorySummary}
+              </span>
+            </div>
+            {context.selectedComponentName && (
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Selected</span>
+                <span className="max-w-[220px] truncate text-cyan-200">
+                  {context.selectedComponentName}
+                </span>
+              </div>
+            )}
+            {context.recentActions.length > 0 && (
+              <div className="flex flex-col gap-1.5 rounded-lg border border-slate-800/80 bg-slate-900/60 px-3 py-2">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                  Recent actions
+                </span>
+                <div className="flex flex-wrap gap-1.5 text-[11px] text-slate-200">
+                  {context.recentActions.slice(0, 3).map((action, idx) => (
+                    <span
+                      key={`${action}-${idx}`}
+                      className="px-2 py-0.5 rounded-full border border-slate-700/80 bg-slate-950/70"
+                    >
+                      {action}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {quickActions.length > 0 && (
+        <div className="px-4 py-3 border-b border-slate-800/70 bg-slate-950/60">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-slate-400">
+            Quick actions
+            <span className="text-slate-500">tap to send</span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {quickActions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => void handleQuickAction(action.prompt)}
+                disabled={isLoading}
+                className={`group flex flex-col gap-2 rounded-xl border px-3 py-2 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 disabled:opacity-70 ${action.style}`}
+                title={action.description}
+                aria-label={action.description}
+              >
+                <span className="flex items-center gap-2 text-[11px] font-semibold text-slate-100">
+                  <span className="text-inherit">{action.icon}</span>
+                  {action.label}
+                </span>
+                <span className="text-[10px] text-slate-400 group-hover:text-slate-200">
+                  {action.description}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
         {messages.length === 0 ? (
@@ -384,14 +598,25 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             </div>
           </div>
         ) : (
-          messages.map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg}
-              onComponentClick={onComponentClick}
-              onActionClick={onActionClick}
-              isStreaming={msg.isStreaming}
-            />
+          groupedMessages.map((group) => (
+            <div key={group.dateKey}>
+              <div className="flex items-center gap-3 my-4">
+                <span className="h-px flex-1 bg-slate-800/80" />
+                <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400">
+                  {formatGroupLabel(group.dateKey)}
+                </span>
+                <span className="h-px flex-1 bg-slate-800/80" />
+              </div>
+              {group.items.map((msg) => (
+                <ChatMessage
+                  key={msg.id}
+                  message={msg}
+                  onComponentClick={onComponentClick}
+                  onActionClick={onActionClick}
+                  isStreaming={msg.isStreaming}
+                />
+              ))}
+            </div>
           ))
         )}
 

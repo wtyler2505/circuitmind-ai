@@ -2364,6 +2364,15 @@ Actions applied:
 - Added inventory quick-filter chips, search clear button, and top-of-panel stats.
 - Added `role="complementary"` to both sidebars and focus-visible rings on resize handles.
 
+### Assistant Sidebar Deep UX Pass
+Scope:
+- Right sidebar assistant UX: message grouping, quick-action launchpad, and context snapshot visibility.
+
+Actions applied:
+- Added a pinned quick-actions grid that sends common prompts without hunting for suggestions.
+- Added a context snapshot drawer for diagram, view, inventory summary, selected component, and recent actions.
+- Grouped message history by day with date separators for scanability.
+
 ## Code Examples
 ```css
 /* Icon-only button accessibility */
