@@ -274,3 +274,41 @@ CIRCUITMIND_BASE_URL=http://localhost:3002 xvfb-run -a npx playwright test scrip
 
 ## Handoff Notes
 Dev server auto-selected port 3002; capture used `CIRCUITMIND_BASE_URL` to target it.
+
+# Codex Completion Report
+
+**Task:** Redesign layout with right AI assistant sidebar and thin status bar
+**Status:** done
+
+## Changes Made
+
+- `App.tsx` - moved chat into new right sidebar, added status bar, and adjusted layout margins
+- `components/AssistantSidebar.tsx` - new auto-hide/pin sidebar wrapper for assistant
+- `components/ChatPanel.tsx` - added headerActions/className hooks and refined empty state
+- `index.css` - added canvas surface + grid styling
+- `docs/screenshots/UI_AUDIT_REPORT.md` - updated summary for new layout
+
+## Commands Run
+
+```bash
+rg -n "ChatPanel|chat-panel|assistant|AI" App.tsx components index.css
+rg -n "layout|sidebar|panel|footer|status" App.tsx index.css
+rg -n "isChat|chatExpanded|chat" App.tsx
+rg -n "assistant" App.tsx
+npm run test
+git status -sb
+git commit -m "Redesign layout with right assistant sidebar"
+```
+
+## Next Steps
+
+- Decide if assistant sidebar should default to auto-hide on first load.
+- Re-run UI screenshot capture when you want updated audit images.
+
+## Blockers (if any)
+
+- None.
+
+## Handoff Notes
+
+- Test run: `npm run test` (8 files, 13 tests) passed.
