@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import Inventory from '../Inventory';
 import { ElectronicComponent } from '../../types';
@@ -45,6 +46,7 @@ describe('Inventory', () => {
   });
 
   it('inventory_bulkSelection_showsActionBar', async () => {
+    const user = userEvent.setup();
     const items: ElectronicComponent[] = [
       {
         id: 'item-1',
@@ -67,9 +69,9 @@ describe('Inventory', () => {
     );
 
     const checkbox = screen.getByRole('checkbox', { name: /select test board/i });
-    fireEvent.click(checkbox);
+    await user.click(checkbox);
 
-    expect(await screen.findByText('1 selected')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('1 selected')).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /export selected/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /mark selected low stock/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /delete selected/i })).toBeEnabled();

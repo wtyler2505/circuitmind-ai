@@ -13,6 +13,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { EnhancedChatMessage, ActionIntent, Conversation, AIContext } from '../types';
 import ChatMessage from './ChatMessage';
 import ConversationSwitcher from './ConversationSwitcher';
+import { aiMetricsService } from '../services/aiMetricsService';
 
 interface ChatPanelProps {
   // Conversation management
@@ -30,6 +31,7 @@ interface ChatPanelProps {
     attachment?: { base64: string; type: 'image' | 'video' }
   ) => Promise<void>;
   isLoading?: boolean;
+  loadingText?: string;
 
   // Action handling
   onComponentClick?: (componentId: string) => void;
@@ -80,6 +82,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   onRenameConversation,
   onSendMessage,
   isLoading = false,
+  loadingText = 'Thinking...',
   onComponentClick,
   onActionClick,
   context,
@@ -107,6 +110,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   );
   const [isDragging, setIsDragging] = useState(false);
   const [showContextDetails, setShowContextDetails] = useState(false);
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(messages.length === 0);
+  const [isQuickActionsPinned, setIsQuickActionsPinned] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -115,6 +120,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (!isQuickActionsPinned && messages.length > 0) {
+      setIsQuickActionsOpen(false);
+    }
+  }, [messages.length, isQuickActionsPinned]);
 
   // Handle send
   const handleSend = async () => {
@@ -183,6 +194,32 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     setAttachment(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleQuickActionsToggle = () => {
+    setIsQuickActionsOpen((prev) => {
+      if (prev && isQuickActionsPinned) {
+        setIsQuickActionsPinned(false);
+      }
+      return !prev;
+    });
+  };
+
+  const handleQuickActionsPin = () => {
+    setIsQuickActionsPinned((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsQuickActionsOpen(true);
+      }
+      return next;
+    });
+  };
+
+  const handleMessageFeedback = (messageId: string, score: number) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (msg?.metricId) {
+      aiMetricsService.recordFeedback(msg.metricId, score);
     }
   };
 
@@ -528,7 +565,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   {context.recentActions.slice(0, 3).map((action, idx) => (
                     <span
                       key={`${action}-${idx}`}
-                      className="px-1 py-0.5 cut-corner-sm border border-slate-700/80 bg-slate-950/70"
+                      className="px-1 py-0.5 cut-corner-sm border border-slate-700/80 bg-slate-900/70"
                     >
                       {action}
                     </span>
@@ -543,30 +580,77 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {quickActions.length > 0 && (
         <div className="px-2 py-1.5 border-b border-slate-800/70 panel-rail">
           <div className="flex items-center justify-between text-[8px] uppercase tracking-[0.2em] text-slate-400">
-            Quick actions
-            <span className="text-slate-500">tap to send</span>
-          </div>
-          <div className="mt-1.5 grid grid-cols-2 lg:grid-cols-3 gap-1">
-            {quickActions.map((action) => (
+            <div className="flex items-center gap-1.5">
+              <span>Quick actions</span>
+              {isQuickActionsPinned && (
+                <span className="px-1 py-0.5 text-[7px] tracking-[0.18em] border border-cyan-400/40 text-cyan-300 cut-corner-sm">
+                  Pinned
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
               <button
-                key={action.id}
                 type="button"
-                onClick={() => void handleQuickAction(action.prompt)}
-                disabled={isLoading}
-                className={`group control-tile cut-corner-sm flex flex-col gap-1 px-1.5 py-0.5 text-left text-[9px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 disabled:opacity-70 ${action.style}`}
-                title={action.description}
-                aria-label={action.description}
+                onClick={handleQuickActionsPin}
+                className={`h-6 w-6 inline-flex items-center justify-center cut-corner-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${
+                  isQuickActionsPinned
+                    ? 'border-cyan-400/60 text-cyan-200 bg-cyan-500/10'
+                    : 'border-slate-700 text-slate-400 hover:text-white'
+                }`}
+                title={isQuickActionsPinned ? 'Unpin quick actions' : 'Pin quick actions'}
+                aria-label={isQuickActionsPinned ? 'Unpin quick actions' : 'Pin quick actions'}
+                aria-pressed={isQuickActionsPinned}
               >
-                <span className="flex items-center gap-1.5 text-[8px] font-semibold text-slate-100">
-                  <span className="text-inherit">{action.icon}</span>
-                  {action.label}
-                </span>
-                <span className="text-[7px] text-slate-400 group-hover:text-slate-200">
-                  {action.description}
-                </span>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 6h6m-6 0v4l-2 2v1h10v-1l-2-2V6m-3 8v4m0 0l-2 2m2-2l2 2"
+                  />
+                </svg>
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={handleQuickActionsToggle}
+                className="h-6 w-6 inline-flex items-center justify-center cut-corner-sm border border-slate-700 text-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                title={isQuickActionsOpen ? 'Collapse quick actions' : 'Expand quick actions'}
+                aria-label={isQuickActionsOpen ? 'Collapse quick actions' : 'Expand quick actions'}
+              >
+                <svg
+                  className={`w-3 h-3 transition-transform ${isQuickActionsOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
           </div>
+          {isQuickActionsOpen && (
+            <div className="mt-1.5 grid grid-cols-2 lg:grid-cols-3 gap-1">
+              {quickActions.map((action) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  onClick={() => void handleQuickAction(action.prompt)}
+                  disabled={isLoading}
+                  className={`group control-tile cut-corner-sm flex flex-col gap-1 px-1.5 py-0.5 text-left text-[9px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 disabled:opacity-70 ${action.style}`}
+                  title={action.description}
+                  aria-label={action.description}
+                >
+                  <span className="flex items-center gap-1.5 text-[8px] font-semibold text-slate-100">
+                    <span className="text-inherit">{action.icon}</span>
+                    {action.label}
+                  </span>
+                  <span className="text-[7px] text-slate-400 group-hover:text-slate-200">
+                    {action.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -620,6 +704,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   onComponentClick={onComponentClick}
                   onActionClick={onActionClick}
                   isStreaming={msg.isStreaming}
+                  onFeedback={handleMessageFeedback}
                 />
               ))}
             </div>
@@ -630,10 +715,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         {isLoading && (
           <div className="flex justify-start mb-2">
             <div className="bg-slate-900 cut-corner-sm px-2 py-1.5 border border-slate-800/70">
-              <div className="flex items-center gap-1">
-                <div className="typing-dot w-1 h-1 bg-cyan-400 rounded-full" />
-                <div className="typing-dot w-1 h-1 bg-cyan-400 rounded-full" />
-                <div className="typing-dot w-1 h-1 bg-cyan-400 rounded-full" />
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <div className="typing-dot w-1 h-1 bg-cyan-400 rounded-full" />
+                  <div className="typing-dot w-1 h-1 bg-cyan-400 rounded-full" />
+                  <div className="typing-dot w-1 h-1 bg-cyan-400 rounded-full" />
+                </div>
+                <span className="text-[9px] text-cyan-400 uppercase tracking-widest animate-pulse">
+                  {loadingText}
+                </span>
               </div>
             </div>
           </div>

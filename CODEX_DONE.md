@@ -1046,3 +1046,30 @@ npm run test
 
 ## Handoff Notes
 Tests: `npm run test` (69 tests) passed.
+
+# Codex Completion Report
+
+**Task:** Fix assistant feedback handler + cap AI metrics size
+**Status:** done
+
+## Changes Made
+- `components/ChatPanel.tsx` - renamed feedback handler to avoid undefined reference during render
+- `components/__tests__/Inventory.test.tsx` - switched to userEvent click for stable bulk selection
+- `services/aiMetricsService.ts` - trim metrics after append to enforce 1000-entry cap
+- `services/__tests__/aiMetricsService.test.ts` - validate cap behavior after logMetric
+
+## Commands Run
+```bash
+npx vitest run components/__tests__/SettingsPanel.test.tsx components/__tests__/Inventory.test.tsx
+npx vitest run components/__tests__/ChatPanel.test.tsx services/__tests__/aiMetricsService.test.ts
+npm run test
+```
+
+## Next Steps
+- If you want, continue tightening center toolbar/bottom rail alignment or re-capture UI screenshots.
+
+## Blockers (if any)
+- None.
+
+## Handoff Notes
+- Full test suite passes (11 files, 71 tests).
