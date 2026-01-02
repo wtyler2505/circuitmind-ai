@@ -3,10 +3,13 @@ import { fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import ComponentEditorModal from '../ComponentEditorModal';
 import { ElectronicComponent } from '../../types';
+import { ToastProvider } from '../../hooks/useToast';
 
 vi.mock('../ThreeViewer', () => ({
   default: () => <div data-testid="three-viewer" />,
 }));
+
+const renderWithToast = (ui: JSX.Element) => render(<ToastProvider>{ui}</ToastProvider>);
 
 describe('ComponentEditorModal', () => {
   it('gates 3D code execution until confirmed', async () => {
@@ -19,7 +22,7 @@ describe('ComponentEditorModal', () => {
       threeCode: 'const group = new THREE.Group();\nreturn group;',
     };
 
-    render(
+    renderWithToast(
       <ComponentEditorModal
         component={component}
         onClose={() => undefined}
@@ -52,7 +55,7 @@ describe('ComponentEditorModal', () => {
       pins: [],
     };
 
-    render(
+    renderWithToast(
       <ComponentEditorModal
         component={component}
         onClose={() => undefined}

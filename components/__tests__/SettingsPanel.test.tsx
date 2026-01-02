@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import SettingsPanel from '../SettingsPanel';
+import { ToastProvider } from '../../hooks/useToast';
 
 describe('SettingsPanel', () => {
   beforeEach(() => {
@@ -9,7 +10,11 @@ describe('SettingsPanel', () => {
   });
 
   test('settingsPanel_emptyApiKey_showsTestDisabledReason', () => {
-    render(<SettingsPanel isOpen={true} onClose={() => undefined} />);
+    render(
+      <ToastProvider>
+        <SettingsPanel isOpen={true} onClose={() => undefined} />
+      </ToastProvider>
+    );
 
     expect(
       screen.getByText('Enter your Gemini API key to enable Test Connection.')
@@ -22,17 +27,19 @@ describe('SettingsPanel', () => {
     const onLayoutSettingsChange = vi.fn();
 
     render(
-      <SettingsPanel
-        isOpen={true}
-        onClose={() => undefined}
-        layoutSettings={{
-          inventoryOpen: true,
-          inventoryPinned: false,
-          assistantOpen: true,
-          assistantPinned: true,
-        }}
-        onLayoutSettingsChange={onLayoutSettingsChange}
-      />
+      <ToastProvider>
+        <SettingsPanel
+          isOpen={true}
+          onClose={() => undefined}
+          layoutSettings={{
+            inventoryOpen: true,
+            inventoryPinned: false,
+            assistantOpen: true,
+            assistantPinned: true,
+          }}
+          onLayoutSettingsChange={onLayoutSettingsChange}
+        />
+      </ToastProvider>
     );
 
     await user.click(screen.getByRole('button', { name: /layout/i }));
@@ -48,19 +55,21 @@ describe('SettingsPanel', () => {
     const onLayoutSettingsChange = vi.fn();
 
     render(
-      <SettingsPanel
-        isOpen={true}
-        onClose={() => undefined}
-        layoutSettings={{
-          inventoryOpen: true,
-          inventoryPinned: true,
-          assistantOpen: false,
-          assistantPinned: false,
-          inventoryWidth: 420,
-          assistantWidth: 500,
-        }}
-        onLayoutSettingsChange={onLayoutSettingsChange}
-      />
+      <ToastProvider>
+        <SettingsPanel
+          isOpen={true}
+          onClose={() => undefined}
+          layoutSettings={{
+            inventoryOpen: true,
+            inventoryPinned: true,
+            assistantOpen: false,
+            assistantPinned: false,
+            inventoryWidth: 420,
+            assistantWidth: 500,
+          }}
+          onLayoutSettingsChange={onLayoutSettingsChange}
+        />
+      </ToastProvider>
     );
 
     await user.click(screen.getByRole('button', { name: /layout/i }));
@@ -75,7 +84,8 @@ describe('SettingsPanel', () => {
       assistantWidth: 380,
     });
 
-    await user.click(screen.getByRole('button', { name: /restore last layout/i }));
+    expect(screen.getByText(/layout reset/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /undo/i }));
 
     expect(onLayoutSettingsChange).toHaveBeenLastCalledWith({
       inventoryOpen: true,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useToast } from '../hooks/useToast';
 import { ActionType, ACTION_SAFETY, AIAutonomySettings } from '../types';
 import { getStoredApiKey, setStoredApiKey } from '../services/apiKeyStorage';
 
@@ -163,9 +164,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout'>('api');
-  const [showResetToast, setShowResetToast] = useState(false);
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
-  const resetToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toast = useToast();
 
   // Local autonomy settings state (if not controlled externally)
   const [localAutonomy, setLocalAutonomy] = useState<AIAutonomySettings>(
@@ -198,14 +198,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   }, [isOpen, autonomySettings]);
 
-  useEffect(() => {
-    return () => {
-      if (resetToastTimeoutRef.current) {
-        clearTimeout(resetToastTimeoutRef.current);
-        resetToastTimeoutRef.current = null;
-      }
-    };
-  }, []);
 
   // Update autonomy settings
   const updateAutonomy = (updates: Partial<AIAutonomySettings>) => {
@@ -222,17 +214,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   };
 
-  const startResetToast = () => {
-    if (resetToastTimeoutRef.current) {
-      clearTimeout(resetToastTimeoutRef.current);
-    }
-
-    setShowResetToast(true);
-    resetToastTimeoutRef.current = setTimeout(() => {
-      setShowResetToast(false);
-    }, 2400);
-  };
-
   const handleResetLayout = () => {
     if (!layoutSettings) return;
 
@@ -246,7 +227,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     };
 
     onLayoutSettingsChange?.(LAYOUT_DEFAULTS);
-    startResetToast();
+    toast.info('Layout reset', 2000, {
+      label: 'Undo',
+      onClick: handleResetUndo,
+    });
   };
 
   const handleResetUndo = () => {
@@ -254,12 +238,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     if (!snapshot) return;
 
     onLayoutSettingsChange?.(snapshot);
-    setShowResetToast(false);
-
-    if (resetToastTimeoutRef.current) {
-      clearTimeout(resetToastTimeoutRef.current);
-      resetToastTimeoutRef.current = null;
-    }
   };
 
   // Toggle action safety override
@@ -939,25 +917,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       Reset Layout
                     </button>
                   </div>
-                  {showResetToast && (
-                    <div
-                      className="flex items-center justify-between gap-3 border border-slate-800/80 bg-slate-950/80 px-3 py-2 text-[11px] text-slate-200 cut-corner-sm"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      <span className="uppercase tracking-[0.22em] text-neon-cyan/80">
-                        Reset complete
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handleResetUndo}
-                        className="text-[10px] font-semibold uppercase tracking-[0.28em] text-neon-cyan hover:text-white transition-colors"
-                        aria-label="Restore last layout"
-                      >
-                        Undo
-                      </button>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

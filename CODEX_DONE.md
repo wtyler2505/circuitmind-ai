@@ -947,3 +947,30 @@ git status --short
 
 ## Handoff Notes
 - Tests: `npm run test` (10 files, 65 tests) passed.
+
+# Codex Completion Report
+
+**Task:** Tune reset toast timing/label and unify to global toast system
+**Status:** done
+
+## Changes Made
+- `hooks/useToast.tsx` - added optional action button support and cut-corner styling
+- `components/SettingsPanel.tsx` - switched reset confirmation to global toast with Undo action
+- `components/__tests__/SettingsPanel.test.tsx` - wrapped with ToastProvider and asserted toast/undo
+- `components/__tests__/Inventory.test.tsx` - wrapped with ToastProvider
+- `components/__tests__/ComponentEditorModal.test.tsx` - wrapped with ToastProvider
+
+## Commands Run
+```bash
+rg -n "toast|Toast|useToast" App.tsx components hooks
+npm run test
+```
+
+## Next Steps
+- If you want longer/shorter confirmation, adjust the `toast.info` duration in `components/SettingsPanel.tsx`.
+
+## Blockers (if any)
+- None.
+
+## Handoff Notes
+- Tests: `npm run test` (10 files, 65 tests) passed.

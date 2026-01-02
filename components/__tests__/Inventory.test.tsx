@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { vi } from 'vitest';
 import Inventory from '../Inventory';
 import { ElectronicComponent } from '../../types';
+import { ToastProvider } from '../../hooks/useToast';
 
 const baseProps = {
   onAddItem: vi.fn(),
@@ -12,6 +13,8 @@ const baseProps = {
   onOpen: vi.fn(),
   onClose: vi.fn(),
 };
+
+const renderWithToast = (ui: JSX.Element) => render(<ToastProvider>{ui}</ToastProvider>);
 
 describe('Inventory', () => {
   it('inventory_thumbnailError_showsFallbackIcon', async () => {
@@ -27,7 +30,7 @@ describe('Inventory', () => {
       },
     ];
 
-    render(<Inventory {...baseProps} items={items} isOpen={true} />);
+    renderWithToast(<Inventory {...baseProps} items={items} isOpen={true} />);
 
     const img = screen.getByAltText('Test Board');
     const thumbnail = img.parentElement as HTMLElement;
@@ -53,7 +56,7 @@ describe('Inventory', () => {
       },
     ];
 
-    render(
+    renderWithToast(
       <Inventory
         {...baseProps}
         items={items}
