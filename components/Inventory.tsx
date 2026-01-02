@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { ElectronicComponent } from '../types';
+import { useToast } from '../hooks/useToast';
 
 // Type alias for component types
 type ComponentType = ElectronicComponent['type'];
@@ -117,6 +118,7 @@ const Inventory: React.FC<InventoryProps> = ({
   // Timer for hover delay
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
+  const toast = useToast();
 
   // Pin State for "Locking" the sidebar
   const [isPinned, setIsPinned] = useState(defaultPinned);
@@ -162,7 +164,18 @@ const Inventory: React.FC<InventoryProps> = ({
     onOpen();
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (event: React.MouseEvent) => {
+    const nextTarget = event.relatedTarget as Node | null;
+    if (
+      nextTarget &&
+      (sidebarRef.current?.contains(nextTarget) || buttonRef.current?.contains(nextTarget))
+    ) {
+      return;
+    }
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
     // Only auto-close if NOT pinned
     if (!isPinned) {
       closeTimeoutRef.current = setTimeout(() => {
@@ -336,7 +349,7 @@ const Inventory: React.FC<InventoryProps> = ({
       setFinderResults(results);
     } catch (e) {
       console.error(e);
-      alert('Search failed. Please try again.');
+      toast.error('Search failed. Please try again.');
     } finally {
       setIsFinderLoading(false);
     }
@@ -371,7 +384,7 @@ const Inventory: React.FC<InventoryProps> = ({
         if (data.description) setNewItemDesc(data.description);
         if (data.pins) setNewItemPins(data.pins.join(', '));
       } catch (_e) {
-        alert('Could not identify component from image.');
+        toast.warning('Could not identify component from image.');
       } finally {
         setIsAiLoading(false);
       }
@@ -387,7 +400,7 @@ const Inventory: React.FC<InventoryProps> = ({
       setNewItemImage(`data:image/png;base64,${base64}`);
     } catch (e) {
       console.error(e);
-      alert('Failed to generate image.');
+      toast.error('Failed to generate image.');
     } finally {
       setIsGeneratingImage(false);
     }
@@ -401,7 +414,7 @@ const Inventory: React.FC<InventoryProps> = ({
         onUpdateItem(updated);
       } catch (e) {
         console.error(e);
-        alert('Failed to generate thumbnail.');
+        toast.error('Failed to generate thumbnail.');
       }
     }
   };
@@ -464,10 +477,10 @@ const Inventory: React.FC<InventoryProps> = ({
           imported.forEach((item) => {
             if (item.name && item.id) onAddItem(item);
           });
-          alert(`Imported ${imported.length} items.`);
+          toast.success(`Imported ${imported.length} items.`);
         }
       } catch (_err) {
-        alert('Invalid JSON file.');
+        toast.error('Invalid JSON file.');
       }
     };
     reader.readAsText(file);
@@ -569,7 +582,7 @@ const Inventory: React.FC<InventoryProps> = ({
         onMouseLeave={handleMouseLeave}
         role="complementary"
         aria-label="Inventory sidebar"
-        className={`fixed inset-y-0 left-0 w-full md:w-[var(--inventory-width)] panel-surface panel-rail panel-frame cut-corner-md border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.55)]`}
+        className={`!fixed inset-y-0 left-0 w-[var(--inventory-width)] max-md:w-full panel-surface panel-rail panel-frame cut-corner-md border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.55)]`}
         style={{ '--inventory-width': `${sidebarWidth}px` } as React.CSSProperties}
       >
         <div

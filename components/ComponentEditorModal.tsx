@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { ElectronicComponent } from '../types';
+import { useToast } from '../hooks/useToast';
+
+// Type alias for component types
+type ComponentType = ElectronicComponent['type'];
+
 import {
   generateComponentThumbnail,
   smartFillComponent,
@@ -74,6 +79,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
   const [activeTab, setActiveTab] = useState<'info' | 'edit' | '3d' | 'image'>('info');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
 
   // Edit State
   const [editedName, setEditedName] = useState(component.name);
@@ -186,7 +192,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
       setActiveTab('image'); // Switch to image tab to see result
     } catch (e) {
       console.error(e);
-      alert('Failed to generate image.');
+      toast.error('Failed to generate image.');
     } finally {
       setIsGeneratingImage(false);
     }
@@ -199,10 +205,10 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
       const result = await smartFillComponent(editedName, editedType);
       if (result.description) setEditedDescription(result.description);
       if (result.pins) setEditedPins(result.pins.join(', '));
-      if (result.type) setEditedType(result.type as any);
+      if (result.type) setEditedType(result.type as ComponentType);
       if (result.datasheetUrl) setEditedDatasheetUrl(result.datasheetUrl);
     } catch (_e) {
-      alert('AI could not find details for this component.');
+      toast.warning('AI could not find details for this component.');
     } finally {
       setIsAiThinking(false);
     }
@@ -245,13 +251,19 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
       // Apply updates
       if (updates.name) setEditedName(updates.name);
-      if (updates.type) setEditedType(updates.type as any);
+      if (updates.type) setEditedType(updates.type as ComponentType);
       if (updates.description) setEditedDescription(updates.description);
       if (updates.pins) setEditedPins(updates.pins.join(', '));
       if (updates.datasheetUrl) setEditedDatasheetUrl(updates.datasheetUrl);
       if (updates.threeDModelUrl) setEditedThreeDModelUrl(updates.threeDModelUrl);
       if (updates.imageUrl) setEditedImageUrl(updates.imageUrl);
       if (updates.quantity !== undefined) setEditedQuantity(updates.quantity);
+
+      // Filter to valid action types
+      const validActions = suggestedActions.filter(
+        (a): a is 'GENERATE_IMAGE' | 'GENERATE_3D' =>
+          a === 'GENERATE_IMAGE' || a === 'GENERATE_3D'
+      );
 
       setChatMessages((prev) => [
         ...prev,
@@ -260,7 +272,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
           role: 'model',
           text: reply,
           images: foundImages,
-          actions: suggestedActions as any,
+          actions: validActions.length > 0 ? validActions : undefined,
         },
       ]);
     } catch (e) {
@@ -543,7 +555,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                       </label>
                       <select
                         value={editedType}
-                        onChange={(e) => setEditedType(e.target.value as any)}
+                        onChange={(e) => setEditedType(e.target.value as ComponentType)}
                         className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-white focus:border-neon-green focus:outline-none"
                       >
                         <option value="microcontroller">Microcontroller</option>

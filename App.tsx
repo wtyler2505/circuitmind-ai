@@ -32,6 +32,7 @@ import { LiveSession } from './services/liveAudio';
 import { useConversations } from './hooks/useConversations';
 import { useAIActions } from './hooks/useAIActions';
 import { useInventorySync } from './hooks/useInventorySync';
+import { useToast } from './hooks/useToast';
 import { buildAIContext } from './services/aiContextBuilder';
 import { determineOrphanAction } from './services/componentValidator';
 
@@ -731,6 +732,9 @@ export default function App() {
     localStorage.setItem('cm_inventory', JSON.stringify(inventory));
   }, [inventory]);
 
+  // Toast notifications
+  const toast = useToast();
+
   // Undo/Redo State & Persistence: Diagram
   const [history, setHistory] = useState<{
     past: WiringDiagram[];
@@ -1106,7 +1110,7 @@ export default function App() {
     if (action === 'block') {
       // Component is wired - cannot delete
       console.error(`❌ Cannot delete: ${reason}`);
-      alert(reason); // TODO: Replace with proper toast notification
+      toast.error(reason);
       return;
     }
 
@@ -1162,9 +1166,8 @@ export default function App() {
     }
 
     if (blockedIds.length > 0) {
-      alert(
-        `❌ Cannot delete ${blockedIds.length} component(s) because they have active wire connections.\n\n` +
-        `Remove the wires first, then try again.`
+      toast.error(
+        `Cannot delete ${blockedIds.length} component(s) with active wire connections. Remove wires first.`
       );
     }
 
@@ -1240,7 +1243,7 @@ export default function App() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       console.error(message);
-      alert('Could not access microphone.');
+      toast.error('Could not access microphone.');
     }
   };
 
