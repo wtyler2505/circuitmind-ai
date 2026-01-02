@@ -2396,6 +2396,14 @@ Actions applied:
 - Added chamfered (cut-corner) framing, panel corner glyphs, and control-tile styling.
 - Updated chat message bubbles and suggestion chips to match slab aesthetic.
 
+### Background Tone Pass
+Scope:
+- Remove panel striping and deepen the global background.
+
+Actions applied:
+- Removed panel rail vertical striping.
+- Darkened the main background and canvas surface.
+
 ## Code Examples
 ```css
 /* Icon-only button accessibility */

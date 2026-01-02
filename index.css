@@ -5,9 +5,9 @@
   --font-sans: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
   
-  --color-cyber-black: #05070d;
-  --color-cyber-dark: #070b12;
-  --color-cyber-card: #0e131c;
+  --color-cyber-black: #020205;
+  --color-cyber-dark: #03040a;
+  --color-cyber-card: #090d14;
   --color-neon-cyan: #00f3ff;
   --color-neon-purple: #bd00ff;
   --color-neon-green: #00ff9d;
@@ -26,13 +26,12 @@
 
 /* Base body styles */
 body {
-  background-color: #05070d;
+  background-color: #020205;
   color: #e2e8f0;
   background-image:
-    linear-gradient(120deg, rgba(12, 16, 24, 0.9), rgba(5, 7, 13, 0.9)),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 18px),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 18px);
-  background-size: 100% 100%, 18px 18px, 18px 18px;
+    radial-gradient(circle at 20% 20%, rgba(18, 22, 30, 0.6), transparent 50%),
+    radial-gradient(circle at 80% 15%, rgba(10, 12, 18, 0.7), transparent 55%);
+  background-size: 100% 100%, 100% 100%;
 }
 
 /* Hard-edge mode: kill rounded corners */
@@ -74,8 +73,7 @@ body {
 
 .panel-rail {
   background-image:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 8px),
-    linear-gradient(180deg, rgba(11, 16, 24, 0.95), rgba(7, 10, 16, 0.95));
+    linear-gradient(180deg, rgba(6, 9, 14, 0.98), rgba(4, 6, 10, 0.98));
 }
 
 .panel-toggle {
@@ -388,7 +386,7 @@ body {
 
 /* Canvas surface + grid */
 .canvas-surface {
-  background-color: #06080f;
+  background-color: #03040a;
 }
 
 .canvas-grid {
