@@ -31,7 +31,9 @@ import {
 import { LiveSession } from './services/liveAudio';
 import { useConversations } from './hooks/useConversations';
 import { useAIActions } from './hooks/useAIActions';
+import { useInventorySync } from './hooks/useInventorySync';
 import { buildAIContext } from './services/aiContextBuilder';
+import { determineOrphanAction } from './services/componentValidator';
 
 // Auto-generated from electronics_inventory_tier5.json - 63 components
 const INITIAL_INVENTORY: ElectronicComponent[] = [
@@ -1030,6 +1032,17 @@ export default function App() {
     activeConversationId: conversationManager.activeConversationId,
   });
 
+  // Inventory-Canvas sync - keeps diagram components in sync with inventory changes
+  useInventorySync(inventory, history.present, updateDiagram, {
+    autoSync: true,
+    devLogging: process.env.NODE_ENV === 'development',
+    onSync: (count) => {
+      if (count > 0) {
+        console.log(`📦 Synced ${count} component(s) with inventory changes`);
+      }
+    },
+  });
+
   const handleDiagramChange = (updatedDiagram: WiringDiagram) => {
     updateDiagram(updatedDiagram);
   };
@@ -1062,10 +1075,11 @@ export default function App() {
 
   // Drag and Drop Logic: Inventory -> Canvas
   const handleComponentDrop = (component: ElectronicComponent, _x: number, _y: number) => {
-    // 1. Create a unique copy for the diagram
+    // 1. Create a unique copy for the diagram with inventory reference
     const newInstance: ElectronicComponent = {
       ...component,
       id: `${component.id}-${Date.now()}`, // Ensure unique ID in diagram
+      sourceInventoryId: component.id, // Link back to inventory for sync
     };
 
     // 2. Initialize diagram if empty, or append
@@ -1083,6 +1097,112 @@ export default function App() {
 
     updateDiagram(newDiagram);
   };
+
+  // Guarded inventory deletion - checks for diagram usage before allowing deletion
+  const handleInventoryRemove = useCallback((id: string) => {
+    const currentDiagram = history.present || { title: '', components: [], connections: [], explanation: '' };
+    const { action, reason } = determineOrphanAction(id, currentDiagram);
+
+    if (action === 'block') {
+      // Component is wired - cannot delete
+      console.error(`❌ Cannot delete: ${reason}`);
+      alert(reason); // TODO: Replace with proper toast notification
+      return;
+    }
+
+    if (action === 'warn') {
+      // Component is in diagrams - confirm before deletion
+      const confirmed = window.confirm(
+        `⚠️ ${reason}\n\nDo you want to remove it from all diagrams?`
+      );
+      if (!confirmed) return;
+    }
+
+    // Proceed with deletion
+    setInventory(inventory.filter((i) => i.id !== id));
+
+    // Also remove from current diagram if present
+    if (currentDiagram.components.some(c => c.sourceInventoryId === id || c.id.startsWith(`${id}-`))) {
+      const updatedComponents = currentDiagram.components.filter(
+        c => c.sourceInventoryId !== id && !c.id.startsWith(`${id}-`)
+      );
+      const removedIds = new Set(
+        currentDiagram.components
+          .filter(c => c.sourceInventoryId === id || c.id.startsWith(`${id}-`))
+          .map(c => c.id)
+      );
+      const updatedConnections = currentDiagram.connections.filter(
+        c => !removedIds.has(c.fromComponentId) && !removedIds.has(c.toComponentId)
+      );
+      updateDiagram({
+        ...currentDiagram,
+        components: updatedComponents,
+        connections: updatedConnections,
+      });
+    }
+  }, [inventory, history.present, updateDiagram]);
+
+  // Guarded bulk deletion
+  const handleInventoryDeleteMany = useCallback((ids: string[]) => {
+    const currentDiagram = history.present || { title: '', components: [], connections: [], explanation: '' };
+    const blockedIds: string[] = [];
+    const warnIds: string[] = [];
+    const okIds: string[] = [];
+
+    for (const id of ids) {
+      const { action, reason } = determineOrphanAction(id, currentDiagram);
+      if (action === 'block') {
+        blockedIds.push(id);
+        console.warn(`Blocked deletion of ${id}: ${reason}`);
+      } else if (action === 'warn') {
+        warnIds.push(id);
+      } else {
+        okIds.push(id);
+      }
+    }
+
+    if (blockedIds.length > 0) {
+      alert(
+        `❌ Cannot delete ${blockedIds.length} component(s) because they have active wire connections.\n\n` +
+        `Remove the wires first, then try again.`
+      );
+    }
+
+    if (warnIds.length > 0) {
+      const confirmed = window.confirm(
+        `⚠️ ${warnIds.length} component(s) are used in the current diagram.\n\n` +
+        `Do you want to remove them from the diagram as well?`
+      );
+      if (confirmed) {
+        okIds.push(...warnIds);
+      }
+    }
+
+    if (okIds.length === 0) return;
+
+    // Delete from inventory
+    setInventory(inventory.filter((i) => !okIds.includes(i.id)));
+
+    // Remove from current diagram
+    const idsToRemove = new Set(okIds);
+    const componentsToRemove = currentDiagram.components.filter(
+      c => (c.sourceInventoryId && idsToRemove.has(c.sourceInventoryId)) ||
+           okIds.some(id => c.id.startsWith(`${id}-`))
+    );
+
+    if (componentsToRemove.length > 0) {
+      const removedCompIds = new Set(componentsToRemove.map(c => c.id));
+      const updatedComponents = currentDiagram.components.filter(c => !removedCompIds.has(c.id));
+      const updatedConnections = currentDiagram.connections.filter(
+        c => !removedCompIds.has(c.fromComponentId) && !removedCompIds.has(c.toComponentId)
+      );
+      updateDiagram({
+        ...currentDiagram,
+        components: updatedComponents,
+        connections: updatedConnections,
+      });
+    }
+  }, [inventory, history.present, updateDiagram]);
 
   // TODO: Implement file attachment feature - requires adding attachment state
   const _handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1406,6 +1526,8 @@ export default function App() {
     }
   };
 
+  const dockedInventoryWidth = isInventoryOpen && inventoryPinnedDefault ? inventoryWidth : 0;
+  const dockedAssistantWidth = isAssistantOpen && isAssistantPinned ? assistantWidth : 0;
   const totalInventoryUnits = inventory.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
   const diagramComponentCount = history.present?.components?.length ?? 0;
   const diagramConnectionCount = history.present?.connections?.length ?? 0;
@@ -1414,19 +1536,19 @@ export default function App() {
   );
 
   return (
-    <div className="relative h-screen w-screen bg-cyber-dark text-slate-200 overflow-hidden font-sans">
+    <div className="flex h-screen w-screen bg-cyber-dark text-slate-200 overflow-hidden font-sans">
       {/* Sidebar: Inventory */}
       <Inventory
         items={inventory}
         onAddItem={(item) => setInventory([...inventory, item])}
-        onRemoveItem={(id) => setInventory(inventory.filter((i) => i.id !== id))}
+        onRemoveItem={handleInventoryRemove}
         onSelect={handleComponentClick}
         onUpdateItem={(item) => setInventory(inventory.map((i) => (i.id === item.id ? item : i)))}
         isOpen={isInventoryOpen}
         toggleOpen={() => setIsInventoryOpen(!isInventoryOpen)}
         onOpen={() => setIsInventoryOpen(true)}
         onClose={() => setIsInventoryOpen(false)}
-        onDeleteMany={(ids) => setInventory(inventory.filter((i) => !ids.includes(i.id)))}
+        onDeleteMany={handleInventoryDeleteMany}
         onUpdateMany={(items) => {
           const updates = new Map(items.map((i) => [i.id, i]));
           setInventory(inventory.map((i) => updates.get(i.id) || i));
@@ -1440,19 +1562,19 @@ export default function App() {
 
       {/* Main Area */}
       <div
-        className="absolute inset-y-0 left-0 right-0 flex flex-col transition-all duration-300 md:left-[var(--inventory-width)] md:right-[var(--assistant-width)]"
+        className="flex-1 flex flex-col transition-all duration-300 ml-0 mr-0 md:ml-[var(--inventory-width)] md:mr-[var(--assistant-width)]"
         style={
           {
-            '--inventory-width': isInventoryOpen ? `${inventoryWidth}px` : '0px',
-            '--assistant-width': isAssistantOpen ? `${assistantWidth}px` : '0px',
+            '--inventory-width': `${dockedInventoryWidth}px`,
+            '--assistant-width': `${dockedAssistantWidth}px`,
           } as React.CSSProperties
         }
       >
         {/* Toolbar */}
-        <div className="h-12 panel-header panel-rail panel-frame cut-corner-md border-b border-slate-800/80 flex items-center justify-between px-3 shrink-0 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
-          <div className="flex items-center gap-2">
-            <h1 className="text-[13px] font-semibold tracking-[0.22em] text-white flex items-center gap-2 panel-title">
-              <span className="text-neon-cyan text-lg">⚡</span>
+        <div className="h-10 panel-header panel-rail panel-frame cut-corner-md border-b border-slate-800/80 flex items-center justify-between px-2.5 shrink-0 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-[12px] font-semibold tracking-[0.22em] text-white flex items-center gap-2 panel-title">
+              <span className="text-neon-cyan text-base">⚡</span>
               CIRCUIT<span className="text-neon-cyan">MIND</span>
             </h1>
 
@@ -1463,7 +1585,7 @@ export default function App() {
                 type="button"
                 onClick={handleUndo}
                 disabled={history.past.length === 0}
-                className="h-8 w-8 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+                className="h-7 w-7 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
                 title="Undo"
                 aria-label="Undo"
               >
@@ -1480,7 +1602,7 @@ export default function App() {
                 type="button"
                 onClick={handleRedo}
                 disabled={history.future.length === 0}
-                className="h-8 w-8 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+                className="h-7 w-7 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
                 title="Redo"
                 aria-label="Redo"
               >
@@ -1500,22 +1622,22 @@ export default function App() {
             <div className="flex gap-2">
               <button
                 onClick={saveDiagram}
-                className="px-3 py-1.5 bg-neon-cyan text-black text-[10px] font-bold tracking-[0.28em] hover:bg-white transition-colors shadow-[0_0_14px_rgba(0,243,255,0.35)] cut-corner-sm"
+                className="px-2.5 py-1 bg-neon-cyan text-black text-[9px] font-bold tracking-[0.28em] hover:bg-white transition-colors shadow-[0_0_14px_rgba(0,243,255,0.35)] cut-corner-sm"
               >
                 SAVE
               </button>
               <button
                 onClick={loadDiagram}
-                className="px-3 py-1.5 border border-neon-purple/60 text-[10px] font-bold tracking-[0.24em] text-neon-purple hover:bg-neon-purple/10 transition-colors cut-corner-sm"
+                className="px-2.5 py-1 border border-neon-purple/60 text-[9px] font-bold tracking-[0.24em] text-neon-purple hover:bg-neon-purple/10 transition-colors cut-corner-sm"
               >
                 LOAD
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {isLiveActive && (
-              <div className="flex items-center gap-2 text-red-500 animate-pulse bg-red-900/20 px-2 py-0.5 border border-red-500/50 text-[8px] uppercase tracking-[0.24em] cut-corner-sm">
+              <div className="flex items-center gap-1.5 text-red-500 animate-pulse bg-red-900/20 px-1.5 py-0.5 border border-red-500/50 text-[8px] uppercase tracking-[0.24em] cut-corner-sm">
                 <div className="w-1.5 h-1.5 bg-red-500"></div>
                 <span className="font-bold">{liveStatus}</span>
               </div>
@@ -1523,7 +1645,7 @@ export default function App() {
             <button
               type="button"
               onClick={toggleLiveMode}
-              className={`h-8 w-8 inline-flex items-center justify-center border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60'}`}
+              className={`h-7 w-7 inline-flex items-center justify-center border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60'}`}
               title="Live Voice Mode"
               aria-label="Toggle live voice mode"
             >
@@ -1539,7 +1661,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
-              className="h-8 w-8 inline-flex items-center justify-center border bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+              className="h-7 w-7 inline-flex items-center justify-center border bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
               title="Settings"
               aria-label="Open settings"
             >
@@ -1573,8 +1695,8 @@ export default function App() {
         </div>
 
         {/* Status Bar */}
-        <div className="h-5 panel-rail panel-frame cut-corner-sm border-t border-slate-800/80 px-2.5 flex items-center justify-between text-[8px] uppercase tracking-[0.16em] text-slate-400">
-          <div className="flex items-center gap-2">
+        <div className="h-4 panel-rail panel-frame cut-corner-sm border-t border-slate-800/80 px-2 flex items-center justify-between text-[8px] uppercase tracking-[0.16em] text-slate-400">
+          <div className="flex items-center gap-1.5">
             <span className="text-neon-cyan">Inv {totalInventoryUnits}</span>
             <span className="h-3 w-px bg-slate-800/80" />
             <span>
@@ -1583,13 +1705,13 @@ export default function App() {
             <span className="h-3 w-px bg-slate-800/80" />
             <span>Mode {generationMode.toUpperCase()}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="text-slate-500">Session</span>
             <span className="text-slate-300 max-w-[180px] truncate" title={activeConversation?.title || 'Untitled'}>
               {activeConversation?.title || 'Untitled'}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-slate-400">
+          <div className="flex items-center gap-1.5 text-slate-400">
             <span className="uppercase">{isLiveActive ? liveStatus : 'standby'}</span>
             <span className={`h-1.5 w-1.5 ${isLiveActive ? 'bg-red-500' : 'bg-slate-600'}`} />
           </div>
