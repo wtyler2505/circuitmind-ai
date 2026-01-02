@@ -1576,25 +1576,25 @@ export default function App() {
         }
       >
         {/* Toolbar */}
-        <div className="h-10 panel-header panel-rail panel-frame cut-corner-md border-b border-slate-800/80 flex items-center justify-between px-2.5 shrink-0 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-[12px] font-semibold tracking-[0.22em] text-white flex items-center gap-2 panel-title">
-              <span className="text-neon-cyan text-base">⚡</span>
+        <div className="h-9 panel-header panel-rail panel-frame cut-corner-md border-b border-slate-800/80 flex items-center justify-between px-2 shrink-0 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
+          <div className="flex items-center gap-1">
+            <h1 className="text-[11px] font-semibold tracking-[0.2em] text-white flex items-center gap-1.5 panel-title">
+              <span className="text-neon-cyan text-sm">⚡</span>
               CIRCUIT<span className="text-neon-cyan">MIND</span>
             </h1>
 
-            <div className="h-4 w-px bg-slate-800/80 mx-1"></div>
+            <div className="h-3 w-px bg-slate-800/80 mx-0.5"></div>
 
             <div className="flex gap-1">
               <button
                 type="button"
                 onClick={handleUndo}
                 disabled={history.past.length === 0}
-                className="h-7 w-7 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+                className="h-6 w-6 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
                 title="Undo"
                 aria-label="Undo"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1607,11 +1607,11 @@ export default function App() {
                 type="button"
                 onClick={handleRedo}
                 disabled={history.future.length === 0}
-                className="h-7 w-7 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+                className="h-6 w-6 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
                 title="Redo"
                 aria-label="Redo"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1622,39 +1622,39 @@ export default function App() {
               </button>
             </div>
 
-            <div className="h-4 w-px bg-slate-800/80 mx-1"></div>
+            <div className="h-3 w-px bg-slate-800/80 mx-0.5"></div>
 
             <div className="flex gap-2">
               <button
                 onClick={saveDiagram}
-                className="px-2.5 py-1 bg-neon-cyan text-black text-[9px] font-bold tracking-[0.28em] hover:bg-white transition-colors shadow-[0_0_14px_rgba(0,243,255,0.35)] cut-corner-sm"
+                className="px-2 py-0.5 bg-neon-cyan text-black text-[8px] font-bold tracking-[0.24em] hover:bg-white transition-colors shadow-[0_0_14px_rgba(0,243,255,0.35)] cut-corner-sm"
               >
                 SAVE
               </button>
               <button
                 onClick={loadDiagram}
-                className="px-2.5 py-1 border border-neon-purple/60 text-[9px] font-bold tracking-[0.24em] text-neon-purple hover:bg-neon-purple/10 transition-colors cut-corner-sm"
+                className="px-2 py-0.5 border border-neon-purple/60 text-[8px] font-bold tracking-[0.22em] text-neon-purple hover:bg-neon-purple/10 transition-colors cut-corner-sm"
               >
                 LOAD
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {isLiveActive && (
-              <div className="flex items-center gap-1.5 text-red-500 animate-pulse bg-red-900/20 px-1.5 py-0.5 border border-red-500/50 text-[8px] uppercase tracking-[0.24em] cut-corner-sm">
-                <div className="w-1.5 h-1.5 bg-red-500"></div>
+              <div className="flex items-center gap-1 text-red-500 animate-pulse bg-red-900/20 px-1 py-0 border border-red-500/50 text-[7px] uppercase tracking-[0.2em] cut-corner-sm">
+                <div className="w-1 h-1 bg-red-500"></div>
                 <span className="font-bold">{liveStatus}</span>
               </div>
             )}
             <button
               type="button"
               onClick={toggleLiveMode}
-              className={`h-7 w-7 inline-flex items-center justify-center border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60'}`}
+              className={`h-6 w-6 inline-flex items-center justify-center border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60'}`}
               title="Live Voice Mode"
               aria-label="Toggle live voice mode"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1666,11 +1666,11 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
-              className="h-7 w-7 inline-flex items-center justify-center border bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+              className="h-6 w-6 inline-flex items-center justify-center border bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
               title="Settings"
               aria-label="Open settings"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1700,25 +1700,25 @@ export default function App() {
         </div>
 
         {/* Status Bar */}
-        <div className="h-4 panel-rail panel-frame cut-corner-sm border-t border-slate-800/80 px-2 flex items-center justify-between text-[8px] uppercase tracking-[0.16em] text-slate-400">
-          <div className="flex items-center gap-1.5">
+        <div className="h-3.5 panel-rail panel-frame cut-corner-sm border-t border-slate-800/80 px-1.5 flex items-center justify-between text-[7px] uppercase tracking-[0.12em] text-slate-400 leading-none">
+          <div className="flex items-center gap-1">
             <span className="text-neon-cyan">Inv {totalInventoryUnits}</span>
-            <span className="h-3 w-px bg-slate-800/80" />
+            <span className="h-2.5 w-px bg-slate-800/80" />
             <span>
               Diagram {diagramComponentCount}c / {diagramConnectionCount}w
             </span>
-            <span className="h-3 w-px bg-slate-800/80" />
+            <span className="h-2.5 w-px bg-slate-800/80" />
             <span>Mode {generationMode.toUpperCase()}</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className="text-slate-500">Session</span>
-            <span className="text-slate-300 max-w-[180px] truncate" title={activeConversation?.title || 'Untitled'}>
+            <span className="text-slate-300 max-w-[160px] truncate" title={activeConversation?.title || 'Untitled'}>
               {activeConversation?.title || 'Untitled'}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-slate-400">
+          <div className="flex items-center gap-1 text-slate-400">
             <span className="uppercase">{isLiveActive ? liveStatus : 'standby'}</span>
-            <span className={`h-1.5 w-1.5 ${isLiveActive ? 'bg-red-500' : 'bg-slate-600'}`} />
+            <span className={`h-1 w-1 ${isLiveActive ? 'bg-red-500' : 'bg-slate-600'}`} />
           </div>
         </div>
       </div>
