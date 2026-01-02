@@ -196,7 +196,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         ? 'bg-neon-amber text-black'
         : 'bg-neon-purple text-black';
   const modeLabel = generationMode === 'chat' ? 'Chat' : generationMode === 'image' ? 'Image' : 'Video';
-  const containerClassName = `relative flex flex-col h-full bg-slate-950/80 rounded-t-xl border border-slate-800/80 border-b-0 ${className}`.trim();
+  const containerClassName = `relative flex flex-col h-full panel-surface border border-slate-800/80 border-b-0 ${className}`.trim();
   const quickActions = [
     {
       id: 'draft-wiring',
@@ -314,7 +314,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/80 bg-slate-950/70 rounded-t-xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/80 panel-header panel-rail">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-slate-400">
             <span>AI Assistant</span>
@@ -444,7 +444,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      <div className="px-4 py-2 border-b border-slate-800/70 bg-slate-950/60">
+      <div className="px-4 py-2 border-b border-slate-800/70 panel-rail">
         <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400">
           <span className={`px-2 py-1 rounded-full ${modeAccent}`}>
             Mode: {modeLabel}
@@ -485,7 +485,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       </div>
 
       {context && showContextDetails && (
-        <div className="px-4 py-3 border-b border-slate-800/70 bg-slate-950/70">
+        <div className="px-4 py-3 border-b border-slate-800/70 panel-rail">
           <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-slate-400">
             Context snapshot
             <span className="text-slate-500">live</span>
@@ -537,7 +537,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
 
       {quickActions.length > 0 && (
-        <div className="px-4 py-3 border-b border-slate-800/70 bg-slate-950/60">
+        <div className="px-4 py-3 border-b border-slate-800/70 panel-rail">
           <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-slate-400">
             Quick actions
             <span className="text-slate-500">tap to send</span>
@@ -701,7 +701,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
 
       {/* Input Area */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/70">
+      <div className="p-3 border-t border-slate-800 panel-rail">
         <div className="flex items-end gap-2">
           {/* File Upload Button */}
           <button

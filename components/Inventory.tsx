@@ -531,7 +531,7 @@ const Inventory: React.FC<InventoryProps> = ({
         onClick={handleButtonClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="hidden md:flex flex-col items-center justify-center fixed left-0 top-1/2 z-50 bg-cyber-card border-r border-y border-neon-cyan/30 h-16 w-11 rounded-r-lg text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+        className="hidden md:flex flex-col items-center justify-center fixed left-0 top-1/2 z-50 panel-toggle border-r border-y border-neon-cyan/30 h-16 w-11 text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
         style={{ transform: `translate(${isOpen ? sidebarWidth : 0}px, -50%)` }}
         title={isPinned ? 'Unlock Inventory' : 'Inventory'}
         aria-label={isPinned ? 'Unlock inventory' : 'Open inventory'}
@@ -569,7 +569,7 @@ const Inventory: React.FC<InventoryProps> = ({
         onMouseLeave={handleMouseLeave}
         role="complementary"
         aria-label="Inventory sidebar"
-        className={`fixed inset-y-0 left-0 w-full md:w-[var(--inventory-width)] bg-cyber-dark/95 backdrop-blur-xl border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.5)]`}
+        className={`fixed inset-y-0 left-0 w-full md:w-[var(--inventory-width)] panel-surface panel-rail border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.55)]`}
         style={{ '--inventory-width': `${sidebarWidth}px` } as React.CSSProperties}
       >
         <div
@@ -590,7 +590,7 @@ const Inventory: React.FC<InventoryProps> = ({
           <div className="h-full w-[3px] bg-neon-cyan/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         </div>
         {/* Header */}
-        <div className="p-4 md:p-5 border-b border-slate-800 bg-gradient-to-b from-slate-900 to-transparent flex flex-col gap-2">
+        <div className="p-4 md:p-5 panel-header border-b border-slate-800 flex flex-col gap-2">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-bold font-sans text-white mb-1 flex items-center gap-2 uppercase tracking-[0.3em]">
               <svg

@@ -2380,6 +2380,14 @@ Scope:
 Actions applied:
 - Added width sliders with min/max bounds and reset buttons for inventory and assistant sidebars.
 
+### Hard-Edge Theme Pass
+Scope:
+- Global radius reset and sharper, industrial panel styling.
+
+Actions applied:
+- Removed rounded corners globally and introduced slab/rail panel styling.
+- Swapped typography to IBM Plex Condensed + Mono and reinforced grid/panel textures.
+
 ## Code Examples
 ```css
 /* Icon-only button accessibility */

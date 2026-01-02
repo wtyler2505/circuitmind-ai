@@ -2,12 +2,12 @@
 
 /* Custom theme for CircuitMind AI */
 @theme {
-  --font-sans: 'Space Grotesk', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
   
-  --color-cyber-black: #050508;
-  --color-cyber-dark: #0a0a12;
-  --color-cyber-card: #12121f;
+  --color-cyber-black: #05070d;
+  --color-cyber-dark: #070b12;
+  --color-cyber-card: #0e131c;
   --color-neon-cyan: #00f3ff;
   --color-neon-purple: #bd00ff;
   --color-neon-green: #00ff9d;
@@ -26,8 +26,20 @@
 
 /* Base body styles */
 body {
-  background-color: #050508;
+  background-color: #05070d;
   color: #e2e8f0;
+  background-image:
+    linear-gradient(120deg, rgba(12, 16, 24, 0.9), rgba(5, 7, 13, 0.9)),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 18px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 18px);
+  background-size: 100% 100%, 18px 18px, 18px 18px;
+}
+
+/* Hard-edge mode: kill rounded corners */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
 }
 
 /* Custom scrollbar */
@@ -42,11 +54,34 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #334155;
-  border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #475569;
+}
+
+/* Panel surfaces */
+.panel-surface {
+  background: linear-gradient(180deg, rgba(15, 20, 30, 0.98), rgba(9, 12, 18, 0.96));
+  border: 1px solid #1f2a3a;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.panel-header {
+  background: linear-gradient(90deg, rgba(0, 243, 255, 0.08), rgba(255, 170, 0, 0.05), rgba(7, 10, 16, 0.95));
+  border-bottom: 1px solid #1f2a3a;
+}
+
+.panel-rail {
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 8px),
+    linear-gradient(180deg, rgba(11, 16, 24, 0.95), rgba(7, 10, 16, 0.95));
+}
+
+.panel-toggle {
+  background: linear-gradient(180deg, rgba(20, 26, 38, 0.95), rgba(10, 13, 19, 0.95));
+  border: 1px solid #273246;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
 }
 
 /* Hide scrollbar utility */
@@ -220,15 +255,16 @@ body {
 
 /* Canvas surface + grid */
 .canvas-surface {
-  background-color: #0a0a12;
+  background-color: #06080f;
 }
 
 .canvas-grid {
   background-image:
-    radial-gradient(circle at 15% 15%, rgba(0, 243, 255, 0.1), transparent 35%),
-    radial-gradient(circle at 80% 10%, rgba(255, 170, 0, 0.08), transparent 40%),
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
-  background-position: center, center, -1px -1px, -1px -1px;
+    radial-gradient(circle at 20% 15%, rgba(0, 243, 255, 0.18), transparent 38%),
+    radial-gradient(circle at 85% 20%, rgba(255, 170, 0, 0.14), transparent 40%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 60px);
+  background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px, 60px 60px;
+  background-position: center, center, 0 0, 0 0, 0 0;
 }

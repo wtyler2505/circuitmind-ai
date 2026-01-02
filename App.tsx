@@ -1449,7 +1449,7 @@ export default function App() {
         }
       >
         {/* Toolbar */}
-        <div className="h-16 bg-gradient-to-r from-slate-950/90 via-slate-900/80 to-slate-950/90 backdrop-blur border-b border-slate-800/80 flex items-center justify-between px-5 shrink-0 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+        <div className="h-16 panel-header panel-rail border-b border-slate-800/80 flex items-center justify-between px-5 shrink-0 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold tracking-[0.15em] text-white flex items-center gap-2">
               <span className="text-neon-cyan text-2xl">⚡</span>
@@ -1573,7 +1573,7 @@ export default function App() {
         </div>
 
         {/* Status Bar */}
-        <div className="h-7 border-t border-slate-800/80 bg-slate-950/80 backdrop-blur px-4 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-slate-400">
+        <div className="h-7 panel-rail border-t border-slate-800/80 px-4 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-slate-400">
           <div className="flex items-center gap-4">
             <span className="text-neon-cyan">Inventory {totalInventoryUnits}</span>
             <span>
