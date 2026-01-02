@@ -132,14 +132,14 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
         onClick={handleToggleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="hidden md:flex flex-col items-center justify-center fixed right-0 top-1/2 z-40 panel-toggle cut-corner-sm border-l border-y border-neon-cyan/30 h-16 w-11 text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+        className="hidden md:flex flex-col items-center justify-center fixed right-0 top-1/2 z-40 panel-toggle cut-corner-sm border-l border-y border-neon-cyan/30 h-12 w-10 text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
         style={{ transform: `translate(${isOpen ? -sidebarWidth : 0}px, -50%)` }}
         title={isPinned ? 'Unlock assistant' : 'AI assistant'}
         aria-label={isPinned ? 'Unlock assistant sidebar' : 'Open assistant sidebar'}
       >
         {isPinned ? (
           <svg
-            className="w-5 h-5 text-neon-green"
+            className="w-4 h-4 text-neon-green"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -152,7 +152,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
             />
           </svg>
         ) : (
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

@@ -531,14 +531,14 @@ const Inventory: React.FC<InventoryProps> = ({
         onClick={handleButtonClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="hidden md:flex flex-col items-center justify-center fixed left-0 top-1/2 z-50 panel-toggle cut-corner-sm border-r border-y border-neon-cyan/30 h-16 w-11 text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+        className="hidden md:flex flex-col items-center justify-center fixed left-0 top-1/2 z-50 panel-toggle cut-corner-sm border-r border-y border-neon-cyan/30 h-12 w-10 text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
         style={{ transform: `translate(${isOpen ? sidebarWidth : 0}px, -50%)` }}
         title={isPinned ? 'Unlock Inventory' : 'Inventory'}
         aria-label={isPinned ? 'Unlock inventory' : 'Open inventory'}
       >
         {isPinned ? (
           <svg
-            className="w-5 h-5 text-neon-green"
+            className="w-4 h-4 text-neon-green"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -551,7 +551,7 @@ const Inventory: React.FC<InventoryProps> = ({
             />
           </svg>
         ) : (
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -590,11 +590,11 @@ const Inventory: React.FC<InventoryProps> = ({
           <div className="h-full w-[3px] bg-neon-cyan/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         </div>
         {/* Header */}
-        <div className="p-4 md:p-5 panel-header border-b border-slate-800 flex flex-col gap-2">
+        <div className="p-3 md:p-4 panel-header border-b border-slate-800 flex flex-col gap-1">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold font-sans text-white mb-1 flex items-center gap-2 uppercase tracking-[0.3em] panel-title">
+            <h2 className="text-base font-bold font-sans text-white mb-1 flex items-center gap-2 uppercase tracking-[0.3em] panel-title">
               <svg
-                className="w-5 h-5 text-neon-cyan"
+                className="w-4 h-4 text-neon-cyan"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -612,7 +612,7 @@ const Inventory: React.FC<InventoryProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="md:hidden h-11 w-11 inline-flex items-center justify-center text-slate-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+              className="md:hidden h-10 w-10 inline-flex items-center justify-center text-slate-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
               title="Close inventory"
               aria-label="Close inventory"
             >
@@ -629,7 +629,7 @@ const Inventory: React.FC<InventoryProps> = ({
             <button
               type="button"
               onClick={() => updatePinned(!isPinned)}
-              className="hidden md:inline-flex h-11 w-11 items-center justify-center text-slate-500 hover:text-neon-cyan transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+              className="hidden md:inline-flex h-9 w-9 items-center justify-center text-slate-500 hover:text-neon-cyan transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
               title={isPinned ? 'Unlock sidebar' : 'Lock sidebar open'}
               aria-label={isPinned ? 'Unlock sidebar' : 'Lock sidebar open'}
             >
@@ -654,15 +654,15 @@ const Inventory: React.FC<InventoryProps> = ({
             </button>
           </div>
 
-          <p className="text-[10px] text-slate-400 font-mono tracking-[0.3em] uppercase mb-2">
+          <p className="text-[9px] text-slate-400 font-mono tracking-[0.3em] uppercase mb-1">
             Total Units: {inventoryStats.totalUnits}
           </p>
-          <div className="grid grid-cols-2 gap-2 mb-3 text-[10px] uppercase tracking-[0.25em]">
-            <div className="rounded-lg border border-slate-800 bg-slate-900/60 px-2 py-1 flex items-center justify-between">
+          <div className="grid grid-cols-2 gap-1 mb-2 text-[9px] uppercase tracking-[0.25em]">
+            <div className="border border-slate-800 bg-slate-900/60 px-2 py-0.5 flex items-center justify-between">
               <span className="text-slate-500">Unique</span>
               <span className="text-slate-200">{inventoryStats.uniqueCount}</span>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-900/60 px-2 py-1 flex items-center justify-between">
+            <div className="border border-slate-800 bg-slate-900/60 px-2 py-0.5 flex items-center justify-between">
               <span className="text-slate-500">Low</span>
               <span className={inventoryStats.lowStockCount > 0 ? 'text-amber-300' : 'text-slate-200'}>
                 {inventoryStats.lowStockCount}
@@ -671,22 +671,22 @@ const Inventory: React.FC<InventoryProps> = ({
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-slate-950/70 p-1 rounded-lg border border-slate-800/80">
+          <div className="flex bg-slate-950/70 p-0.5 border border-slate-800/80">
             <button
               onClick={() => setActiveTab('list')}
-              className={`flex-1 py-1.5 text-[11px] font-bold rounded transition-all tracking-[0.2em] ${activeTab === 'list' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
+              className={`flex-1 py-1 text-[10px] font-bold transition-all tracking-[0.2em] ${activeTab === 'list' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
             >
               LIST
             </button>
             <button
               onClick={() => setActiveTab('add')}
-              className={`flex-1 py-1.5 text-[11px] font-bold rounded transition-all tracking-[0.2em] ${activeTab === 'add' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
+              className={`flex-1 py-1 text-[10px] font-bold transition-all tracking-[0.2em] ${activeTab === 'add' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
             >
               ADD NEW
             </button>
             <button
               onClick={() => setActiveTab('tools')}
-              className={`flex-1 py-1.5 text-[11px] font-bold rounded transition-all tracking-[0.2em] ${activeTab === 'tools' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
+              className={`flex-1 py-1 text-[10px] font-bold transition-all tracking-[0.2em] ${activeTab === 'tools' ? 'bg-neon-cyan text-black shadow-lg' : 'text-slate-300 hover:text-white'}`}
             >
               TOOLS
             </button>
@@ -697,12 +697,12 @@ const Inventory: React.FC<InventoryProps> = ({
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-grid-white/[0.02] relative">
           {/* --- LIST VIEW --- */}
           {activeTab === 'list' && (
-            <div className="p-4 space-y-4 pb-24 md:pb-20">
-              <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.2em]">
+            <div className="p-3 space-y-3 pb-20 md:pb-16">
+              <div className="flex flex-wrap gap-1.5 text-[9px] uppercase tracking-[0.2em]">
                 <button
                   type="button"
                   onClick={() => setActiveCategory('all')}
-                  className={`px-3 py-1 rounded-full border transition-colors ${
+                  className={`px-2 py-0.5 border transition-colors ${
                     activeCategory === 'all'
                       ? 'border-neon-cyan text-neon-cyan bg-neon-cyan/10'
                       : 'border-slate-700 text-slate-400 hover:text-slate-200'
@@ -716,7 +716,7 @@ const Inventory: React.FC<InventoryProps> = ({
                     key={cat}
                     type="button"
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-3 py-1 rounded-full border transition-colors ${
+                    className={`px-2 py-0.5 border transition-colors ${
                       activeCategory === cat
                         ? 'border-neon-cyan text-neon-cyan bg-neon-cyan/10'
                         : 'border-slate-700 text-slate-400 hover:text-slate-200'
@@ -737,7 +737,7 @@ const Inventory: React.FC<InventoryProps> = ({
                   placeholder="Filter assets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-neon-cyan transition-colors"
+                  className="w-full bg-slate-900 border border-slate-700 pl-9 pr-3 py-1.5 text-[11px] text-white focus:outline-none focus:border-neon-cyan transition-colors"
                 />
                 <svg
                   className="w-4 h-4 text-slate-400 absolute left-3 top-2"
@@ -772,7 +772,7 @@ const Inventory: React.FC<InventoryProps> = ({
               </div>
 
               {selectedIds.size > 0 && (
-                <div className="bg-slate-900/70 border border-slate-800 rounded-lg px-3 py-2 text-[11px] text-slate-300 space-y-2">
+                <div className="bg-slate-900/70 border border-slate-800 cut-corner-sm px-2.5 py-1.5 text-[10px] text-slate-300 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-mono uppercase tracking-widest text-slate-300">
                       {selectedIds.size} selected
@@ -780,7 +780,7 @@ const Inventory: React.FC<InventoryProps> = ({
                     <button
                       type="button"
                       onClick={clearSelection}
-                      className="text-[10px] text-slate-300 hover:text-white transition-colors"
+                      className="text-[9px] text-slate-300 hover:text-white transition-colors"
                       aria-label="Clear selection"
                     >
                       Clear
@@ -790,7 +790,7 @@ const Inventory: React.FC<InventoryProps> = ({
                     <button
                       type="button"
                       onClick={handleBulkExport}
-                      className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-200 hover:text-white hover:border-neon-cyan/60 transition-colors"
+                      className="px-2 py-0.5 cut-corner-sm border border-slate-700 bg-slate-900 text-[10px] text-slate-200 hover:text-white hover:border-neon-cyan/60 transition-colors"
                       aria-label="Export selected"
                     >
                       Export JSON
@@ -799,7 +799,7 @@ const Inventory: React.FC<InventoryProps> = ({
                       type="button"
                       onClick={handleBulkLowStock}
                       disabled={!onUpdateMany}
-                      className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-200 hover:text-white hover:border-amber-400/60 transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
+                      className="px-2 py-0.5 cut-corner-sm border border-slate-700 bg-slate-900 text-[10px] text-slate-200 hover:text-white hover:border-amber-400/60 transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
                       aria-label="Mark selected low stock"
                     >
                       Mark Low Stock
@@ -808,7 +808,7 @@ const Inventory: React.FC<InventoryProps> = ({
                       type="button"
                       onClick={handleBulkDelete}
                       disabled={!onDeleteMany}
-                      className="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-slate-200 hover:text-white hover:border-red-400/60 transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
+                      className="px-2 py-0.5 cut-corner-sm border border-slate-700 bg-slate-900 text-[10px] text-slate-200 hover:text-white hover:border-red-400/60 transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
                       aria-label="Delete selected"
                     >
                       Delete
@@ -837,20 +837,20 @@ const Inventory: React.FC<InventoryProps> = ({
                             draggable
                             onDragStart={(e) => handleDragStart(e, item)}
                             onDoubleClick={() => onSelect(item)}
-                            className={`group relative border p-2 rounded cursor-grab active:cursor-grabbing transition-all flex justify-between items-start ${selectedIds.has(item.id) ? 'bg-neon-cyan/10 border-neon-cyan' : 'bg-slate-800/40 border-slate-700/50 hover:border-neon-cyan/50 hover:bg-slate-800'}`}
+                            className={`group relative border p-1.5 cut-corner-sm cursor-grab active:cursor-grabbing transition-all flex justify-between items-start ${selectedIds.has(item.id) ? 'bg-neon-cyan/10 border-neon-cyan' : 'bg-slate-800/40 border-slate-700/50 hover:border-neon-cyan/50 hover:bg-slate-800'}`}
                           >
                             <div className="flex items-start gap-3 flex-1 min-w-0">
                               <input
                                 type="checkbox"
                                 checked={selectedIds.has(item.id)}
                                 onChange={() => toggleSelection(item.id)}
-                                className="mt-1 w-4 h-4 rounded border-slate-600 text-neon-cyan focus:ring-neon-cyan bg-slate-900 cursor-pointer shrink-0"
+                                className="mt-1 w-4 h-4 rounded-none border-slate-600 text-neon-cyan focus:ring-neon-cyan bg-slate-900 cursor-pointer shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                                 aria-label={`Select ${item.name}`}
                               />
 
                               {/* Component Image/Thumbnail */}
-                              <div className="w-10 h-10 rounded bg-black/50 border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
+                              <div className="w-9 h-9 cut-corner-sm bg-black/50 border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
                                 {item.imageUrl && !isThumbnailBroken ? (
                                   <img
                                     src={item.imageUrl}
@@ -868,28 +868,25 @@ const Inventory: React.FC<InventoryProps> = ({
                               </div>
 
                               <div className="flex-1 min-w-0">
-                                <div className="font-bold text-slate-200 text-sm group-hover:text-neon-cyan transition-colors flex items-center gap-2">
+                                <div className="font-bold text-slate-200 text-[11px] group-hover:text-neon-cyan transition-colors flex items-center gap-2">
                                   <span className="truncate" title={item.name}>
                                     {item.name}
                                   </span>
                                   {item.lowStock && (
                                     <span
-                                      className="text-[8px] bg-red-500/20 text-red-400 px-1 rounded border border-red-500/50 shrink-0"
+                                      className="text-[8px] bg-red-500/20 text-red-400 px-1 cut-corner-sm border border-red-500/50 shrink-0"
                                       title="Low Stock"
                                     >
                                       LOW
                                     </span>
                                   )}
                                 </div>
-                                <div
-                                  className="text-[10px] text-slate-300 mt-0.5 truncate"
-                                  title={item.description}
-                                >
+                                <div className="text-[9px] text-slate-300 mt-0.5 truncate" title={item.description}>
                                   {item.description}
                                 </div>
-                                <div className="flex gap-2 mt-2">
+                                <div className="flex gap-2 mt-1.5">
                                   {item.pins && item.pins.length > 0 && (
-                                    <span className="text-[9px] bg-black/40 px-1.5 py-0.5 rounded text-slate-300 border border-slate-700">
+                                    <span className="text-[9px] bg-black/40 px-1.5 py-0.5 cut-corner-sm text-slate-300 border border-slate-700">
                                       {item.pins.length} PINS
                                     </span>
                                   )}
@@ -898,7 +895,7 @@ const Inventory: React.FC<InventoryProps> = ({
                             </div>
                             <div className="flex flex-col items-end gap-2 ml-2 shrink-0">
                               <div
-                                className="flex items-center gap-0.5 bg-slate-950 border border-slate-700 rounded overflow-hidden"
+                                className="flex items-center gap-0.5 bg-slate-950 border border-slate-700 cut-corner-sm overflow-hidden"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <button
@@ -930,12 +927,12 @@ const Inventory: React.FC<InventoryProps> = ({
                                     e.stopPropagation();
                                     onAddToCanvas?.(item);
                                   }}
-                                  className="h-11 w-11 inline-flex items-center justify-center text-neon-green hover:text-white bg-neon-green/10 hover:bg-neon-green/20 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-green/50"
+                                  className="h-9 w-9 inline-flex items-center justify-center text-neon-green hover:text-white bg-neon-green/10 hover:bg-neon-green/20 cut-corner-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-green/50"
                                   title="Add to diagram"
                                   aria-label="Add to diagram"
                                 >
                                   <svg
-                                    className="w-4 h-4"
+                                    className="w-3.5 h-3.5"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -954,12 +951,12 @@ const Inventory: React.FC<InventoryProps> = ({
                                     e.stopPropagation();
                                     handleQuickThumbnail(item);
                                   }}
-                                  className="h-11 w-11 inline-flex items-center justify-center text-slate-500 hover:text-neon-amber rounded hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/50"
+                                  className="h-9 w-9 inline-flex items-center justify-center text-slate-500 hover:text-neon-amber cut-corner-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/50"
                                   title="Generate Thumbnail"
                                   aria-label="Generate thumbnail"
                                 >
                                   <svg
-                                    className="w-4 h-4"
+                                    className="w-3.5 h-3.5"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -978,12 +975,12 @@ const Inventory: React.FC<InventoryProps> = ({
                                     e.stopPropagation();
                                     onSelect(item);
                                   }}
-                                  className="h-11 w-11 inline-flex items-center justify-center text-slate-500 hover:text-neon-cyan rounded hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
+                                  className="h-9 w-9 inline-flex items-center justify-center text-slate-500 hover:text-neon-cyan cut-corner-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/50"
                                   title="Edit details"
                                   aria-label="Edit details"
                                 >
                                   <svg
-                                    className="w-4 h-4"
+                                    className="w-3.5 h-3.5"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -1006,12 +1003,12 @@ const Inventory: React.FC<InventoryProps> = ({
                                       onRemoveItem(item.id);
                                     }
                                   }}
-                                  className="h-11 w-11 inline-flex items-center justify-center text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+                                  className="h-9 w-9 inline-flex items-center justify-center text-slate-500 hover:text-red-400 cut-corner-sm hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
                                   title="Delete item"
                                   aria-label="Delete item"
                                 >
                                   <svg
-                                    className="w-4 h-4"
+                                    className="w-3.5 h-3.5"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -1027,7 +1024,7 @@ const Inventory: React.FC<InventoryProps> = ({
                               </div>
                             </div>
                             {/* Drag Handle Indicator */}
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-neon-cyan/0 group-hover:bg-neon-cyan/50 rounded-l transition-colors"></div>
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-neon-cyan/0 group-hover:bg-neon-cyan/50 transition-colors"></div>
                           </div>
                         );
                       })}
@@ -1040,11 +1037,11 @@ const Inventory: React.FC<InventoryProps> = ({
 
           {/* --- ADD NEW VIEW --- */}
           {activeTab === 'add' && (
-            <div className="p-4 space-y-4">
+            <div className="p-3 space-y-4">
               {/* Part Finder Section */}
-              <div className="bg-slate-900/80 border border-neon-cyan/20 p-3 rounded-xl space-y-2">
+              <div className="bg-slate-900/80 border border-neon-cyan/20 p-3 cut-corner-md space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-neon-cyan flex items-center gap-2">
+                  <label className="text-[11px] font-bold text-neon-cyan flex items-center gap-2 uppercase tracking-[0.2em]">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
@@ -1064,12 +1061,12 @@ const Inventory: React.FC<InventoryProps> = ({
                     onChange={(e) => setFinderQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleFinderSearch()}
                     placeholder="Describe part (e.g., 'wemos d1' or 'temp sensor')"
-                    className="flex-1 bg-black border border-slate-700 rounded px-3 py-2 text-xs text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none"
+                    className="flex-1 bg-black border border-slate-700 cut-corner-sm px-3 py-1.5 text-[11px] text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none"
                   />
                   <button
                     onClick={handleFinderSearch}
                     disabled={isFinderLoading || !finderQuery}
-                    className="bg-neon-cyan text-black font-bold px-3 py-2 rounded text-xs hover:bg-white disabled:opacity-80"
+                    className="bg-neon-cyan text-black font-bold px-3 py-1.5 cut-corner-sm text-[11px] tracking-[0.2em] hover:bg-white disabled:opacity-80"
                   >
                     {isFinderLoading ? '...' : 'FIND'}
                   </button>
@@ -1083,13 +1080,13 @@ const Inventory: React.FC<InventoryProps> = ({
                       <button
                         key={idx}
                         onClick={() => handleSelectFinderResult(result)}
-                        className="w-full text-left p-2 rounded bg-slate-800/50 hover:bg-neon-cyan/20 border border-transparent hover:border-neon-cyan/50 transition-colors group"
+                        className="w-full text-left p-1.5 cut-corner-sm bg-slate-800/50 hover:bg-neon-cyan/20 border border-transparent hover:border-neon-cyan/50 transition-colors group"
                       >
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-xs text-white group-hover:text-neon-cyan">
+                          <span className="font-bold text-[11px] text-white group-hover:text-neon-cyan">
                             {result.name}
                           </span>
-                          <span className="text-[9px] uppercase text-slate-300 bg-black/30 px-1 rounded">
+                          <span className="text-[9px] uppercase text-slate-300 bg-black/30 px-1 cut-corner-sm">
                             {result.type}
                           </span>
                         </div>
@@ -1102,9 +1099,11 @@ const Inventory: React.FC<InventoryProps> = ({
                 )}
               </div>
 
-              <div className="bg-slate-900/50 p-4 rounded-xl border border-dashed border-slate-700 text-center relative overflow-hidden group">
+              <div className="bg-slate-900/50 p-3 cut-corner-md border border-dashed border-slate-700 text-center relative overflow-hidden group">
                 <div className="flex items-center justify-between text-left mb-3">
-                  <span className="text-xs font-bold text-slate-200 uppercase tracking-widest">Photo Scan</span>
+                  <span className="text-[11px] font-bold text-slate-200 uppercase tracking-widest">
+                    Photo Scan
+                  </span>
                   <span className="text-[9px] font-mono text-slate-300 uppercase tracking-widest">Optional</span>
                 </div>
                 {newItemImage && (
@@ -1126,13 +1125,13 @@ const Inventory: React.FC<InventoryProps> = ({
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isAiLoading}
-                  className="w-full py-4 flex flex-col items-center gap-2 text-slate-300 hover:text-neon-cyan transition-colors relative z-10"
+                  className="w-full py-3 flex flex-col items-center gap-2 text-slate-300 hover:text-neon-cyan transition-colors relative z-10"
                 >
                   {isAiLoading ? (
-                    <div className="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-7 h-7 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <svg
-                      className="w-8 h-8 opacity-50"
+                      className="w-6 h-6 opacity-50"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1151,7 +1150,7 @@ const Inventory: React.FC<InventoryProps> = ({
                       />
                     </svg>
                   )}
-                  <span className="text-xs font-bold uppercase tracking-wider shadow-black drop-shadow-md">
+                  <span className="text-[11px] font-bold uppercase tracking-wider shadow-black drop-shadow-md">
                     {isAiLoading
                       ? 'ANALYZING...'
                       : newItemImage
@@ -1159,14 +1158,14 @@ const Inventory: React.FC<InventoryProps> = ({
                         : 'SCAN COMPONENT PHOTO'}
                   </span>
                 </button>
-                <p className="text-[11px] text-slate-300 mt-2 relative z-10">
+                <p className="text-[10px] text-slate-300 mt-2 relative z-10">
                   Tip: A clear top-down photo helps auto-fill name, type, and pins.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+              <div className="cut-corner-md border border-slate-800/80 bg-slate-900/40 p-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">
+                  <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-widest">
                     Basics
                   </h4>
                   <span className="text-[9px] font-mono text-slate-300 uppercase tracking-widest">
@@ -1175,7 +1174,7 @@ const Inventory: React.FC<InventoryProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 mb-1">
+                  <label className="block text-[11px] font-mono text-slate-300 mb-1">
                     COMPONENT NAME
                     <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                       Required
@@ -1187,7 +1186,7 @@ const Inventory: React.FC<InventoryProps> = ({
                       value={newItemName}
                       onChange={(e) => setNewItemName(e.target.value)}
                       placeholder="e.g., NE555 Timer"
-                      className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-sm text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none"
+                      className="flex-1 bg-slate-950 border border-slate-700 cut-corner-sm px-3 py-1.5 text-[11px] text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none"
                     />
                     <button
                       type="button"
@@ -1195,13 +1194,13 @@ const Inventory: React.FC<InventoryProps> = ({
                       disabled={!newItemName || isGeneratingImage}
                       title="Auto-generate product image"
                       aria-label="Auto-generate product image"
-                      className="h-11 w-11 inline-flex items-center justify-center bg-slate-800 border border-slate-600 text-neon-purple rounded hover:bg-slate-700 hover:border-neon-purple disabled:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-purple/50"
+                      className="h-9 w-9 inline-flex items-center justify-center bg-slate-800 border border-slate-600 text-neon-purple cut-corner-sm hover:bg-slate-700 hover:border-neon-purple disabled:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-purple/50"
                     >
                       {isGeneratingImage ? (
-                        <div className="w-4 h-4 border-2 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-3.5 h-3.5 border-2 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         <svg
-                          className="w-4 h-4"
+                          className="w-3.5 h-3.5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1220,7 +1219,7 @@ const Inventory: React.FC<InventoryProps> = ({
 
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label className="block text-[11px] font-mono text-slate-300 mb-1">
                       TYPE
                       <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                         Required
@@ -1229,7 +1228,7 @@ const Inventory: React.FC<InventoryProps> = ({
                     <select
                       value={newItemType}
                       onChange={(e) => setNewItemType(e.target.value as ComponentType)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none"
+                      className="w-full bg-slate-950 border border-slate-700 cut-corner-sm px-2 py-1.5 text-[11px] text-white focus:border-neon-cyan focus:outline-none"
                     >
                       {CATEGORIES.map((c) => (
                         <option key={c} value={c}>
@@ -1239,7 +1238,7 @@ const Inventory: React.FC<InventoryProps> = ({
                     </select>
                   </div>
                   <div className="w-20">
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label className="block text-[11px] font-mono text-slate-300 mb-1">
                       QTY
                       <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                         Required
@@ -1250,15 +1249,15 @@ const Inventory: React.FC<InventoryProps> = ({
                       min="1"
                       value={newItemQty}
                       onChange={(e) => setNewItemQty(parseInt(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-xs text-white focus:border-neon-cyan focus:outline-none"
+                      className="w-full bg-slate-950 border border-slate-700 cut-corner-sm px-2 py-1.5 text-[11px] text-white focus:border-neon-cyan focus:outline-none"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+              <div className="cut-corner-md border border-slate-800/80 bg-slate-900/40 p-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">
+                  <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-widest">
                     Details
                   </h4>
                   <span className="text-[9px] font-mono text-slate-300 uppercase tracking-widest">
@@ -1266,7 +1265,7 @@ const Inventory: React.FC<InventoryProps> = ({
                   </span>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 mb-1">
+                  <label className="block text-[11px] font-mono text-slate-300 mb-1">
                     DESCRIPTION
                     <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                       Optional
@@ -1277,14 +1276,14 @@ const Inventory: React.FC<InventoryProps> = ({
                     onChange={(e) => setNewItemDesc(e.target.value)}
                     rows={2}
                     placeholder="Short summary for inventory and AI suggestions..."
-                    className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none resize-none"
+                    className="w-full bg-slate-950 border border-slate-700 cut-corner-sm px-3 py-1.5 text-[11px] text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none resize-none"
                   />
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
+              <div className="cut-corner-md border border-slate-800/80 bg-slate-900/40 p-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest">
+                  <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-widest">
                     Pins
                   </h4>
                   <span className="text-[9px] font-mono text-slate-300 uppercase tracking-widest">
@@ -1292,7 +1291,7 @@ const Inventory: React.FC<InventoryProps> = ({
                   </span>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 mb-1">
+                  <label className="block text-[11px] font-mono text-slate-300 mb-1">
                     PINS
                     <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                       Optional
@@ -1303,9 +1302,9 @@ const Inventory: React.FC<InventoryProps> = ({
                     value={newItemPins}
                     onChange={(e) => setNewItemPins(e.target.value)}
                     placeholder="Comma separated: VCC, GND, OUT..."
-                    className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none font-mono"
+                    className="w-full bg-slate-950 border border-slate-700 cut-corner-sm px-3 py-1.5 text-[11px] text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none font-mono"
                   />
-                  <p className="text-[11px] text-slate-300 mt-2">
+                  <p className="text-[10px] text-slate-300 mt-2">
                     Pin labels surface on the wiring canvas and AI suggestions.
                   </p>
                 </div>
@@ -1314,7 +1313,7 @@ const Inventory: React.FC<InventoryProps> = ({
               <button
                 onClick={handleAdd}
                 disabled={!newItemName}
-                className="w-full bg-neon-cyan text-black font-bold py-3 rounded hover:bg-white transition-colors uppercase tracking-widest text-xs shadow-lg disabled:opacity-80 disabled:cursor-not-allowed"
+                className="w-full bg-neon-cyan text-black font-bold py-2.5 cut-corner-sm hover:bg-white transition-colors uppercase tracking-[0.25em] text-[11px] shadow-lg disabled:opacity-80 disabled:cursor-not-allowed"
               >
                 ADD TO INVENTORY
               </button>
@@ -1323,18 +1322,18 @@ const Inventory: React.FC<InventoryProps> = ({
 
           {/* --- TOOLS VIEW --- */}
           {activeTab === 'tools' && (
-            <div className="p-4 space-y-6">
+            <div className="p-3 space-y-4">
               <div>
-                <h3 className="text-xs font-bold text-slate-300 mb-3 border-b border-slate-800 pb-1">
+                <h3 className="text-[11px] font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 uppercase tracking-[0.25em]">
                   DATA MANAGEMENT
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={handleExport}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded border border-slate-600 flex flex-col items-center gap-1"
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 cut-corner-sm border border-slate-600 flex flex-col items-center gap-1"
                   >
                     <svg
-                      className="w-5 h-5 text-neon-green"
+                      className="w-4 h-4 text-neon-green"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1346,12 +1345,12 @@ const Inventory: React.FC<InventoryProps> = ({
                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                       />
                     </svg>
-                    <span className="text-[10px] font-bold">EXPORT JSON</span>
+                    <span className="text-[9px] font-bold tracking-[0.2em]">EXPORT JSON</span>
                   </button>
-                  <label className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded border border-slate-600 flex flex-col items-center gap-1 cursor-pointer">
+                  <label className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 cut-corner-sm border border-slate-600 flex flex-col items-center gap-1 cursor-pointer">
                     <input type="file" accept=".json" className="hidden" onChange={handleImport} />
                     <svg
-                      className="w-5 h-5 text-neon-purple"
+                      className="w-4 h-4 text-neon-purple"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1363,7 +1362,7 @@ const Inventory: React.FC<InventoryProps> = ({
                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
                       />
                     </svg>
-                    <span className="text-[10px] font-bold">IMPORT JSON</span>
+                    <span className="text-[9px] font-bold tracking-[0.2em]">IMPORT JSON</span>
                   </label>
                 </div>
 
@@ -1371,7 +1370,7 @@ const Inventory: React.FC<InventoryProps> = ({
                   <div className="mt-2">
                     <button
                       onClick={onReset}
-                      className="w-full bg-red-900/20 hover:bg-red-900/50 text-red-400 py-2 rounded border border-red-900/50 flex items-center justify-center gap-2 transition-colors"
+                      className="w-full bg-red-900/20 hover:bg-red-900/50 text-red-400 py-2 cut-corner-sm border border-red-900/50 flex items-center justify-center gap-2 transition-colors"
                     >
                       <svg
                         className="w-4 h-4"
@@ -1393,15 +1392,15 @@ const Inventory: React.FC<InventoryProps> = ({
               </div>
 
               <div>
-                <h3 className="text-xs font-bold text-slate-300 mb-3 border-b border-slate-800 pb-1">
+                <h3 className="text-[11px] font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 uppercase tracking-[0.25em]">
                   AI ANALYSIS
                 </h3>
                 <button
                   onClick={handleSuggestProjects}
                   disabled={isSuggesting}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-left p-3 rounded border border-slate-600 group"
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-left p-2.5 cut-corner-sm border border-slate-600 group"
                 >
-                  <div className="flex items-center gap-2 mb-1 text-neon-cyan font-bold text-xs">
+                  <div className="flex items-center gap-2 mb-1 text-neon-cyan font-bold text-[11px]">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
@@ -1418,7 +1417,7 @@ const Inventory: React.FC<InventoryProps> = ({
                 </button>
 
                 {suggestions && (
-                  <div className="mt-4 p-3 bg-slate-900 border border-slate-700 rounded text-xs text-slate-300 markdown prose prose-invert max-w-none">
+                  <div className="mt-3 p-2.5 bg-slate-900 border border-slate-700 cut-corner-sm text-[11px] text-slate-300 markdown prose prose-invert max-w-none">
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-[10px] text-neon-purple font-mono uppercase">
                         Ideas

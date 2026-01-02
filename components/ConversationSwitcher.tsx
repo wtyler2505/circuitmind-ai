@@ -111,7 +111,7 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-200 transition-colors"
+        className="flex items-center gap-2 px-2.5 py-1 bg-slate-900/70 hover:bg-slate-800/70 cut-corner-sm text-[11px] text-slate-200 border border-slate-700/80 transition-colors"
       >
         <svg
           className="w-4 h-4 text-cyan-400"
@@ -139,14 +139,14 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-72 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 mt-1 w-72 panel-surface panel-frame cut-corner-sm border border-slate-800/80 shadow-[0_12px_30px_rgba(0,0,0,0.6)] z-50 overflow-hidden">
           {/* New Conversation Button */}
           <button
             onClick={() => {
               onCreateConversation();
               setIsOpen(false);
             }}
-            className="w-full flex items-center gap-2 px-4 py-3 text-left text-sm text-cyan-400 hover:bg-gray-800 transition-colors border-b border-gray-700"
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] text-cyan-300 hover:text-white hover:bg-slate-900/70 transition-colors border-b border-slate-800/80 uppercase tracking-[0.2em]"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -170,10 +170,10 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                     setIsOpen(false);
                   }
                 }}
-                className={`group flex items-center gap-2 px-4 py-2.5 cursor-pointer transition-colors ${
+                className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
                   conv.id === activeConversationId
                     ? 'bg-cyan-500/10 border-l-2 border-cyan-400'
-                    : 'hover:bg-gray-800 border-l-2 border-transparent'
+                    : 'hover:bg-slate-900/70 border-l-2 border-transparent'
                 }`}
               >
                 {/* Icon */}
@@ -214,12 +214,12 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                       onKeyDown={handleKeyDown}
                       onBlur={handleSaveEdit}
                       onClick={(e) => e.stopPropagation()}
-                      className="w-full px-2 py-0.5 bg-gray-800 border border-cyan-500 rounded text-sm text-white focus:outline-none"
+                      className="w-full px-2 py-0.5 bg-slate-900 border border-cyan-500 cut-corner-sm text-[11px] text-white focus:outline-none"
                     />
                   ) : (
                     <>
-                      <div className="text-sm text-gray-200 truncate">{conv.title}</div>
-                      <div className="flex items-center gap-2 text-[10px] text-gray-300">
+                      <div className="text-[11px] text-slate-200 truncate">{conv.title}</div>
+                      <div className="flex items-center gap-2 text-[9px] text-slate-400">
                         <span>{conv.messageCount} messages</span>
                         <span>·</span>
                         <span>{formatDate(conv.updatedAt)}</span>
@@ -279,7 +279,9 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
 
           {/* Empty State */}
           {conversations.length === 0 && (
-            <div className="px-4 py-6 text-center text-gray-300 text-sm">No conversations yet</div>
+            <div className="px-3 py-4 text-center text-slate-400 text-[11px]">
+              No conversations yet
+            </div>
           )}
         </div>
       )}

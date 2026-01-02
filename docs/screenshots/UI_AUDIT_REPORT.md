@@ -2404,6 +2404,23 @@ Actions applied:
 - Removed panel rail vertical striping.
 - Darkened the main background and canvas surface.
 
+### Desktop Density Pass
+Scope:
+- Compress top/bottom bars and sidebar chrome for desktop-focused density.
+- Tighten assistant header/context rails, message area, and input stack.
+- Reduce inventory action footprint and make add/tools forms more compact.
+
+Actions applied:
+- Reduced header/status heights, padding, and icon sizing in the assistant panel.
+- Tightened inventory list cards, bulk actions, and action buttons; replaced residual rounded corners.
+- Reduced spacing and input heights in add/tools sections to free vertical space.
+
+Evidence:
+- `components/ChatPanel.tsx`
+- `components/ConversationSwitcher.tsx`
+- `components/Inventory.tsx`
+- `components/AssistantSidebar.tsx`
+
 ## Code Examples
 ```css
 /* Icon-only button accessibility */
