@@ -974,3 +974,28 @@ npm run test
 
 ## Handoff Notes
 - Tests: `npm run test` (10 files, 65 tests) passed.
+
+# Codex Completion Report
+
+**Task:** Finish documented canvas/wiring items (wire labels, virtualization, control labels)
+**Status:** partial
+
+## Changes Made
+- `components/DiagramCanvas.tsx` - added viewport-based virtualization for large diagrams and added visible labels to zoom controls; cleaned wire label edit styling
+- `docs/frontend/diagram-canvas.md` - marked virtualization as completed
+
+## Commands Run
+```bash
+rg -n "DiagramCanvas|diagram canvas|wiring|wire" docs
+npm run test
+```
+
+## Next Steps
+- Decide whether to mark UI-001 as addressed for canvas controls in `docs/screenshots/UI_AUDIT_REPORT.md`.
+- (Optional) Convert remaining canvas rounded corners to cut-corner styles for full theme consistency.
+
+## Blockers (if any)
+- `services/__tests__/aiMetricsService.test.ts` failed: "should limit metrics storage to 1000 items" (unrelated to canvas changes).
+
+## Handoff Notes
+- Tests: `npm run test` failed with the aiMetricsService test; other suites passed.
