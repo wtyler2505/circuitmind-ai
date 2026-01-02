@@ -42,4 +42,48 @@ describe('SettingsPanel', () => {
     expect(onLayoutSettingsChange).toHaveBeenCalledWith({ inventoryOpen: false });
     expect(onLayoutSettingsChange).toHaveBeenCalledWith({ assistantPinned: false });
   });
+
+  test('settingsPanel_layoutReset_showsUndo_and_restoresSnapshot', async () => {
+    const user = userEvent.setup();
+    const onLayoutSettingsChange = vi.fn();
+
+    render(
+      <SettingsPanel
+        isOpen={true}
+        onClose={() => undefined}
+        layoutSettings={{
+          inventoryOpen: true,
+          inventoryPinned: true,
+          assistantOpen: false,
+          assistantPinned: false,
+          inventoryWidth: 420,
+          assistantWidth: 500,
+        }}
+        onLayoutSettingsChange={onLayoutSettingsChange}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /layout/i }));
+    await user.click(screen.getByRole('button', { name: /reset layout/i }));
+
+    expect(onLayoutSettingsChange).toHaveBeenCalledWith({
+      inventoryOpen: false,
+      inventoryPinned: false,
+      assistantOpen: true,
+      assistantPinned: true,
+      inventoryWidth: 360,
+      assistantWidth: 380,
+    });
+
+    await user.click(screen.getByRole('button', { name: /restore last layout/i }));
+
+    expect(onLayoutSettingsChange).toHaveBeenLastCalledWith({
+      inventoryOpen: true,
+      inventoryPinned: true,
+      assistantOpen: false,
+      assistantPinned: false,
+      inventoryWidth: 420,
+      assistantWidth: 500,
+    });
+  });
 });

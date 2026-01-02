@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ActionType, ACTION_SAFETY, AIAutonomySettings } from '../types';
 import { getStoredApiKey, setStoredApiKey } from '../services/apiKeyStorage';
 
@@ -118,6 +118,23 @@ const ACTION_LABELS: Record<ActionType, { label: string; description: string; ca
 const CATEGORIES = ['Canvas', 'Navigation', 'Diagram', 'Forms'] as const;
 const INVENTORY_WIDTH_RANGE = { min: 280, max: 520, default: 360 };
 const ASSISTANT_WIDTH_RANGE = { min: 300, max: 560, default: 380 };
+type LayoutSnapshot = {
+  inventoryOpen: boolean;
+  inventoryPinned: boolean;
+  assistantOpen: boolean;
+  assistantPinned: boolean;
+  inventoryWidth: number;
+  assistantWidth: number;
+};
+
+const LAYOUT_DEFAULTS: LayoutSnapshot = {
+  inventoryOpen: false,
+  inventoryPinned: false,
+  assistantOpen: true,
+  assistantPinned: true,
+  inventoryWidth: INVENTORY_WIDTH_RANGE.default,
+  assistantWidth: ASSISTANT_WIDTH_RANGE.default,
+};
 
 // Default autonomy settings
 const getDefaultAutonomySettings = (): AIAutonomySettings => ({
@@ -146,6 +163,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout'>('api');
+  const [showResetToast, setShowResetToast] = useState(false);
+  const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
+  const resetToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Local autonomy settings state (if not controlled externally)
   const [localAutonomy, setLocalAutonomy] = useState<AIAutonomySettings>(
@@ -178,6 +198,15 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   }, [isOpen, autonomySettings]);
 
+  useEffect(() => {
+    return () => {
+      if (resetToastTimeoutRef.current) {
+        clearTimeout(resetToastTimeoutRef.current);
+        resetToastTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   // Update autonomy settings
   const updateAutonomy = (updates: Partial<AIAutonomySettings>) => {
     const newSettings = { ...currentAutonomy, ...updates };
@@ -190,6 +219,46 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       } catch {
         console.error('Failed to save autonomy settings');
       }
+    }
+  };
+
+  const startResetToast = () => {
+    if (resetToastTimeoutRef.current) {
+      clearTimeout(resetToastTimeoutRef.current);
+    }
+
+    setShowResetToast(true);
+    resetToastTimeoutRef.current = setTimeout(() => {
+      setShowResetToast(false);
+    }, 2400);
+  };
+
+  const handleResetLayout = () => {
+    if (!layoutSettings) return;
+
+    resetSnapshotRef.current = {
+      inventoryOpen: layoutSettings.inventoryOpen,
+      inventoryPinned: layoutSettings.inventoryPinned,
+      assistantOpen: layoutSettings.assistantOpen,
+      assistantPinned: layoutSettings.assistantPinned,
+      inventoryWidth: layoutSettings.inventoryWidth ?? INVENTORY_WIDTH_RANGE.default,
+      assistantWidth: layoutSettings.assistantWidth ?? ASSISTANT_WIDTH_RANGE.default,
+    };
+
+    onLayoutSettingsChange?.(LAYOUT_DEFAULTS);
+    startResetToast();
+  };
+
+  const handleResetUndo = () => {
+    const snapshot = resetSnapshotRef.current;
+    if (!snapshot) return;
+
+    onLayoutSettingsChange?.(snapshot);
+    setShowResetToast(false);
+
+    if (resetToastTimeoutRef.current) {
+      clearTimeout(resetToastTimeoutRef.current);
+      resetToastTimeoutRef.current = null;
     }
   };
 
@@ -854,6 +923,41 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       </div>
                     </div>
                   </div>
+
+                  <div className="rounded-xl border border-slate-800/80 bg-slate-950/70 p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-200">Reset layout defaults</p>
+                      <p className="text-xs text-slate-400">
+                        Clears sidebar widths and restores pinned/open defaults.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleResetLayout}
+                      className="inline-flex items-center justify-center px-3 py-2 text-[10px] font-bold uppercase tracking-[0.28em] text-neon-cyan border border-neon-cyan/60 bg-slate-900/80 hover:bg-neon-cyan/15 hover:border-neon-cyan transition-colors cut-corner-sm"
+                    >
+                      Reset Layout
+                    </button>
+                  </div>
+                  {showResetToast && (
+                    <div
+                      className="flex items-center justify-between gap-3 border border-slate-800/80 bg-slate-950/80 px-3 py-2 text-[11px] text-slate-200 cut-corner-sm"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <span className="uppercase tracking-[0.22em] text-neon-cyan/80">
+                        Reset complete
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleResetUndo}
+                        className="text-[10px] font-semibold uppercase tracking-[0.28em] text-neon-cyan hover:text-white transition-colors"
+                        aria-label="Restore last layout"
+                      >
+                        Undo
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -861,32 +965,32 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700 bg-gray-800/50 rounded-b-xl">
+        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-800 bg-slate-950/70 panel-rail panel-frame">
           <button
             onClick={handleClear}
-            className="px-4 py-2 text-sm text-gray-300 hover:text-red-400 transition-colors"
+            className="inline-flex items-center justify-center px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-300 border border-slate-700/70 bg-slate-900/60 hover:text-red-300 hover:border-red-400/70 transition-colors cut-corner-sm"
           >
             Clear Key
           </button>
           <div className="flex flex-col items-end gap-1">
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={handleTest}
                 disabled={!apiKey.trim() || testStatus === 'testing'}
-                className="px-4 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-100 border border-slate-700/70 bg-slate-900/80 hover:border-amber-400/70 hover:text-amber-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed cut-corner-sm"
               >
                 Test Connection
               </button>
               <button
                 onClick={handleSave}
                 disabled={!apiKey.trim()}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-80 disabled:cursor-not-allowed font-medium"
+                className="inline-flex items-center justify-center px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-neon-cyan border border-neon-cyan/60 bg-slate-900/80 hover:border-neon-cyan hover:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed cut-corner-sm"
               >
                 Save & Apply
               </button>
             </div>
             {!apiKey.trim() && (
-              <span className="text-[11px] text-gray-300">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
                 Enter your Gemini API key to enable Test Connection.
               </span>
             )}
