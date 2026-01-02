@@ -1412,6 +1412,8 @@ export default function App() {
   const activeConversation = conversationManager.conversations.find(
     (conversation) => conversation.id === conversationManager.activeConversationId
   );
+  const isInventoryDocked = isInventoryOpen && inventoryPinnedDefault;
+  const isAssistantDocked = isAssistantOpen && isAssistantPinned;
 
   return (
     <div className="flex h-screen w-screen bg-cyber-dark text-slate-200 overflow-hidden font-sans">
@@ -1443,8 +1445,8 @@ export default function App() {
         className="flex-1 flex flex-col transition-all duration-300 ml-0 mr-0 md:ml-[var(--inventory-width)] md:mr-[var(--assistant-width)]"
         style={
           {
-            '--inventory-width': isInventoryOpen ? `${inventoryWidth}px` : '0px',
-            '--assistant-width': isAssistantOpen ? `${assistantWidth}px` : '0px',
+            '--inventory-width': isInventoryDocked ? `${inventoryWidth}px` : '0px',
+            '--assistant-width': isAssistantDocked ? `${assistantWidth}px` : '0px',
           } as React.CSSProperties
         }
       >
