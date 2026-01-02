@@ -1414,7 +1414,7 @@ export default function App() {
   );
 
   return (
-    <div className="flex h-screen w-screen bg-cyber-dark text-slate-200 overflow-hidden font-sans">
+    <div className="relative h-screen w-screen bg-cyber-dark text-slate-200 overflow-hidden font-sans">
       {/* Sidebar: Inventory */}
       <Inventory
         items={inventory}
@@ -1440,7 +1440,7 @@ export default function App() {
 
       {/* Main Area */}
       <div
-        className="flex-1 flex flex-col transition-all duration-300 ml-0 mr-0 md:ml-[var(--inventory-width)] md:mr-[var(--assistant-width)]"
+        className="absolute inset-y-0 left-0 right-0 flex flex-col transition-all duration-300 md:left-[var(--inventory-width)] md:right-[var(--assistant-width)]"
         style={
           {
             '--inventory-width': isInventoryOpen ? `${inventoryWidth}px` : '0px',
