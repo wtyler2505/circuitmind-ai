@@ -784,12 +784,12 @@ export default function App() {
 
   // 3D Gen State
   const [isGenerating3D, setIsGenerating3D] = useState(false);
-  const [_generate3DError, setGenerate3DError] = useState<string | null>(null); // Value unused but setter used - TODO: Display 3D gen errors in UI
+  const [_generate3DError, setGenerate3DError] = useState<string | null>(null); // Errors displayed via toast
 
   // New State for Mode and Configuration
   const [generationMode, setGenerationMode] = useState<'chat' | 'image' | 'video'>('chat');
-  const [imageSize, _setImageSize] = useState<'1K' | '2K' | '4K'>('1K'); // Setter unused - TODO: Add image size selector to UI
-  const [aspectRatio, _setAspectRatio] = useState<string>('16:9'); // Setter unused - TODO: Add aspect ratio selector to UI
+  const [imageSize, setImageSize] = useState<'1K' | '2K' | '4K'>('1K');
+  const [aspectRatio, setAspectRatio] = useState<string>('16:9');
 
   // Feature Toggles
   const [useDeepThinking, setUseDeepThinking] = useState(false);
@@ -948,6 +948,9 @@ export default function App() {
   // Update AI context when state changes
   useEffect(() => {
     const updateContext = async () => {
+      const zoom = canvasRef.current?.getZoom() || 1;
+      const pan = canvasRef.current?.getPan() || { x: 0, y: 0 };
+      
       const context = await buildAIContext({
         diagram: history.present,
         inventory,
@@ -959,11 +962,17 @@ export default function App() {
             : isSettingsOpen
               ? 'settings'
               : 'canvas',
+        viewport: { zoom, x: pan.x, y: pan.y }
       });
       setAIContext(context);
     };
     updateContext();
-  }, [history.present, inventory, selectedComponent, isInventoryOpen, isSettingsOpen]);
+  }, [history.present, inventory, selectedComponent, isInventoryOpen, isSettingsOpen, 
+      // Re-run when view changes? No, that would be too frequent. 
+      // We accept that viewport info is "snapshot at time of major state change".
+      // But we can add a listener for view changes if DiagramCanvas exposed one. 
+      // For now, let's just accept it updates on interaction.
+      ]);
 
   // Generate proactive suggestions periodically
   useEffect(() => {
@@ -1022,20 +1031,6 @@ export default function App() {
     });
   }, []);
 
-  // AI actions system - must be after updateDiagram definition
-  const aiActions = useAIActions({
-    canvasRef,
-    inventory,
-    diagram: history.present,
-    setInventory,
-    setIsInventoryOpen,
-    setIsSettingsOpen,
-    setSelectedComponent,
-    setGenerationMode,
-    updateDiagram,
-    activeConversationId: conversationManager.activeConversationId,
-  });
-
   // Inventory-Canvas sync - keeps diagram components in sync with inventory changes
   useInventorySync(inventory, history.present, updateDiagram, {
     autoSync: true,
@@ -1051,7 +1046,7 @@ export default function App() {
     updateDiagram(updatedDiagram);
   };
 
-  const handleUndo = () => {
+  function handleUndo() {
     setHistory((curr) => {
       if (curr.past.length === 0) return curr;
       const previous = curr.past[curr.past.length - 1];
@@ -1062,9 +1057,9 @@ export default function App() {
         future: curr.present ? [curr.present, ...curr.future] : curr.future,
       };
     });
-  };
+  }
 
-  const handleRedo = () => {
+  function handleRedo() {
     setHistory((curr) => {
       if (curr.future.length === 0) return curr;
       const next = curr.future[0];
@@ -1075,7 +1070,7 @@ export default function App() {
         future: newFuture,
       };
     });
-  };
+  }
 
   // Drag and Drop Logic: Inventory -> Canvas
   const handleComponentDrop = (component: ElectronicComponent, _x: number, _y: number) => {
@@ -1207,25 +1202,8 @@ export default function App() {
     }
   }, [inventory, history.present, updateDiagram]);
 
-  // TODO: Implement file attachment feature - requires adding attachment state
-  const _handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const type = file.type.startsWith('video') ? 'video' : 'image';
-        // TODO: Add attachment state: const [attachment, setAttachment] = useState<{data: string, type: string} | null>(null);
-        console.log('File attachment not implemented:', { type, size: file.size });
-        if (generationMode !== 'image' && generationMode !== 'video') {
-          setGenerationMode('chat');
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // TODO: Implement voice input feature - requires adding input state prop
-  const _startRecording = async () => {
+  // Voice input - transcription auto-sends to chat
+  const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -1247,7 +1225,7 @@ export default function App() {
     }
   };
 
-  const _stopRecording = () => {
+  const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
@@ -1261,12 +1239,16 @@ export default function App() {
           reader.onloadend = async () => {
             const base64Audio = reader.result as string;
             const transcription = await transcribeAudio(base64Audio);
-            // TODO: Add input state prop to pass transcription to ChatPanel
-            console.log('Transcription:', transcription);
             setIsLoading(false);
+            if (transcription && transcription.trim()) {
+              // Auto-send transcription to chat
+              handleSendEnhancedMessage(transcription.trim());
+            } else {
+              toast.warning('No speech detected.');
+            }
           };
         } catch (_e: unknown) {
-          console.error('Transcription failed');
+          toast.error('Transcription failed.');
           setIsLoading(false);
         }
         mediaRecorderRef.current?.stream.getTracks().forEach((track) => track.stop());
@@ -1311,6 +1293,24 @@ export default function App() {
     }
   };
 
+  // AI actions system - must be after all handler definitions
+  const aiActions = useAIActions({
+    canvasRef,
+    inventory,
+    diagram: history.present,
+    setInventory,
+    setIsInventoryOpen,
+    setIsSettingsOpen,
+    setSelectedComponent,
+    setGenerationMode,
+    updateDiagram,
+    activeConversationId: conversationManager.activeConversationId,
+    handleUndo,
+    handleRedo,
+    saveDiagram,
+    loadDiagram,
+  });
+
   const handleComponentClick = async (component: ElectronicComponent) => {
     setSelectedComponent(component);
     const explain = await explainComponent(component.name);
@@ -1328,7 +1328,9 @@ export default function App() {
       setSelectedComponent(updated);
       setInventory((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     } catch (e: unknown) {
-      setGenerate3DError(e instanceof Error ? e.message : '3D generation failed');
+      const errorMsg = e instanceof Error ? e.message : '3D generation failed';
+      setGenerate3DError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsGenerating3D(false);
     }
@@ -1757,6 +1759,13 @@ export default function App() {
           onModeChange={setGenerationMode}
           useDeepThinking={useDeepThinking}
           onDeepThinkingChange={setUseDeepThinking}
+          isRecording={isRecording}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          imageSize={imageSize}
+          onImageSizeChange={setImageSize}
+          aspectRatio={aspectRatio}
+          onAspectRatioChange={setAspectRatio}
           className="bg-slate-950/80 border-slate-800 rounded-l-2xl rounded-r-none h-full"
           headerActions={
             <div className="flex items-center gap-1">

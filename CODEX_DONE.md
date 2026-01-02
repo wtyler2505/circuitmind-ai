@@ -999,3 +999,26 @@ npm run test
 
 ## Handoff Notes
 - Tests: `npm run test` failed with the aiMetricsService test; other suites passed.
+
+# Codex Completion Report
+
+**Task:** Fix App crash "Cannot access 'handleUndo' before initialization"
+**Status:** done
+
+## Changes Made
+- `App.tsx` - converted undo/redo handlers to function declarations to avoid TDZ crashes.
+
+## Commands Run
+```bash
+npm run test
+```
+
+## Next Steps
+- Confirm the crash no longer occurs when loading and using undo/redo.
+- Decide how to handle the unrelated modified/untracked files in git status.
+
+## Blockers (if any)
+- None.
+
+## Handoff Notes
+Tests: `npm run test` (69 tests) passed.
