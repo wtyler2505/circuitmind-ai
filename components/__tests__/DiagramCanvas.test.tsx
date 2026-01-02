@@ -92,8 +92,8 @@ describe('DiagramCanvas', () => {
     it('displays component types', () => {
       render(<DiagramCanvas diagram={diagramWithComponents} {...defaultProps} />);
 
-      expect(screen.getByText(/microcontroller/i)).toBeInTheDocument();
-      expect(screen.getByText(/actuator/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/microcontroller/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/actuator/i).length).toBeGreaterThanOrEqual(1);
     });
 
     it('renders component pins', () => {

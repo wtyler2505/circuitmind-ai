@@ -2421,6 +2421,23 @@ Evidence:
 - `components/Inventory.tsx`
 - `components/AssistantSidebar.tsx`
 
+### Center Toolbar + Assistant Density Pass
+Scope:
+- Compact the central toolbar and bottom status rail to maximize canvas real estate.
+- Refine assistant header hierarchy, quick actions layout, and message density.
+
+Actions applied:
+- Reduced toolbar height, button sizing, and CTA padding; aligned grouping for undo/redo/save/load and live/settings controls.
+- Compressed bottom status rail typography and spacing for tighter scanability.
+- Reworked assistant header into a single-line hierarchy with compact toggles and context chips.
+- Converted context snapshot to a grid-based layout and tightened quick-action tiles.
+- Reduced ChatMessage padding, action chip sizing, and markdown heading scale for denser history.
+
+Evidence:
+- `App.tsx`
+- `components/ChatPanel.tsx`
+- `components/ChatMessage.tsx`
+
 ## Code Examples
 ```css
 /* Icon-only button accessibility */

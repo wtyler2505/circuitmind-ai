@@ -310,59 +310,57 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800/80 panel-header panel-rail">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.28em] text-slate-400 panel-title">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-800/80 panel-header panel-rail">
+        <div className="flex items-center flex-wrap gap-2">
+          <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.24em] text-slate-400 panel-title">
             <span>AI Assistant</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan shadow-[0_0_8px_rgba(0,243,255,0.65)]" />
+            <span className="h-1.5 w-1.5 bg-neon-cyan shadow-[0_0_8px_rgba(0,243,255,0.65)]" />
           </div>
-          <div className="flex items-center gap-2">
-            {/* Conversation Switcher */}
-            <ConversationSwitcher
-              conversations={conversations}
-              activeConversationId={activeConversationId}
-              onSwitchConversation={onSwitchConversation}
-              onCreateConversation={onCreateConversation}
-              onDeleteConversation={onDeleteConversation}
-              onRenameConversation={onRenameConversation}
-            />
+          {/* Conversation Switcher */}
+          <ConversationSwitcher
+            conversations={conversations}
+            activeConversationId={activeConversationId}
+            onSwitchConversation={onSwitchConversation}
+            onCreateConversation={onCreateConversation}
+            onDeleteConversation={onDeleteConversation}
+            onRenameConversation={onRenameConversation}
+          />
 
-            {/* Context Indicator */}
-            {context && (
-              <div className="hidden sm:flex items-center gap-2 px-2 py-0.5 cut-corner-sm text-[9px] text-slate-300 border border-slate-700/70 bg-slate-900/70">
-                {context.currentDiagramTitle && (
-                  <span className="flex items-center gap-1">
-                    <svg
-                      className="w-3 h-3 text-cyan-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
-                      />
-                    </svg>
-                    {context.componentCount}c / {context.connectionCount}w
-                  </span>
-                )}
-                {context.selectedComponentName && (
-                  <span className="flex items-center gap-1 text-cyan-300">
-                    → {context.selectedComponentName}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Context Indicator */}
+          {context && (
+            <div className="hidden lg:flex items-center gap-2 px-2 py-0.5 cut-corner-sm text-[9px] text-slate-300 border border-slate-700/70 bg-slate-900/70">
+              {context.currentDiagramTitle && (
+                <span className="flex items-center gap-1">
+                  <svg
+                    className="w-3 h-3 text-cyan-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                    />
+                  </svg>
+                  {context.componentCount}c / {context.connectionCount}w
+                </span>
+              )}
+              {context.selectedComponentName && (
+                <span className="flex items-center gap-1 text-cyan-300">
+                  → {context.selectedComponentName}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={onCreateConversation}
-            className="hidden sm:inline-flex items-center gap-2 px-2.5 py-1.5 text-[9px] uppercase tracking-[0.2em] cut-corner-sm border border-slate-700 bg-slate-900/70 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+            className="hidden sm:inline-flex items-center gap-2 px-2 py-1 text-[8px] uppercase tracking-[0.24em] cut-corner-sm border border-slate-700 bg-slate-900/70 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
             title="Start a new conversation"
             aria-label="Create new conversation"
           >
@@ -374,7 +372,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             <button
               type="button"
               onClick={() => onDeepThinkingChange(!useDeepThinking)}
-              className={`h-9 w-9 inline-flex items-center justify-center cut-corner-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/60 ${
+              className={`h-8 w-8 inline-flex items-center justify-center cut-corner-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/60 ${
                 useDeepThinking
                   ? 'bg-amber-500/20 text-amber-300'
                   : 'text-slate-300 hover:text-white'
@@ -382,7 +380,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               title={useDeepThinking ? 'Deep thinking enabled' : 'Enable deep thinking'}
               aria-label={useDeepThinking ? 'Disable deep thinking' : 'Enable deep thinking'}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -396,7 +394,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             <button
               type="button"
               onClick={() => setShowContextDetails((prev) => !prev)}
-              className={`h-9 w-9 inline-flex items-center justify-center cut-corner-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${
+              className={`h-8 w-8 inline-flex items-center justify-center cut-corner-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${
                 showContextDetails
                   ? 'bg-cyan-500/20 text-cyan-200'
                   : 'text-slate-300 hover:text-white'
@@ -405,7 +403,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               aria-label={showContextDetails ? 'Hide context snapshot' : 'Show context snapshot'}
               aria-pressed={showContextDetails}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -423,11 +421,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             <button
               type="button"
               onClick={onToggleExpand}
-              className="h-9 w-9 inline-flex items-center justify-center cut-corner-sm text-gray-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="h-8 w-8 inline-flex items-center justify-center cut-corner-sm text-gray-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
               title="Minimize chat"
               aria-label="Minimize chat"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -440,14 +438,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      <div className="px-3 py-1.5 border-b border-slate-800/70 panel-rail">
-        <div className="flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.18em] text-slate-400">
-          <span className={`px-2 py-0.5 cut-corner-sm ${modeAccent}`}>
+      <div className="px-2.5 py-1 border-b border-slate-800/70 panel-rail">
+        <div className="flex flex-wrap items-center gap-1.5 text-[8px] uppercase tracking-[0.2em] text-slate-400">
+          <span className={`px-1.5 py-0.5 cut-corner-sm ${modeAccent}`}>
             Mode: {modeLabel}
           </span>
           {onDeepThinkingChange && (
             <span
-              className={`px-2 py-0.5 cut-corner-sm border ${
+              className={`px-1.5 py-0.5 cut-corner-sm border ${
                 useDeepThinking
                   ? 'border-amber-400/60 text-amber-300'
                   : 'border-slate-700 text-slate-400'
@@ -459,17 +457,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
           {context && (
             <>
               <span
-                className="px-2 py-0.5 cut-corner-sm border border-slate-700 text-slate-300"
+                className="px-1.5 py-0.5 cut-corner-sm border border-slate-700 text-slate-300"
                 title={context.inventorySummary}
               >
                 Inv: {context.componentCount}c / {context.connectionCount}w
               </span>
-              <span className="px-2 py-0.5 cut-corner-sm border border-slate-700 text-slate-300">
+              <span className="px-1.5 py-0.5 cut-corner-sm border border-slate-700 text-slate-300">
                 View: {context.activeView.replace('-', ' ')}
               </span>
               {context.selectedComponentName && (
                 <span
-                  className="px-2 py-0.5 cut-corner-sm border border-slate-700 text-slate-300 max-w-[180px] truncate"
+                  className="px-1.5 py-0.5 cut-corner-sm border border-slate-700 text-slate-300 max-w-[160px] truncate"
                   title={context.selectedComponentName}
                 >
                   Selected: {context.selectedComponentName}
@@ -481,46 +479,38 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       </div>
 
       {context && showContextDetails && (
-        <div className="px-3 py-2 border-b border-slate-800/70 panel-rail">
-          <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.28em] text-slate-400">
+        <div className="px-2.5 py-2 border-b border-slate-800/70 panel-rail">
+          <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.24em] text-slate-400">
             Context snapshot
             <span className="text-slate-500">live</span>
           </div>
-          <div className="mt-2 grid gap-2 text-[11px] text-slate-200">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Diagram</span>
-              <span className="max-w-[200px] truncate text-slate-200">
-                {context.currentDiagramTitle || 'Untitled diagram'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Active view</span>
-              <span className="text-slate-200">{context.activeView.replace('-', ' ')}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Inventory</span>
-              <span className="max-w-[200px] truncate text-slate-200" title={context.inventorySummary}>
-                {context.inventorySummary}
-              </span>
-            </div>
+          <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] text-slate-200">
+            <span className="text-slate-400">Diagram</span>
+            <span className="truncate text-slate-200" title={context.currentDiagramTitle || 'Untitled diagram'}>
+              {context.currentDiagramTitle || 'Untitled diagram'}
+            </span>
+            <span className="text-slate-400">Active view</span>
+            <span className="text-slate-200">{context.activeView.replace('-', ' ')}</span>
+            <span className="text-slate-400">Inventory</span>
+            <span className="truncate text-slate-200" title={context.inventorySummary}>
+              {context.inventorySummary}
+            </span>
             {context.selectedComponentName && (
-              <div className="flex items-center justify-between">
+              <>
                 <span className="text-slate-400">Selected</span>
-                <span className="max-w-[200px] truncate text-cyan-200">
-                  {context.selectedComponentName}
-                </span>
-              </div>
+                <span className="truncate text-cyan-200">{context.selectedComponentName}</span>
+              </>
             )}
             {context.recentActions.length > 0 && (
-              <div className="flex flex-col gap-1.5 cut-corner-sm border border-slate-800/80 bg-slate-900/60 px-2 py-1.5">
-                <span className="text-[9px] uppercase tracking-[0.2em] text-slate-400">
+              <div className="col-span-2 flex flex-col gap-1.5 cut-corner-sm border border-slate-800/80 bg-slate-900/60 px-2 py-1.5">
+                <span className="text-[8px] uppercase tracking-[0.22em] text-slate-400">
                   Recent actions
                 </span>
-                <div className="flex flex-wrap gap-1.5 text-[10px] text-slate-200">
+                <div className="flex flex-wrap gap-1 text-[9px] text-slate-200">
                   {context.recentActions.slice(0, 3).map((action, idx) => (
                     <span
                       key={`${action}-${idx}`}
-                      className="px-2 py-0.5 cut-corner-sm border border-slate-700/80 bg-slate-950/70"
+                      className="px-1.5 py-0.5 cut-corner-sm border border-slate-700/80 bg-slate-950/70"
                     >
                       {action}
                     </span>
@@ -533,27 +523,27 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
 
       {quickActions.length > 0 && (
-        <div className="px-3 py-2 border-b border-slate-800/70 panel-rail">
-          <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.28em] text-slate-400">
+        <div className="px-2.5 py-2 border-b border-slate-800/70 panel-rail">
+          <div className="flex items-center justify-between text-[9px] uppercase tracking-[0.24em] text-slate-400">
             Quick actions
             <span className="text-slate-500">tap to send</span>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
+          <div className="mt-2 grid grid-cols-2 lg:grid-cols-3 gap-1.5">
             {quickActions.map((action) => (
               <button
                 key={action.id}
                 type="button"
                 onClick={() => void handleQuickAction(action.prompt)}
                 disabled={isLoading}
-                className={`group control-tile cut-corner-sm flex flex-col gap-2 px-2 py-1.5 text-left text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 disabled:opacity-70 ${action.style}`}
+                className={`group control-tile cut-corner-sm flex flex-col gap-1.5 px-2 py-1 text-left text-[10px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 disabled:opacity-70 ${action.style}`}
                 title={action.description}
                 aria-label={action.description}
               >
-                <span className="flex items-center gap-2 text-[10px] font-semibold text-slate-100">
+                <span className="flex items-center gap-2 text-[9px] font-semibold text-slate-100">
                   <span className="text-inherit">{action.icon}</span>
                   {action.label}
                 </span>
-                <span className="text-[9px] text-slate-400 group-hover:text-slate-200">
+                <span className="text-[8px] text-slate-400 group-hover:text-slate-200">
                   {action.description}
                 </span>
               </button>
@@ -563,7 +553,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto px-2.5 py-2 custom-scrollbar">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <svg
@@ -598,9 +588,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         ) : (
           groupedMessages.map((group) => (
             <div key={group.dateKey}>
-              <div className="flex items-center gap-3 my-3">
+              <div className="flex items-center gap-2 my-2">
                 <span className="h-px flex-1 bg-slate-800/80" />
-                <span className="text-[9px] uppercase tracking-[0.28em] text-slate-400">
+                <span className="text-[8px] uppercase tracking-[0.24em] text-slate-400">
                   {formatGroupLabel(group.dateKey)}
                 </span>
                 <span className="h-px flex-1 bg-slate-800/80" />
@@ -636,17 +626,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Proactive Suggestions */}
       {proactiveSuggestions.length > 0 && (
-        <div className="px-3 py-1.5 border-t border-slate-800/70">
-          <div className="flex items-center justify-between mb-2 text-[9px] uppercase tracking-[0.28em] text-slate-400">
+        <div className="px-2.5 py-1.5 border-t border-slate-800/70">
+          <div className="flex items-center justify-between mb-1.5 text-[9px] uppercase tracking-[0.24em] text-slate-400">
             Suggestions
             <span className="text-slate-500">tap to send</span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {proactiveSuggestions.map((suggestion, idx) => (
               <button
                 key={idx}
                 onClick={() => onSuggestionClick?.(suggestion)}
-                className="px-2 py-1 chip-square cut-corner-sm hover:text-white text-slate-300 text-[11px] border border-slate-700 transition-colors"
+                className="px-2 py-0.5 chip-square cut-corner-sm hover:text-white text-slate-300 text-[10px] border border-slate-700 transition-colors"
               >
                 💡 {suggestion}
               </button>
@@ -657,24 +647,24 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Attachment Preview */}
       {attachment && (
-        <div className="px-3 py-1.5 border-t border-slate-800">
+        <div className="px-2.5 py-1.5 border-t border-slate-800">
           <div className="relative inline-block">
             {attachment.type === 'image' ? (
               <img
                 src={attachment.base64}
                 alt="Attachment"
-                className="max-h-20 cut-corner-sm border border-slate-700"
+                className="max-h-16 cut-corner-sm border border-slate-700"
               />
             ) : (
               <video
                 src={attachment.base64}
-                className="max-h-20 cut-corner-sm border border-slate-700"
+                className="max-h-16 cut-corner-sm border border-slate-700"
               />
             )}
             <button
               type="button"
               onClick={removeAttachment}
-              className="absolute -top-2 -right-2 h-8 w-8 inline-flex items-center justify-center bg-red-500 text-white cut-corner-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200"
+              className="absolute -top-2 -right-2 h-7 w-7 inline-flex items-center justify-center bg-red-500 text-white cut-corner-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200"
               title="Remove attachment"
               aria-label="Remove attachment"
             >
@@ -699,17 +689,17 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
 
       {/* Input Area */}
-      <div className="p-2 border-t border-slate-800 panel-rail">
-        <div className="flex items-end gap-2">
+      <div className="p-1.5 border-t border-slate-800 panel-rail">
+        <div className="flex items-end gap-1.5">
           {/* File Upload Button */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="h-9 w-9 inline-flex items-center justify-center cut-corner-sm text-slate-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+            className="h-8 w-8 inline-flex items-center justify-center cut-corner-sm text-slate-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
             title="Attach image or video"
             aria-label="Attach image or video"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -734,7 +724,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   key={mode}
                   type="button"
                   onClick={() => onModeChange(mode)}
-                  className={`h-9 w-9 inline-flex items-center justify-center text-[11px] cut-corner-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${
+                  className={`h-8 w-8 inline-flex items-center justify-center text-[10px] cut-corner-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${
                     generationMode === mode
                       ? modeAccent
                       : 'text-slate-300 hover:text-white'
@@ -765,9 +755,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   ? 'Describe the image to generate...'
                   : 'Describe the video to generate...'
             }
-            className="flex-1 px-3 py-2 bg-slate-900/70 border border-slate-700 cut-corner-sm text-slate-100 placeholder-slate-400 text-[12px] resize-none focus:outline-none focus:ring-2 focus:ring-neon-cyan/60 focus:border-transparent"
+            className="flex-1 px-2.5 py-1.5 bg-slate-900/70 border border-slate-700 cut-corner-sm text-slate-100 placeholder-slate-400 text-[11px] resize-none focus:outline-none focus:ring-2 focus:ring-neon-cyan/60 focus:border-transparent"
             rows={1}
-            style={{ minHeight: '38px', maxHeight: '120px' }}
+            style={{ minHeight: '34px', maxHeight: '120px' }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
               target.style.height = 'auto';
@@ -780,11 +770,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             type="button"
             onClick={handleSend}
             disabled={(!inputValue.trim() && !attachment) || isLoading}
-            className="h-9 w-9 inline-flex items-center justify-center bg-neon-cyan text-black cut-corner-sm transition-colors hover:bg-white disabled:opacity-80 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 shadow-[0_0_12px_rgba(0,243,255,0.35)]"
+            className="h-8 w-8 inline-flex items-center justify-center bg-neon-cyan text-black cut-corner-sm transition-colors hover:bg-white disabled:opacity-80 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 shadow-[0_0_12px_rgba(0,243,255,0.35)]"
             title="Send message"
             aria-label="Send message"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
