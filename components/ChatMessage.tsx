@@ -306,10 +306,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
       <div
-        className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-          isUser
-            ? 'bg-blue-600 text-white rounded-br-md'
-            : 'bg-gray-800 text-gray-200 rounded-bl-md'
+        className={`max-w-[85%] message-slab cut-corner-sm px-4 py-3 ${
+          isUser ? 'message-user' : 'message-assistant'
         }`}
       >
         {/* Message content */}

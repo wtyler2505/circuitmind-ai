@@ -196,15 +196,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         ? 'bg-neon-amber text-black'
         : 'bg-neon-purple text-black';
   const modeLabel = generationMode === 'chat' ? 'Chat' : generationMode === 'image' ? 'Image' : 'Video';
-  const containerClassName = `relative flex flex-col h-full panel-surface border border-slate-800/80 border-b-0 ${className}`.trim();
+  const containerClassName = `relative flex flex-col h-full panel-surface panel-frame cut-corner-md border border-slate-800/80 border-b-0 ${className}`.trim();
   const quickActions = [
     {
       id: 'draft-wiring',
       label: 'Draft wiring',
       description: 'Propose a safe wiring plan.',
       prompt: 'Draft a safe wiring plan based on my current diagram and inventory.',
-      style:
-        'border-cyan-400/50 text-cyan-200 bg-cyan-500/10 hover:bg-cyan-500/20 hover:text-white',
+      style: 'quick-action--cyan',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -221,8 +220,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       label: 'Check pins',
       description: 'Find conflicts and unsafe pins.',
       prompt: 'Check for pin conflicts or unsafe connections in this diagram.',
-      style:
-        'border-amber-400/50 text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 hover:text-white',
+      style: 'quick-action--amber',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -239,8 +237,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       label: 'Inventory gaps',
       description: 'Highlight missing parts.',
       prompt: 'Identify missing parts or substitutions needed for this design.',
-      style:
-        'border-emerald-400/50 text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-white',
+      style: 'quick-action--emerald',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -257,8 +254,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       label: 'Tidy layout',
       description: 'Suggest layout improvements.',
       prompt: 'Suggest layout improvements and cleaner routing for the current diagram.',
-      style:
-        'border-purple-400/50 text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 hover:text-white',
+      style: 'quick-action--purple',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -316,7 +312,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/80 panel-header panel-rail">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-slate-400">
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-slate-400 panel-title">
             <span>AI Assistant</span>
             <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan shadow-[0_0_8px_rgba(0,243,255,0.65)]" />
           </div>
@@ -549,7 +545,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 type="button"
                 onClick={() => void handleQuickAction(action.prompt)}
                 disabled={isLoading}
-                className={`group flex flex-col gap-2 rounded-xl border px-3 py-2 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 disabled:opacity-70 ${action.style}`}
+                className={`group control-tile cut-corner-sm flex flex-col gap-2 px-3 py-2 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 disabled:opacity-70 ${action.style}`}
                 title={action.description}
                 aria-label={action.description}
               >
@@ -648,7 +644,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               <button
                 key={idx}
                 onClick={() => onSuggestionClick?.(suggestion)}
-                className="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-800 text-slate-300 text-xs rounded-full border border-slate-700 transition-colors"
+                className="px-3 py-1.5 chip-square cut-corner-sm hover:text-white text-slate-300 text-xs border border-slate-700 transition-colors"
               >
                 💡 {suggestion}
               </button>

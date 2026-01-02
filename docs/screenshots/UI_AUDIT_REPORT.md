@@ -2388,6 +2388,14 @@ Actions applied:
 - Removed rounded corners globally and introduced slab/rail panel styling.
 - Swapped typography to IBM Plex Condensed + Mono and reinforced grid/panel textures.
 
+### Industrial Frame Refinement
+Scope:
+- Push non-generic industrial framing and slab styling across core panels and chat.
+
+Actions applied:
+- Added chamfered (cut-corner) framing, panel corner glyphs, and control-tile styling.
+- Updated chat message bubbles and suggestion chips to match slab aesthetic.
+
 ## Code Examples
 ```css
 /* Icon-only button accessibility */

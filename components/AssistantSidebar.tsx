@@ -132,7 +132,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
         onClick={handleToggleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="hidden md:flex flex-col items-center justify-center fixed right-0 top-1/2 z-40 panel-toggle border-l border-y border-neon-cyan/30 h-16 w-11 text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+        className="hidden md:flex flex-col items-center justify-center fixed right-0 top-1/2 z-40 panel-toggle cut-corner-sm border-l border-y border-neon-cyan/30 h-16 w-11 text-neon-cyan transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,243,255,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
         style={{ transform: `translate(${isOpen ? -sidebarWidth : 0}px, -50%)` }}
         title={isPinned ? 'Unlock assistant' : 'AI assistant'}
         aria-label={isPinned ? 'Unlock assistant sidebar' : 'Open assistant sidebar'}
@@ -169,7 +169,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({
         onMouseLeave={handleMouseLeave}
         role="complementary"
         aria-label="AI assistant sidebar"
-        className={`fixed inset-y-0 right-0 w-full md:w-[var(--assistant-width)] panel-surface panel-rail border-l border-slate-800 z-40 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.55)]`}
+        className={`fixed inset-y-0 right-0 w-full md:w-[var(--assistant-width)] panel-surface panel-rail panel-frame cut-corner-md border-l border-slate-800 z-40 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.55)]`}
         style={{ '--assistant-width': `${sidebarWidth}px` } as React.CSSProperties}
       >
         <div
