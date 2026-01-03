@@ -28,13 +28,14 @@ import {
   generateComponent3DCode,
   generateProactiveSuggestions,
 } from './services/geminiService';
+import { buildAIContext } from './services/aiContextBuilder';
+import { determineOrphanAction } from './services/componentValidator';
 import { LiveSession } from './services/liveAudio';
 import { useConversations } from './hooks/useConversations';
 import { useAIActions } from './hooks/useAIActions';
 import { useInventorySync } from './hooks/useInventorySync';
 import { useToast } from './hooks/useToast';
-import { buildAIContext } from './services/aiContextBuilder';
-import { determineOrphanAction } from './services/componentValidator';
+import { storageService } from './services/storage';
 
 // Auto-generated from electronics_inventory_tier5.json - 63 components
 const INITIAL_INVENTORY: ElectronicComponent[] = [
@@ -245,7 +246,7 @@ const INITIAL_INVENTORY: ElectronicComponent[] = [
     pins: ['VCC', 'GND', 'SDA', 'SCL'],
     quantity: 1,
     datasheetUrl: 'https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf',
-    imageUrl: 'https://components101.com/sites/default/files/components/GY-521-MPU6050-Module.jpg',
+    imageUrl: 'https://components101.com/sites/default/files/component_pin/GY-521-MPU6050-Module.jpg',
   },
   {
     id: '11',
@@ -729,7 +730,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem('cm_inventory', JSON.stringify(inventory));
+    storageService.setItem('cm_inventory', JSON.stringify(inventory));
   }, [inventory]);
 
   // Toast notifications
@@ -758,7 +759,7 @@ export default function App() {
   // Auto-save Diagram
   useEffect(() => {
     if (history.present) {
-      localStorage.setItem('cm_autosave', JSON.stringify(history.present));
+      storageService.setItem('cm_autosave', JSON.stringify(history.present));
     }
   }, [history.present]);
 
@@ -891,7 +892,7 @@ export default function App() {
   // Persist autonomy settings
   useEffect(() => {
     try {
-      localStorage.setItem('cm_autonomy_settings', JSON.stringify(autonomySettings));
+      storageService.setItem('cm_autonomy_settings', JSON.stringify(autonomySettings));
     } catch (e) {
       console.error('Failed to save autonomy settings:', e);
     }
@@ -899,7 +900,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('cm_inventory_open_default', String(isInventoryOpen));
+      storageService.setItem('cm_inventory_open_default', String(isInventoryOpen));
     } catch (e) {
       console.error('Failed to save inventory open default:', e);
     }
@@ -907,7 +908,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('cm_inventory_pinned_default', String(inventoryPinnedDefault));
+      storageService.setItem('cm_inventory_pinned_default', String(inventoryPinnedDefault));
     } catch (e) {
       console.error('Failed to save inventory pinned default:', e);
     }
@@ -915,7 +916,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('cm_assistant_open_default', String(isAssistantOpen));
+      storageService.setItem('cm_assistant_open_default', String(isAssistantOpen));
     } catch (e) {
       console.error('Failed to save assistant open default:', e);
     }
@@ -923,7 +924,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('cm_assistant_pinned_default', String(isAssistantPinned));
+      storageService.setItem('cm_assistant_pinned_default', String(isAssistantPinned));
     } catch (e) {
       console.error('Failed to save assistant pinned default:', e);
     }
@@ -931,7 +932,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('cm_inventory_width', String(inventoryWidth));
+      storageService.setItem('cm_inventory_width', String(inventoryWidth));
     } catch (e) {
       console.error('Failed to save inventory width:', e);
     }
@@ -939,7 +940,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('cm_assistant_width', String(assistantWidth));
+      storageService.setItem('cm_assistant_width', String(assistantWidth));
     } catch (e) {
       console.error('Failed to save assistant width:', e);
     }
@@ -950,7 +951,7 @@ export default function App() {
     const updateContext = async () => {
       const zoom = canvasRef.current?.getZoom() || 1;
       const pan = canvasRef.current?.getPan() || { x: 0, y: 0 };
-      
+
       const context = await buildAIContext({
         diagram: history.present,
         inventory,
@@ -967,12 +968,7 @@ export default function App() {
       setAIContext(context);
     };
     updateContext();
-  }, [history.present, inventory, selectedComponent, isInventoryOpen, isSettingsOpen, 
-      // Re-run when view changes? No, that would be too frequent. 
-      // We accept that viewport info is "snapshot at time of major state change".
-      // But we can add a listener for view changes if DiagramCanvas exposed one. 
-      // For now, let's just accept it updates on interaction.
-      ]);
+  }, [history.present, inventory]);
 
   // Generate proactive suggestions periodically
   useEffect(() => {
@@ -985,8 +981,9 @@ export default function App() {
           history.present.connections
         );
         setProactiveSuggestions(suggestions);
-      } catch {
-        // Ignore errors
+      } catch (error) {
+        // Ignore errors for suggestions
+        console.error("Failed to generate proactive suggestions:", error);
       }
     };
 
@@ -1016,6 +1013,14 @@ export default function App() {
           setIsLiveActive(false);
         }
       });
+
+      // Set the visual context provider when live session is created
+      if (canvasRef.current) {
+        liveSessionRef.current.setVisualContextProvider(canvasRef.current.getSnapshotBlob);
+      } else {
+        console.warn("Canvas ref not available when initializing LiveSession.");
+      }
+
       await liveSessionRef.current.connect();
     }
   };
@@ -1317,13 +1322,12 @@ export default function App() {
     setModalContent(explain);
   };
 
-  const handleGenerate3D = async () => {
+  const handleGenerate3D = async (customPrompt?: string) => {
     if (!selectedComponent) return;
     setIsGenerating3D(true);
     setGenerate3DError(null);
     try {
-      // Fix: Passed selectedComponent.type as 2nd argument
-      const code = await generateComponent3DCode(selectedComponent.name, selectedComponent.type);
+      const code = await generateComponent3DCode(selectedComponent.name, selectedComponent.type, customPrompt);
       const updated = { ...selectedComponent, threeCode: code };
       setSelectedComponent(updated);
       setInventory((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
@@ -1336,8 +1340,35 @@ export default function App() {
     }
   };
 
+  const handleGenerate3DForComponent = async (component: ElectronicComponent) => {
+    if (isGenerating3D) return;
+    setIsGenerating3D(true);
+    // Show toast for feedback since this might be triggered from 3D view
+    toast.info(`Generating 3D model for ${component.name}...`);
+    try {
+      const code = await generateComponent3DCode(component.name, component.type);
+      const updated = { ...component, threeCode: code };
+      
+      // Update inventory and diagram
+      setInventory((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      if (history.present) {
+        updateDiagram({
+          ...history.present,
+          components: history.present.components.map((c) => (c.id === updated.id ? updated : c)),
+        });
+      }
+      
+      toast.success(`Generated 3D model for ${component.name}`);
+    } catch (e: unknown) {
+      console.error(e);
+      toast.error(`Failed to generate 3D model for ${component.name}`);
+    } finally {
+      setIsGenerating3D(false);
+    }
+  };
+
   // Handle sending messages through the enhanced chat system
-  const handleSendEnhancedMessage = async (
+  const handleSendEnhancedMessage = useCallback(async (
     content: string,
     attachment?: { base64: string; type: 'image' | 'video' }
   ) => {
@@ -1388,7 +1419,7 @@ export default function App() {
 
         const modelMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
           role: 'model',
-          content: `Generated image for "${content}"`,
+          content: `Generated image for "${content}"`, // Corrected escaped quote
           linkedComponents: [],
           suggestedActions: [],
           image: imgData,
@@ -1401,7 +1432,7 @@ export default function App() {
 
         const modelMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
           role: 'model',
-          content: `Video generated for "${content}"`,
+          content: `Video generated for "${content}"`, // Corrected escaped quote
           linkedComponents: [],
           suggestedActions: [],
           video: videoUrl,
@@ -1448,6 +1479,7 @@ export default function App() {
             linkedComponents: response.componentMentions,
             suggestedActions: response.suggestedActions,
             groundingSources: response.groundingSources,
+            metricId: response.metricId,
           };
           await conversationManager.addMessage(modelMsg);
 
@@ -1501,7 +1533,40 @@ export default function App() {
       setIsLoading(false);
       setLoadingText('');
     }
-  };
+  }, [ // Add dependencies that can change and affect the function's behavior
+    isLoading,
+    conversationManager,
+    generationMode,
+    imageSize,
+    aspectRatio,
+    aiContext,
+    autonomySettings.autoExecuteSafeActions,
+    autonomySettings.customSafeActions,
+    autonomySettings.customUnsafeActions,
+    aiActions,
+    history.present,
+    inventory,
+    updateDiagram,
+    useDeepThinking,
+    // Removed attachmentData and attachment?.type as they are derived within the function
+  ]);
+
+  // Listen for Visual Analysis requests from AI actions
+  useEffect(() => {
+    const handleVisualAnalysis = (event: Event) => {
+        const customEvent = event as CustomEvent<{ image: string, conversationId?: string }>;
+        const { image } = customEvent.detail;
+        if (image) {
+            handleSendEnhancedMessage(
+                "I've captured a snapshot of the current circuit layout. Please analyze it for visual organization, clutter, and improvements.",
+                { base64: image, type: 'image' }
+            );
+        }
+    };
+
+    window.addEventListener('cm:visual-analysis', handleVisualAnalysis);
+    return () => window.removeEventListener('cm:visual-analysis', handleVisualAnalysis);
+  }, [handleSendEnhancedMessage]);
 
   // Handle component click from chat messages
   const handleChatComponentClick = (componentId: string) => {
@@ -1576,149 +1641,150 @@ export default function App() {
         }
       >
         {/* Toolbar */}
-        <div className="h-9 panel-header panel-rail panel-frame cut-corner-md border-b border-slate-800/80 flex items-center justify-between px-2 shrink-0 z-20 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
-          <div className="flex items-center gap-1">
-            <h1 className="text-[11px] font-semibold tracking-[0.2em] text-white flex items-center gap-1.5 panel-title">
-              <span className="text-neon-cyan text-sm">⚡</span>
-              CIRCUIT<span className="text-neon-cyan">MIND</span>
-            </h1>
+        <div className="h-10 panel-header flex items-center justify-between px-3 shrink-0 z-20 gap-4">
+          {/* Brand Plate */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 select-none group">
+              <img 
+                src="/assets/ui/logo.png" 
+                alt="CircuitMind AI" 
+                className="h-6 w-6 object-contain drop-shadow-[0_0_8px_rgba(0,243,255,0.5)] group-hover:drop-shadow-[0_0_12px_rgba(0,243,255,0.8)] transition-all duration-300" 
+              />
+              <h1 className="text-[10px] font-bold tracking-[0.3em] text-white panel-title leading-none">
+                CIRCUIT<span className="text-neon-cyan">MIND</span>
+              </h1>
+            </div>
+            
+            <div className="h-5 w-px bg-white/10 border-r border-black/50" />
 
-            <div className="h-3 w-px bg-slate-800/80 mx-0.5"></div>
-
+            {/* Edit History Group */}
             <div className="flex gap-1">
               <button
                 type="button"
                 onClick={handleUndo}
                 disabled={history.past.length === 0}
-                className="h-6 w-6 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+                className="h-7 w-7 inline-flex items-center justify-center bg-black/20 border border-white/5 text-slate-400 hover:text-white hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed cut-corner-sm"
                 title="Undo"
                 aria-label="Undo"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                 </svg>
               </button>
               <button
                 type="button"
                 onClick={handleRedo}
                 disabled={history.future.length === 0}
-                className="h-6 w-6 inline-flex items-center justify-center bg-slate-950/60 border border-slate-700 text-slate-300 hover:text-white hover:border-neon-cyan/60 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+                className="h-7 w-7 inline-flex items-center justify-center bg-black/20 border border-white/5 text-slate-400 hover:text-white hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed cut-corner-sm"
                 title="Redo"
                 aria-label="Redo"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
                 </svg>
               </button>
             </div>
 
-            <div className="h-3 w-px bg-slate-800/80 mx-0.5"></div>
+            <div className="h-5 w-px bg-white/10 border-r border-black/50" />
 
-            <div className="flex gap-2">
+            {/* Persistence Group */}
+            <div className="flex items-center gap-1">
               <button
                 onClick={saveDiagram}
-                className="px-2 py-0.5 bg-neon-cyan text-black text-[8px] font-bold tracking-[0.24em] hover:bg-white transition-colors shadow-[0_0_14px_rgba(0,243,255,0.35)] cut-corner-sm"
+                className="h-7 px-3 bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan text-[9px] font-bold tracking-[0.2em] hover:bg-neon-cyan hover:text-black transition-all cut-corner-sm leading-none"
               >
                 SAVE
               </button>
               <button
                 onClick={loadDiagram}
-                className="px-2 py-0.5 border border-neon-purple/60 text-[8px] font-bold tracking-[0.22em] text-neon-purple hover:bg-neon-purple/10 transition-colors cut-corner-sm"
+                className="h-7 px-3 bg-black/20 border border-white/10 text-slate-300 text-[9px] font-bold tracking-[0.2em] hover:text-white hover:border-white/30 transition-all cut-corner-sm leading-none"
               >
                 LOAD
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          {/* Right Controls */}
+          <div className="flex items-center gap-2">
             {isLiveActive && (
-              <div className="flex items-center gap-1 text-red-500 animate-pulse bg-red-900/20 px-1 py-0 border border-red-500/50 text-[7px] uppercase tracking-[0.2em] cut-corner-sm">
-                <div className="w-1 h-1 bg-red-500"></div>
-                <span className="font-bold">{liveStatus}</span>
+              <div className="flex items-center gap-2 px-2 py-1 bg-red-950/30 border border-red-500/30 cut-corner-sm">
+                <div className="w-1.5 h-1.5 bg-red-500 animate-pulse shadow-[0_0_8px_#ef4444]" />
+                <span className="text-[9px] font-mono text-red-400 uppercase tracking-widest leading-none">{liveStatus}</span>
               </div>
             )}
+            
             <button
               type="button"
               onClick={toggleLiveMode}
-              className={`h-6 w-6 inline-flex items-center justify-center border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm ${isLiveActive ? 'bg-red-500 text-white border-red-400' : 'bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60'}`}
+              className={`h-7 w-7 inline-flex items-center justify-center border transition-all cut-corner-sm ${
+                isLiveActive 
+                  ? 'bg-red-500 text-white border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
+                  : 'bg-black/20 text-slate-400 border-white/5 hover:text-neon-cyan hover:border-neon-cyan/30'
+              }`}
               title="Live Voice Mode"
               aria-label="Toggle live voice mode"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                />
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </button>
+            
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
-              className="h-6 w-6 inline-flex items-center justify-center border bg-slate-950/60 text-slate-400 border-slate-700 hover:text-white hover:border-neon-cyan/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 cut-corner-sm"
+              className="h-7 w-7 inline-flex items-center justify-center border bg-black/20 text-slate-400 border-white/5 hover:text-white hover:border-white/30 transition-all cut-corner-sm"
               title="Settings"
               aria-label="Open settings"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
           </div>
         </div>
 
         {/* Diagram Canvas */}
-        <div className="flex-1 relative overflow-hidden bg-cyber-dark canvas-surface canvas-grid">
+        <div className="flex-1 relative overflow-hidden bg-cyber-black canvas-grid border-y border-white/5">
           <DiagramCanvas
             ref={canvasRef}
             diagram={history.present}
             onComponentClick={handleComponentClick}
             onDiagramUpdate={handleDiagramChange}
             onComponentDrop={handleComponentDrop}
+            onGenerate3D={handleGenerate3DForComponent}
           />
         </div>
 
-        {/* Status Bar */}
-        <div className="h-3.5 panel-rail panel-frame cut-corner-sm border-t border-slate-800/80 px-1.5 flex items-center justify-between text-[7px] uppercase tracking-[0.12em] text-slate-400 leading-none">
-          <div className="flex items-center gap-1">
-            <span className="text-neon-cyan">Inv {totalInventoryUnits}</span>
-            <span className="h-2.5 w-px bg-slate-800/80" />
-            <span>
-              Diagram {diagramComponentCount}c / {diagramConnectionCount}w
-            </span>
-            <span className="h-2.5 w-px bg-slate-800/80" />
-            <span>Mode {generationMode.toUpperCase()}</span>
+        {/* Status Rail */}
+        <div className="h-7 bg-[#050608] border-t border-white/10 flex items-center justify-between px-3 text-[9px] uppercase tracking-[0.1em] font-mono select-none">
+          <div className="flex items-center gap-4 text-slate-500">
+            <div className="flex items-center gap-2">
+              <span className="text-neon-cyan">SYS</span>
+              <span className="text-slate-300">ONLINE</span>
+            </div>
+            <div className="w-px h-3 bg-white/10" />
+            <div className="flex items-center gap-2">
+              <span className="text-neon-cyan">INV</span>
+              <span className="text-slate-300">{totalInventoryUnits}</span>
+            </div>
+            <div className="w-px h-3 bg-white/10" />
+            <div className="flex items-center gap-2">
+              <span className="text-neon-cyan">NET</span>
+              <span className="text-slate-300">{diagramComponentCount} / {diagramConnectionCount}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-slate-500">Session</span>
-            <span className="text-slate-300 max-w-[160px] truncate" title={activeConversation?.title || 'Untitled'}>
-              {activeConversation?.title || 'Untitled'}
-            </span>
-          </div>
-          <div className="flex items-center gap-1 text-slate-400">
-            <span className="uppercase">{isLiveActive ? liveStatus : 'standby'}</span>
-            <span className={`h-1 w-1 ${isLiveActive ? 'bg-red-500' : 'bg-slate-600'}`} />
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-slate-500">
+              <span>MODE</span>
+              <span className="text-neon-purple bg-neon-purple/10 px-1">{generationMode}</span>
+            </div>
+            <div className="w-px h-3 bg-white/10" />
+            <div className="flex items-center gap-2 text-slate-500">
+              <span>SESSION</span>
+              <span className="text-slate-300 max-w-[120px] truncate">{activeConversation?.title || 'UNTITLED'}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1750,6 +1816,7 @@ export default function App() {
           onRenameConversation={conversationManager.renameConversation}
           onSendMessage={handleSendEnhancedMessage}
           isLoading={isLoading}
+          loadingText={_loadingText}
           onComponentClick={handleChatComponentClick}
           onActionClick={handleChatActionClick}
           context={aiContext || undefined}
@@ -1775,9 +1842,7 @@ export default function App() {
                   setIsAssistantPinned(!isAssistantPinned);
                   if (!isAssistantOpen) setIsAssistantOpen(true);
                 }}
-                className={`h-10 w-10 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${
-                  isAssistantPinned ? 'text-neon-green' : 'text-slate-400 hover:text-neon-cyan'
-                }`}
+                className={`h-10 w-10 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${isAssistantPinned ? 'text-neon-green' : 'text-slate-400 hover:text-neon-cyan'}`}
                 title={isAssistantPinned ? 'Unpin to auto-hide' : 'Auto-hide assistant'}
                 aria-label={isAssistantPinned ? 'Unpin assistant sidebar' : 'Enable auto-hide for assistant'}
               >
@@ -1795,7 +1860,7 @@ export default function App() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                      d="M8 11V7a4 4 0 118 0v6a3 3 0 01-3 3H6a2 2 0 01-2-2v-6a3 3 0 013-3zM8 16v2M12 16v2M16 16v2"
                     />
                   </svg>
                 )}
