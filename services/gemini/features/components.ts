@@ -54,8 +54,7 @@ export const smartFillComponent = async (name: string, type?: string): Promise<P
       contents: PROMPTS.SMART_FILL(name, type),
       config: {
         tools: [{ googleSearch: {} }],
-        responseMimeType: "application/json",
-        responseSchema: SMART_FILL_SCHEMA
+        // responseMimeType: "application/json" is unsupported when tools are used
       }
     });
 
@@ -97,8 +96,7 @@ export const assistComponentEditor = async (
       ],
       config: {
         tools: [{ googleSearch: {} }],
-        responseMimeType: "application/json",
-        responseSchema: ASSIST_EDITOR_SCHEMA
+        // responseMimeType: "application/json" is unsupported when tools are used
       }
     });
 

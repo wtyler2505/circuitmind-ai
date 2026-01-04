@@ -160,8 +160,12 @@ export const chatWithContext = async (
     }
 
     config.tools = tools.length > 0 ? tools : undefined;
-    config.responseMimeType = "application/json";
-    config.responseSchema = STRUCTURED_RESPONSE_SCHEMA;
+    
+    // Controlled output (JSON) is unsupported when tools (like Google Search) are used
+    if (!config.tools) {
+      config.responseMimeType = "application/json";
+      config.responseSchema = STRUCTURED_RESPONSE_SCHEMA;
+    }
 
     const response = await ai.models.generateContent({
       model,

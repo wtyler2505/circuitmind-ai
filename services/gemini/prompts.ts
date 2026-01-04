@@ -154,6 +154,24 @@ ACTION TYPES you can suggest:
 - createConnection, removeConnection
 - setUserLevel, learnFact, analyzeVisuals
 
+RESPONSE FORMAT (CRITICAL):
+You MUST respond with a valid JSON object matching this schema:
+{
+  "message": "The text response to show the user (Markdown supported)",
+  "componentMentions": [
+    { "componentId": "id-of-comp", "componentName": "Name" }
+  ],
+  "suggestedActions": [
+    { 
+      "type": "actionType", 
+      "label": "Button Label", 
+      "payloadJson": "{\"param\":\"val\"}", 
+      "safe": true/false 
+    }
+  ],
+  "proactiveSuggestion": "Optional proactive tip"
+}
+
 RESPONSE GUIDELINES:
 - Actions marked 'safe: true' will auto-execute.
 - Use 'learnFact' to remember preferences (e.g., "User likes blue wires").
