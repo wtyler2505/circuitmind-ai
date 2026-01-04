@@ -17,7 +17,11 @@ type ViewMode = '2d' | '3d';
 
 interface DiagramCanvasProps {
   diagram: WiringDiagram | null;
-  onComponentClick: (component: ElectronicComponent) => void;
+  selectedComponentId?: string | null;
+  onComponentSelect?: (componentId: string) => void;
+  onComponentContextMenu?: (componentId: string, x: number, y: number) => void;
+  onComponentDoubleClick?: (component: ElectronicComponent) => void;
+  onBackgroundClick?: () => void;
   onDiagramUpdate: (diagram: WiringDiagram) => void;
   onComponentDrop?: (component: ElectronicComponent, x: number, y: number) => void;
   onGenerate3D?: (component: ElectronicComponent) => Promise<void>;
@@ -66,7 +70,17 @@ export interface DiagramCanvasRef {
   getSnapshotBlob: () => Promise<Blob | null>;
 }
 
-const DiagramCanvasRenderer = ({ diagram, onComponentClick, onDiagramUpdate, onComponentDrop, onGenerate3D }: DiagramCanvasProps, ref: React.ForwardedRef<DiagramCanvasRef>) => {
+const DiagramCanvasRenderer = ({ 
+  diagram, 
+  selectedComponentId,
+  onComponentSelect, 
+  onComponentContextMenu,
+  onComponentDoubleClick,
+  onBackgroundClick,
+  onDiagramUpdate, 
+  onComponentDrop, 
+  onGenerate3D 
+}: DiagramCanvasProps, ref: React.ForwardedRef<DiagramCanvasRef>) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement>(null);
 
@@ -364,8 +378,14 @@ const DiagramCanvasRenderer = ({ diagram, onComponentClick, onDiagramUpdate, onC
 
     const handlePointerUp = useCallback((e: React.PointerEvent) => {
       (e.target as Element).releasePointerCapture(e.pointerId);
+      if (!state.isDragging && !state.isPanning && onBackgroundClick) {
+         // Check if we clicked on background (svg or container)
+         // Actually DiagramNode stops propagation, so if we reach here it should be background
+         // BUT we need to ensure we didn't just finish a drag
+         onBackgroundClick();
+      }
       dispatch({ type: 'POINTER_UP' });
-    }, []);
+    }, [state.isDragging, state.isPanning, onBackgroundClick]);
 
     const handleDragOver = useCallback((e: React.DragEvent) => {
       e.preventDefault();
@@ -1000,9 +1020,12 @@ const DiagramCanvasRenderer = ({ diagram, onComponentClick, onDiagramUpdate, onC
                     component={comp}
                     position={pos}
                     isHovered={state.hoveredNodeId === comp.id}
+                    isSelected={selectedComponentId === comp.id}
                     highlight={highlight ? { color: highlight.color, pulse: highlight.pulse } : undefined}
                     onPointerDown={handlePointerDown}
-                    onClick={onComponentClick}
+                    onSelect={onComponentSelect}
+                    onContextMenu={onComponentContextMenu}
+                    onDoubleClick={onComponentDoubleClick}
                     onPinPointerDown={handlePinPointerDown}
                     onPinPointerUp={handlePinPointerUp}
                   />
