@@ -150,7 +150,7 @@ ACTION TYPES you can suggest:
 - highlight, centerOn, zoomTo, panTo
 - openInventory, openSettings, toggleSidebar
 - undo, redo, saveDiagram, loadDiagram
-- addComponent, updateComponent, removeComponent
+- addComponent, updateComponent, removeComponent, clearCanvas
 - createConnection, removeConnection
 - setUserLevel, learnFact, analyzeVisuals
 

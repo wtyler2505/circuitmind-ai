@@ -47,32 +47,52 @@ export interface ChatMessage {
 }
 
 // =====================================
-// AI Integration Types (Phase 1)
+// AI Actions
 // =====================================
 
-// Action types for AI control system
-export type ActionType =
-  // Canvas actions (safe by default)
+export type ActionType = 
+  // Viewport
   | 'highlight'
   | 'centerOn'
   | 'zoomTo'
+  | 'panTo'
   | 'resetView'
   | 'highlightWire'
-  // Navigation actions (safe by default)
+  
+  // UI State
   | 'openInventory'
-  | 'closeInventory'
   | 'openSettings'
-  | 'closeSettings'
+  | 'toggleSidebar'
+  | 'setTheme'
   | 'openComponentEditor'
+  | 'closeInventory'
+  | 'closeSettings'
   | 'switchGenerationMode'
-  // Diagram actions (unsafe - require confirmation)
+  
+  // Project State
+  | 'undo'
+  | 'redo'
+  | 'saveDiagram'
+  | 'loadDiagram'
+  
+  // Diagram Editing
   | 'addComponent'
+  | 'updateComponent' // Generic update
   | 'removeComponent'
+  | 'clearCanvas'
   | 'createConnection'
   | 'removeConnection'
-  // Form actions (unsafe - require confirmation)
+  
+  // Forms (Legacy/Specific)
   | 'fillField'
-  | 'saveComponent';
+  | 'saveComponent'
+  
+  // User Profile
+  | 'setUserLevel' // AI decides to change user level
+  | 'learnFact'
+  
+  // Vision
+  | 'analyzeVisuals';
 
 // Default safe/unsafe classification for actions
 export const ACTION_SAFETY: Record<ActionType, boolean> = {
@@ -80,23 +100,44 @@ export const ACTION_SAFETY: Record<ActionType, boolean> = {
   highlight: true,
   centerOn: true,
   zoomTo: true,
+  panTo: true,
   resetView: true,
   highlightWire: true,
-  // Navigation - safe
+  
+  // UI - safe
   openInventory: true,
   closeInventory: true,
   openSettings: true,
   closeSettings: true,
+  toggleSidebar: true,
+  setTheme: true,
   openComponentEditor: true,
   switchGenerationMode: true,
+  
+  // Project - safeish
+  undo: true,
+  redo: true,
+  saveDiagram: true,
+  loadDiagram: false,
+  
   // Diagram - unsafe
   addComponent: false,
+  updateComponent: false,
   removeComponent: false,
+  clearCanvas: false,
   createConnection: false,
   removeConnection: false,
+  
   // Forms - unsafe
   fillField: false,
   saveComponent: false,
+  
+  // Profile - safe
+  setUserLevel: true,
+  learnFact: true,
+  
+  // Vision - safe (read only)
+  analyzeVisuals: true,
 };
 
 // Reference to a component mentioned in chat
@@ -143,6 +184,9 @@ export interface EnhancedChatMessage {
   linkedComponents: ComponentReference[];
   suggestedActions: ActionIntent[];
   executedActions?: ExecutedAction[];
+  
+  // Metrics
+  metricId?: string;
 
   // Context at time of message
   linkedDiagramId?: string;
@@ -181,9 +225,12 @@ export interface AIContext {
   connectionCount: number;
   selectedComponentId?: string;
   selectedComponentName?: string;
+  componentList?: string[]; // List of "id: name" for context awareness
   recentActions: string[];
   activeView: 'canvas' | 'component-editor' | 'inventory' | 'settings';
-  inventorySummary: string; // e.g., "62 components: 6 microcontrollers, 15 sensors..."
+  inventorySummary: string;
+  userProfile?: any; // Avoiding circular dependency for now, or use loose typing
+  viewport?: string;
 }
 
 // AI autonomy settings (stored in localStorage)

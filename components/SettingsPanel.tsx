@@ -2,123 +2,66 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '../hooks/useToast';
 import { ActionType, ACTION_SAFETY, AIAutonomySettings } from '../types';
 import { getStoredApiKey, setStoredApiKey } from '../services/apiKeyStorage';
+import { datasetService } from '../services/datasetService';
+import IconButton from './IconButton';
+import { useLayout } from '../contexts/LayoutContext';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   autonomySettings?: AIAutonomySettings;
   onAutonomySettingsChange?: (settings: AIAutonomySettings) => void;
-  layoutSettings?: {
-    inventoryOpen: boolean;
-    inventoryPinned: boolean;
-    assistantOpen: boolean;
-    assistantPinned: boolean;
-    inventoryWidth?: number;
-    assistantWidth?: number;
-  };
-  onLayoutSettingsChange?: (updates: {
-    inventoryOpen?: boolean;
-    inventoryPinned?: boolean;
-    assistantOpen?: boolean;
-    assistantPinned?: boolean;
-    inventoryWidth?: number;
-    assistantWidth?: number;
-  }) => void;
 }
 
 // Human-readable labels for action types
 const ACTION_LABELS: Record<ActionType, { label: string; description: string; category: string }> =
   {
     // Canvas actions
-    highlight: {
-      label: 'Highlight Component',
-      description: 'Add visual glow to a component',
-      category: 'Canvas',
-    },
-    centerOn: {
-      label: 'Center View',
-      description: 'Pan canvas to focus on component',
-      category: 'Canvas',
-    },
+    highlight: { label: 'Highlight Component', description: 'Add visual glow to a component', category: 'Canvas' },
+    centerOn: { label: 'Center View', description: 'Pan canvas to focus on component', category: 'Canvas' },
     zoomTo: { label: 'Zoom', description: 'Change zoom level', category: 'Canvas' },
-    resetView: {
-      label: 'Reset View',
-      description: 'Reset pan and zoom to default',
-      category: 'Canvas',
-    },
-    highlightWire: {
-      label: 'Highlight Wire',
-      description: 'Add visual glow to a connection',
-      category: 'Canvas',
-    },
+    panTo: { label: 'Pan', description: 'Move view to coordinates', category: 'Canvas' },
+    resetView: { label: 'Reset View', description: 'Reset pan and zoom to default', category: 'Canvas' },
+    highlightWire: { label: 'Highlight Wire', description: 'Add visual glow to a connection', category: 'Canvas' },
+
     // Navigation actions
-    openInventory: {
-      label: 'Open Inventory',
-      description: 'Show component library sidebar',
-      category: 'Navigation',
-    },
-    closeInventory: {
-      label: 'Close Inventory',
-      description: 'Hide component library sidebar',
-      category: 'Navigation',
-    },
-    openSettings: {
-      label: 'Open Settings',
-      description: 'Show settings panel',
-      category: 'Navigation',
-    },
-    closeSettings: {
-      label: 'Close Settings',
-      description: 'Hide settings panel',
-      category: 'Navigation',
-    },
-    openComponentEditor: {
-      label: 'Open Editor',
-      description: 'Open component detail editor',
-      category: 'Navigation',
-    },
-    switchGenerationMode: {
-      label: 'Switch Mode',
-      description: 'Change AI generation mode',
-      category: 'Navigation',
-    },
+    openInventory: { label: 'Open Inventory', description: 'Show component library sidebar', category: 'Navigation' },
+    closeInventory: { label: 'Close Inventory', description: 'Hide component library sidebar', category: 'Navigation' },
+    openSettings: { label: 'Open Settings', description: 'Show settings panel', category: 'Navigation' },
+    closeSettings: { label: 'Close Settings', description: 'Hide settings panel', category: 'Navigation' },
+    openComponentEditor: { label: 'Open Editor', description: 'Open component detail editor', category: 'Navigation' },
+    switchGenerationMode: { label: 'Switch Mode', description: 'Change AI generation mode', category: 'Navigation' },
+    toggleSidebar: { label: 'Toggle Sidebar', description: 'Expand/Collapse sidebars', category: 'Navigation' },
+    setTheme: { label: 'Set Theme', description: 'Change UI visual theme', category: 'Navigation' },
+
+    // Project actions
+    undo: { label: 'Undo', description: 'Revert last change', category: 'Project' },
+    redo: { label: 'Redo', description: 'Reapply reverted change', category: 'Project' },
+    saveDiagram: { label: 'Save Diagram', description: 'Save current state to local storage', category: 'Project' },
+    loadDiagram: { label: 'Load Diagram', description: 'Load state from local storage', category: 'Project' },
+
     // Diagram modification actions
-    addComponent: {
-      label: 'Add Component',
-      description: 'Insert new component into diagram',
-      category: 'Diagram',
-    },
-    removeComponent: {
-      label: 'Remove Component',
-      description: 'Delete component from diagram',
-      category: 'Diagram',
-    },
-    createConnection: {
-      label: 'Create Connection',
-      description: 'Wire two components together',
-      category: 'Diagram',
-    },
-    removeConnection: {
-      label: 'Remove Connection',
-      description: 'Delete wire from diagram',
-      category: 'Diagram',
-    },
+    addComponent: { label: 'Add Component', description: 'Insert new component into diagram', category: 'Diagram' },
+    updateComponent: { label: 'Update Component', description: 'Modify component properties', category: 'Diagram' },
+    removeComponent: { label: 'Remove Component', description: 'Delete component from diagram', category: 'Diagram' },
+    clearCanvas: { label: 'Clear Canvas', description: 'Remove all components', category: 'Diagram' },
+    createConnection: { label: 'Create Connection', description: 'Wire two components together', category: 'Diagram' },
+    removeConnection: { label: 'Remove Connection', description: 'Delete wire from diagram', category: 'Diagram' },
+
     // Form actions
-    fillField: {
-      label: 'Fill Form Field',
-      description: 'Auto-populate form input',
-      category: 'Forms',
-    },
-    saveComponent: {
-      label: 'Save Component',
-      description: 'Save component changes',
-      category: 'Forms',
-    },
+    fillField: { label: 'Fill Form Field', description: 'Auto-populate form input', category: 'Forms' },
+    saveComponent: { label: 'Save Component', description: 'Save component changes', category: 'Forms' },
+    
+    // Profile actions (Background)
+    setUserLevel: { label: 'Set Experience', description: 'Adjust AI teaching level', category: 'System' },
+    learnFact: { label: 'Learn Fact', description: 'Save user preference/fact', category: 'System' },
+    analyzeVisuals: { label: 'Analyze Visuals', description: 'Take canvas snapshot for AI', category: 'System' },
   };
 
-const CATEGORIES = ['Canvas', 'Navigation', 'Diagram', 'Forms'] as const;
+const CATEGORIES = ['Canvas', 'Navigation', 'Project', 'Diagram', 'Forms', 'System'] as const;
 const INVENTORY_WIDTH_RANGE = { min: 280, max: 520, default: 360 };
 const ASSISTANT_WIDTH_RANGE = { min: 300, max: 560, default: 380 };
+
 type LayoutSnapshot = {
   inventoryOpen: boolean;
   inventoryPinned: boolean;
@@ -126,15 +69,6 @@ type LayoutSnapshot = {
   assistantPinned: boolean;
   inventoryWidth: number;
   assistantWidth: number;
-};
-
-const LAYOUT_DEFAULTS: LayoutSnapshot = {
-  inventoryOpen: false,
-  inventoryPinned: false,
-  assistantOpen: true,
-  assistantPinned: true,
-  inventoryWidth: INVENTORY_WIDTH_RANGE.default,
-  assistantWidth: ASSISTANT_WIDTH_RANGE.default,
 };
 
 // Default autonomy settings
@@ -156,8 +90,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onClose,
   autonomySettings,
   onAutonomySettingsChange,
-  layoutSettings,
-  onLayoutSettingsChange,
 }) => {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
@@ -166,6 +98,17 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout'>('api');
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
   const toast = useToast();
+  
+  const {
+    isInventoryOpen, setInventoryOpen,
+    inventoryPinned, setInventoryPinned,
+    inventoryWidth, setInventoryWidth,
+    isAssistantOpen, setAssistantOpen,
+    assistantPinned, setAssistantPinned,
+    assistantWidth, setAssistantWidth,
+    inventoryDefaultWidth,
+    assistantDefaultWidth
+  } = useLayout();
 
   // Local autonomy settings state (if not controlled externally)
   const [localAutonomy, setLocalAutonomy] = useState<AIAutonomySettings>(
@@ -174,8 +117,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   // Use external settings if provided, otherwise use local state
   const currentAutonomy = autonomySettings || localAutonomy;
-  const inventoryWidthValue = layoutSettings?.inventoryWidth ?? INVENTORY_WIDTH_RANGE.default;
-  const assistantWidthValue = layoutSettings?.assistantWidth ?? ASSISTANT_WIDTH_RANGE.default;
 
   useEffect(() => {
     if (isOpen) {
@@ -215,18 +156,22 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   };
 
   const handleResetLayout = () => {
-    if (!layoutSettings) return;
-
     resetSnapshotRef.current = {
-      inventoryOpen: layoutSettings.inventoryOpen,
-      inventoryPinned: layoutSettings.inventoryPinned,
-      assistantOpen: layoutSettings.assistantOpen,
-      assistantPinned: layoutSettings.assistantPinned,
-      inventoryWidth: layoutSettings.inventoryWidth ?? INVENTORY_WIDTH_RANGE.default,
-      assistantWidth: layoutSettings.assistantWidth ?? ASSISTANT_WIDTH_RANGE.default,
+      inventoryOpen: isInventoryOpen,
+      inventoryPinned: inventoryPinned,
+      assistantOpen: isAssistantOpen,
+      assistantPinned: assistantPinned,
+      inventoryWidth: inventoryWidth,
+      assistantWidth: assistantWidth,
     };
 
-    onLayoutSettingsChange?.(LAYOUT_DEFAULTS);
+    setInventoryOpen(false); // Default
+    setInventoryPinned(false);
+    setAssistantOpen(true);
+    setAssistantPinned(true);
+    setInventoryWidth(inventoryDefaultWidth);
+    setAssistantWidth(assistantDefaultWidth);
+
     toast.info('Layout reset', 2000, {
       label: 'Undo',
       onClick: handleResetUndo,
@@ -237,7 +182,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     const snapshot = resetSnapshotRef.current;
     if (!snapshot) return;
 
-    onLayoutSettingsChange?.(snapshot);
+    setInventoryOpen(snapshot.inventoryOpen);
+    setInventoryPinned(snapshot.inventoryPinned);
+    setAssistantOpen(snapshot.assistantOpen);
+    setAssistantPinned(snapshot.assistantPinned);
+    setInventoryWidth(snapshot.inventoryWidth);
+    setAssistantWidth(snapshot.assistantWidth);
   };
 
   // Toggle action safety override
@@ -357,55 +307,40 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             </svg>
             <h2 className="text-lg font-semibold text-white uppercase tracking-[0.3em]">Settings</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-300 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800/80 border border-slate-800/70"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+          <IconButton icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>} label="Close settings" variant="ghost" onClick={onClose} />
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-slate-800/80 bg-slate-950/60">
           <button
             onClick={() => setActiveTab('api')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'api' ? 'text-neon-cyan' : 'text-slate-400 hover:text-slate-200'
+            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+              activeTab === 'api' 
+                ? 'border-neon-cyan text-white bg-white/5' 
+                : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
-            API Key
-            {activeTab === 'api' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-cyan" />
-            )}
+            API KEY
           </button>
           <button
             onClick={() => setActiveTab('ai')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'ai' ? 'text-neon-purple' : 'text-slate-400 hover:text-slate-200'
+            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+              activeTab === 'ai' 
+                ? 'border-neon-purple text-white bg-white/5' 
+                : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
-            AI Autonomy
-            {activeTab === 'ai' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-purple" />
-            )}
+            AI AUTONOMY
           </button>
           <button
             onClick={() => setActiveTab('layout')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'layout' ? 'text-neon-amber' : 'text-slate-400 hover:text-slate-200'
+            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+              activeTab === 'layout' 
+                ? 'border-neon-amber text-white bg-white/5' 
+                : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
-            Layout
-            {activeTab === 'layout' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-amber" />
-            )}
+            LAYOUT
           </button>
         </div>
 
@@ -741,6 +676,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   </div>
                 </div>
               </div>
+              
+              {/* Dataset Export */}
+              <div className="flex justify-end pt-2 border-t border-gray-700/50">
+                  <button
+                    onClick={() => datasetService.downloadDataset()}
+                    className="text-xs text-slate-400 hover:text-white underline"
+                  >
+                    Export Training Data (JSONL)
+                  </button>
+              </div>
             </>
           )}
 
@@ -754,14 +699,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </p>
               </div>
 
-              {!layoutSettings && (
-                <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
-                  Layout settings are currently unavailable.
-                </div>
-              )}
-
-              {layoutSettings && (
-                <div className="grid gap-4">
+              <div className="grid gap-4">
                   <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -773,10 +711,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       <span>Open on launch</span>
                       <input
                         type="checkbox"
-                        checked={layoutSettings.inventoryOpen}
-                        onChange={(event) =>
-                          onLayoutSettingsChange?.({ inventoryOpen: event.target.checked })
-                        }
+                        checked={isInventoryOpen}
+                        onChange={(event) => setInventoryOpen(event.target.checked)}
                         className="h-4 w-4"
                         style={{ accentColor: '#00f3ff' }}
                         aria-label="Inventory open on launch"
@@ -786,10 +722,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       <span>Pinned by default (disable auto-hide)</span>
                       <input
                         type="checkbox"
-                        checked={layoutSettings.inventoryPinned}
-                        onChange={(event) =>
-                          onLayoutSettingsChange?.({ inventoryPinned: event.target.checked })
-                        }
+                        checked={inventoryPinned}
+                        onChange={(event) => setInventoryPinned(event.target.checked)}
                         className="h-4 w-4"
                         style={{ accentColor: '#00f3ff' }}
                         aria-label="Inventory pinned by default"
@@ -798,19 +732,15 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs text-slate-300">
                         <span>Width</span>
-                        <span className="text-slate-400">{inventoryWidthValue}px</span>
+                        <span className="text-slate-400">{inventoryWidth}px</span>
                       </div>
                       <input
                         type="range"
                         min={INVENTORY_WIDTH_RANGE.min}
                         max={INVENTORY_WIDTH_RANGE.max}
                         step={10}
-                        value={inventoryWidthValue}
-                        onChange={(event) =>
-                          onLayoutSettingsChange?.({
-                            inventoryWidth: Number(event.target.value),
-                          })
-                        }
+                        value={inventoryWidth}
+                        onChange={(event) => setInventoryWidth(Number(event.target.value))}
                         className="w-full accent-cyan-400"
                         aria-label="Inventory sidebar width"
                       />
@@ -818,11 +748,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <span>{INVENTORY_WIDTH_RANGE.min}px</span>
                         <button
                           type="button"
-                          onClick={() =>
-                            onLayoutSettingsChange?.({
-                              inventoryWidth: INVENTORY_WIDTH_RANGE.default,
-                            })
-                          }
+                          onClick={() => setInventoryWidth(INVENTORY_WIDTH_RANGE.default)}
                           className="text-slate-400 hover:text-neon-cyan transition-colors"
                         >
                           Reset
@@ -843,10 +769,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       <span>Open on launch</span>
                       <input
                         type="checkbox"
-                        checked={layoutSettings.assistantOpen}
-                        onChange={(event) =>
-                          onLayoutSettingsChange?.({ assistantOpen: event.target.checked })
-                        }
+                        checked={isAssistantOpen}
+                        onChange={(event) => setAssistantOpen(event.target.checked)}
                         className="h-4 w-4"
                         style={{ accentColor: '#ffaa00' }}
                         aria-label="Assistant open on launch"
@@ -856,10 +780,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                       <span>Pinned by default (disable auto-hide)</span>
                       <input
                         type="checkbox"
-                        checked={layoutSettings.assistantPinned}
-                        onChange={(event) =>
-                          onLayoutSettingsChange?.({ assistantPinned: event.target.checked })
-                        }
+                        checked={assistantPinned}
+                        onChange={(event) => setAssistantPinned(event.target.checked)}
                         className="h-4 w-4"
                         style={{ accentColor: '#ffaa00' }}
                         aria-label="Assistant pinned by default"
@@ -868,19 +790,15 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs text-slate-300">
                         <span>Width</span>
-                        <span className="text-slate-400">{assistantWidthValue}px</span>
+                        <span className="text-slate-400">{assistantWidth}px</span>
                       </div>
                       <input
                         type="range"
                         min={ASSISTANT_WIDTH_RANGE.min}
                         max={ASSISTANT_WIDTH_RANGE.max}
                         step={10}
-                        value={assistantWidthValue}
-                        onChange={(event) =>
-                          onLayoutSettingsChange?.({
-                            assistantWidth: Number(event.target.value),
-                          })
-                        }
+                        value={assistantWidth}
+                        onChange={(event) => setAssistantWidth(Number(event.target.value))}
                         className="w-full accent-amber-400"
                         aria-label="Assistant sidebar width"
                       />
@@ -888,11 +806,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <span>{ASSISTANT_WIDTH_RANGE.min}px</span>
                         <button
                           type="button"
-                          onClick={() =>
-                            onLayoutSettingsChange?.({
-                              assistantWidth: ASSISTANT_WIDTH_RANGE.default,
-                            })
-                          }
+                          onClick={() => setAssistantWidth(ASSISTANT_WIDTH_RANGE.default)}
                           className="text-slate-400 hover:text-neon-amber transition-colors"
                         >
                           Reset
@@ -902,7 +816,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800/80 bg-slate-950/70 p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="rounded-xl border border-slate-800/80 bg-slate-900/70 p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-200">Reset layout defaults</p>
                       <p className="text-xs text-slate-400">
@@ -918,13 +832,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </button>
                   </div>
                 </div>
-              )}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-800 bg-slate-950/70 panel-rail panel-frame">
+        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-800 bg-slate-900/70 panel-rail panel-frame">
           <button
             onClick={handleClear}
             className="inline-flex items-center justify-center px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-300 border border-slate-700/70 bg-slate-900/60 hover:text-red-300 hover:border-red-400/70 transition-colors cut-corner-sm"
