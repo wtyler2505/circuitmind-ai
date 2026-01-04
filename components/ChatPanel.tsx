@@ -29,7 +29,7 @@ interface ChatPanelProps {
   // Message handling
   onSendMessage: (
     content: string,
-    attachment?: { base64: string; type: 'image' | 'video' }
+    attachment?: { base64: string; type: 'image' | 'video' | 'document'; name?: string }
   ) => Promise<void>;
   isLoading?: boolean;
   loadingText?: string;
@@ -177,7 +177,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   onAspectRatioChange,
 }) => {
   const [inputValue, setInputValue] = useState('');
-  const [attachment, setAttachment] = useState<{ base64: string; type: 'image' | 'video' } | null>(
+  const [attachment, setAttachment] = useState<{ base64: string; type: 'image' | 'video' | 'document'; name?: string } | null>(
     null
   );
   const [isDragging, setIsDragging] = useState(false);
@@ -227,8 +227,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
-      const type = file.type.startsWith('video/') ? 'video' : 'image';
-      setAttachment({ base64, type });
+      let type: 'image' | 'video' | 'document' = 'image';
+      if (file.type.startsWith('video/')) type = 'video';
+      if (file.type === 'application/pdf') type = 'document';
+      
+      setAttachment({ base64, type, name: file.name });
     };
     reader.readAsDataURL(file);
   }, []);
@@ -250,12 +253,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     const file = e.dataTransfer.files[0];
     if (!file) return;
 
-    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+    if (file.type.startsWith('image/') || file.type.startsWith('video/') || file.type === 'application/pdf') {
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result as string;
-        const type = file.type.startsWith('video/') ? 'video' : 'image';
-        setAttachment({ base64, type });
+        let type: 'image' | 'video' | 'document' = 'image';
+        if (file.type.startsWith('video/')) type = 'video';
+        if (file.type === 'application/pdf') type = 'document';
+        
+        setAttachment({ base64, type, name: file.name });
       };
       reader.readAsDataURL(file);
     }
@@ -670,11 +676,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       {attachment && (
         <div className="px-3 py-2 border-t border-white/5 bg-[#0a0c10]">
           <div className="relative inline-block group">
-            <div className="cut-corner-sm overflow-hidden border border-slate-600">
+            <div className="cut-corner-sm overflow-hidden border border-slate-600 bg-slate-900">
               {attachment.type === 'image' ? (
                 <img src={attachment.base64} alt="Attachment" className="max-h-16 object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-              ) : (
+              ) : attachment.type === 'video' ? (
                 <video src={attachment.base64} className="max-h-16" />
+              ) : (
+                <div className="flex items-center gap-2 p-2 h-16 min-w-[120px]">
+                  <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v15a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-[10px] text-slate-300 truncate max-w-[100px]">{attachment.name || 'Document'}</span>
+                </div>
               )}
             </div>
             <button
@@ -793,7 +806,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*,video/*"
+          accept="image/*,video/*,application/pdf"
           onChange={handleFileSelect}
           className="hidden"
         />

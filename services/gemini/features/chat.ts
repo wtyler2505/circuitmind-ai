@@ -18,7 +18,7 @@ export const chatWithAI = async (
   message: string,
   history: GeminiChatMessage[],
   attachmentBase64?: string,
-  attachmentType?: 'image' | 'video',
+  attachmentType?: 'image' | 'video' | 'document',
   useDeepThinking: boolean = false
 ): Promise<{ text: string, groundingSources: GroundingSource[] }> => {
    const startTime = Date.now();
@@ -37,13 +37,7 @@ export const chatWithAI = async (
 
     // 1. Video Analysis
     if (isAttachment && attachmentType === 'video') {
-       model = MODELS.VIDEO; // Pro for video - actually gemini-3-pro in original mapping for VIDEO task in chat? 
-       // Original: model = 'gemini-2.5-pro'; // Pro for video
-       // My client.ts MODELS.VIDEO is 'veo-3.1...'. Wait, original chatWithAI used 'gemini-2.5-pro' for video analysis. 
-       // Let's use 'gemini-2.5-pro' directly or add a key for it. 
-       // I'll use CONTEXT_CHAT_COMPLEX which is mapped to gemini-2.5-pro in my client.ts
        model = MODELS.CONTEXT_CHAT_COMPLEX;
-
        const cleanBase64 = attachmentBase64?.replace(/^data:video\/(mp4|webm|quicktime);base64,/, '') || '';
        parts = [
          { inlineData: { mimeType: 'video/mp4', data: cleanBase64 } }, 
@@ -52,21 +46,30 @@ export const chatWithAI = async (
     }
     // 2. Image Analysis
     else if (isAttachment && attachmentType === 'image') {
-      model = MODELS.CONTEXT_CHAT_COMPLEX; // Pro for vision details
+      model = MODELS.CONTEXT_CHAT_COMPLEX;
       const cleanBase64 = attachmentBase64?.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '') || '';
       parts = [
         { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
         { text: message || "Analyze this electronic component/circuit." }
       ];
     }
-    // 3. Deep Thinking Mode
+    // 3. Document Analysis
+    else if (isAttachment && attachmentType === 'document') {
+      model = MODELS.CONTEXT_CHAT_COMPLEX;
+      const cleanBase64 = attachmentBase64?.replace(/^data:application\/pdf;base64,/, '') || '';
+      parts = [
+        { inlineData: { mimeType: 'application/pdf', data: cleanBase64 } },
+        { text: message || "Analyze this document." }
+      ];
+    }
+    // 4. Deep Thinking Mode
     else if (useDeepThinking) {
       model = MODELS.THINKING;
       config.thinkingConfig = { thinkingBudget: 32768 };
     }
-    // 4. Complex Text Queries (Standard Pro)
+    // 5. Complex Text Queries (Standard Pro)
     else if (isComplexQuery) {
-      model = MODELS.CONTEXT_CHAT_COMPLEX; // Pro for complex/search
+      model = MODELS.CONTEXT_CHAT_COMPLEX;
       tools = [{ googleSearch: {} }];
     } 
 
@@ -102,7 +105,7 @@ export const chatWithContext = async (
   context: AIContext,
   options?: {
     attachmentBase64?: string;
-    attachmentType?: 'image' | 'video';
+    attachmentType?: 'image' | 'video' | 'document';
     useDeepThinking?: boolean;
     enableProactive?: boolean;
   }
@@ -150,6 +153,13 @@ export const chatWithContext = async (
       parts = [
         { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
         { text: message || "Analyze this electronic component/circuit." }
+      ];
+    } else if (isAttachment && attachmentType === 'document') {
+      model = MODELS.CONTEXT_CHAT_COMPLEX;
+      const cleanBase64 = attachmentBase64?.replace(/^data:application\/pdf;base64,/, '') || '';
+      parts = [
+        { inlineData: { mimeType: 'application/pdf', data: cleanBase64 } },
+        { text: message || "Analyze this document." }
       ];
     } else if (useDeepThinking) {
       model = MODELS.THINKING;

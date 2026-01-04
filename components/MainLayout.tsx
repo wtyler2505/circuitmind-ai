@@ -173,7 +173,7 @@ export const MainLayout: React.FC = () => {
   // Main Chat Handler
   const handleSendEnhancedMessage = useCallback(async (
     content: string,
-    attachment?: { base64: string; type: 'image' | 'video' }
+    attachment?: { base64: string; type: 'image' | 'video' | 'document'; name?: string }
   ) => {
     if ((!content.trim() && !attachment) || isLoading) return;
 
