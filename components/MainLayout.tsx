@@ -92,6 +92,155 @@ export const MainLayout: React.FC = () => {
     devLogging: process.env.NODE_ENV === 'development',
   });
 
+  // Main Chat Handler
+  const handleSendEnhancedMessage = useCallback(async (
+    content: string,
+    attachment?: { base64: string; type: 'image' | 'video' | 'document'; name?: string }
+  ) => {
+    if ((!content.trim() && !attachment) || isLoading) return;
+
+    const attachmentData = attachment?.base64;
+
+    const userEnhancedMsg: Omit<EnhancedChatMessage, 'id' | 'conversationId' | 'timestamp'> = {
+      role: 'user',
+      content,
+      linkedComponents: [],
+      suggestedActions: [],
+      image: attachment?.type === 'image' ? attachmentData : undefined,
+      video: attachment?.type === 'video' ? attachmentData : undefined,
+    };
+
+    const sentUserMessage = await conversationManager.addMessage(userEnhancedMsg);
+
+    setIsLoading(true);
+    setLoadingText('Thinking...');
+
+    try {
+      // Reconstruct history
+      const conversationMessages = conversationManager.messages.filter(
+        (msg) => msg.conversationId === sentUserMessage.conversationId
+      );
+      const chatHistory = conversationMessages
+        .filter((msg) => msg.role === 'user' || msg.role === 'model')
+        .map((msg) => ({
+          role: msg.role as 'user' | 'model',
+          parts: [{ text: msg.content }],
+        }));
+
+      if (generationMode === 'image') {
+        setLoadingText('Generating Image...');
+        let imgData = '';
+        if (attachment?.type === 'image' && attachmentData) {
+          imgData = await generateEditedImage(attachmentData, content);
+        } else {
+          imgData = await generateConceptImage(content, imageSize, aspectRatio);
+        }
+        await conversationManager.addMessage({
+          role: 'model',
+          content: `Generated image for "${content}"`,
+          linkedComponents: [],
+          suggestedActions: [],
+          image: imgData,
+        });
+      } else if (generationMode === 'video') {
+        setLoadingText('Generating Video...');
+        const videoAspect = aspectRatio === '9:16' ? '9:16' : '16:9';
+        const videoUrl = await generateCircuitVideo(content, videoAspect, attachmentData);
+        await conversationManager.addMessage({
+          role: 'model',
+          content: `Video generated for "${content}"`,
+          linkedComponents: [],
+          suggestedActions: [],
+          video: videoUrl,
+        });
+      } else {
+        // Chat Mode
+        const isDiagramRequest = content.toLowerCase().includes('diagram') || content.toLowerCase().includes('circuit');
+
+        if (isDiagramRequest) {
+          setLoadingText('Designing Circuit...');
+          const newDiagram = await generateWiringDiagram(content, inventory);
+          updateDiagram(newDiagram);
+          await conversationManager.addMessage({
+            role: 'model',
+            content: `Here is the wiring diagram for: ${newDiagram.title}.`,
+            linkedComponents: newDiagram.components.map((c) => ({
+              componentId: c.id,
+              componentName: c.name,
+              mentionStart: 0,
+              mentionEnd: 0,
+            })),
+            suggestedActions: [
+              { type: 'highlight', payload: {}, label: 'Highlight all', safe: true },
+              { type: 'zoomTo', payload: { level: 1 }, label: 'Fit view', safe: true },
+            ],
+            diagramData: newDiagram,
+          });
+        } else if (aiContext) {
+          setLoadingText('Analyzing...');
+          const response = await chatWithContext(content, chatHistory, aiContext, {
+            enableProactive: true,
+            attachmentBase64: attachmentData,
+            attachmentType: attachment?.type,
+          });
+
+          await conversationManager.addMessage({
+            role: 'model',
+            content: response.text,
+            linkedComponents: response.componentMentions,
+            suggestedActions: response.suggestedActions,
+            groundingSources: response.groundingSources,
+            metricId: response.metricId,
+          });
+
+          // Autonomy
+          if (aiActions.autonomySettings.autoExecuteSafeActions) {
+            for (const action of response.suggestedActions) {
+              const isSafe = aiActions.autonomySettings.customSafeActions.includes(action.type)
+                ? true
+                : aiActions.autonomySettings.customUnsafeActions.includes(action.type)
+                  ? false
+                  : (ACTION_SAFETY[action.type] ?? false);
+
+              if (isSafe) await aiActions.execute(action);
+            }
+          }
+        } else {
+          setLoadingText('Analyzing...');
+          const { text, groundingSources } = await chatWithAI(
+            content,
+            chatHistory,
+            attachmentData,
+            attachment?.type === 'video' ? 'video' : 'image',
+            useDeepThinking
+          );
+          await conversationManager.addMessage({
+            role: 'model',
+            content: text,
+            linkedComponents: [],
+            suggestedActions: [],
+            groundingSources,
+          });
+        }
+      }
+    } catch (error: unknown) {
+      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      await conversationManager.addMessage({
+        role: 'system',
+        content: `Error: ${errorMessage}`,
+        linkedComponents: [],
+        suggestedActions: [],
+      });
+    } finally {
+      setIsLoading(false);
+      setLoadingText('');
+    }
+  }, [
+    isLoading, generationMode, imageSize, aspectRatio, inventory, 
+    aiContext, aiActions, useDeepThinking, conversationManager, updateDiagram, toast
+  ]);
+
   // Handle Voice Transcription
   useEffect(() => {
     if (lastTranscription) {
