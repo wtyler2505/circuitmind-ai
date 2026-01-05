@@ -32,9 +32,9 @@ class ErrorBoundary extends Component<Props, State> {
         this.props.fallback || (
           <div className="w-full h-full flex flex-col items-center justify-center bg-cyber-dark/50 border border-red-900/50 rounded-xl p-6 text-center">
             <div className="text-red-500 text-4xl mb-2">⚠️</div>
-            <h3 className="text-white font-bold mb-2">3D Render Error</h3>
-            <p className="text-slate-300 text-sm font-mono">
-              {this.state.error?.message || 'Failed to load 3D content.'}
+            <h3 className="text-white font-bold mb-2">Component Error</h3>
+            <p className="text-slate-300 text-sm font-mono break-all max-w-full">
+              {this.state.error?.message || 'Something went wrong.'}
             </p>
             <button
               onClick={() => this.setState({ hasError: false })}

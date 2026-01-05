@@ -6,6 +6,7 @@ import Inventory from './Inventory';
 import AssistantSidebar from './AssistantSidebar';
 import ChatPanel from './ChatPanel';
 import DiagramCanvas, { DiagramCanvasRef } from './DiagramCanvas';
+import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
 const ComponentEditorModal = lazy(() => import('./ComponentEditorModal'));
@@ -166,7 +167,99 @@ export const MainLayout: React.FC = () => {
 
   return (
     <AppLayout
-      // ...
+      inventory={<Inventory onSelect={handleOpenComponentInfo} />}
+      assistant={
+        <AssistantSidebar>
+          <ErrorBoundary>
+            <ChatPanel
+              conversations={conversationManager.conversations}
+              activeConversationId={conversationManager.activeConversationId}
+              messages={conversationManager.messages}
+              onSwitchConversation={conversationManager.switchConversation}
+              onCreateConversation={conversationManager.createConversation}
+              onDeleteConversation={conversationManager.deleteConversation}
+              onRenameConversation={conversationManager.renameConversation}
+              onSendMessage={handleSendEnhancedMessage}
+              isLoading={isLoading || isProcessingAudio}
+              loadingText={loadingText || audioLoadingText}
+              onComponentClick={handleChatComponentClick}
+              onActionClick={(action) => aiActions.execute(action)}
+              context={aiContext || undefined}
+              proactiveSuggestions={proactiveSuggestions}
+              onSuggestionClick={(s) => handleSendEnhancedMessage(s)}
+              generationMode={generationMode}
+              onModeChange={setGenerationMode}
+              useDeepThinking={useDeepThinking}
+              onDeepThinkingChange={setUseDeepThinking}
+              isRecording={isRecording}
+              onStartRecording={startRecording}
+              onStopRecording={stopRecording}
+              imageSize={imageSize}
+              onImageSizeChange={setImageSize}
+              aspectRatio={aspectRatio}
+              onAspectRatioChange={setAspectRatio}
+              className="bg-slate-950/80 border-slate-800 rounded-l-2xl rounded-r-none h-full"
+              headerActions={
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAssistantPinned(!assistantPinned);
+                      if (!isAssistantOpen) setAssistantOpen(true);
+                    }}
+                    className={`h-10 w-10 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${assistantPinned ? 'text-neon-green' : 'text-slate-400 hover:text-neon-cyan'}`}
+                  >
+                    {assistantPinned ? (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0v6a3 3 0 01-3 3H6a2 2 0 01-2-2v-6a3 3 0 013-3zM8 16v2M12 16v2M16 16v2" /></svg>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAssistantPinned(false);
+                      setAssistantOpen(false);
+                    }}
+                    className="h-10 w-10 inline-flex items-center justify-center rounded text-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 6L6 18M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              }
+            />
+          </ErrorBoundary>
+        </AssistantSidebar>
+      }
+      header={<AppHeader />}
+      statusRail={<StatusRail />}
+      modals={
+        <>
+          {selectedComponent && (
+            <Suspense fallback={<div className="fixed inset-0 bg-black/50 z-50 text-neon-cyan">Loading...</div>}>
+              <ComponentEditorModal
+                component={selectedComponent}
+                onClose={() => setSelectedComponent(null)}
+                onSave={(updated) => {
+                  setInventory(inventory.map((i) => (i.id === updated.id ? updated : i)));
+                  setSelectedComponent(null);
+                }}
+                explanation={modalContent}
+                isGenerating3D={isGenerating3D}
+                onGenerate3D={handleGenerate3D}
+              />
+            </Suspense>
+          )}
+          <Suspense fallback={null}>
+            <SettingsPanel
+              isOpen={isSettingsOpen}
+              onClose={() => setSettingsOpen(false)}
+              autonomySettings={aiActions.autonomySettings}
+              onAutonomySettingsChange={aiActions.updateAutonomySettings}
+            />
+          </Suspense>
+        </>
+      }
     >
       <DiagramCanvas
         ref={setCanvasRef}
