@@ -1,0 +1,11 @@
+Create a clean wiring diagram for the circuit "Stepper Motor Control".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- power-supply-5v + -> uln2003 VCC (wire: red)
+- power-supply-5v - -> uln2003 GND (wire: black)
+- arduino-uno GND -> uln2003 GND (wire: black)
+- arduino-uno D8 -> uln2003 IN1 (wire: yellow)
+- arduino-uno D9 -> uln2003 IN2 (wire: orange)
+- arduino-uno D10 -> uln2003 IN3 (wire: green)
+- arduino-uno D11 -> uln2003 IN4 (wire: blue)
+- uln2003 MOTOR -> 28byj48 connector (wire: ribbon)

@@ -1,100 +1,105 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Quick Start
 
-## Project Overview
-
-CircuitMind AI is an AI-powered electronics prototyping workspace. Users can generate wiring diagrams, analyze circuits via image/video, create 3D component models, and interact with a circuit engineering AI assistant. Built with React 19, Vite, Three.js, and Google Gemini models.
+1. `npm install && npm run dev` → localhost:3000
+2. Set `GEMINI_API_KEY` in `.env.local`
+3. Read `types.ts` first, then `App.tsx:1-150` for state
 
 ## Commands
 
 ```bash
-npm install          # Install dependencies
-npm run dev          # Start dev server on localhost:3000
-npm run build        # Production build
-npm run preview      # Preview production build
+npm run dev      # Dev server
+npm run build    # Production build
+npm run preview  # Preview build
 ```
 
-**Environment**: Set `GEMINI_API_KEY` in `.env.local` before running.
+## Critical Files
+
+| Priority | File                           | Why                                  |
+| -------- | ------------------------------ | ------------------------------------ |
+| 1        | types.ts                       | All interfaces                       |
+| 2        | App.tsx                        | Centralized state (838 LOC)          |
+| 3        | services/geminiService.ts      | AI integration (934 LOC)             |
+| 4        | services/aiMetricsService.ts   | AI Latency/Success tracking          |
+| 5        | services/circuitAnalysis.ts    | Rule-based verification              |
+| 6        | hooks/useAIActions.ts          | Action dispatch hub                  |
+| 7        | hooks/actions/\*.ts            | Handler registry (✅ refactored)     |
+| 8        | hooks/useConversations.ts      | Conversation state                   |
+| 9        | services/responseParser.ts     | AI response parsing                  |
+| 10       | ref/\*.md                      | Detailed docs                        |
 
 ## Architecture
 
-### State Management (App.tsx)
+**State**: Centralized in App.tsx (no Redux/Context)
 
-No Redux/Context API. State is centralized in `App.tsx`:
+- `inventory` → `localStorage.cm_inventory`
+- `history` → `localStorage.cm_autosave` (undo/redo)
+- `liveSessionRef` → useRef (not useState!)
 
-- **Inventory** (`inventory`): Master component list, persisted to `localStorage.cm_inventory`
-- **History** (`history`): Past/Present/Future stacks for undo/redo on WiringDiagram, persisted to `localStorage.cm_autosave`
-- **Mode** (`generationMode`): 'chat' | 'image' | 'video' determines which Gemini model is used
-- **LiveSession** (`liveSessionRef`): Uses `useRef` (not state) to prevent WebSocket disconnection on re-render
+**Z-Index**: Canvas(0) < Header(10) < Chat(20) < Inventory(40) < Modals(50)
 
-### Component Sync Pattern
+## ⚠️ Critical Pitfalls
 
-When editing components via `ComponentEditorModal`, changes must update BOTH:
-1. The active diagram in history
-2. The global inventory array
+| Issue          | Rule                                              |
+| -------------- | ------------------------------------------------- |
+| Gemini Schema  | OBJECT types MUST have `properties: {...}`        |
+| Reload Race    | Add 100ms delay before `window.location.reload()` |
+| Component Sync | Update BOTH inventory AND diagram                 |
+| WebSocket      | Use `useRef` not `useState` for liveSession       |
+| Veo URLs       | Append `&key=API_KEY` to video URLs               |
 
-This dual-update ensures future diagrams use updated pin definitions.
+**Full details**: See [ref/pitfalls.md](ref/pitfalls.md)
 
-### Z-Index Layers
+## Gemini Models
 
-| Layer | Z-Index | Element |
-|-------|---------|---------|
-| Canvas | z-0 | Background diagram |
-| Header | z-10 | Top bar |
-| Chat | z-20 | Bottom panel |
-| Inventory | z-40 | Slide-out sidebar |
-| Modals | z-50 | Overlays |
+| Task            | Model                           | Strategy |
+| --------------- | ------------------------------- | -------- |
+| Wiring diagrams | gemini-2.5-pro                  | Accuracy |
+| Chat            | gemini-2.5-flash                | Speed    |
+| Chat (Complex)  | gemini-2.5-pro                  | Accuracy |
+| Images          | gemini-2.5-flash-image          | Speed    |
+| Concept Art     | gemini-3-pro-image-preview      | Quality  |
+| Video           | veo-3.1-fast-generate-preview   | Speed    |
 
-## Key Services
+## Key Patterns
 
-### services/geminiService.ts
+**Dual Component Sync** - When editing:
 
-Model routing:
+```typescript
+setInventory((prev) => prev.map((i) => (i.id === id ? updated : i)));
+updateDiagram({
+  ...diagram,
+  components: diagram.components.map((c) => (c.id === id ? updated : c)),
+});
+```
 
-| Task | Model |
-|------|-------|
-| Wiring diagrams, research | gemini-3-pro-preview |
-| Simple chat | gemini-2.5-flash-lite-preview |
-| Concept art | gemini-3-pro-image-preview |
-| Image editing | gemini-2.5-flash-image |
-| Video gen | veo-3.1-fast-generate-preview |
-| TTS | gemini-2.5-flash-preview-tts |
+**Missing Pin** - AI hallucinates pin → red pulsing dot (not crash)
 
-**Key functions**:
-- `generateWiringDiagram()`: Produces JSON with components[] and connections[]
-- `smartFillComponent()`: One-click component auto-fill using Google Search
-- `assistComponentEditor()`: Chat assistant with search + state updates
-- `generateComponent3DCode()`: Returns raw JS code for Three.js mesh generation
+## Reference Docs
 
-### services/liveAudio.ts
+| File                                                         | Content                      |
+| ------------------------------------------------------------ | ---------------------------- |
+| [ref/architecture.md](ref/architecture.md)                   | System design, data flow     |
+| [ref/services.md](ref/services.md)                           | Service APIs                 |
+| [ref/components.md](ref/components.md)                       | Component APIs               |
+| [ref/patterns.md](ref/patterns.md)                           | Design patterns              |
+| [ref/types.md](ref/types.md)                                 | TypeScript interfaces        |
+| [ref/pitfalls.md](ref/pitfalls.md)                           | Gotchas & common mistakes    |
+| [ref/visual-analysis-tools.md](ref/visual-analysis-tools.md) | OCR, diffing, a11y, CV tools |
 
-WebSocket connection to Gemini Live. Uses `nextStartTime` pattern for gapless audio playback via Web Audio API.
+## ⚠️ Complexity Hotspots
 
-### services/storage.ts
+| File                      | LOC | Status                         |
+| ------------------------- | --- | ------------------------------ |
+| services/geminiService.ts | 934 | 🟡 Monolithic, monitor         |
+| components/Inventory.tsx  | 936 | 🟡 Could extract subcomponents |
+| hooks/useAIActions.ts     | 153 | ✅ Refactored (was 523)        |
 
-localStorage wrapper for persistence.
+## Performance Optimizations (Applied)
 
-## Components
+- **Bundle**: 414KB → 150KB gzip (lazy loading, Tailwind build-time)
+- **Code Splitting**: ThreeViewer, Modals in separate chunks
+- **Memory**: ThreeViewer scene disposal, MediaRecorder cleanup
+- **Rendering**: ChatMessage memoized, DiagramCanvas useMemo
 
-- **DiagramCanvas.tsx**: SVG rendering of wiring diagrams. Uses "smart path" algorithm for wire routing (Bezier curves with fallback to zig-zag paths when curves would loop back).
-- **ThreeViewer.tsx**: Three.js canvas. Executes AI-generated JS via `new Function('THREE', code)` - not `eval()`.
-- **ComponentEditorModal.tsx**: Multi-tab editor with AI chat assistant sidebar.
-- **Inventory.tsx**: Slide-out component library.
-
-## Known Patterns
-
-### Missing Pin Indicator
-
-When AI hallucinates a pin that doesn't exist in inventory, `DiagramCanvas` renders a red pulsing dot at component bottom instead of crashing.
-
-### Veo Video URLs
-
-Video generation returns URLs that require `&key=YOUR_API_KEY` appended to avoid 403. Handled in geminiService.
-
-## Types (types.ts)
-
-Core data structures:
-- `ElectronicComponent`: id, name, type, pins, quantity, threeCode, datasheetUrl
-- `WireConnection`: fromComponentId, fromPin, toComponentId, toPin, color
-- `WiringDiagram`: title, components[], connections[], explanation

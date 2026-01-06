@@ -1,0 +1,7 @@
+Create a clean wiring diagram for the circuit "6-Axis Motion Sensor".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- arduino-uno 3.3V -> mpu6050 VCC (wire: orange)
+- arduino-uno GND -> mpu6050 GND (wire: black)
+- arduino-uno A4 -> mpu6050 SDA (wire: blue)
+- arduino-uno A5 -> mpu6050 SCL (wire: yellow)

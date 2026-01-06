@@ -169,21 +169,28 @@ export function useInventorySync(
   }, [inventory, diagram, autoSync, syncNow, debouncedSync]);
 
   /**
-   * Validate on diagram load
+   * Validate on diagram changes
    */
   useEffect(() => {
     if (!diagram || !devLogging) return;
 
-    // Validate when diagram first loads
-    const result = validateNow();
+    // Validate when diagram loads or changes
+    // We use a small timeout to let the sync effect finish if it's racing
+    const timer = setTimeout(() => {
+        const result = validateNow();
 
-    if (!result.isValid) {
-      console.warn(
-        `⚠️ Diagram loaded with ${result.mismatches.length} inconsistencies. ` +
-        `Auto-sync will resolve these.`
-      );
-    }
-  }, [diagram?.title]); // Only on diagram change, not every render
+        if (!result.isValid) {
+          console.warn(
+            `⚠️ Diagram has ${result.mismatches.length} inconsistencies.`
+          );
+        } else {
+            // Optional: Log success if we want to confirm sync
+            // console.log('✅ Diagram consistency verified');
+        }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [diagram, devLogging, validateNow]);
 
   return {
     syncNow,

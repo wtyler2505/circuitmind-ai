@@ -1,0 +1,6 @@
+Create a clean wiring diagram for the circuit "LED Blink (Hello World)".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- arduino-uno D13 -> resistor-220ohm 1 (wire: yellow)
+- resistor-220ohm 2 -> led-red anode (wire: yellow)
+- led-red cathode -> arduino-uno GND (wire: black)

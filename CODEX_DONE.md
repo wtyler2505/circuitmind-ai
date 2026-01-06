@@ -1073,3 +1073,151 @@ npm run test
 
 ## Handoff Notes
 - Full test suite passes (11 files, 71 tests).
+
+# Codex Completion Report
+
+**Task:** Documentation duty (audit updates, decisions, status, improvements)
+**Status:** done
+
+## Changes Made
+- `docs/screenshots/UI_AUDIT_REPORT.md` - added glass surface pass details and recapture blocker note.
+- `docs/IMPROVEMENTS.md` - logged open items for recapture blocker and icon-only controls.
+- `PROJECT_STATUS_REPORT.md` - created project status report with active threads and blockers.
+- `docs/DECISIONS.md` - created ADR-style decision log for glass surface system.
+- `docs/IMPLEMENTATION_NOTES.md` - created narrative implementation notes.
+- `docs/README.md` - linked new decision/implementation docs.
+
+## Commands Run
+```bash
+rg -n "IMPROVEMENTS|DECISIONS|STATUS|REPORT" -g "*.md" .
+ls -la /home/wtyler/circuitmind-ai
+ls -la /home/wtyler/circuitmind-ai/docs
+```
+
+## Next Steps
+- Recapture screenshots once Claude DevTools capture is available.
+- Continue glass surface refinements in sidebars and top/bottom bars (Gemini).
+
+## Blockers (if any)
+- Playwright screenshot capture blocked by Chromium crashpad permission error.
+
+## Handoff Notes
+- Documentation updated for glassmorphism direction and recapture blocker.
+
+# Codex Completion Report
+
+**Task:** Create new documentation set (style guide, capture playbook, UX principles)
+**Status:** done
+
+## Changes Made
+- `docs/UI_STYLE_GUIDE.md` - new glass + slab visual rules and component conventions.
+- `docs/SCREENSHOT_CAPTURE_PLAYBOOK.md` - new capture workflow with fallback paths.
+- `docs/UX_PRINCIPLES.md` - new UX philosophy and interaction standards.
+- `docs/README.md` - linked new documentation.
+
+## Commands Run
+```bash
+rg -n "IMPROVEMENTS|DECISIONS|STATUS|REPORT" -g "*.md" .
+ls -la /home/wtyler/circuitmind-ai
+ls -la /home/wtyler/circuitmind-ai/docs
+```
+
+## Next Steps
+- Review new docs with Gemini/Claude to ensure alignment with ongoing UI work.
+
+## Blockers (if any)
+- None
+
+## Handoff Notes
+- Docs intentionally written to be educational + engaging while staying accurate.
+
+# Codex Completion Report
+
+**Task:** Add UI tokens, consistency checklist, and live review log docs
+**Status:** done
+
+## Changes Made
+- `docs/UI_TOKENS_REFERENCE.md` - added token map for glass/typography/density.
+- `docs/COMPONENT_CONSISTENCY_CHECKLIST.md` - added pre-merge UI checklist.
+- `docs/LIVE_REVIEW_LOG.md` - added live UI critique log.
+- `docs/README.md` - linked new docs.
+
+## Commands Run
+```bash
+none
+```
+
+## Next Steps
+- Review and refine token values after Gemini/Claude finish UI passes.
+
+## Blockers (if any)
+- None
+
+## Handoff Notes
+- Tokens are aligned to current glass system; update if palette shifts.
+
+# Codex Completion Report
+
+**Task:** Add UI review template, component inventory index, and visual drift guide
+**Status:** done
+
+## Changes Made
+- `docs/UI_CHANGE_REVIEW_TEMPLATE.md` - PR-friendly UI review checklist.
+- `docs/COMPONENT_INVENTORY_INDEX.md` - map of core UI components and files.
+- `docs/VISUAL_DRIFT_AUDIT_GUIDE.md` - fast audit procedure for consistency.
+- `docs/README.md` - linked new docs.
+
+## Commands Run
+```bash
+none
+```
+
+## Next Steps
+- Incorporate these templates into Gemini/Claude workflows.
+
+## Blockers (if any)
+- None
+
+## Handoff Notes
+- These docs assume the glass + slab system as current baseline.
+
+# Codex Completion Report
+
+**Task:** Generate comprehensive codebase audit report with metrics and UI cross-reference
+**Status:** done
+
+## Changes Made
+- `docs/audits/CODE_AUDIT_REPORT.md` - updated metrics, issue ledger, root cause mapping, refactor candidates, and action plan.
+- `tmp/audit/scc-report.json` - scc output (workspace temp).
+- `tmp/audit/complexity.csv` - lizard output (workspace temp).
+- `tmp/audit/tokei.json` - tokei output (workspace temp).
+
+## Commands Run
+```bash
+scc --by-file --sort complexity | head -50
+scc --format json > /home/wtyler/circuitmind-ai/tmp/audit/scc-report.json
+lizard -l javascript -l typescript -C 10 src/ components/ hooks/ services/
+lizard -l javascript -l typescript --csv App.tsx components hooks services > /home/wtyler/circuitmind-ai/tmp/audit/complexity.csv
+tokei --output json . > /home/wtyler/circuitmind-ai/tmp/audit/tokei.json
+fd -e tsx -e ts --exec wc -l {} \; | sort -rn | head -20
+ast-grep --lang tsx --pattern 'const [$STATE, $SETTER] = useState($$$)' App.tsx components hooks services --json | jq length
+ast-grep --lang tsx --pattern '<button $$$>$ICON</button>' components/ --json | jq length
+ast-grep --lang ts --pattern 'try { $$$ } catch ($ERR) { $$$ }' services/ --json | jq length
+rg "style=\{\{" components/ --count-matches
+rg "className=" components/ -c | sort -t: -k2 -rn | head -20
+rg "#[0-9a-fA-F]{6}" components/ index.css | wc -l
+rg -n "truncate|overflow-hidden|line-clamp|whitespace-nowrap" components App.tsx
+python3 - <<'PY'
+# parse lizard csv for CCN summary
+PY
+```
+
+## Next Steps
+- Decide whether to keep tmp/audit artifacts or move them to a dedicated audit folder.
+- Review the report and pick a P1 item to implement.
+
+## Blockers (if any)
+- None
+
+## Handoff Notes
+- UI-001..003 definitions differ between the two UI audit reports; this audit follows the user-requested mapping.

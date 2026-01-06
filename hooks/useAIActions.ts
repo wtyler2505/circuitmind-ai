@@ -1,0 +1,163 @@
+import { useCallback, useState } from 'react';
+import { ActionIntent, ElectronicComponent } from '../types';
+import { DiagramCanvasRef, HighlightOptions } from '../components/DiagramCanvas';
+import { getHandler, ActionContext } from './actions';
+import { useAutonomySettings } from './useAutonomySettings';
+import { useActionHistory, ActionResult } from './useActionHistory';
+import { useInventory } from '../contexts/InventoryContext';
+import { useDiagram } from '../contexts/DiagramContext';
+import { useLayout } from '../contexts/LayoutContext';
+import { useAssistantState } from '../contexts/AssistantStateContext';
+import { useConversationContext } from '../contexts/ConversationContext';
+
+export type { ActionResult } from './useActionHistory';
+
+export interface UseAIActionsOptions {
+  canvasRef: React.RefObject<DiagramCanvasRef | null>; // Updated type to match nullable ref
+  setSelectedComponent: (component: ElectronicComponent | null) => void;
+}
+
+export function useAIActions(options: UseAIActionsOptions) {
+  const { canvasRef, setSelectedComponent } = options;
+
+  // Contexts
+  const { inventory, setInventory } = useInventory();
+  const { diagram, updateDiagram, undo: handleUndo, redo: handleRedo, saveToQuickSlot: saveDiagram, loadFromQuickSlot: loadDiagram } = useDiagram();
+  const { setInventoryOpen, setSettingsOpen } = useLayout();
+  const { setGenerationMode } = useAssistantState();
+  const { activeConversationId } = useConversationContext();
+
+  const [pendingActions, setPendingActions] = useState<ActionIntent[]>([]);
+  const { autonomySettings, updateAutonomySettings, isActionSafe } = useAutonomySettings();
+  const { actionHistory, addToHistory, recordUndo, undo, canUndo } = useActionHistory(updateDiagram);
+
+  // Execute action via handler registry
+  const executeAction = useCallback(async (action: ActionIntent, auto: boolean): Promise<ActionResult> => {
+    // Build context inside callback to avoid stale closures and dependency changes
+    const context: ActionContext = {
+      canvasRef: canvasRef as React.RefObject<DiagramCanvasRef>, // Cast for compatibility with handler types
+      inventory, diagram, setInventory,
+      setIsInventoryOpen: setInventoryOpen,
+      setIsSettingsOpen: setSettingsOpen,
+      setSelectedComponent,
+      setGenerationMode, updateDiagram, activeConversationId,
+      recordUndo,
+      // App Controls
+      handleUndo, handleRedo, saveDiagram, loadDiagram
+    };
+
+    const result: ActionResult = {
+      action,
+      success: false,
+      timestamp: Date.now(),
+      auto,
+    };
+
+    try {
+      const handler = getHandler(action.type);
+      if (!handler) {
+        result.error = `Unknown action type: ${action.type}`;
+      } else {
+        const handlerResult = await handler(action.payload, context);
+        result.success = handlerResult.success;
+        result.error = handlerResult.error;
+      }
+    } catch (err) {
+      result.error = err instanceof Error ? err.message : 'Unknown error';
+    }
+
+    addToHistory(result);
+    return result;
+  }, [
+    canvasRef, inventory, diagram, setInventory,
+    setInventoryOpen, setSettingsOpen, setSelectedComponent,
+    setGenerationMode, updateDiagram, activeConversationId,
+    recordUndo, addToHistory, handleUndo, handleRedo, saveDiagram, loadDiagram
+  ]);
+
+  // Main execute - checks autonomy settings
+  const execute = useCallback(async (action: ActionIntent): Promise<ActionResult> => {
+    const safe = action.safe ?? isActionSafe(action.type);
+
+    if (safe && autonomySettings.autoExecuteSafeActions) {
+      return executeAction(action, true);
+    } else {
+      setPendingActions((prev) => [...prev, action]);
+      return {
+        action,
+        success: false,
+        timestamp: Date.now(),
+        auto: false,
+        error: 'Awaiting user confirmation',
+      };
+    }
+  }, [autonomySettings, isActionSafe, executeAction]);
+
+  const confirmAction = useCallback(async (action: ActionIntent): Promise<ActionResult> => {
+    setPendingActions((prev) => prev.filter((a) => a !== action));
+    return executeAction(action, false);
+  }, [executeAction]);
+
+  const rejectAction = useCallback((action: ActionIntent) => {
+    setPendingActions((prev) => prev.filter((a) => a !== action));
+  }, []);
+
+  const clearPendingActions = useCallback(() => setPendingActions([]), []);
+
+  // Convenience shortcuts (direct canvas calls)
+  const highlightComponent = useCallback((id: string, opts?: HighlightOptions) => {
+    canvasRef.current?.highlightComponent(id, opts);
+  }, [canvasRef]);
+
+  const centerOnComponent = useCallback((id: string) => {
+    canvasRef.current?.centerOnComponent(id);
+  }, [canvasRef]);
+
+  const zoomTo = useCallback((level: number) => {
+    canvasRef.current?.setZoom(level);
+  }, [canvasRef]);
+
+  const resetView = useCallback(() => {
+    canvasRef.current?.resetView();
+  }, [canvasRef]);
+
+  const openInventory = useCallback(() => setInventoryOpen(true), [setInventoryOpen]);
+  const closeInventory = useCallback(() => setInventoryOpen(false), [setInventoryOpen]);
+  const openSettings = useCallback(() => setSettingsOpen(true), [setSettingsOpen]);
+  const closeSettings = useCallback(() => setSettingsOpen(false), [setSettingsOpen]);
+
+  const openComponentEditor = useCallback((componentId: string) => {
+    const component = inventory.find((c) => c.id === componentId);
+    if (component) setSelectedComponent(component);
+  }, [inventory, setSelectedComponent]);
+
+  const switchGenerationMode = useCallback((mode: 'chat' | 'image' | 'video') => {
+    setGenerationMode(mode);
+  }, [setGenerationMode]);
+
+  return {
+    execute,
+    pendingActions,
+    confirmAction,
+    rejectAction,
+    clearPendingActions,
+    canUndo,
+    undo,
+    actionHistory,
+    highlightComponent,
+    centerOnComponent,
+    zoomTo,
+    resetView,
+    openInventory,
+    closeInventory,
+    openSettings,
+    closeSettings,
+    openComponentEditor,
+    switchGenerationMode,
+    autonomySettings,
+    updateAutonomySettings,
+  };
+}
+
+// Re-export for backwards compatibility
+export { saveAutonomySettings } from './useAutonomySettings';

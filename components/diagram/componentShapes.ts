@@ -553,6 +553,44 @@ export const BREADBOARD_SHAPE: ComponentShape = {
   pinStroke: TOKENS.materials.goldPin,
 };
 
+// Helper type for shape matching logic
+type ShapeMatcher = {
+  predicate: (name: string) => boolean;
+  shape: ComponentShape;
+};
+
+// Defined matchers to reduce cyclomatic complexity
+const SHAPE_MATCHERS: ShapeMatcher[] = [
+  // Passive components
+  { predicate: (n) => n.includes('resistor') || n.includes('ohm') || /\d+[kKmM]?Ω/.test(n), shape: RESISTOR_SHAPE },
+  { predicate: (n) => n.includes('capacitor') || n.includes('farad') || /\d+[nμup]?[fF]/.test(n), shape: CAPACITOR_SHAPE },
+  
+  // DHT sensors
+  { predicate: (n) => n.includes('dht11') || n.includes('dht22') || n.includes('dht-'), shape: DHT11_SHAPE },
+  
+  // Displays
+  { predicate: (n) => (n.includes('lcd') || n.includes('1602') || n.includes('2004') || n.includes('display')) && !n.includes('oled'), shape: LCD1602_SHAPE },
+  
+  // Breadboards
+  { predicate: (n) => n.includes('breadboard') || n.includes('solderless') || n.includes('830') || n.includes('400') || n.includes('170'), shape: BREADBOARD_SHAPE },
+  
+  // Active components / Actuators
+  { predicate: (n) => n.includes('led') || n.includes('diode'), shape: COMPONENT_SHAPES.actuator },
+  { predicate: (n) => n.includes('motor') || n.includes('servo') || n.includes('relay'), shape: COMPONENT_SHAPES.actuator },
+  
+  // Power
+  { predicate: (n) => n.includes('battery') || n.includes('power') || n.includes('supply') || n.includes('regulator'), shape: COMPONENT_SHAPES.power },
+  
+  // Specific Microcontrollers
+  { predicate: (n) => n.includes('arduino uno') || n.includes('uno r3'), shape: ARDUINO_UNO_SHAPE },
+  
+  // General Microcontrollers
+  { predicate: (n) => n.includes('arduino') || n.includes('esp') || n.includes('raspberry') || n.includes('nodemcu') || n.includes('teensy') || n.includes('stm32') || n.includes('atmega') || n.includes('pic'), shape: COMPONENT_SHAPES.microcontroller },
+  
+  // General Sensors
+  { predicate: (n) => n.includes('sensor') || n.includes('thermistor') || n.includes('photoresistor') || n.includes('accelerometer') || n.includes('gyro') || n.includes('ultrasonic'), shape: COMPONENT_SHAPES.sensor },
+];
+
 /**
  * Get the shape definition for a component based on type and name.
  * Name-based matching handles cases where component type is generic "other".
@@ -561,63 +599,11 @@ export function getComponentShape(type: string, name?: string): ComponentShape {
   // Check name first for specific component matching
   if (name) {
     const lowerName = name.toLowerCase();
-
-    // Passive components
-    if (lowerName.includes('resistor') || lowerName.includes('ohm') || lowerName.match(/\d+[kKmM]?Ω/)) {
-      return RESISTOR_SHAPE;
-    }
-    if (lowerName.includes('capacitor') || lowerName.includes('farad') || lowerName.match(/\d+[nμup]?[fF]/)) {
-      return CAPACITOR_SHAPE;
-    }
-
-    // DHT sensors - Temperature/Humidity
-    if (lowerName.includes('dht11') || lowerName.includes('dht22') || lowerName.includes('dht-')) {
-      return DHT11_SHAPE;
-    }
-
-    // LCD displays
-    if (lowerName.includes('lcd') || lowerName.includes('1602') || lowerName.includes('2004') ||
-        lowerName.includes('display') && !lowerName.includes('oled')) {
-      return LCD1602_SHAPE;
-    }
-
-    // Breadboards
-    if (lowerName.includes('breadboard') || lowerName.includes('solderless') ||
-        lowerName.includes('830') || lowerName.includes('400') || lowerName.includes('170')) {
-      return BREADBOARD_SHAPE;
-    }
-
-    // Active components
-    if (lowerName.includes('led') || lowerName.includes('diode')) {
-      return COMPONENT_SHAPES.actuator;
-    }
-    if (lowerName.includes('motor') || lowerName.includes('servo') || lowerName.includes('relay')) {
-      return COMPONENT_SHAPES.actuator;
-    }
-
-    // Power
-    if (lowerName.includes('battery') || lowerName.includes('power') || lowerName.includes('supply') || lowerName.includes('regulator')) {
-      return COMPONENT_SHAPES.power;
-    }
-
-    // Microcontrollers - Check for specific boards first
-    if (lowerName.includes('arduino uno') || lowerName.includes('uno r3')) {
-      return ARDUINO_UNO_SHAPE;
-    }
-    if (lowerName.includes('arduino') || lowerName.includes('esp') || lowerName.includes('raspberry') ||
-        lowerName.includes('nodemcu') || lowerName.includes('teensy') || lowerName.includes('stm32') ||
-        lowerName.includes('atmega') || lowerName.includes('pic')) {
-      return COMPONENT_SHAPES.microcontroller;
-    }
-
-    // Sensors
-    if (lowerName.includes('sensor') || lowerName.includes('thermistor') || lowerName.includes('photoresistor') ||
-        lowerName.includes('accelerometer') || lowerName.includes('gyro') || lowerName.includes('ultrasonic')) {
-      return COMPONENT_SHAPES.sensor;
-    }
+    const matcher = SHAPE_MATCHERS.find(m => m.predicate(lowerName));
+    if (matcher) return matcher.shape;
   }
 
-  // Check type string
+  // Check type string fallback
   const lowerType = type.toLowerCase();
   if (lowerType.includes('resistor')) return RESISTOR_SHAPE;
   if (lowerType.includes('capacitor')) return CAPACITOR_SHAPE;

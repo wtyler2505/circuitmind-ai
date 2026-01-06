@@ -247,7 +247,7 @@ export const MainLayout: React.FC = () => {
       handleSendEnhancedMessage(lastTranscription);
       clearTranscription();
     }
-  }, [lastTranscription]);
+  }, [lastTranscription, handleSendEnhancedMessage]);
 
   // AI Context Builder
   useEffect(() => {
@@ -434,19 +434,33 @@ export const MainLayout: React.FC = () => {
               if (comp) handleOpenComponentInfo(comp);
             }}
           >
-            Details
+            Edit
           </button>
           <button 
             className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
             onClick={() => {
-               // Quick action: Generate 3D
                const comp = diagram?.components.find(c => c.id === contextMenu.componentId);
                if (comp) {
-                   // We need to set selectedComponent for the modal to open and handle generation
-                   // OR handle generation directly. The existing handler uses 'selectedComponent' state.
-                   // Let's open the modal for now as it's safer.
-                   handleOpenComponentInfo(comp);
+                   const newComp = {
+                       ...comp,
+                       id: `${comp.sourceInventoryId || 'comp'}-${Date.now()}`,
+                       name: `${comp.name} (Copy)`
+                   };
+                   updateDiagram({
+                       ...diagram!,
+                       components: [...diagram!.components, newComp],
+                   });
+                   setContextMenu(null);
                }
+            }}
+          >
+            Duplicate
+          </button>
+          <button 
+            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+            onClick={() => {
+               const comp = diagram?.components.find(c => c.id === contextMenu.componentId);
+               if (comp) handleOpenComponentInfo(comp); // Open modal which has 3D gen
             }}
           >
             Generate 3D

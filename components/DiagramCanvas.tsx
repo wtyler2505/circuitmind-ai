@@ -938,7 +938,7 @@ const DiagramCanvasRenderer = ({
             <Diagram3DView
               diagram={diagram}
               positions={state.nodePositions}
-              onComponentClick={onComponentClick}
+              onComponentClick={(component) => onComponentSelect?.(component.id)}
               onGenerate3D={onGenerate3D}
             />
           </div>

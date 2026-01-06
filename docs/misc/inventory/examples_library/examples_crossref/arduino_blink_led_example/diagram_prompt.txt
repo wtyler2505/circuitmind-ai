@@ -1,0 +1,5 @@
+Draw a breadboard diagram showing an external LED connected to an Arduino Uno.
+The LED’s **anode** should connect through a 220 Ω resistor to digital pin 8 on
+the Arduino.  The **cathode** should connect directly to the GND rail.  Use
+colors to differentiate the resistor and jumper wires and label the LED’s
+polarity.

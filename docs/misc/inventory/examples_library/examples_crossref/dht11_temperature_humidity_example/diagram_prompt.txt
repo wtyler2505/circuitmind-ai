@@ -1,0 +1,6 @@
+Draw a breadboard diagram showing a DHT11 sensor connected to an Arduino Uno.  
+The DHT11’s **VCC** pin should connect to the Arduino’s 5 V rail, **GND** to GND
+and the **data** pin to digital pin 2.  Include a 10 kΩ resistor between
+the data pin and 5 V to act as a pull‑up.  Label each wire with its
+connection and make sure the resistor is clearly shown bridging the data
+line to the 5 V rail.

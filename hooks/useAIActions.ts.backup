@@ -1,0 +1,523 @@
+import { useCallback, useRef, useState } from 'react';
+import {
+  ActionType,
+  ActionIntent,
+  ActionRecord,
+  ACTION_SAFETY,
+  AIAutonomySettings,
+  ElectronicComponent,
+  WiringDiagram,
+} from '../types';
+import { DiagramCanvasRef, HighlightOptions } from '../components/DiagramCanvas';
+import { recordAction, getRecentActions, deleteAction } from '../services/storage';
+
+// Generate unique ID
+const generateId = () => `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+// Get autonomy settings from localStorage
+const getAutonomySettings = (): AIAutonomySettings => {
+  try {
+    const stored = localStorage.getItem('cm_ai_autonomy');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Ignore errors
+  }
+  return {
+    autoExecuteSafeActions: true,
+    customSafeActions: [],
+    customUnsafeActions: [],
+  };
+};
+
+// Save autonomy settings to localStorage
+export const saveAutonomySettings = (settings: AIAutonomySettings): void => {
+  try {
+    localStorage.setItem('cm_ai_autonomy', JSON.stringify(settings));
+  } catch {
+    console.error('Failed to save autonomy settings');
+  }
+};
+
+// Check if an action is safe based on settings
+const isActionSafe = (actionType: ActionType, settings: AIAutonomySettings): boolean => {
+  // Check custom overrides first
+  if (settings.customSafeActions.includes(actionType)) return true;
+  if (settings.customUnsafeActions.includes(actionType)) return false;
+  // Fall back to defaults
+  return ACTION_SAFETY[actionType] ?? false;
+};
+
+// Action result for tracking
+export interface ActionResult {
+  action: ActionIntent;
+  success: boolean;
+  timestamp: number;
+  error?: string;
+  auto: boolean; // Was it auto-executed?
+}
+
+// Dependencies for the hook
+export interface UseAIActionsOptions {
+  canvasRef: React.RefObject<DiagramCanvasRef>;
+  inventory: ElectronicComponent[];
+  diagram: WiringDiagram | null;
+  setInventory: React.Dispatch<React.SetStateAction<ElectronicComponent[]>>;
+  setIsInventoryOpen: (open: boolean) => void;
+  setIsSettingsOpen: (open: boolean) => void;
+  setSelectedComponent: (component: ElectronicComponent | null) => void;
+  setGenerationMode: (mode: 'chat' | 'image' | 'video') => void;
+  updateDiagram: (diagram: WiringDiagram) => void;
+  activeConversationId?: string | null;
+}
+
+export interface UseAIActionsReturn {
+  // Execute an action
+  execute: (action: ActionIntent) => Promise<ActionResult>;
+
+  // Queue of pending actions (awaiting user confirmation)
+  pendingActions: ActionIntent[];
+  confirmAction: (action: ActionIntent) => Promise<ActionResult>;
+  rejectAction: (action: ActionIntent) => void;
+  clearPendingActions: () => void;
+
+  // Undo support
+  canUndo: boolean;
+  undo: () => Promise<void>;
+  actionHistory: ActionResult[];
+
+  // Shortcut methods
+  highlightComponent: (componentId: string, options?: HighlightOptions) => void;
+  centerOnComponent: (componentId: string) => void;
+  zoomTo: (level: number) => void;
+  resetView: () => void;
+  openInventory: () => void;
+  closeInventory: () => void;
+  openSettings: () => void;
+  closeSettings: () => void;
+  openComponentEditor: (componentId: string) => void;
+  switchGenerationMode: (mode: 'chat' | 'image' | 'video') => void;
+
+  // Settings
+  autonomySettings: AIAutonomySettings;
+  updateAutonomySettings: (settings: Partial<AIAutonomySettings>) => void;
+}
+
+export function useAIActions(options: UseAIActionsOptions): UseAIActionsReturn {
+  const {
+    canvasRef,
+    inventory,
+    diagram,
+    setInventory,
+    setIsInventoryOpen,
+    setIsSettingsOpen,
+    setSelectedComponent,
+    setGenerationMode,
+    updateDiagram,
+    activeConversationId,
+  } = options;
+
+  const [pendingActions, setPendingActions] = useState<ActionIntent[]>([]);
+  const [actionHistory, setActionHistory] = useState<ActionResult[]>([]);
+  const [autonomySettings, setAutonomySettings] = useState<AIAutonomySettings>(getAutonomySettings);
+
+  // Reference to track undo records
+  const undoStackRef = useRef<ActionRecord[]>([]);
+
+  // Update autonomy settings
+  const updateAutonomySettings = useCallback((updates: Partial<AIAutonomySettings>) => {
+    const newSettings = { ...autonomySettings, ...updates };
+    setAutonomySettings(newSettings);
+    saveAutonomySettings(newSettings);
+  }, [autonomySettings]);
+
+  // Execute an action (core logic)
+  const executeAction = useCallback(async (action: ActionIntent, auto: boolean): Promise<ActionResult> => {
+    const result: ActionResult = {
+      action,
+      success: false,
+      timestamp: Date.now(),
+      auto,
+    };
+
+    try {
+      switch (action.type) {
+        // Canvas actions
+        case 'highlight': {
+          const { componentId, color, duration, pulse } = action.payload as {
+            componentId: string;
+            color?: string;
+            duration?: number;
+            pulse?: boolean;
+          };
+          canvasRef.current?.highlightComponent(componentId, { color, duration, pulse });
+          result.success = true;
+          break;
+        }
+
+        case 'centerOn': {
+          const { componentId, zoom } = action.payload as { componentId: string; zoom?: number };
+          canvasRef.current?.centerOnComponent(componentId, zoom);
+          result.success = true;
+          break;
+        }
+
+        case 'zoomTo': {
+          const { level } = action.payload as { level: number };
+          canvasRef.current?.setZoom(level);
+          result.success = true;
+          break;
+        }
+
+        case 'resetView': {
+          canvasRef.current?.resetView();
+          result.success = true;
+          break;
+        }
+
+        case 'highlightWire': {
+          const { wireIndex, color, duration, pulse } = action.payload as {
+            wireIndex: number;
+            color?: string;
+            duration?: number;
+            pulse?: boolean;
+          };
+          canvasRef.current?.highlightWire(wireIndex, { color, duration, pulse });
+          result.success = true;
+          break;
+        }
+
+        // Navigation actions
+        case 'openInventory': {
+          setIsInventoryOpen(true);
+          result.success = true;
+          break;
+        }
+
+        case 'closeInventory': {
+          setIsInventoryOpen(false);
+          result.success = true;
+          break;
+        }
+
+        case 'openSettings': {
+          setIsSettingsOpen(true);
+          result.success = true;
+          break;
+        }
+
+        case 'closeSettings': {
+          setIsSettingsOpen(false);
+          result.success = true;
+          break;
+        }
+
+        case 'openComponentEditor': {
+          const { componentId } = action.payload as { componentId: string };
+          const component = inventory.find((c) => c.id === componentId);
+          if (component) {
+            setSelectedComponent(component);
+            result.success = true;
+          } else {
+            result.error = `Component ${componentId} not found`;
+          }
+          break;
+        }
+
+        case 'switchGenerationMode': {
+          const { mode } = action.payload as { mode: 'chat' | 'image' | 'video' };
+          setGenerationMode(mode);
+          result.success = true;
+          break;
+        }
+
+        // Diagram modification actions (require undo support)
+        case 'addComponent': {
+          const { component, x, y } = action.payload as {
+            component: ElectronicComponent;
+            x?: number;
+            y?: number;
+          };
+          if (!diagram) {
+            result.error = 'No active diagram';
+            break;
+          }
+
+          // Create undo record
+          const undoRecord: ActionRecord = {
+            id: generateId(),
+            timestamp: Date.now(),
+            type: 'addComponent',
+            payload: { componentId: component.id },
+            conversationId: activeConversationId || undefined,
+            undoable: true,
+            snapshotBefore: { ...diagram },
+          };
+
+          // Add component to diagram
+          const newComponent = {
+            ...component,
+            id: `${component.id}-${Date.now()}`, // Unique instance ID
+          };
+          updateDiagram({
+            ...diagram,
+            components: [...diagram.components, newComponent],
+          });
+
+          // Set position if provided
+          if (x !== undefined && y !== undefined) {
+            canvasRef.current?.setComponentPosition(newComponent.id, x, y);
+          }
+
+          await recordAction(undoRecord);
+          undoStackRef.current.push(undoRecord);
+          result.success = true;
+          break;
+        }
+
+        case 'removeComponent': {
+          const { componentId } = action.payload as { componentId: string };
+          if (!diagram) {
+            result.error = 'No active diagram';
+            break;
+          }
+
+          const undoRecord: ActionRecord = {
+            id: generateId(),
+            timestamp: Date.now(),
+            type: 'removeComponent',
+            payload: { componentId },
+            conversationId: activeConversationId || undefined,
+            undoable: true,
+            snapshotBefore: { ...diagram },
+          };
+
+          // Remove component and its connections
+          updateDiagram({
+            ...diagram,
+            components: diagram.components.filter((c) => c.id !== componentId),
+            connections: diagram.connections.filter(
+              (conn) => conn.fromComponentId !== componentId && conn.toComponentId !== componentId
+            ),
+          });
+
+          await recordAction(undoRecord);
+          undoStackRef.current.push(undoRecord);
+          result.success = true;
+          break;
+        }
+
+        case 'createConnection': {
+          const { fromComponentId, fromPin, toComponentId, toPin, color, description } =
+            action.payload as {
+              fromComponentId: string;
+              fromPin: string;
+              toComponentId: string;
+              toPin: string;
+              color?: string;
+              description?: string;
+            };
+          if (!diagram) {
+            result.error = 'No active diagram';
+            break;
+          }
+
+          const undoRecord: ActionRecord = {
+            id: generateId(),
+            timestamp: Date.now(),
+            type: 'createConnection',
+            payload: { fromComponentId, fromPin, toComponentId, toPin },
+            conversationId: activeConversationId || undefined,
+            undoable: true,
+            snapshotBefore: { ...diagram },
+          };
+
+          updateDiagram({
+            ...diagram,
+            connections: [
+              ...diagram.connections,
+              {
+                fromComponentId,
+                fromPin,
+                toComponentId,
+                toPin,
+                color: color || '#00f3ff',
+                description: description || 'Connection',
+              },
+            ],
+          });
+
+          await recordAction(undoRecord);
+          undoStackRef.current.push(undoRecord);
+          result.success = true;
+          break;
+        }
+
+        case 'removeConnection': {
+          const { wireIndex } = action.payload as { wireIndex: number };
+          if (!diagram || wireIndex < 0 || wireIndex >= diagram.connections.length) {
+            result.error = 'Invalid wire index';
+            break;
+          }
+
+          const undoRecord: ActionRecord = {
+            id: generateId(),
+            timestamp: Date.now(),
+            type: 'removeConnection',
+            payload: { wireIndex, connection: diagram.connections[wireIndex] },
+            conversationId: activeConversationId || undefined,
+            undoable: true,
+            snapshotBefore: { ...diagram },
+          };
+
+          updateDiagram({
+            ...diagram,
+            connections: diagram.connections.filter((_, idx) => idx !== wireIndex),
+          });
+
+          await recordAction(undoRecord);
+          undoStackRef.current.push(undoRecord);
+          result.success = true;
+          break;
+        }
+
+        default:
+          result.error = `Unknown action type: ${action.type}`;
+      }
+    } catch (err) {
+      result.error = err instanceof Error ? err.message : 'Unknown error';
+    }
+
+    // Add to history
+    setActionHistory((prev) => [...prev.slice(-49), result]); // Keep last 50
+
+    return result;
+  }, [
+    canvasRef,
+    inventory,
+    diagram,
+    setIsInventoryOpen,
+    setIsSettingsOpen,
+    setSelectedComponent,
+    setGenerationMode,
+    updateDiagram,
+    activeConversationId,
+  ]);
+
+  // Main execute function that checks autonomy
+  const execute = useCallback(async (action: ActionIntent): Promise<ActionResult> => {
+    const isSafe = action.safe ?? isActionSafe(action.type, autonomySettings);
+
+    if (isSafe && autonomySettings.autoExecuteSafeActions) {
+      // Auto-execute safe actions
+      return executeAction(action, true);
+    } else {
+      // Queue for user confirmation
+      setPendingActions((prev) => [...prev, action]);
+      return {
+        action,
+        success: false,
+        timestamp: Date.now(),
+        auto: false,
+        error: 'Awaiting user confirmation',
+      };
+    }
+  }, [autonomySettings, executeAction]);
+
+  // Confirm a pending action
+  const confirmAction = useCallback(async (action: ActionIntent): Promise<ActionResult> => {
+    setPendingActions((prev) => prev.filter((a) => a !== action));
+    return executeAction(action, false);
+  }, [executeAction]);
+
+  // Reject a pending action
+  const rejectAction = useCallback((action: ActionIntent) => {
+    setPendingActions((prev) => prev.filter((a) => a !== action));
+  }, []);
+
+  // Clear all pending actions
+  const clearPendingActions = useCallback(() => {
+    setPendingActions([]);
+  }, []);
+
+  // Undo last action
+  const undo = useCallback(async () => {
+    const lastAction = undoStackRef.current.pop();
+    if (!lastAction || !lastAction.snapshotBefore) return;
+
+    // Restore previous state
+    const snapshot = lastAction.snapshotBefore as WiringDiagram;
+    updateDiagram(snapshot);
+
+    // Remove from IndexedDB
+    await deleteAction(lastAction.id);
+  }, [updateDiagram]);
+
+  // Shortcut methods
+  const highlightComponent = useCallback((componentId: string, options?: HighlightOptions) => {
+    canvasRef.current?.highlightComponent(componentId, options);
+  }, [canvasRef]);
+
+  const centerOnComponent = useCallback((componentId: string) => {
+    canvasRef.current?.centerOnComponent(componentId);
+  }, [canvasRef]);
+
+  const zoomTo = useCallback((level: number) => {
+    canvasRef.current?.setZoom(level);
+  }, [canvasRef]);
+
+  const resetView = useCallback(() => {
+    canvasRef.current?.resetView();
+  }, [canvasRef]);
+
+  const openInventory = useCallback(() => {
+    setIsInventoryOpen(true);
+  }, [setIsInventoryOpen]);
+
+  const closeInventory = useCallback(() => {
+    setIsInventoryOpen(false);
+  }, [setIsInventoryOpen]);
+
+  const openSettings = useCallback(() => {
+    setIsSettingsOpen(true);
+  }, [setIsSettingsOpen]);
+
+  const closeSettings = useCallback(() => {
+    setIsSettingsOpen(false);
+  }, [setIsSettingsOpen]);
+
+  const openComponentEditor = useCallback((componentId: string) => {
+    const component = inventory.find((c) => c.id === componentId);
+    if (component) {
+      setSelectedComponent(component);
+    }
+  }, [inventory, setSelectedComponent]);
+
+  const switchGenerationMode = useCallback((mode: 'chat' | 'image' | 'video') => {
+    setGenerationMode(mode);
+  }, [setGenerationMode]);
+
+  return {
+    execute,
+    pendingActions,
+    confirmAction,
+    rejectAction,
+    clearPendingActions,
+    canUndo: undoStackRef.current.length > 0,
+    undo,
+    actionHistory,
+    highlightComponent,
+    centerOnComponent,
+    zoomTo,
+    resetView,
+    openInventory,
+    closeInventory,
+    openSettings,
+    closeSettings,
+    openComponentEditor,
+    switchGenerationMode,
+    autonomySettings,
+    updateAutonomySettings,
+  };
+}

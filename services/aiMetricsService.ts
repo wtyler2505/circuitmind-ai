@@ -1,4 +1,4 @@
-import { ActionType } from "../hooks/actions/types";
+import { ActionType } from "../types";
 
 export interface AIMetric {
   id: string;

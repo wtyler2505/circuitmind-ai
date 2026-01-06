@@ -7,6 +7,42 @@
   
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-scan: scan 2s linear infinite;
+
+  /* Colors - Migrated from tailwind.config.js for v4 compatibility */
+  --color-cyber-black: #050508;
+  --color-cyber-dark: #0a0a12;
+  --color-cyber-card: #12121f;
+  
+  --color-neon-cyan: #00f3ff;
+  --color-neon-purple: #bd00ff;
+  --color-neon-green: #00ff9d;
+  --color-neon-amber: #ffaa00;
+
+  /* Component Colors */
+  --color-arduino: #00979D;
+  --color-arduino-dark: #005C5F;
+  --color-arduino-light: #00B5B8;
+
+  --color-pcb: #1D5C4B;
+  --color-pcb-dark: #0F3D2F;
+  --color-pcb-light: #2A7A64;
+
+  --color-breadboard-white: #F8F8F8;
+  --color-breadboard-rail-blue: #3B82F6;
+  --color-breadboard-rail-red: #EF4444;
+
+  --color-chip: #1E1E1E;
+  --color-chip-highlight: #3D3D3D;
+
+  --color-copper: #9A916C;
+  --color-copper-highlight: #C4B896;
+
+  --color-lcd-green: #9ACD32;
+  --color-lcd-dark: #556B2F;
+
+  --color-sensor-blue: #2563EB;
+  --color-sensor-dark: #1D4ED8;
+  --color-sensor-purple: #6D28D9;
 }
 
 @keyframes scan {
@@ -434,4 +470,11 @@ body {
     repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 60px);
   background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px, 60px 60px;
   background-position: center, center, 0 0, 0 0, 0 0;
+}
+
+/* Utilities */
+@layer utilities {
+  .focus-visible-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 focus-visible:ring-offset-2 focus-visible:ring-offset-cyber-black;
+  }
 }

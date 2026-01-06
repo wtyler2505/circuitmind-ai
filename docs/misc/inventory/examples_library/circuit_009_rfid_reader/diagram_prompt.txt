@@ -1,0 +1,10 @@
+Create a clean wiring diagram for the circuit "RFID Card Reader".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- arduino-uno 3.3V -> rc522 3.3V (wire: orange)
+- arduino-uno GND -> rc522 GND (wire: black)
+- arduino-uno D10 -> rc522 SDA/SS (wire: purple)
+- arduino-uno D13 -> rc522 SCK (wire: blue)
+- arduino-uno D11 -> rc522 MOSI (wire: green)
+- arduino-uno D12 -> rc522 MISO (wire: yellow)
+- arduino-uno D9 -> rc522 RST (wire: white)

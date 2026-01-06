@@ -7,6 +7,7 @@
  * - Executed action indicators
  * - Code blocks with syntax highlighting
  * - Grounding source links
+ * - Feedback UI (Thumbs Up/Down)
  */
 
 import React from 'react';
@@ -20,6 +21,7 @@ interface ChatMessageProps {
   onComponentClick?: (componentId: string) => void;
   onActionClick?: (action: ActionIntent) => void;
   isStreaming?: boolean;
+  onFeedback?: (messageId: string, score: number) => void;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -27,9 +29,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   onComponentClick,
   onActionClick,
   isStreaming = false,
+  onFeedback,
 }) => {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
+  const [feedbackGiven, setFeedbackGiven] = React.useState<number | null>(null);
+
+  const handleFeedback = (score: number) => {
+    setFeedbackGiven(score);
+    if (onFeedback) {
+      onFeedback(message.id, score);
+    }
+  };
 
   const renderMarkdown = () => {
     if (!message.content) return null;
@@ -200,6 +211,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 px-1.5 py-0.5 chip-square cut-corner-sm text-gray-300 text-[9px] hover:text-cyan-300 transition-colors truncate max-w-[200px]"
+              title={source.title || 'Source'}
             >
               <svg
                 className="w-2.5 h-2.5 flex-shrink-0"
@@ -306,7 +318,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   }
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-2`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-2 group`}>
       <div
         className={`max-w-[86%] message-slab cut-corner-sm px-3 py-2 ${
           isUser ? 'message-user' : 'message-assistant'
@@ -336,9 +348,29 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         {/* Grounding sources */}
         {!isUser && renderSources()}
 
-        {/* Timestamp */}
-        <div className={`text-[9px] mt-2 ${isUser ? 'text-blue-200/70' : 'text-gray-300'}`}>
-          {formatTimestamp(message.timestamp)}
+        {/* Timestamp & Feedback */}
+        <div className="flex items-center justify-between mt-2">
+            <div className={`text-[9px] ${isUser ? 'text-blue-200/70' : 'text-gray-300'}`}>
+              {formatTimestamp(message.timestamp)}
+            </div>
+            {!isUser && !isSystem && (
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                        onClick={() => handleFeedback(1)} 
+                        className={`p-1 hover:text-green-400 ${feedbackGiven === 1 ? 'text-green-400' : 'text-gray-500'}`}
+                        title="Helpful"
+                    >
+                        👍
+                    </button>
+                    <button 
+                        onClick={() => handleFeedback(-1)} 
+                        className={`p-1 hover:text-red-400 ${feedbackGiven === -1 ? 'text-red-400' : 'text-gray-500'}`}
+                        title="Not helpful"
+                    >
+                        👎
+                    </button>
+                </div>
+            )}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ This file contains all interaction with `@google/genai`.
 |------|----------|-----------|
 | **Wiring Diagrams** | `gemini-3-pro-preview` | Needs high reasoning capabilities to understand pinouts and connection logic. |
 | **Component Research** | `gemini-3-pro-preview` | Used for `smartFill` and `assistComponentEditor`. Requires **Google Search** tool. |
-| **Simple Chat** | `gemini-2.5-flash-lite-preview-02-04` | Speed and cost-efficiency for general queries. |
+| **Simple Chat** | `gemini-3-flash-preview` | Speed and cost-efficiency for general queries. |
 | **Deep Thinking** | `gemini-3-pro-preview` | Enabled when `useDeepThinking` is true. Uses `thinkingConfig` budget. |
 | **Image Analysis** | `gemini-3-pro-preview` | Best-in-class vision capabilities. |
 | **Video Analysis** | `gemini-3-pro-preview` | Native video understanding. |
@@ -61,3 +61,8 @@ This is the backend for the "AI Assistant" side panel in the editor.
 ## Function: `generateComponent3DCode`
 - **Output**: Returns **raw JavaScript code string**.
 - **Prompting**: Instructs the model to write a function body that takes `THREE` as an argument and returns a `THREE.Group`. This allows us to inject the code into the `ThreeViewer` component dynamically.
+
+## API Key Handling
+- Primary source: `localStorage.cm_gemini_api_key` (user-selected).
+- Fallback: `process.env.API_KEY` or `process.env.GEMINI_API_KEY` via Vite config.
+- Image and video generation use the same key resolution and append `&key=` to Veo video URIs.

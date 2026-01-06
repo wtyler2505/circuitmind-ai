@@ -1,0 +1,10 @@
+Create a clean wiring diagram for the circuit "WS2812B LED Strip".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- power-supply-5v + -> capacitor-1000uf + (wire: red)
+- power-supply-5v - -> capacitor-1000uf - (wire: black)
+- power-supply-5v + -> ws2812b 5V (wire: red)
+- power-supply-5v - -> ws2812b GND (wire: black)
+- arduino-uno GND -> power-supply-5v - (wire: black)
+- arduino-uno D6 -> resistor-330ohm 1 (wire: green)
+- resistor-330ohm 2 -> ws2812b DIN (wire: green)

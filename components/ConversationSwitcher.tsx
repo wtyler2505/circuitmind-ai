@@ -10,6 +10,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Conversation } from '../types';
+import IconButton from './IconButton';
 
 interface ConversationSwitcherProps {
   conversations: Conversation[];
@@ -111,10 +112,10 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-2.5 py-1 bg-slate-900/70 hover:bg-slate-800/70 cut-corner-sm text-[11px] text-slate-200 border border-slate-700/80 transition-colors"
+        className="flex items-center gap-2 px-2 py-1 bg-white/5 hover:bg-white/10 cut-corner-sm text-[10px] text-slate-200 border border-white/10 transition-colors uppercase tracking-wider max-w-full"
       >
         <svg
-          className="w-4 h-4 text-cyan-400"
+          className="w-3.5 h-3.5 text-neon-cyan flex-shrink-0"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -126,9 +127,14 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
           />
         </svg>
-        <span className="max-w-[150px] truncate">{activeConversation?.title || 'New Chat'}</span>
+        <span 
+          className="flex-1 min-w-0 truncate font-bold text-left"
+          title={activeConversation?.title || 'New Session'}
+        >
+          {activeConversation?.title || 'New Session'}
+        </span>
         <svg
-          className={`w-4 h-4 text-gray-300 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-3 h-3 text-slate-500 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -139,16 +145,16 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-72 panel-surface panel-frame cut-corner-sm border border-slate-800/80 shadow-[0_12px_30px_rgba(0,0,0,0.6)] z-50 overflow-hidden">
+        <div className="absolute top-full left-0 mt-1 w-64 panel-surface panel-frame cut-corner-sm border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.9)] z-50 overflow-hidden backdrop-blur-xl">
           {/* New Conversation Button */}
           <button
             onClick={() => {
               onCreateConversation();
               setIsOpen(false);
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] text-cyan-300 hover:text-white hover:bg-slate-900/70 transition-colors border-b border-slate-800/80 uppercase tracking-[0.2em]"
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[10px] text-neon-cyan hover:text-white hover:bg-white/10 transition-colors border-b border-white/5 uppercase tracking-[0.2em] font-bold"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -156,11 +162,11 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               />
             </svg>
-            New Conversation
+            New Session
           </button>
 
           {/* Conversation List */}
-          <div className="max-h-64 overflow-y-auto custom-scrollbar">
+          <div className="max-h-60 overflow-y-auto custom-scrollbar bg-[#050608]">
             {sortedConversations.map((conv) => (
               <div
                 key={conv.id}
@@ -170,17 +176,17 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                     setIsOpen(false);
                   }
                 }}
-                className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
+                className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-all border-l-2 ${
                   conv.id === activeConversationId
-                    ? 'bg-cyan-500/10 border-l-2 border-cyan-400'
-                    : 'hover:bg-slate-900/70 border-l-2 border-transparent'
+                    ? 'bg-neon-cyan/5 border-neon-cyan'
+                    : 'hover:bg-white/5 border-transparent hover:border-slate-600'
                 }`}
               >
                 {/* Icon */}
                 <div className="flex-shrink-0">
                   {conv.isPrimary ? (
                     <svg
-                      className="w-4 h-4 text-yellow-400"
+                      className="w-3.5 h-3.5 text-neon-amber"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -188,7 +194,7 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                     </svg>
                   ) : (
                     <svg
-                      className="w-4 h-4 text-gray-300"
+                      className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -214,13 +220,13 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                       onKeyDown={handleKeyDown}
                       onBlur={handleSaveEdit}
                       onClick={(e) => e.stopPropagation()}
-                      className="w-full px-2 py-0.5 bg-slate-900 border border-cyan-500 cut-corner-sm text-[11px] text-white focus:outline-none"
+                      className="w-full px-2 py-0.5 bg-black border border-neon-cyan cut-corner-sm text-[10px] text-white focus:outline-none font-mono"
                     />
                   ) : (
                     <>
-                      <div className="text-[11px] text-slate-200 truncate">{conv.title}</div>
-                      <div className="flex items-center gap-2 text-[9px] text-slate-400">
-                        <span>{conv.messageCount} messages</span>
+                      <div className={`text-[10px] font-medium truncate ${conv.id === activeConversationId ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>{conv.title}</div>
+                      <div className="flex items-center gap-2 text-[8px] text-slate-600 font-mono mt-0.5">
+                        <span>{conv.messageCount} msgs</span>
                         <span>·</span>
                         <span>{formatDate(conv.updatedAt)}</span>
                       </div>
@@ -231,33 +237,14 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                 {/* Actions (visible on hover) */}
                 {editingId !== conv.id && (
                   <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
+                    <IconButton
                       onClick={(e) => handleStartEdit(conv, e)}
-                      className="p-1 text-gray-300 hover:text-white transition-colors"
-                      title="Rename"
-                    >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                        />
-                      </svg>
-                    </button>
-                    {!conv.isPrimary && (
-                      <button
-                        onClick={(e) => handleDelete(conv.id, e)}
-                        className="p-1 text-gray-300 hover:text-red-400 transition-colors"
-                        title="Delete"
-                      >
+                      label="Rename"
+                      size="sm"
+                      variant="ghost"
+                      icon={
                         <svg
-                          className="w-3.5 h-3.5"
+                          className="w-3 h-3"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -266,10 +253,33 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                           />
                         </svg>
-                      </button>
+                      }
+                    />
+                    {!conv.isPrimary && (
+                      <IconButton
+                        onClick={(e) => handleDelete(conv.id, e)}
+                        label="Delete"
+                        size="sm"
+                        variant="danger"
+                        icon={
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        }
+                      />
                     )}
                   </div>
                 )}
@@ -279,8 +289,8 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
 
           {/* Empty State */}
           {conversations.length === 0 && (
-            <div className="px-3 py-4 text-center text-slate-400 text-[11px]">
-              No conversations yet
+            <div className="px-3 py-4 text-center text-slate-500 text-[10px] font-mono uppercase tracking-widest">
+              No sessions found
             </div>
           )}
         </div>

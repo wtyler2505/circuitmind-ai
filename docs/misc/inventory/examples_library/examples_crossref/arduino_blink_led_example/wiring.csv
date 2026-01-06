@@ -1,0 +1,5 @@
+Component,Pin,Connection,Notes
+led-generic,Anode,Arduino Uno Digital 8 via 220 Ω resistor,
+led-generic,Cathode,Arduino Uno GND,
+resistor-220ohm,1,led-generic Anode,
+resistor-220ohm,2,Arduino Uno Digital 8,

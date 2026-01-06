@@ -20,7 +20,7 @@ interface ComponentEditorModalProps {
   onSave: (component: ElectronicComponent) => void;
   explanation: string;
   isGenerating3D: boolean;
-  onGenerate3D: () => void;
+  onGenerate3D: (prompt?: string) => void;
 }
 
 interface ChatMessage {
@@ -90,6 +90,9 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
   const [editedThreeDModelUrl, setEditedThreeDModelUrl] = useState(component.threeDModelUrl || '');
   const [editedImageUrl, setEditedImageUrl] = useState(component.imageUrl || '');
   const [editedQuantity, setEditedQuantity] = useState(component.quantity || 1);
+
+  const [imagePrompt, setImagePrompt] = useState('');
+  const [threeDPrompt, setThreeDPrompt] = useState('');
 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
@@ -187,7 +190,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
   const handleGenerateThumbnail = async () => {
     setIsGeneratingImage(true);
     try {
-      const base64 = await generateComponentThumbnail(editedName);
+      const base64 = await generateComponentThumbnail(editedName, imagePrompt);
       setEditedImageUrl(`data:image/png;base64,${base64}`);
       setActiveTab('image'); // Switch to image tab to see result
     } catch (e) {
@@ -302,7 +305,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
         ...prev,
         { id: Date.now().toString(), role: 'user', text: 'Generate a 3D model code for this.' },
       ]);
-      onGenerate3D();
+      onGenerate3D(threeDPrompt);
       setActiveTab('3d');
     }
   };
@@ -761,9 +764,15 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-xs text-slate-300 text-center">
-                    Upload an image or generate one using AI for "<strong>{editedName}</strong>".
-                  </p>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Optional Refinement Prompt</label>
+                    <textarea
+                      value={imagePrompt}
+                      onChange={(e) => setImagePrompt(e.target.value)}
+                      placeholder="e.g. realistic product photo, dark blue board, high detail..."
+                      className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white focus:border-neon-amber focus:outline-none h-16 resize-none"
+                    />
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <button
@@ -829,21 +838,33 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
             {activeTab === '3d' && (
               <div className="flex flex-col h-full min-h-[300px] md:min-h-[400px]">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-sm font-bold text-neon-purple font-mono">
-                    INTERACTIVE 3D VIEW
-                  </h4>
-                  <button
-                    onClick={onGenerate3D}
-                    disabled={isGenerating3D}
-                    className="text-xs bg-slate-800 border border-slate-600 hover:border-neon-purple hover:text-neon-purple px-3 py-1 rounded transition-colors disabled:opacity-80"
-                  >
-                    {isGenerating3D
-                      ? 'GENERATING...'
-                      : component.threeCode
-                        ? 'REGENERATE'
-                        : 'GENERATE 3D MODEL'}
-                  </button>
+                <div className="mb-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-sm font-bold text-neon-purple font-mono">
+                      INTERACTIVE 3D VIEW
+                    </h4>
+                    <button
+                      onClick={() => onGenerate3D(threeDPrompt)}
+                      disabled={isGenerating3D}
+                      className="text-xs bg-slate-800 border border-slate-600 hover:border-neon-purple hover:text-neon-purple px-3 py-1 rounded transition-colors disabled:opacity-80"
+                    >
+                      {isGenerating3D
+                        ? 'GENERATING...'
+                        : component.threeCode
+                          ? 'REGENERATE'
+                          : 'GENERATE 3D MODEL'}
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Optional 3D Refinement</label>
+                    <textarea
+                      value={threeDPrompt}
+                      onChange={(e) => setThreeDPrompt(e.target.value)}
+                      placeholder="e.g. make it blue, add 4 long pins, make the base taller..."
+                      className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white focus:border-neon-purple focus:outline-none h-16 resize-none"
+                    />
+                  </div>
                 </div>
                 <div className="flex-1 bg-black rounded-xl overflow-hidden border border-slate-700 relative">
                   {(has3DModel || canRenderThreeCode) && !isGenerating3D ? (
@@ -954,6 +975,34 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
               </div>
 
               <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-slate-950/30">
+                {chatMessages.length === 1 && (
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <button
+                      onClick={() => handleSendChat("Find the datasheet for this component")}
+                      className="text-[10px] bg-slate-800 border border-slate-700 hover:border-neon-purple text-slate-300 hover:text-white p-2 rounded text-left transition-colors"
+                    >
+                      📄 Find Datasheet
+                    </button>
+                    <button
+                      onClick={() => handleSendChat("What is the pinout for this?")}
+                      className="text-[10px] bg-slate-800 border border-slate-700 hover:border-neon-purple text-slate-300 hover:text-white p-2 rounded text-left transition-colors"
+                    >
+                      🔌 Get Pinout
+                    </button>
+                    <button
+                      onClick={() => handleSendChat("Find a product image")}
+                      className="text-[10px] bg-slate-800 border border-slate-700 hover:border-neon-purple text-slate-300 hover:text-white p-2 rounded text-left transition-colors"
+                    >
+                      🖼️ Search Image
+                    </button>
+                    <button
+                      onClick={() => handleSendChat("Suggest compatible parts")}
+                      className="text-[10px] bg-slate-800 border border-slate-700 hover:border-neon-purple text-slate-300 hover:text-white p-2 rounded text-left transition-colors"
+                    >
+                      🔗 Compatible Parts
+                    </button>
+                  </div>
+                )}
                 {chatMessages.map((msg) => (
                   <div
                     key={msg.id}

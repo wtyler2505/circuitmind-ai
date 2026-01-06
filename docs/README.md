@@ -23,5 +23,23 @@ The brain of the operation. How we talk to Gemini, handle specific models, and m
 ### 4. [The "Other Shit"](/docs/misc/)
 - **[Hacks, Math & Trade Secrets](/docs/misc/hacks-and-secrets.md)**: The stuff usually left out of docs. SVG path algorithms, `eval()` usage for 3D generation, and race condition handling.
 
+### 5. [Decision + Implementation Logs](/docs/)
+- **[DECISIONS.md](/docs/DECISIONS.md)**: ADR-style log of key design and engineering choices.
+- **[IMPLEMENTATION_NOTES.md](/docs/IMPLEMENTATION_NOTES.md)**: Narrative change notes with rationale and context.
+
 ---
 *Generated for CircuitMind AI - v2025 Beta*
+
+### 6. [Design System & UX](/docs/)
+- **[UI Style Guide](/docs/UI_STYLE_GUIDE.md)**: Glass + slab visual rules and component conventions.
+- **[UX Principles](/docs/UX_PRINCIPLES.md)**: Product-level interaction philosophy.
+- **[Screenshot Capture Playbook](/docs/SCREENSHOT_CAPTURE_PLAYBOOK.md)**: Visual audit recapture steps and fallback paths.
+- **[UI Tokens Reference](/docs/UI_TOKENS_REFERENCE.md)**: Token map for colors, glass surfaces, blur, and density.
+- **[Component Consistency Checklist](/docs/COMPONENT_CONSISTENCY_CHECKLIST.md)**: Pre-merge UI sanity check.
+- **[Live Review Log](/docs/LIVE_REVIEW_LOG.md)**: Ongoing critique and next actions.
+- **[UI Change Review Template](/docs/UI_CHANGE_REVIEW_TEMPLATE.md)**: Copy/paste PR-ready review checklist.
+- **[Component Inventory Index](/docs/COMPONENT_INVENTORY_INDEX.md)**: Quick map of UI components and files.
+- **[Visual Drift Audit Guide](/docs/VISUAL_DRIFT_AUDIT_GUIDE.md)**: Fast consistency audit process.
+
+### 7. [Research](/docs/research/)
+- **[AI 3D Model Generator Research Log](/docs/research/ai-3d-model-generator.md)**: Sources, findings, and pipeline recommendations.

@@ -10,6 +10,12 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       plugins: [react()],
+      test: {
+        environment: 'jsdom',
+        setupFiles: './tests/setup.ts',
+        globals: true,
+        clearMocks: true,
+      },
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
@@ -18,6 +24,18 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'vendor-react': ['react', 'react-dom'],
+              'vendor-three': ['three'],
+              'vendor-markdown': ['react-markdown', 'remark-gfm', 'remark-breaks'],
+            }
+          }
+        },
+        chunkSizeWarningLimit: 400,
       }
     };
 });

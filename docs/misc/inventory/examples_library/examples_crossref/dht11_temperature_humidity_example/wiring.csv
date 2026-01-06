@@ -1,0 +1,6 @@
+Component,Pin,Connection,Notes
+sensor-dht11,VCC,Arduino Uno 5V,
+sensor-dht11,Data,Arduino Uno Digital 2,Pull‑up to 5V with 10 kΩ resistor
+sensor-dht11,GND,Arduino Uno GND,
+resistor-10k,1,sensor-dht11 Data,
+resistor-10k,2,Arduino Uno 5V,

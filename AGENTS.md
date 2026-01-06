@@ -1,40 +1,58 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- `App.tsx` holds the main app state; the entry point is `index.tsx` with `index.html` and `index.css`.
-- UI components live in `components/` (for example, `DiagramCanvas.tsx` and `ComponentEditorModal.tsx`).
-- Hooks are in `hooks/` (`useAIActions.ts`, `useConversations.ts`), services in `services/` (Gemini API, storage, audio).
-- Shared types live in `types.ts`. Documentation and datasets are in `docs/` (see `docs/README.md`, inventory under `docs/misc/inventory/`).
-- Tests are not configured yet; if added, use `tests/` or `components/__tests__/`.
+## Project Principles
 
-## Build, Test, and Development Commands
-- `npm install`: install dependencies.
-- `npm run dev`: start Vite dev server at `http://localhost:3000` (requires `GEMINI_API_KEY` in `.env.local`).
-- `npm run build`: create a production build.
-- `npm run preview`: preview the production build locally.
-- No test script is defined in `package.json` at the moment.
+- Personal, local-only project for Tyler; optimize for his workflow, not deployment or public release.
+- No deadlines; correctness and craftsmanship always win over speed.
+- No shortcuts: every change must be deliberate, understood, and robust.
+- Verification is mandatory: add/extend tests, run them, and confirm behavior before "done".
+- Protect privacy and locality: no telemetry or cloud dependencies without explicit request.
 
-## Coding Style & Naming Conventions
-- TypeScript + React; follow existing formatting (2-space indentation, semicolons, single quotes).
-- Components use PascalCase filenames/exports (`ComponentEditorModal.tsx`).
-- Hooks use the `useX` prefix in `hooks/`.
-- Services are lower camelCase filenames in `services/` (for example, `geminiService.ts`).
-- Keep shared models in `types.ts`; add explicit types for API payloads and wiring data.
+## Collaboration Style
 
-## Testing Guidelines
-- No testing framework or coverage targets are configured.
-- If you add tests, use `*.test.ts(x)` naming and wire a runner (for example, Vitest) plus a script like `npm run test`.
-- Keep UI tests close to components; mock network calls to Gemini services.
+- Tyler is self-taught and does this for fun; assume strong hands-on experience with computers and electronics.
+- Tyler is not a professional developer; avoid jargon, explain terms plainly, and define acronyms the first time.
+- Communication can be hard at times (ADHD + autism); confirm intent, summarize decisions, and offer clear options.
+- Prefer concrete examples, step-by-step explanations, and quick visual descriptions when useful.
 
-## Commit & Pull Request Guidelines
-- Git history currently has a single commit (“Initial commit - CircuitMind AI”), so no convention is established.
-- Use concise, imperative summaries (for example, “Add live audio reconnect”); add scope only when it adds clarity.
-- PRs should include a short summary, screenshots for UI changes, and docs updates when behavior changes; link issues if applicable.
+## Continuous Improvement Protocol
 
-## Security & Configuration Tips
-- Store secrets in `.env.local` (`GEMINI_API_KEY`) and do not commit them.
-- Vite injects the key in `vite.config.ts`; verify local config before running.
+- Each change includes a micro-audit (correctness, safety, UX/accessibility, performance, maintainability).
+- Fix issues immediately or log them in `docs/IMPROVEMENTS.md`.
+- Treat all AI/user content as untrusted; sanitize before rendering and gate code execution.
+- Reduce complexity where touched; refactor when it improves long-term reliability.
 
-## Agent/Docs Notes
-- See `CLAUDE.md` for architecture notes and model routing.
-- Use `docs/` for deeper references on services, data types, and UI architecture.
+## Project Structure
+
+- `App.tsx` holds app state; entry is `index.tsx` with `index.html`/`index.css`.
+- UI in `components/`, hooks in `hooks/`, services in `services/`, shared types in `types.ts`.
+- Docs + datasets in `docs/` (inventory under `docs/misc/inventory/`).
+
+## Build, Test, and Dev Commands
+
+- `npm install`
+- `npm run dev` (requires `GEMINI_API_KEY` in `.env.local`)
+- `npm run build`
+- `npm run preview`
+- `npm run test` / `npm run test:watch`
+
+## Coding Style & Naming
+
+- TypeScript + React; follow existing formatting (2-space indent, semicolons, single quotes).
+- Components PascalCase, hooks `useX`, services camelCase.
+- Keep API payload types and wiring schemas explicit in `types.ts`.
+
+## Testing
+
+- Vitest + Testing Library configured in `tests/setup.ts`.
+- Tests live near code (`components/__tests__`, `hooks/__tests__`); mock Gemini calls.
+
+## Commits & PRs
+
+- No established convention; use concise imperative messages (e.g., "Add live audio reconnect").
+- For PRs: summary, screenshots for UI changes, doc updates when behavior changes.
+
+## Security & Docs
+
+- Secrets live in `.env.local` only; never commit them.
+- See `CLAUDE.md` and `docs/` for architecture, services, and data references.
