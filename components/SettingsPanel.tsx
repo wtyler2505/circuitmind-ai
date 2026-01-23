@@ -345,7 +345,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-950/60">
+        <div className="p-6 pb-12 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-950/60">
           {/* API Key Tab */}
           {activeTab === 'api' && (
             <>
@@ -614,27 +614,28 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                           return (
                             <div
                               key={actionType}
-                              className={`flex items-center justify-between p-2 rounded-lg ${
+                              className={`flex items-center justify-between p-2.5 gap-3 rounded-lg ${
                                 isCustomized ? 'bg-gray-700/50' : 'bg-gray-800/30'
                               }`}
                             >
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm text-gray-200">{label}</span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-medium text-gray-200">{label}</span>
                                   {isCustomized && (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-300">
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-300 border border-purple-500/20">
                                       custom
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-gray-300 truncate">{description}</p>
+                                <p className="text-xs text-gray-400 mt-0.5 leading-tight">{description}</p>
                               </div>
                               <button
                                 onClick={() => toggleActionSafe(actionType)}
-                                className={`ml-3 px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                aria-label={`Toggle ${label} permission`}
+                                className={`shrink-0 min-w-[60px] px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full transition-all border ${
                                   isSafe
-                                    ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                                    : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                                    ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20 border-green-500/30'
+                                    : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border-amber-500/30'
                                 }`}
                               >
                                 {isSafe ? 'Auto' : 'Ask'}

@@ -1,9 +1,0 @@
-{
-  "startTime": "2026-01-02T00:00:00Z",
-  "phase": "capture",
-  "capturedCount": 0,
-  "viewports": ["1920x1080", "1440x900", "1366x768", "1024x768", "768x1024", "430x932", "393x852", "375x667", "320x568"],
-  "states": ["default-3d", "2d-mode", "settings", "component-editor", "inventory-hover", "chat-input"],
-  "themes": ["dark"],
-  "routes": ["/"]
-}

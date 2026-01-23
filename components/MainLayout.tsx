@@ -357,6 +357,8 @@ export const MainLayout: React.FC = () => {
                       if (!isAssistantOpen) setAssistantOpen(true);
                     }}
                     className={`h-10 w-10 inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 ${assistantPinned ? 'text-neon-green' : 'text-slate-400 hover:text-neon-cyan'}`}
+                    aria-label={assistantPinned ? 'Unpin assistant sidebar' : 'Pin assistant sidebar'}
+                    title={assistantPinned ? 'Unpin sidebar' : 'Pin sidebar'}
                   >
                     {assistantPinned ? (
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
@@ -371,6 +373,8 @@ export const MainLayout: React.FC = () => {
                       setAssistantOpen(false);
                     }}
                     className="h-10 w-10 inline-flex items-center justify-center rounded text-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60"
+                    aria-label="Close assistant sidebar"
+                    title="Close assistant"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 6L6 18M6 6l12 12" /></svg>
                   </button>

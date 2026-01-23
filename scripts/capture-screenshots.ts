@@ -107,6 +107,22 @@ async function safeHover(locator: Locator, label: string) {
   return false;
 }
 
+async function safeScrollAndCheck(locator: Locator, label: string) {
+  try {
+    if (await locator.isVisible()) {
+      // Try to scroll it into view but don't fail if it doesn't work perfectly
+      await locator.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+      
+      // Use force click to bypass visibility/viewport checks if needed
+      await locator.click({ force: true, timeout: SCREENSHOT_TIMEOUT_MS });
+      return true;
+    }
+  } catch (error) {
+    console.warn(`WARN: safeScrollAndCheck failed for ${label} (${String(error)})`);
+  }
+  return false;
+}
+
 test.describe('CircuitMind AI Screenshot Catalog', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(BASE_URL);
@@ -165,7 +181,7 @@ test.describe('CircuitMind AI Screenshot Catalog', () => {
     }
 
     // Settings button (gear icon)
-    const settingsBtn = page.locator('button[aria-label="Open settings"]');
+    const settingsBtn = page.locator('button[aria-label="Settings"]');
     if (await settingsBtn.isVisible()) {
       await screenshot(page, '02-header', 'settings-button', settingsBtn);
     }
@@ -187,7 +203,7 @@ test.describe('CircuitMind AI Screenshot Catalog', () => {
     await screenshot(page, '03-panels', 'inventory-panel-open');
 
     // Lock button
-    const lockBtn = page.locator('button[aria-label*="sidebar"]');
+    const lockBtn = page.locator('button[aria-label="Unlock sidebar"]');
     if (await lockBtn.isVisible()) {
       await safeClick(lockBtn, 'inventory lock');
       await page.waitForTimeout(300);
@@ -198,10 +214,11 @@ test.describe('CircuitMind AI Screenshot Catalog', () => {
     const assetHeader = page.locator('h2:has-text("ASSET MANAGER")');
     await screenshot(page, '03-panels', 'inventory-header', assetHeader);
 
-    // Tab buttons (LIST, ADD NEW, TOOLS)
-    const listTab = page.locator('button:has-text("LIST")');
-    const addNewTab = page.locator('button:has-text("ADD NEW")');
-    const toolsTab = page.locator('button:has-text("TOOLS")');
+    // Tab buttons (ASSETS, NEW, TOOLS) - Scoped to inventory panel with exact text
+    const inventoryTabs = page.locator('div').filter({ has: page.locator('h2:has-text("ASSET MANAGER")') });
+    const listTab = inventoryTabs.getByRole('button', { name: 'ASSETS', exact: true });
+    const addNewTab = inventoryTabs.getByRole('button', { name: 'NEW', exact: true });
+    const toolsTab = inventoryTabs.getByRole('button', { name: 'TOOLS', exact: true });
 
     await screenshot(page, '03-panels', 'inventory-tab-list', listTab);
     await screenshot(page, '03-panels', 'inventory-tab-addnew', addNewTab);
@@ -245,7 +262,7 @@ test.describe('CircuitMind AI Screenshot Catalog', () => {
 
   test('04 - Settings Modal', async ({ page }) => {
     // Open settings
-    const settingsBtn = page.locator('button[aria-label="Open settings"]');
+    const settingsBtn = page.locator('button[aria-label="Settings"]');
     const settingsOpened = await safeClick(settingsBtn, 'settings button');
     if (!settingsOpened) {
       console.warn('WARN: Settings button not found. Skipping settings capture.');
@@ -291,7 +308,7 @@ test.describe('CircuitMind AI Screenshot Catalog', () => {
     await page.waitForTimeout(500);
 
     // Lock sidebar
-    const lockBtn = page.locator('button[aria-label*="sidebar"]');
+    const lockBtn = page.locator('button[aria-label="Unlock sidebar"]');
     if (await lockBtn.isVisible()) {
       await safeClick(lockBtn, 'inventory lock');
       await page.waitForTimeout(300);
@@ -430,7 +447,7 @@ test.describe('CircuitMind AI Screenshot Catalog', () => {
     }
     await page.waitForTimeout(500);
 
-    const lockBtn = page.locator('button[aria-label*="sidebar"]');
+    const lockBtn = page.locator('button[aria-label="Unlock sidebar"]');
     if (await lockBtn.isVisible()) {
       await safeClick(lockBtn, 'inventory lock');
       await page.waitForTimeout(300);
@@ -553,17 +570,10 @@ test.describe('CircuitMind AI Screenshot Catalog', () => {
         await screenshot(page, '10-forms', `checkbox-${i}-unchecked`, cb);
 
         // Checked
-        try {
-          await cb.scrollIntoViewIfNeeded({ timeout: SCREENSHOT_TIMEOUT_MS });
-        } catch (error) {
-          console.warn(`WARN: Scroll skipped for checkbox-${i} (${String(error)})`);
-        }
-        try {
-          await cb.check({ force: true });
+        const checked = await safeScrollAndCheck(cb, `checkbox-${i}`);
+        if (checked) {
           await screenshot(page, '10-forms', `checkbox-${i}-checked`, cb);
           await cb.uncheck({ force: true });
-        } catch (error) {
-          console.warn(`WARN: Skipped checkbox toggle for checkbox-${i} (${String(error)})`);
         }
       }
     }

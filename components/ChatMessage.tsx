@@ -359,6 +359,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                         onClick={() => handleFeedback(1)} 
                         className={`p-1 hover:text-green-400 ${feedbackGiven === 1 ? 'text-green-400' : 'text-gray-500'}`}
                         title="Helpful"
+                        aria-label="Helpful"
                     >
                         👍
                     </button>
@@ -366,6 +367,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                         onClick={() => handleFeedback(-1)} 
                         className={`p-1 hover:text-red-400 ${feedbackGiven === -1 ? 'text-red-400' : 'text-gray-500'}`}
                         title="Not helpful"
+                        aria-label="Not helpful"
                     >
                         👎
                     </button>

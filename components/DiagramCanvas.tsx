@@ -95,6 +95,10 @@ const DiagramCanvasRenderer = ({
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
     const [viewMode, setViewMode] = useState<ViewMode>('2d');
 
+    // Export feedback states
+    const [svgExportStatus, setSvgExportStatus] = useState<'idle' | 'exporting' | 'done' | 'error'>('idle');
+    const [pngExportStatus, setPngExportStatus] = useState<'idle' | 'exporting' | 'done' | 'error'>('idle');
+
     // Grid settings
     const GRID_SIZE = 20;
     const VIRTUALIZATION_THRESHOLD = 100;
@@ -378,14 +382,16 @@ const DiagramCanvasRenderer = ({
 
     const handlePointerUp = useCallback((e: React.PointerEvent) => {
       (e.target as Element).releasePointerCapture(e.pointerId);
-      if (!state.isDragging && !state.isPanning && onBackgroundClick) {
+      const wasDragging = state.interactionMode === 'dragging_node';
+      const wasPanning = state.interactionMode === 'panning';
+      if (!wasDragging && !wasPanning && onBackgroundClick) {
          // Check if we clicked on background (svg or container)
          // Actually DiagramNode stops propagation, so if we reach here it should be background
          // BUT we need to ensure we didn't just finish a drag
          onBackgroundClick();
       }
       dispatch({ type: 'POINTER_UP' });
-    }, [state.isDragging, state.isPanning, onBackgroundClick]);
+    }, [state.interactionMode, onBackgroundClick]);
 
     const handleDragOver = useCallback((e: React.DragEvent) => {
       e.preventDefault();
@@ -659,68 +665,106 @@ const DiagramCanvasRenderer = ({
     }, [diagramBounds, state.zoom]);
 
     const handleExportSVG = useCallback(() => {
-      if (!svgRef.current || !diagram) return;
-      const svgClone = svgRef.current.cloneNode(true) as SVGSVGElement;
-      const bbox = svgRef.current.getBBox();
-      const padding = 40;
-      svgClone.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
-      svgClone.setAttribute('width', String(bbox.width + padding * 2));
-      svgClone.setAttribute('height', String(bbox.height + padding * 2));
-      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      bg.setAttribute('x', String(bbox.x - padding));
-      bg.setAttribute('y', String(bbox.y - padding));
-      bg.setAttribute('width', String(bbox.width + padding * 2));
-      bg.setAttribute('height', String(bbox.height + padding * 2));
-      bg.setAttribute('fill', '#0f172a');
-      svgClone.insertBefore(bg, svgClone.firstChild);
-      const svgData = new XMLSerializer().serializeToString(svgClone);
-      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${diagram.title.replace(/\s+/g, '_')}_diagram.svg`;
-      link.click();
-      URL.revokeObjectURL(url);
+      if (!svgRef.current || !diagram) {
+        setSvgExportStatus('error');
+        setTimeout(() => setSvgExportStatus('idle'), 1500);
+        return;
+      }
+      setSvgExportStatus('exporting');
+      try {
+        const svgClone = svgRef.current.cloneNode(true) as SVGSVGElement;
+        const bbox = svgRef.current.getBBox();
+        const padding = 40;
+        svgClone.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
+        svgClone.setAttribute('width', String(bbox.width + padding * 2));
+        svgClone.setAttribute('height', String(bbox.height + padding * 2));
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bg.setAttribute('x', String(bbox.x - padding));
+        bg.setAttribute('y', String(bbox.y - padding));
+        bg.setAttribute('width', String(bbox.width + padding * 2));
+        bg.setAttribute('height', String(bbox.height + padding * 2));
+        bg.setAttribute('fill', '#0f172a');
+        svgClone.insertBefore(bg, svgClone.firstChild);
+        const svgData = new XMLSerializer().serializeToString(svgClone);
+        const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${diagram.title.replace(/\s+/g, '_')}_diagram.svg`;
+        link.click();
+        URL.revokeObjectURL(url);
+        setSvgExportStatus('done');
+        setTimeout(() => setSvgExportStatus('idle'), 1500);
+      } catch (e) {
+        console.error('SVG export failed:', e);
+        setSvgExportStatus('error');
+        setTimeout(() => setSvgExportStatus('idle'), 1500);
+      }
     }, [diagram]);
 
     const handleExportPNG = useCallback(() => {
-        if (!svgRef.current || !diagram) return;
-        const svg = svgRef.current;
-        const bbox = svg.getBBox();
-        const padding = 40;
-        const scale = 2;
-        const width = (bbox.width + padding * 2) * scale;
-        const height = (bbox.height + padding * 2) * scale;
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, width, height);
-        const svgClone = svg.cloneNode(true) as SVGSVGElement;
-        svgClone.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
-        svgClone.setAttribute('width', String(width));
-        svgClone.setAttribute('height', String(height));
-        const svgData = new XMLSerializer().serializeToString(svgClone);
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
-        const img = new Image();
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0);
-          URL.revokeObjectURL(url);
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const pngUrl = URL.createObjectURL(blob);
-              const link = document.createElement('a');
-              link.href = pngUrl;
-              link.download = `${diagram.title.replace(/\s+/g, '_')}_diagram.png`;
-              link.click();
-              URL.revokeObjectURL(pngUrl);
-            }
-          }, 'image/png');
-        };
-        img.src = url;
+        if (!svgRef.current || !diagram) {
+          setPngExportStatus('error');
+          setTimeout(() => setPngExportStatus('idle'), 1500);
+          return;
+        }
+        setPngExportStatus('exporting');
+        try {
+          const svg = svgRef.current;
+          const bbox = svg.getBBox();
+          const padding = 40;
+          const scale = 2;
+          const width = (bbox.width + padding * 2) * scale;
+          const height = (bbox.height + padding * 2) * scale;
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            setPngExportStatus('error');
+            setTimeout(() => setPngExportStatus('idle'), 1500);
+            return;
+          }
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, 0, width, height);
+          const svgClone = svg.cloneNode(true) as SVGSVGElement;
+          svgClone.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
+          svgClone.setAttribute('width', String(width));
+          svgClone.setAttribute('height', String(height));
+          const svgData = new XMLSerializer().serializeToString(svgClone);
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+          const img = new Image();
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            setPngExportStatus('error');
+            setTimeout(() => setPngExportStatus('idle'), 1500);
+          };
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const pngUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = pngUrl;
+                link.download = `${diagram.title.replace(/\s+/g, '_')}_diagram.png`;
+                link.click();
+                URL.revokeObjectURL(pngUrl);
+                setPngExportStatus('done');
+                setTimeout(() => setPngExportStatus('idle'), 1500);
+              } else {
+                setPngExportStatus('error');
+                setTimeout(() => setPngExportStatus('idle'), 1500);
+              }
+            }, 'image/png');
+          };
+          img.src = url;
+        } catch (e) {
+          console.error('PNG export failed:', e);
+          setPngExportStatus('error');
+          setTimeout(() => setPngExportStatus('idle'), 1500);
+        }
     }, [diagram]);
 
     const dropZoneOverlay = state.isDragOver && (
@@ -790,7 +834,7 @@ const DiagramCanvasRenderer = ({
         {emptyDiagramOverlay}
 
         {/* Zoom Controls */}
-        <div className="absolute top-16 right-4 md:top-4 md:right-4 flex flex-col gap-2 z-10 pointer-events-auto">
+        <div className="absolute top-16 right-4 md:top-4 md:right-4 flex flex-col gap-2 z-10 pointer-events-auto panel-flourish">
           <button
             type="button"
             onClick={() => dispatch({ type: 'ZOOM_IN', payload: 0.2 })}
@@ -798,9 +842,7 @@ const DiagramCanvasRenderer = ({
             title="Zoom In"
             aria-label="Zoom in"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
+            <img src="/assets/ui/action-zoom-in.png" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:block leading-none">Zoom In</span>
           </button>
           <button
@@ -810,9 +852,7 @@ const DiagramCanvasRenderer = ({
             title="Zoom Out"
             aria-label="Zoom out"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-            </svg>
+            <img src="/assets/ui/action-zoom-out.png" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:block leading-none">Zoom Out</span>
           </button>
           <div
@@ -829,9 +869,7 @@ const DiagramCanvasRenderer = ({
             title="Reset View"
             aria-label="Reset view"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
+            <img src="/assets/ui/action-load.png" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:block leading-none">Reset</span>
           </button>
         </div>
@@ -878,10 +916,7 @@ const DiagramCanvasRenderer = ({
             title={snapToGrid ? 'Snap to Grid: ON' : 'Snap to Grid: OFF'}
             aria-pressed={snapToGrid}
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 3h18v18H3V3z" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M3 9h18M3 15h18M9 3v18M15 3v18" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <img src="/assets/ui/action-grid.png" alt="" className={`w-4 h-4 ${snapToGrid ? '' : 'opacity-70'}`} onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:inline">{snapToGrid ? 'Grid ON' : 'Grid OFF'}</span>
           </button>
           <button
@@ -895,40 +930,65 @@ const DiagramCanvasRenderer = ({
             title={viewMode === '3d' ? 'Switch to 2D View' : 'Switch to 3D View'}
             aria-pressed={viewMode === '3d'}
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {viewMode === '3d' ? (
-                <path d="M4 4h16v16H4zM4 9h16M9 4v16" strokeLinecap="round" strokeLinejoin="round"/>
-              ) : (
-                <>
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
-                </>
-              )}
-            </svg>
+            <img src={`/assets/ui/${viewMode === '3d' ? 'action-2d' : 'action-3d'}.png`} alt="" className={`w-4 h-4 ${viewMode === '3d' ? 'opacity-90' : 'opacity-70'}`} onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:inline">{viewMode === '3d' ? '2D' : '3D'}</span>
           </button>
           <div className="flex gap-1">
             <button
               type="button"
               onClick={handleExportSVG}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold cut-corner-sm border shadow-lg bg-slate-950/85 border-slate-700/80 text-slate-300 hover:text-white hover:border-emerald-500 hover:bg-emerald-500/10 transition-colors"
+              disabled={svgExportStatus !== 'idle'}
+              className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold cut-corner-sm border shadow-lg transition-all ${
+                svgExportStatus === 'done'
+                  ? 'bg-green-500 border-green-400 text-white shadow-[0_0_12px_rgba(34,197,94,0.5)]'
+                  : svgExportStatus === 'error'
+                  ? 'bg-red-500/20 border-red-500/50 text-red-400'
+                  : svgExportStatus === 'exporting'
+                  ? 'bg-emerald-500/30 border-emerald-500/50 text-emerald-400 animate-pulse'
+                  : 'bg-slate-950/85 border-slate-700/80 text-slate-300 hover:text-white hover:border-emerald-500 hover:bg-emerald-500/10'
+              }`}
               title="Export as SVG (vector)"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="hidden md:inline">SVG</span>
+              {svgExportStatus === 'done' ? (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : svgExportStatus === 'exporting' ? (
+                <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <img src="/assets/ui/action-save.png" alt="" className="w-4 h-4 opacity-80 invert" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              )}
+              <span className="hidden md:inline">
+                {svgExportStatus === 'done' ? 'DONE' : svgExportStatus === 'error' ? 'ERROR' : svgExportStatus === 'exporting' ? '...' : 'SVG'}
+              </span>
             </button>
             <button
               type="button"
               onClick={handleExportPNG}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold cut-corner-sm border shadow-lg bg-slate-950/85 border-slate-700/80 text-slate-300 hover:text-white hover:border-blue-500 hover:bg-blue-500/10 transition-colors"
+              disabled={pngExportStatus !== 'idle'}
+              className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold cut-corner-sm border shadow-lg transition-all ${
+                pngExportStatus === 'done'
+                  ? 'bg-green-500 border-green-400 text-white shadow-[0_0_12px_rgba(34,197,94,0.5)]'
+                  : pngExportStatus === 'error'
+                  ? 'bg-red-500/20 border-red-500/50 text-red-400'
+                  : pngExportStatus === 'exporting'
+                  ? 'bg-blue-500/30 border-blue-500/50 text-blue-400 animate-pulse'
+                  : 'bg-slate-950/85 border-slate-700/80 text-slate-300 hover:text-white hover:border-blue-500 hover:bg-blue-500/10'
+              }`}
               title="Export as PNG (image)"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="hidden md:inline">PNG</span>
+              {pngExportStatus === 'done' ? (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : pngExportStatus === 'exporting' ? (
+                <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <img src="/assets/ui/action-save.png" alt="" className="w-4 h-4 opacity-80 invert" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              )}
+              <span className="hidden md:inline">
+                {pngExportStatus === 'done' ? 'DONE' : pngExportStatus === 'error' ? 'ERROR' : pngExportStatus === 'exporting' ? '...' : 'PNG'}
+              </span>
             </button>
           </div>
         </div>

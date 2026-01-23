@@ -1,143 +1,309 @@
-# UI Screenshot Catalog - CircuitMind AI
+# Screenshot Catalog Manifest
 
-**Generated**: 2026-01-02
-**App Version**: 0.0.0
-**Base URL**: http://localhost:3001
+Generated: 2026-01-06T04:32:44.157Z
 
-## Summary
+## Directory Structure
 
-| Category | Count | Status |
-|----------|-------|--------|
-| App Shell | 2 | Pending |
-| Canvas Views | 2 | ✅ Saved |
-| Sidebars | 2 | Pending |
-| Settings Modal | 3 | Pending |
-| Component Editor | 2 | Pending |
-| Interactive States | 2 | Pending |
-| Responsive Viewports | 7 | ✅ Saved |
-| **Total** | **20** | **9 Saved** |
 
-## Screenshot Inventory
+### 01-app-shell/
 
-### 01 - App Shell
+- app-1280x720.png
+- app-1440x900.png
+- app-1920x1080.png
+- app-default-state.png
+- app-full-page.png
 
-| Screenshot ID | Description | Viewport | State |
-|---------------|-------------|----------|-------|
-| ss_2869hrpyq | Empty state - No diagram yet | 1920x1080 | Default |
-| ss_8636pb6ba | 2D Diagram view with Arduino LED circuit | 1920x1080 | Active |
+### 02-header/
 
-### 02 - Canvas Views
+- header-full.png
+- load-button.png
+- logo.png
+- redo-button-disabled.png
+- save-button.png
+- settings-button.png
+- undo-button-disabled.png
 
-| File | Description | Viewport | State |
-|------|-------------|----------|-------|
-| `02-canvas-views/001_2d-diagram-generated_1920x1080.png` | 2D Wiring Diagram - Arduino Uno LED Blink | 1920x1080 | Default |
-| `02-canvas-views/002_3d-view_1920x1080.png` | 3D View - Procedural geometry with LOD + MISSING 3D MODELS panel | 1920x1080 | 3D Mode |
+### 03-panels/
 
-### 03 - Sidebars
+- inventory-addnew-panel.png
+- inventory-category-actuator.png
+- inventory-category-microcontroller.png
+- inventory-category-other.png
+- inventory-category-power.png
+- inventory-category-sensor.png
+- inventory-header.png
+- inventory-panel-locked.png
+- inventory-panel-open.png
+- inventory-tab-addnew.png
+- inventory-tab-list.png
+- inventory-tab-tools.png
+- inventory-tools-panel.png
 
-| Screenshot ID | Description | Viewport | State |
-|---------------|-------------|----------|-------|
-| ss_37081ixk6 | Inventory Panel - Full component library (142 items) | 1920x1080 | Open |
-| ss_9720fzn49 | Inventory with 2D canvas visible | 1920x1080 | Open |
+### 04-modals/
 
-### 04 - Settings Modal
+- settings-apikey-tab.png
+- settings-autonomy-tab.png
+- settings-modal-full.png
 
-| Screenshot ID | Description | Viewport | State |
-|---------------|-------------|----------|-------|
-| ss_5152jd29w | Settings - API Key Tab | 1920x1080 | Modal Open |
-| ss_28171jrpb | Settings - AI Autonomy Tab (action permissions) | 1920x1080 | Modal Open |
-| ss_9720d2485 | Settings - Layout Tab (sidebar config) | 1920x1080 | Modal Open |
+### 05-chat/
 
-### 05 - Component Editor Modal
+- chat-deep-thinking-toggle.png
+- chat-messages-area.png
 
-| Screenshot ID | Description | Viewport | State |
-|---------------|-------------|----------|-------|
-| ss_1622utip7 | Component Editor - INFO Tab (Arduino Uno R3 pinout) | 1920x1080 | Modal Open |
-| ss_1588ppny3 | Component Editor - EDIT Tab (editable fields) | 1920x1080 | Modal Open |
+### 06-canvas/
 
-### 06 - Interactive States
+- canvas-empty.png
 
-| Screenshot ID | Description | Viewport | State |
-|---------------|-------------|----------|-------|
-| ss_280721lp6 | Conversation Switcher dropdown open | 1920x1080 | Dropdown |
-| ss_1972h1e8m | Full UI with all panels visible | 1920x1080 | Complete |
+### 07-inventory-components/
 
-### 07 - Responsive Viewports
+- component-0.png
+- component-1.png
+- component-10.png
+- component-11.png
+- component-12.png
+- component-13.png
+- component-14.png
+- component-15.png
+- component-16.png
+- component-17.png
+- component-18.png
+- component-19.png
+- component-2.png
+- component-3.png
+- component-4.png
+- component-5.png
+- component-6.png
+- component-7.png
+- component-8.png
+- component-9.png
 
-| File | Description | Viewport | Device |
-|------|-------------|----------|--------|
-| `07-responsive/001_2d-diagram_1440x900.png` | 2D Diagram - Medium desktop | 1440x900 | MacBook Pro 15" |
-| `07-responsive/002_2d-diagram_1024x768.png` | 2D Diagram - Small desktop | 1024x768 | iPad Landscape |
-| `07-responsive/003_2d-diagram_768x1024_tablet.png` | 2D Diagram - Tablet portrait | 768x1024 | iPad Portrait |
-| `07-responsive/004_2d-diagram_430x932_mobile.png` | 2D Diagram - Large mobile | 430x932 | iPhone 14 Pro Max |
-| `07-responsive/005_2d-diagram_393x852_mobile.png` | 2D Diagram - Standard mobile | 393x852 | Pixel 7 |
-| `07-responsive/006_2d-diagram_375x667_mobile-se.png` | 2D Diagram - Small mobile | 375x667 | iPhone SE |
-| `07-responsive/007_2d-diagram_320x568_mobile-legacy.png` | 2D Diagram - Legacy mobile | 320x568 | iPhone 5/SE |
+### 08-buttons/
 
-## UI Components Documented
+- actuator-hover.png
+- actuator-normal.png
+- all-hover.png
+- all-normal.png
+- assets-hover.png
+- assets-normal.png
+- attach-file-hover.png
+- attach-file-normal.png
+- btn-209-hover.png
+- btn-209-normal.png
+- btn-210-hover.png
+- btn-210-normal.png
+- chat-hover.png
+- chat-normal.png
+- circuitmind-session-hover.png
+- circuitmind-session-normal.png
+- create-new-conversation-hover.png
+- create-new-conversation-normal.png
+- enable-deep-thinking-hover.png
+- enable-deep-thinking-normal.png
+- enable-voice-mode-hover.png
+- enable-voice-mode-normal.png
+- helpful-hover.png
+- helpful-normal.png
+- image-hover.png
+- image-normal.png
+- load-from-quick-slot-hover.png
+- load-from-quick-slot-normal.png
+- lock-sidebar-open-hover.png
+- lock-sidebar-open-normal.png
+- microcontroller-hover.png
+- microcontroller-normal.png
+- new-hover.png
+- new-normal.png
+- not-helpful-hover.png
+- not-helpful-normal.png
+- open-inventory-hover.png
+- open-inventory-normal.png
+- other-hover.png
+- other-normal.png
+- pin-actions-hover.png
+- pin-actions-normal.png
+- power-hover.png
+- power-normal.png
+- redo-hover.png
+- redo-normal.png
+- save-to-quick-slot-hover.png
+- save-to-quick-slot-normal.png
+- send-message-hover.png
+- send-message-normal.png
+- sensor-hover.png
+- sensor-normal.png
+- settings-hover.png
+- settings-normal.png
+- show-context-snapshot-hover.png
+- show-context-snapshot-normal.png
+- switch-to-chat-mode-hover.png
+- switch-to-chat-mode-normal.png
+- switch-to-image-mode-hover.png
+- switch-to-image-mode-normal.png
+- switch-to-video-mode-hover.png
+- switch-to-video-mode-normal.png
+- toggle-actions-hover.png
+- toggle-actions-normal.png
+- tools-hover.png
+- tools-normal.png
+- undo-hover.png
+- undo-normal.png
+- unlock-assistant-sidebar-hover.png
+- unlock-assistant-sidebar-normal.png
+- video-hover.png
+- video-normal.png
+- voice-input-hover.png
+- voice-input-normal.png
 
-### Layout Structure
-- **Header**: CIRCUIT MIND branding, Save/Load, Voice toggle, Settings
-- **Left Sidebar**: Asset Manager (Inventory) with 142 components
-- **Center Canvas**: 2D/3D wiring diagram view
-- **Right Sidebar**: Assistant panel with chat, quick actions
-- **Status Bar**: SYS status, inventory count, network status, mode, session
+### 10-forms/
 
-### Inventory Panel
-- **Tabs**: ASSETS, NEW, TOOLS
-- **Filters**: ALL, MICROCONTROLLER, SENSOR, ACTUATOR, POWER, OTHER
-- **Component Categories**:
-  - Microcontrollers: Arduino Uno R3, Mega 2560, ESP32, NodeMCU, etc.
-  - Sensors: Ultrasonic, PIR, DHT11, MPU6050, etc.
-  - And more...
+- checkbox-0-unchecked.png
+- checkbox-1-unchecked.png
+- checkbox-2-unchecked.png
+- checkbox-3-unchecked.png
+- checkbox-4-unchecked.png
+- checkbox-5-unchecked.png
+- checkbox-6-unchecked.png
+- checkbox-7-unchecked.png
+- checkbox-8-unchecked.png
+- checkbox-9-unchecked.png
+- enter-command----empty.png
+- enter-command----filled.png
+- enter-command----focus.png
+- filter-id---name----empty.png
+- filter-id---name----filled.png
+- filter-id---name----focus.png
+- input-1-empty.png
+- input-1-focus.png
+- input-10-empty.png
+- input-10-focus.png
+- input-11-empty.png
+- input-11-focus.png
+- input-12-empty.png
+- input-12-focus.png
+- input-13-empty.png
+- input-13-focus.png
+- input-14-empty.png
+- input-14-focus.png
+- input-15-empty.png
+- input-15-focus.png
+- input-16-empty.png
+- input-16-focus.png
+- input-17-empty.png
+- input-17-focus.png
+- input-18-empty.png
+- input-18-focus.png
+- input-19-empty.png
+- input-19-focus.png
+- input-2-empty.png
+- input-2-focus.png
+- input-20-empty.png
+- input-20-focus.png
+- input-21-empty.png
+- input-21-focus.png
+- input-22-empty.png
+- input-22-focus.png
+- input-23-empty.png
+- input-23-focus.png
+- input-24-empty.png
+- input-24-focus.png
+- input-25-empty.png
+- input-25-focus.png
+- input-26-empty.png
+- input-26-focus.png
+- input-27-empty.png
+- input-27-focus.png
+- input-28-empty.png
+- input-28-focus.png
+- input-29-empty.png
+- input-29-focus.png
+- input-3-empty.png
+- input-3-focus.png
+- input-30-empty.png
+- input-30-focus.png
+- input-31-empty.png
+- input-31-focus.png
+- input-32-empty.png
+- input-32-focus.png
+- input-33-empty.png
+- input-33-focus.png
+- input-34-empty.png
+- input-34-focus.png
+- input-35-empty.png
+- input-35-focus.png
+- input-36-empty.png
+- input-36-focus.png
+- input-37-empty.png
+- input-37-focus.png
+- input-38-empty.png
+- input-38-focus.png
+- input-39-empty.png
+- input-39-focus.png
+- input-4-empty.png
+- input-4-focus.png
+- input-40-empty.png
+- input-40-focus.png
+- input-41-empty.png
+- input-41-focus.png
+- input-42-empty.png
+- input-42-focus.png
+- input-43-empty.png
+- input-43-focus.png
+- input-44-empty.png
+- input-44-focus.png
+- input-45-empty.png
+- input-45-focus.png
+- input-46-empty.png
+- input-46-focus.png
+- input-47-empty.png
+- input-47-focus.png
+- input-48-empty.png
+- input-48-focus.png
+- input-49-empty.png
+- input-49-focus.png
+- input-5-empty.png
+- input-5-focus.png
+- input-50-empty.png
+- input-50-focus.png
+- input-51-empty.png
+- input-51-focus.png
+- input-52-empty.png
+- input-52-focus.png
+- input-53-empty.png
+- input-53-focus.png
+- input-54-empty.png
+- input-54-focus.png
+- input-55-empty.png
+- input-55-focus.png
+- input-56-empty.png
+- input-56-focus.png
+- input-57-empty.png
+- input-57-focus.png
+- input-58-empty.png
+- input-58-focus.png
+- input-59-empty.png
+- input-59-focus.png
+- input-6-empty.png
+- input-6-focus.png
+- input-60-empty.png
+- input-60-focus.png
+- input-61-empty.png
+- input-61-focus.png
+- input-62-empty.png
+- input-62-focus.png
+- input-7-empty.png
+- input-7-focus.png
+- input-8-empty.png
+- input-8-focus.png
+- input-9-empty.png
+- input-9-focus.png
 
-### Canvas Tools
-- Search components
-- Type filter dropdown
-- Grid toggle (ON/OFF)
-- 2D/3D view toggle
-- SVG/PNG export
-- Zoom controls
-- Minimap
+### 12-typography/
 
-### Settings Panel (3 tabs)
-1. **API Key**: Gemini API configuration with test connection
-2. **AI Autonomy**: Auto-execute toggle, per-action permissions (Canvas, Navigation, Diagram, Inventory)
-3. **Layout**: Sidebar defaults (open on launch, pinned, width sliders)
-
-### Component Editor (4 tabs)
-1. **INFO**: Description, pinout diagram, datasheet link, typical use cases
-2. **EDIT**: Name, type, quantity, description, pins, media URLs
-3. **IMAGE**: Component thumbnail
-4. **3D MODEL**: GLB/GLTF model URL
-
-### Assistant Panel
-- Session switcher dropdown
-- Mode indicators (CHAT, DEEP, VIEW)
-- Quick Actions cards
-- Chat history with AI responses
-- Diagram info cards with component tags
-- Action suggestions
-- Input modes: Chat, Image, Video
-- Attach file, Voice input
-
-## Technical Details
-
-- **Framework**: React 19 + Vite + TailwindCSS 4
-- **3D Engine**: Three.js with LOD system
-- **AI Integration**: Gemini API (gemini-2.5-pro/flash)
-- **State Management**: Centralized in App.tsx
-- **Responsive**: Fluid layout with resizable sidebars
-
-## Notes
-
-- Screenshots captured via Chrome DevTools MCP (`take_screenshot` with `filePath`)
-- Saved screenshots use PNG format for lossless quality
-- Responsive viewports tested from 1920x1080 down to 320x568
-- Dark theme only (default)
-- Previous session used wrong tool (Claude in Chrome MCP - inline only, no file save)
-- This session correctly saves files to disk in `/docs/screenshots/` subdirectories
-
----
-
-*Generated by UI Screenshot Cataloger - CircuitMind AI*
+- h1-0.png
+- h2-0.png
+- h3-0.png
+- h3-1.png
+- h3-2.png
+- h3-3.png
+- h3-4.png
+- h3-5.png

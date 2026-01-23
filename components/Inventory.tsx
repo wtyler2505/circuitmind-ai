@@ -543,15 +543,12 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
         title={isPinned ? 'Unlock Inventory' : 'Inventory'}
         aria-label={isPinned ? 'Unlock inventory' : 'Open inventory'}
       >
-        {isPinned ? (
-          <svg className="w-4 h-4 text-neon-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        ) : (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        )}
+        <img 
+          src={`/assets/ui/${isPinned ? 'action-settings' : 'icon-microcontroller'}.png`} 
+          alt="" 
+          className={`w-5 h-5 transition-all ${isPinned ? 'animate-pulse-slow' : 'group-hover:scale-110'}`}
+          onError={(e) => (e.currentTarget.style.opacity = '0')}
+        />
       </button>
 
       <div
@@ -560,7 +557,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
         onMouseLeave={handleMouseLeave}
         role="complementary"
         aria-label="Inventory sidebar"
-        className={`!fixed inset-y-0 left-0 w-[var(--inventory-width)] max-md:w-full panel-surface panel-rail panel-frame panel-circuit cut-corner-md border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.8)]`}
+        className={`!fixed inset-y-0 left-0 w-[var(--inventory-width)] max-md:w-full panel-surface panel-rail panel-frame panel-brushed panel-flourish cut-corner-md border-r border-slate-800 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col shadow-[10px_0_30px_rgba(0,0,0,0.8)]`}
         style={{ '--inventory-width': `${sidebarWidth}px` } as React.CSSProperties}
       >
         <div
@@ -584,7 +581,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
         <div className="px-3 pt-3 pb-0 bg-[#050608] border-b border-white/5 flex flex-col gap-2 shrink-0">
           <div className="flex justify-between items-center">
             <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-[0.2em] panel-title">
-              <span className="text-neon-cyan">///</span>
+              <img src="/assets/ui/logo.png" alt="" className="w-4 h-4" onError={(e) => (e.currentTarget.style.display = 'none')} />
               ASSET MANAGER
             </h2>
             <div className="flex items-center gap-1">
@@ -674,7 +671,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                 <button
                   type="button"
                   onClick={() => setActiveCategory('all')}
-                  className={`px-2 py-1 text-[9px] uppercase tracking-wider border cut-corner-sm transition-all ${ activeCategory === 'all'
+                  className={`px-2 py-1 text-[9px] uppercase tracking-wider border cut-corner-sm transition-all flex items-center gap-1.5 ${ activeCategory === 'all'
                       ? 'border-neon-cyan text-black bg-neon-cyan'
                       : 'border-white/10 text-slate-400 bg-black/20 hover:border-white/30'
                   }`}
@@ -686,11 +683,17 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                     key={cat}
                     type="button"
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-2 py-1 text-[9px] uppercase tracking-wider border cut-corner-sm transition-all ${ activeCategory === cat
+                    className={`px-2 py-1 text-[9px] uppercase tracking-wider border cut-corner-sm transition-all flex items-center gap-1.5 ${ activeCategory === cat
                         ? 'border-neon-cyan text-black bg-neon-cyan'
                         : 'border-white/10 text-slate-400 bg-black/20 hover:border-white/30'
                     }`}
                   >
+                    <img 
+                      src={`/assets/ui/icon-${cat === 'microcontroller' ? 'microcontroller' : cat === 'sensor' ? 'sensor' : cat === 'actuator' ? 'actuator' : cat === 'power' ? 'power' : 'other'}.png`} 
+                      alt="" 
+                      className={`w-3 h-3 ${activeCategory === cat ? 'invert' : 'opacity-70'}`}
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
                     {cat}
                   </button>
                 ))}
@@ -799,7 +802,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                   className="w-full py-3 flex flex-col items-center gap-2 text-slate-300 hover:text-neon-cyan transition-colors relative z-10"
                 >
                   {isAiLoading ? (
-                    <div className="w-7 h-7 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                    <div className="loading-tech scale-75"></div>
                   ) : (
                     <svg className="w-6 h-6 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -834,7 +837,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                       className="h-9 w-9 inline-flex items-center justify-center bg-slate-800 border border-slate-600 text-neon-purple cut-corner-sm hover:bg-slate-700"
                     >
                       {isGeneratingImage ? (
-                        <div className="w-3.5 h-3.5 border-2 border-neon-purple border-t-transparent rounded-full animate-spin"></div>
+                        <div className="loading-tech scale-50" style={{ filter: 'drop-shadow(0 0 4px #bd00ff)' }}></div>
                       ) : (
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -915,16 +918,12 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                     onClick={handleExport}
                     className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 cut-corner-sm border border-slate-600 flex flex-col items-center gap-1"
                   >
-                    <svg className="w-4 h-4 text-neon-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
+                    <img src="/assets/ui/action-save.png" alt="" className="w-4 h-4 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
                     <span className="text-[9px] font-bold tracking-[0.2em]">EXPORT JSON</span>
                   </button>
                   <label className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 cut-corner-sm border border-slate-600 flex flex-col items-center gap-1 cursor-pointer">
                     <input type="file" accept=".json" className="hidden" onChange={handleImport} />
-                    <svg className="w-4 h-4 text-neon-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
+                    <img src="/assets/ui/action-load.png" alt="" className="w-4 h-4 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
                     <span className="text-[9px] font-bold tracking-[0.2em]">IMPORT JSON</span>
                   </label>
                 </div>

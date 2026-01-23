@@ -1,13 +1,42 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useDiagram } from '../../contexts/DiagramContext';
 import { useVoiceAssistant } from '../../contexts/VoiceAssistantContext';
 import { useLayout } from '../../contexts/LayoutContext';
 import IconButton from '../IconButton';
 
 export const AppHeader = React.memo(() => {
-  const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot } = useDiagram();
+  const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot, diagram } = useDiagram();
   const { isLiveActive, liveStatus, toggleLiveMode } = useVoiceAssistant();
   const { setSettingsOpen } = useLayout();
+
+  // Feedback states for SAVE/LOAD buttons
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [loadStatus, setLoadStatus] = useState<'idle' | 'loading' | 'loaded' | 'empty'>('idle');
+
+  const handleSave = useCallback(() => {
+    if (!diagram) {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 1500);
+      return;
+    }
+    setSaveStatus('saving');
+    saveToQuickSlot();
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 1500);
+  }, [diagram, saveToQuickSlot]);
+
+  const handleLoad = useCallback(() => {
+    const saved = localStorage.getItem('savedDiagram');
+    if (!saved) {
+      setLoadStatus('empty');
+      setTimeout(() => setLoadStatus('idle'), 1500);
+      return;
+    }
+    setLoadStatus('loading');
+    loadFromQuickSlot();
+    setLoadStatus('loaded');
+    setTimeout(() => setLoadStatus('idle'), 1500);
+  }, [loadFromQuickSlot]);
 
   return (
     <div className="h-10 panel-header flex items-center justify-between px-3 shrink-0 z-20 gap-4">
@@ -31,9 +60,7 @@ export const AppHeader = React.memo(() => {
           <IconButton
             label="Undo"
             icon={
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
+              <img src="/assets/ui/action-undo.png" alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
             }
             onClick={undo}
             disabled={!canUndo}
@@ -44,9 +71,7 @@ export const AppHeader = React.memo(() => {
           <IconButton
             label="Redo"
             icon={
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
-              </svg>
+              <img src="/assets/ui/action-redo.png" alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
             }
             onClick={redo}
             disabled={!canRedo}
@@ -61,18 +86,38 @@ export const AppHeader = React.memo(() => {
         {/* Persistence Group */}
         <div className="flex items-center gap-1">
           <button
-            onClick={saveToQuickSlot}
-            className="h-7 px-3 bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan text-[9px] font-bold tracking-[0.2em] hover:bg-neon-cyan hover:text-black transition-all cut-corner-sm leading-none focus-visible-ring rounded-none"
+            onClick={handleSave}
+            disabled={saveStatus !== 'idle'}
+            className={`h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none focus-visible-ring rounded-none flex items-center gap-1.5 ${
+              saveStatus === 'saved'
+                ? 'bg-green-500 border-green-400 text-white shadow-[0_0_12px_rgba(34,197,94,0.5)]'
+                : saveStatus === 'error'
+                ? 'bg-red-500/20 border-red-500/50 text-red-400'
+                : saveStatus === 'saving'
+                ? 'bg-neon-cyan/30 border-neon-cyan/50 text-neon-cyan animate-pulse'
+                : 'bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan hover:text-black group'
+            }`}
             title="Save to Quick Slot"
           >
-            SAVE
+            <img src="/assets/ui/action-save.png" alt="" className={`w-3 h-3 ${saveStatus === 'idle' ? 'opacity-60 group-hover:invert' : ''}`} />
+            {saveStatus === 'saved' ? '✓ SAVED' : saveStatus === 'error' ? 'NO DATA' : saveStatus === 'saving' ? '...' : 'SAVE'}
           </button>
           <button
-            onClick={loadFromQuickSlot}
-            className="h-7 px-3 bg-black/20 border border-white/10 text-slate-300 text-[9px] font-bold tracking-[0.2em] hover:text-white hover:border-white/30 transition-all cut-corner-sm leading-none focus-visible-ring rounded-none"
+            onClick={handleLoad}
+            disabled={loadStatus !== 'idle'}
+            className={`h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none focus-visible-ring rounded-none flex items-center gap-1.5 ${
+              loadStatus === 'loaded'
+                ? 'bg-green-500 border-green-400 text-white shadow-[0_0_12px_rgba(34,197,94,0.5)]'
+                : loadStatus === 'empty'
+                ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                : loadStatus === 'loading'
+                ? 'bg-white/20 border-white/30 text-white animate-pulse'
+                : 'bg-black/20 border border-white/10 text-slate-300 hover:text-white hover:border-white/30 group'
+            }`}
             title="Load from Quick Slot"
           >
-            LOAD
+            <img src="/assets/ui/action-load.png" alt="" className={`w-3 h-3 ${loadStatus === 'idle' ? 'opacity-60' : ''}`} />
+            {loadStatus === 'loaded' ? '✓ LOADED' : loadStatus === 'empty' ? 'EMPTY' : loadStatus === 'loading' ? '...' : 'LOAD'}
           </button>
         </div>
       </div>
@@ -89,9 +134,7 @@ export const AppHeader = React.memo(() => {
         <IconButton
           label={isLiveActive ? "Disable Voice Mode" : "Enable Voice Mode"}
           icon={
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
+            <img src="/assets/ui/action-voice.png" alt="" className={`w-3.5 h-3.5 ${isLiveActive ? '' : 'opacity-60'}`} />
           }
           onClick={toggleLiveMode}
           size="sm"
@@ -105,10 +148,7 @@ export const AppHeader = React.memo(() => {
         <IconButton
           label="Settings"
           icon={
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c-.94 1.543.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543-.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            <img src="/assets/ui/action-settings.png" alt="" className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
           }
           onClick={() => setSettingsOpen(true)}
           size="sm"

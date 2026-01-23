@@ -8,10 +8,12 @@ interface HistoryState {
   future: WiringDiagram[];
 }
 
+type DiagramUpdater = WiringDiagram | null | ((current: WiringDiagram | null) => WiringDiagram | null);
+
 interface DiagramContextType {
   diagram: WiringDiagram | null;
   history: HistoryState;
-  updateDiagram: (newDiagram: WiringDiagram | null) => void;
+  updateDiagram: (newDiagram: DiagramUpdater) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -45,12 +47,15 @@ export const DiagramProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [history.present]);
 
-  const updateDiagram = useCallback((newDiagram: WiringDiagram | null) => {
+  const updateDiagram = useCallback((newDiagram: DiagramUpdater) => {
     setHistory((curr) => {
-      if (curr.present === newDiagram) return curr;
+      const resolvedDiagram = typeof newDiagram === 'function'
+        ? newDiagram(curr.present)
+        : newDiagram;
+      if (curr.present === resolvedDiagram) return curr;
       return {
         past: curr.present ? [...curr.past, curr.present] : curr.past,
-        present: newDiagram,
+        present: resolvedDiagram,
         future: [],
       };
     });

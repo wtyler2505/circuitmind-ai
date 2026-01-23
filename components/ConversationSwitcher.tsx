@@ -48,7 +48,11 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target;
+      // Guard: ensure target is a valid Node before calling contains()
+      if (!(target instanceof Node)) return;
+
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setIsOpen(false);
         setEditingId(null);
       }

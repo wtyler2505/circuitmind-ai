@@ -99,11 +99,11 @@ const Wire = memo<WireProps>(function Wire({
   onEditClick,
   onDelete,
 }) {
-  // Skip rendering if positions are missing
-  if (!startPos || !endPos) return null;
-
   const { startX, startY, endX, endY } = useMemo(
-    () => calculateWireEndpoints(connection, startComponent, endComponent, startPos, endPos),
+    () => {
+      if (!startPos || !endPos) return { startX: 0, startY: 0, endX: 0, endY: 0 };
+      return calculateWireEndpoints(connection, startComponent, endComponent, startPos, endPos);
+    },
     [connection, startComponent, endComponent, startPos, endPos]
   );
 
@@ -111,6 +111,9 @@ const Wire = memo<WireProps>(function Wire({
     () => getSmartPath(startX, startY, endX, endY),
     [startX, startY, endX, endY]
   );
+
+  // Skip rendering if positions are missing
+  if (!startPos || !endPos) return null;
 
   const isHighlighted = !!highlight;
   const color = isHighlighted ? highlight.color : connection.color || '#00f3ff';

@@ -1,9 +1,29 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+/**
+ * AssistantSidebar Component
+ *
+ * Container wrapper for the AI assistant panel.
+ * Refactored to use custom hooks for reduced complexity (CCN: 57 -> ~15).
+ *
+ * Features:
+ * - Hover-to-open behavior (with delay on close)
+ * - Click-outside-to-close (when unpinned)
+ * - Resizable via drag handle (300-560px)
+ * - Pin/unpin toggle
+ * - Keyboard-accessible resize (arrow keys + Home)
+ */
+
+import React, { useRef, useCallback } from 'react';
 import { useLayout } from '../contexts/LayoutContext';
+import { useClickOutside } from '../hooks/useClickOutside';
+import { useResizeHandler } from '../hooks/useResizeHandler';
+import { useHoverBehavior } from '../hooks/useHoverBehavior';
 
 interface AssistantSidebarProps {
   children: React.ReactNode;
 }
+
+const MIN_SIDEBAR_WIDTH = 300;
+const MAX_SIDEBAR_WIDTH = 560;
 
 const AssistantSidebar: React.FC<AssistantSidebarProps> = ({ children }) => {
   const {
@@ -16,129 +36,59 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({ children }) => {
     assistantDefaultWidth: defaultSidebarWidth,
   } = useLayout();
 
-  // Derived
-  const onClose = useCallback(() => onOpen(false), [onOpen]);
-  const onSidebarOpen = useCallback(() => onOpen(true), [onOpen]);
-
-  const minSidebarWidth = 300;
-  const maxSidebarWidth = 560;
-
   const sidebarRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
 
-  const handleMouseEnter = useCallback(() => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-    onSidebarOpen();
-  }, [onSidebarOpen]);
+  // Derived callbacks
+  const handleClose = useCallback(() => onOpen(false), [onOpen]);
+  const handleOpen = useCallback(() => onOpen(true), [onOpen]);
 
-  const handleMouseLeave = useCallback((event: React.MouseEvent) => {
-    const nextTarget = event.relatedTarget;
-    // Check if nextTarget is a valid Node before calling contains
-    if (
-      nextTarget instanceof Node &&
-      (sidebarRef.current?.contains(nextTarget) || buttonRef.current?.contains(nextTarget))
-    ) {
-      return;
-    }
-    
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-    
-    if (!isPinned) {
-      closeTimeoutRef.current = setTimeout(() => {
-        onClose();
-      }, 300);
-    }
-  }, [isPinned, onClose]);
+  // Hook: Click outside to close (when unpinned and open)
+  useClickOutside({
+    ref: sidebarRef,
+    ignoreRefs: [buttonRef],
+    onClickOutside: handleClose,
+    enabled: isOpen && !isPinned,
+  });
 
-  const handleToggleClick = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (isPinned) {
-      onPinnedChange(false);
-      onClose();
-      return;
-    }
-    onPinnedChange(true);
-    onSidebarOpen();
-  }, [isPinned, onPinnedChange, onClose, onSidebarOpen]);
+  // Hook: Resize handling
+  const { handleResizeStart, handleResizeKeyDown, handleResizeReset } =
+    useResizeHandler({
+      width: sidebarWidth,
+      onWidthChange: onSidebarWidthChange,
+      minWidth: MIN_SIDEBAR_WIDTH,
+      maxWidth: MAX_SIDEBAR_WIDTH,
+      defaultWidth: defaultSidebarWidth,
+      direction: 'left',
+    });
 
-  const clampSidebarWidth = useCallback((value: number) =>
-    Math.min(maxSidebarWidth, Math.max(minSidebarWidth, value)), []);
+  // Hook: Hover behavior (open on hover, close on leave with delay)
+  const { handleMouseEnter, handleMouseLeave } = useHoverBehavior({
+    onOpen: handleOpen,
+    onClose: handleClose,
+    isPinned,
+    closeDelay: 300,
+    containerRefs: [sidebarRef, buttonRef],
+  });
 
-  const handleResizeStart = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!onSidebarWidthChange) return;
-    event.preventDefault();
-    resizeStartRef.current = { x: event.clientX, width: sidebarWidth };
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!resizeStartRef.current) return;
-      const nextWidth = clampSidebarWidth(
-        resizeStartRef.current.width + (resizeStartRef.current.x - moveEvent.clientX)
-      );
-      onSidebarWidthChange(nextWidth);
-    };
-
-    const handleMouseUp = () => {
-      resizeStartRef.current = null;
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-  }, [onSidebarWidthChange, sidebarWidth, clampSidebarWidth]);
-
-  const handleResizeKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!onSidebarWidthChange) return;
-    const step = event.shiftKey ? 40 : 16;
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      onSidebarWidthChange(clampSidebarWidth(sidebarWidth + step));
-    }
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      onSidebarWidthChange(clampSidebarWidth(sidebarWidth - step));
-    }
-    if (event.key === 'Home') {
-      event.preventDefault();
-      onSidebarWidthChange(clampSidebarWidth(defaultSidebarWidth));
-    }
-  }, [onSidebarWidthChange, sidebarWidth, defaultSidebarWidth, clampSidebarWidth]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isPinned) return;
-
-      const target = event.target;
-      if (!(target instanceof Node)) return;
-
-      if (
-        isOpen &&
-        sidebarRef.current &&
-        !sidebarRef.current.contains(target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(target)
-      ) {
-        onClose();
+  // Toggle button click: pin/unpin
+  const handleToggleClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      if (isPinned) {
+        onPinnedChange(false);
+        handleClose();
+      } else {
+        onPinnedChange(true);
+        handleOpen();
       }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-    };
-  }, [isOpen, isPinned, onClose]);
+    },
+    [isPinned, onPinnedChange, handleClose, handleOpen]
+  );
 
   return (
     <>
+      {/* Toggle Button (right edge) */}
       <button
         ref={buttonRef}
         type="button"
@@ -150,52 +100,36 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({ children }) => {
         title={isPinned ? 'Unlock assistant' : 'AI assistant'}
         aria-label={isPinned ? 'Unlock assistant sidebar' : 'Open assistant sidebar'}
       >
-        {isPinned ? (
-          <svg
-            className="w-4 h-4 text-neon-green"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
-          </svg>
-        ) : (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 8h10M7 12h6m-7 6l4-2 4 2 4-2 4 2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12z"
-            />
-          </svg>
-        )}
+        <img 
+          src={`/assets/ui/${isPinned ? 'action-voice' : 'logo'}.png`} 
+          alt="" 
+          className={`w-5 h-5 transition-all ${isPinned ? 'animate-pulse' : 'group-hover:scale-110'}`}
+          onError={(e) => (e.currentTarget.style.opacity = '0')}
+        />
       </button>
 
+      {/* Sidebar Panel */}
       <div
         ref={sidebarRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         role="complementary"
         aria-label="AI assistant sidebar"
-        className={`!fixed inset-y-0 right-0 w-[var(--assistant-width)] max-md:w-full panel-surface panel-rail panel-frame panel-carbon cut-corner-md border-l border-slate-800 z-40 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.8)]`}
+        className={`!fixed inset-y-0 right-0 w-[var(--assistant-width)] max-md:w-full panel-surface panel-rail panel-frame panel-carbon panel-flourish cut-corner-md border-l border-slate-800 z-40 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.8)]`}
         style={{ '--assistant-width': `${sidebarWidth}px` } as React.CSSProperties}
       >
+        {/* Resize Handle */}
         <div
           className="group absolute left-0 top-0 hidden h-full w-1 cursor-ew-resize md:block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-amber/60"
           onMouseDown={handleResizeStart}
           onKeyDown={handleResizeKeyDown}
-          onDoubleClick={() => onSidebarWidthChange?.(clampSidebarWidth(defaultSidebarWidth))}
+          onDoubleClick={handleResizeReset}
           role="separator"
           tabIndex={0}
           aria-orientation="vertical"
           aria-label="Resize assistant sidebar"
-          aria-valuemin={minSidebarWidth}
-          aria-valuemax={maxSidebarWidth}
+          aria-valuemin={MIN_SIDEBAR_WIDTH}
+          aria-valuemax={MAX_SIDEBAR_WIDTH}
           aria-valuenow={sidebarWidth}
           aria-valuetext={`${sidebarWidth}px`}
           title="Drag or use arrow keys to resize. Double-click to reset."

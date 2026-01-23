@@ -98,6 +98,8 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [is3DCodeApproved, setIs3DCodeApproved] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
   // AI Chat Assistant State
   const [showAiChat, setShowAiChat] = useState(false);
@@ -158,6 +160,14 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages, showAiChat]);
+
+  // Reset image error state when URL changes
+  useEffect(() => {
+    setImageLoadError(false);
+    if (editedImageUrl) {
+      setIsImageLoading(true);
+    }
+  }, [editedImageUrl]);
 
   const handleSave = () => {
     const pinsArray = editedPins
@@ -737,12 +747,51 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
             {activeTab === 'image' && (
               <div className="flex flex-col h-full gap-4">
                 <div className="bg-black/50 border border-slate-700 rounded-xl overflow-hidden aspect-square relative flex items-center justify-center max-h-[300px] mx-auto w-full">
-                  {editedImageUrl ? (
-                    <img
-                      src={editedImageUrl}
-                      alt="Preview"
-                      className="w-full h-full object-contain"
-                    />
+                  {editedImageUrl && !imageLoadError ? (
+                    <>
+                      {isImageLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+                          <div className="w-8 h-8 border-2 border-neon-amber border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      <img
+                        src={editedImageUrl}
+                        alt="Preview"
+                        className={`w-full h-full object-contain transition-opacity ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                        onLoad={() => setIsImageLoading(false)}
+                        onError={() => {
+                          setIsImageLoading(false);
+                          setImageLoadError(true);
+                        }}
+                      />
+                    </>
+                  ) : imageLoadError ? (
+                    <div className="text-red-400 text-center p-4">
+                      <svg
+                        className="w-16 h-16 mx-auto mb-2 opacity-70"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                      <p className="text-sm font-medium">Failed to Load Image</p>
+                      <p className="text-xs text-slate-500 mt-1">The image URL may be invalid or blocked</p>
+                      <button
+                        onClick={() => {
+                          setImageLoadError(false);
+                          setEditedImageUrl('');
+                        }}
+                        className="mt-3 text-xs text-neon-cyan hover:text-white transition-colors"
+                      >
+                        Clear URL
+                      </button>
+                    </div>
                   ) : (
                     <div className="text-slate-300 text-center p-4">
                       <svg

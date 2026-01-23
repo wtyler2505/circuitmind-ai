@@ -301,27 +301,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   }, [messages]);
 
-  if (!isExpanded) {
-    return (
-      <button
-        type="button"
-        onClick={onToggleExpand}
-        className="fixed bottom-4 right-4 h-10 w-10 inline-flex items-center justify-center bg-neon-cyan text-black cut-corner-sm border border-neon-cyan/70 shadow-[0_0_18px_rgba(0,243,255,0.45)] transition-all z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 hover:bg-white"
-        title="Open chat"
-        aria-label="Open chat"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-      </button>
-    );
-  }
-
   // Updated container class for darker industrial look
   const containerClassName = useMemo(() => 
     `relative flex flex-col h-full bg-[#020203] panel-frame border-l border-slate-800/80 ${className}`.trim(),
@@ -365,6 +344,27 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     }
     return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
   }, []);
+
+  if (!isExpanded) {
+    return (
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        className="fixed bottom-4 right-4 h-10 w-10 inline-flex items-center justify-center bg-neon-cyan text-black cut-corner-sm border border-neon-cyan/70 shadow-[0_0_18px_rgba(0,243,255,0.45)] transition-all z-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 hover:bg-white"
+        title="Open chat"
+        aria-label="Open chat"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+        </svg>
+      </button>
+    );
+  }
 
   return (
     <div
@@ -662,6 +662,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               <button
                 key={idx}
                 onClick={() => onSuggestionClick?.(suggestion)}
+                aria-label={`Try suggestion: ${suggestion}`}
                 className="px-2 py-1 bg-slate-800/50 hover:bg-slate-700/80 border border-slate-700 hover:border-slate-500 text-[9px] text-slate-300 hover:text-white transition-colors cut-corner-sm flex items-center gap-1.5"
               >
                 <span className="text-neon-purple text-[10px]">›</span>
@@ -694,7 +695,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
               type="button"
               onClick={removeAttachment}
               className="absolute -top-1.5 -right-1.5 h-5 w-5 flex items-center justify-center bg-red-500 text-black font-bold hover:bg-white cut-corner-sm shadow-md"
-              title="Remove"
+              title="Remove attachment"
+              aria-label="Remove attachment"
             >
               ✕
             </button>
@@ -723,6 +725,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   key={mode}
                   type="button"
                   onClick={() => onModeChange?.(mode)}
+                  aria-label={`Switch to ${mode} mode`}
                   className={`px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider transition-colors ${
                     generationMode === mode
                       ? mode === 'chat' ? 'text-neon-cyan bg-neon-cyan/10' : mode === 'image' ? 'text-neon-amber bg-neon-amber/10' : 'text-neon-purple bg-neon-purple/10'

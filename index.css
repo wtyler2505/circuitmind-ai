@@ -124,6 +124,22 @@ body {
 .panel-carbon::before { background-image: url('/assets/ui/pattern-carbon.png'); opacity: 0.05; }
 .panel-brushed::before { background-image: url('/assets/ui/pattern-brushed.png'); opacity: 0.04; }
 .panel-circuit::before { background-image: url('/assets/ui/pattern-circuit.png'); opacity: 0.08; background-size: 512px; }
+.panel-loading::before { background-image: url('/assets/ui/loading.png'); opacity: 0.15; background-size: 256px; animation: scan 4s linear infinite; }
+
+.loading-tech {
+  width: 40px;
+  height: 40px;
+  background-image: url('/assets/ui/loading.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  animation: rotate-tech 3s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.5));
+}
+
+@keyframes rotate-tech {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 .panel-header {
   background: 
@@ -208,6 +224,21 @@ body {
   border-right: 1px solid rgba(255, 255, 255, 0.3);
   pointer-events: none;
   z-index: 10;
+}
+
+.panel-flourish::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  background-image: url('/assets/ui/flourish.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 15;
 }
 
 .panel-title {

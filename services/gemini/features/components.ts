@@ -17,29 +17,51 @@ export const explainComponent = async (componentName: string): Promise<string> =
   const startTime = Date.now();
   const model = MODELS.CHAT;
   const ai = getAIClient();
+
+  // Check if API key is configured
+  const apiKey = localStorage.getItem('cm_gemini_api_key') || process.env.API_KEY;
+  if (!apiKey) {
+    return `**API Key Required**\n\nTo get component explanations, please configure your Gemini API key in Settings.\n\n*Component: ${componentName}*`;
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: model,
       contents: PROMPTS.EXPLAIN_COMPONENT(componentName),
     });
-    
+
     aiMetricsService.logMetric({
         model,
         operation: 'explainComponent',
         latencyMs: Date.now() - startTime,
         success: true
       });
-      
+
     return response.text || "Could not retrieve explanation.";
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[explainComponent] Error:', errorMessage);
+
     aiMetricsService.logMetric({
         model,
         operation: 'explainComponent',
         latencyMs: Date.now() - startTime,
         success: false,
-        error: String(error)
+        error: errorMessage
       });
-    return "Error retrieving component details.";
+
+    // Provide user-friendly error messages
+    if (errorMessage.includes('API_KEY') || errorMessage.includes('401') || errorMessage.includes('invalid')) {
+      return `**API Key Error**\n\nYour Gemini API key may be invalid or expired. Please check your API key in Settings.\n\n*Error: ${errorMessage}*`;
+    }
+    if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate')) {
+      return `**Rate Limited**\n\nToo many requests. Please wait a moment and try again.\n\n*Component: ${componentName}*`;
+    }
+    if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch')) {
+      return `**Connection Error**\n\nCouldn't connect to the AI service. Please check your internet connection.\n\n*Component: ${componentName}*`;
+    }
+
+    return `**Error Loading Details**\n\nCouldn't retrieve information for "${componentName}".\n\n*Error: ${errorMessage}*`;
   }
 };
 

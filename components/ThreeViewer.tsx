@@ -358,28 +358,21 @@ const ThreeViewerContent: React.FC<ThreeViewerProps> = ({ code, modelUrl }) => {
   // if (error) throw new Error(error);
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden border border-slate-700 group bg-cyber-dark">
-      <div ref={containerRef} className="w-full h-full" />
+    <div className="relative w-full h-full rounded-xl overflow-hidden border border-slate-700 group bg-cyber-dark panel-frame panel-loading">
+      <div ref={containerRef} className="w-full h-full relative z-10" />
 
       {!hasContent && !error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center text-slate-300 p-6 pointer-events-none">
-          <div className="w-16 h-16 rounded-full border border-neon-purple/40 flex items-center justify-center text-neon-purple/80">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center text-slate-300 p-6 pointer-events-none z-20">
+          <div className="w-20 h-20 flex items-center justify-center">
+            <img src="/assets/ui/logo.png" alt="" className="w-16 h-16 object-contain opacity-40 grayscale animate-pulse-slow" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-bold text-slate-100">No 3D model yet.</h3>
+            <h3 className="text-lg font-bold text-slate-100 uppercase tracking-[0.2em]">No 3D model yet.</h3>
             <p className="text-[11px] text-slate-300 max-w-xs">
               Generate a model with AI or paste a GLB/GLTF URL in the editor.
             </p>
           </div>
-          <div className="text-[11px] text-slate-300">
+          <div className="text-[10px] uppercase tracking-[0.1em] text-slate-500 mt-4">
             Tip: Models are auto-centered and scaled for the grid.
           </div>
         </div>

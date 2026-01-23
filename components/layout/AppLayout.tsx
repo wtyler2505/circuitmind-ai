@@ -33,7 +33,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
       {/* Main Area */}
       <div
-        className="flex-1 flex flex-col transition-all duration-300 ml-0 mr-0 md:ml-[var(--inventory-width)] md:mr-[var(--assistant-width)]"
+        className="flex-1 flex flex-col min-w-0 transition-all duration-300 ml-0 mr-0 sm:ml-[var(--inventory-width)] sm:mr-[var(--assistant-width)]"
         style={
           {
             '--inventory-width': `${dockedInventoryWidth}px`,

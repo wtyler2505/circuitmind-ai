@@ -19,21 +19,31 @@ npm run preview  # Preview build
 | Priority | File                           | Why                                  |
 | -------- | ------------------------------ | ------------------------------------ |
 | 1        | types.ts                       | All interfaces                       |
-| 2        | App.tsx                        | Centralized state (838 LOC)          |
-| 3        | services/geminiService.ts      | AI integration (934 LOC)             |
-| 4        | services/aiMetricsService.ts   | AI Latency/Success tracking          |
-| 5        | services/circuitAnalysis.ts    | Rule-based verification              |
+| 2        | App.tsx                        | Root orchestration                   |
+| 3        | contexts/*.tsx                 | Domain state (6 contexts)            |
+| 4        | services/gemini/               | Modular AI integration               |
+| 5        | services/aiMetricsService.ts   | AI Latency/Success tracking          |
 | 6        | hooks/useAIActions.ts          | Action dispatch hub                  |
-| 7        | hooks/actions/\*.ts            | Handler registry (✅ refactored)     |
+| 7        | hooks/actions/*.ts             | Handler registry (refactored)        |
 | 8        | hooks/useConversations.ts      | Conversation state                   |
-| 9        | services/responseParser.ts     | AI response parsing                  |
-| 10       | ref/\*.md                      | Detailed docs                        |
+| 9        | hooks/useInventorySync.ts      | Inventory-diagram sync               |
+| 10       | ref/*.md                       | Detailed docs                        |
 
 ## Architecture
 
-**State**: Centralized in App.tsx (no Redux/Context)
+**State**: React Context API + App.tsx coordination
 
-- `inventory` → `localStorage.cm_inventory`
+| Context | Purpose |
+|---------|---------|
+| DiagramContext | Diagram state + undo/redo |
+| InventoryContext | Component library |
+| LayoutContext | UI layout + sidebars |
+| ConversationContext | Chat session |
+| AssistantStateContext | AI status |
+| VoiceAssistantContext | Voice I/O |
+
+**Persistence**:
+- `inventory` → `localStorage.cm_inventory` + IndexedDB
 - `history` → `localStorage.cm_autosave` (undo/redo)
 - `liveSessionRef` → useRef (not useState!)
 
@@ -64,14 +74,17 @@ npm run preview  # Preview build
 
 ## Key Patterns
 
-**Dual Component Sync** - When editing:
+**Dual Component Sync** - When editing (handled by `useInventorySync`):
 
 ```typescript
-setInventory((prev) => prev.map((i) => (i.id === id ? updated : i)));
-updateDiagram({
-  ...diagram,
-  components: diagram.components.map((c) => (c.id === id ? updated : c)),
-});
+// InventoryContext - source of truth
+updateItem(updated);
+
+// DiagramContext - synced automatically
+updateDiagram(curr => ({
+  ...curr,
+  components: curr.components.map(c => c.id === updated.id ? updated : c)
+}));
 ```
 
 **Missing Pin** - AI hallucinates pin → red pulsing dot (not crash)
@@ -83,6 +96,8 @@ updateDiagram({
 | [ref/architecture.md](ref/architecture.md)                   | System design, data flow     |
 | [ref/services.md](ref/services.md)                           | Service APIs                 |
 | [ref/components.md](ref/components.md)                       | Component APIs               |
+| [ref/contexts.md](ref/contexts.md)                           | Context providers            |
+| [ref/hooks.md](ref/hooks.md)                                 | Custom hooks                 |
 | [ref/patterns.md](ref/patterns.md)                           | Design patterns              |
 | [ref/types.md](ref/types.md)                                 | TypeScript interfaces        |
 | [ref/pitfalls.md](ref/pitfalls.md)                           | Gotchas & common mistakes    |
@@ -90,11 +105,14 @@ updateDiagram({
 
 ## ⚠️ Complexity Hotspots
 
-| File                      | LOC | Status                         |
-| ------------------------- | --- | ------------------------------ |
-| services/geminiService.ts | 934 | 🟡 Monolithic, monitor         |
-| components/Inventory.tsx  | 936 | 🟡 Could extract subcomponents |
-| hooks/useAIActions.ts     | 153 | ✅ Refactored (was 523)        |
+| File                           | LOC  | Status                          |
+| ------------------------------ | ---- | ------------------------------- |
+| components/diagram/Diagram3DView.tsx | 1833 | 🟡 Largest component            |
+| components/DiagramCanvas.tsx   | 1227 | 🟡 Core canvas, complex         |
+| components/ComponentEditorModal.tsx | 1159 | 🟡 Multi-tab editor            |
+| components/Inventory.tsx       | 987  | 🟡 Could extract subcomponents  |
+| services/gemini/               | 10 files | ✅ Refactored (was 934 LOC) |
+| hooks/useAIActions.ts          | 153  | ✅ Refactored (was 523)         |
 
 ## Performance Optimizations (Applied)
 
@@ -102,4 +120,3 @@ updateDiagram({
 - **Code Splitting**: ThreeViewer, Modals in separate chunks
 - **Memory**: ThreeViewer scene disposal, MediaRecorder cleanup
 - **Rendering**: ChatMessage memoized, DiagramCanvas useMemo
-
