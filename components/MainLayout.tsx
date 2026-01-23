@@ -6,6 +6,7 @@ import Inventory from './Inventory';
 import AssistantSidebar from './AssistantSidebar';
 import ChatPanel from './ChatPanel';
 import DiagramCanvas, { DiagramCanvasRef } from './DiagramCanvas';
+import { TacticalHUD } from './diagram/TacticalHUD';
 import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
@@ -414,6 +415,7 @@ export const MainLayout: React.FC = () => {
         </>
       }
     >
+      <TacticalHUD />
       <DiagramCanvas
         ref={setCanvasRef}
         diagram={diagram}

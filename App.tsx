@@ -6,13 +6,15 @@ import { LayoutProvider } from './contexts/LayoutContext';
 import { VoiceAssistantProvider } from './contexts/VoiceAssistantContext';
 import { ConversationProvider } from './contexts/ConversationContext';
 import { AssistantStateProvider } from './contexts/AssistantStateContext';
+import { HUDProvider } from './contexts/HUDContext';
 import { INITIAL_INVENTORY } from './data/initialInventory';
 
 export default function App() {
   return (
     <LayoutProvider>
       <AssistantStateProvider>
-        <InventoryProvider initialData={INITIAL_INVENTORY}>
+        <HUDProvider>
+          <InventoryProvider initialData={INITIAL_INVENTORY}>
           <DiagramProvider>
             <VoiceAssistantProvider>
               <ConversationProvider>
