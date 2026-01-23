@@ -225,10 +225,106 @@ ${connections ? `Connections: ${connections.length}` : ''}
 
 
 
-    FRAGMENT:
+        FRAGMENT:
 
-  `
 
-};
+
+      `,
+
+
+
+    
+
+
+
+      GENERATE_PREDICTIONS: (context: string) => `
+
+
+
+        You are a proactive electronics design assistant.
+
+
+
+        Analyze the current workspace state and predict the 3 most likely next actions the user should take to advance their design.
+
+
+
+        
+
+
+
+        CONTEXT:
+
+
+
+        ${context}
+
+
+
+        
+
+
+
+        CATEGORIES:
+
+
+
+        - connectivity: Missing wires or standard connections (GND, VCC, I2C).
+
+
+
+        - safety: Missing protection components (Resistors, Capacitors).
+
+
+
+        - config: Setting component values or naming nodes.
+
+
+
+    
+
+
+
+        RETURN a JSON array of PredictiveAction objects matching this schema:
+
+
+
+        [{
+
+
+
+          "id": "string",
+
+
+
+          "type": "connectivity" | "safety" | "config",
+
+
+
+          "action": { "type": "string", "payloadJson": "stringified_json", "label": "string", "safe": true },
+
+
+
+          "confidence": number,
+
+
+
+          "reasoning": "string"
+
+
+
+        }]
+
+
+
+      `
+
+
+
+    };
+
+
+
+    
 
 
