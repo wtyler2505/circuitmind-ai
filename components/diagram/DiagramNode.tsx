@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ElectronicComponent } from '../../types';
 import { getComponentShape, calculatePinPositions, COLORS, type ComponentShape } from './componentShapes';
 import { useTelemetry } from '../../contexts/TelemetryContext';
+import { useSimulation } from '../../contexts/SimulationContext';
 
 // Default dimensions (used for layout calculations)
 const COMPONENT_WIDTH = 180;
@@ -136,6 +137,34 @@ const TelemetryOverlay: React.FC<{
         </motion.g>
       </AnimatePresence>
     </g>
+  );
+};
+
+/**
+ * PinStatusDot component - tiny indicator for logical pin state.
+ */
+const PinStatusDot: React.FC<{ pin: string; componentId: string; x: number; y: number }> = ({ pin, componentId, x, y }) => {
+  const { result } = useSimulation();
+  const state = result?.pinStates[`${componentId}:${pin}`];
+
+  if (!state || state.logicState === 'FLOATING') return null;
+
+  const color = 
+    state.logicState === 'HIGH' ? '#00ff9d' : 
+    state.logicState === 'LOW' ? '#1e293b' : 
+    state.logicState === 'ERROR' ? '#ef4444' : 'transparent';
+
+  return (
+    <circle 
+      cx={x} 
+      cy={y} 
+      r="2.5" 
+      fill={color} 
+      stroke="#000" 
+      strokeWidth="0.5" 
+      pointerEvents="none" 
+      className="transition-colors duration-200"
+    />
   );
 };
 
@@ -729,13 +758,23 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
     return Object.keys(liveData).some(key => key.startsWith(`${component.id}:`));
   }, [liveData, component.id]);
 
+  const { result: simResult } = useSimulation();
+  const hasLogicError = useMemo(() => {
+    if (!simResult) return false;
+    return Object.keys(simResult.pinStates).some(key => 
+      key.startsWith(`${component.id}:`) && simResult.pinStates[key].logicState === 'ERROR'
+    );
+  }, [simResult, component.id]);
+
   const strokeColor = isHighlighted
     ? highlight.color
-    : isSelected
-      ? '#00F3FF'
-      : isHovered
+    : hasLogicError
+      ? '#ef4444'
+      : isSelected
         ? '#00F3FF'
-        : shape.stroke;
+        : isHovered
+          ? '#00F3FF'
+          : shape.stroke;
 
   const strokeWidth = isHighlighted ? 3 : isSelected ? 3 : isHovered ? 2.5 : shape.strokeWidth;
 
@@ -770,7 +809,7 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
   return (
     <g
       transform={`translate(${position.x}, ${position.y})`}
-      className={`pointer-events-auto cursor-grab active:cursor-grabbing ${isHighlighted && highlight.pulse ? 'component-highlighted' : ''} ${hasActiveTelemetry ? 'telemetry-active' : ''}`}
+      className={`pointer-events-auto cursor-grab active:cursor-grabbing ${isHighlighted && highlight.pulse ? 'component-highlighted' : ''} ${hasActiveTelemetry ? 'telemetry-active' : ''} ${hasLogicError ? 'logic-error' : ''}`}
       style={
         isHighlighted
           ? ({ '--highlight-color': highlight.color } as React.CSSProperties)
@@ -889,6 +928,12 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
             x={pinDef.x}
             y={pinDef.y}
             isRightSide={pinDef.side === 'right'}
+          />
+          <PinStatusDot
+            pin={pinDef.name}
+            componentId={component.id}
+            x={pinDef.x}
+            y={pinDef.y}
           />
         </React.Fragment>
       ))}
