@@ -136,6 +136,11 @@ export const PROMPTS = {
 ${contextSection}
 ${knowledgeInjection}
 
+CRITICAL AWARENESS RULES:
+1. REFERENTIAL INTEGRITY: When the user says "this", "that", or "it", check the 'Selected' or 'Focus Path' in the context first. If a component or pin is selected, assume they are talking about that.
+2. TEMPORAL AWARENESS: Use 'Timeline Awareness' to understand the sequence of actions. If the user refers to a "previous" or "last" action, look at the timeline.
+3. PIN SPECIFICITY: If a specific pin path is focused (e.g., component.pins.GPIO13), prioritize technical specs for that specific pin.
+
 ADAPTIVE INSTRUCTION: ${toneInstruction}
 
 CAPABILITIES:
