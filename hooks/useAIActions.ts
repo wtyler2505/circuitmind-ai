@@ -9,6 +9,7 @@ import { useDiagram } from '../contexts/DiagramContext';
 import { useLayout } from '../contexts/LayoutContext';
 import { useAssistantState } from '../contexts/AssistantStateContext';
 import { useConversationContext } from '../contexts/ConversationContext';
+import { useMacros } from '../contexts/MacroContext';
 import { PredictiveAction } from '../services/predictionEngine';
 
 export type { ActionResult } from './useActionHistory';
@@ -32,26 +33,12 @@ export function useAIActions(options: UseAIActionsOptions) {
   const [stagedActions, setStagedActions] = useState<PredictiveAction[]>([]);
   const { autonomySettings, updateAutonomySettings, isActionSafe } = useAutonomySettings();
   const { actionHistory, addToHistory, recordUndo, undo, canUndo } = useActionHistory(updateDiagram);
-
-  // Staged Actions (Predictions)
-  const acceptStagedAction = useCallback(async (id: string) => {
-    const prediction = stagedActions.find((a) => a.id === id);
-    if (prediction) {
-      setStagedActions((prev) => prev.filter((a) => a.id !== id));
-      return await executeAction(prediction.action, false);
-    }
-  }, [stagedActions, executeAction]);
-
-  const rejectStagedAction = useCallback((id: string) => {
-    setStagedActions((prev) => prev.filter((a) => a.id !== id));
-  }, [stagedActions]);
-
-  const clearStagedActions = useCallback(() => setStagedActions([]), []);
-  const stageActions = useCallback((actions: PredictiveAction[]) => setStagedActions(actions), []);
+  const { isRecording, addRecordedStep } = useMacros();
 
   // Execute action via handler registry
   const executeAction = useCallback(async (action: ActionIntent, auto: boolean): Promise<ActionResult> => {
-    // Build context inside callback to avoid stale closures and dependency changes
+    // ...
+    // context building omitted for brevity in replace
     const context: ActionContext = {
       canvasRef: canvasRef as React.RefObject<DiagramCanvasRef>, // Cast for compatibility with handler types
       inventory, diagram, setInventory,
@@ -85,6 +72,9 @@ export function useAIActions(options: UseAIActionsOptions) {
     }
 
     if (result.success) {
+      if (isRecording) {
+        addRecordedStep(action);
+      }
       pushActionDelta({
         type: action.type,
         targetId: (action.payload as any).componentId || (action.payload as any).nodeId || (action.payload as any).id,
@@ -98,8 +88,24 @@ export function useAIActions(options: UseAIActionsOptions) {
     canvasRef, inventory, diagram, setInventory,
     setInventoryOpen, setSettingsOpen, setSelectedComponent,
     setGenerationMode, updateDiagram, activeConversationId,
-    recordUndo, addToHistory, handleUndo, handleRedo, saveDiagram, loadDiagram
+    recordUndo, addToHistory, handleUndo, handleRedo, saveDiagram, loadDiagram, pushActionDelta
   ]);
+
+  // Staged Actions (Predictions)
+  const acceptStagedAction = useCallback(async (id: string) => {
+    const prediction = stagedActions.find((a) => a.id === id);
+    if (prediction) {
+      setStagedActions((prev) => prev.filter((a) => a.id !== id));
+      return await executeAction(prediction.action, false);
+    }
+  }, [stagedActions, executeAction]);
+
+  const rejectStagedAction = useCallback((id: string) => {
+    setStagedActions((prev) => prev.filter((a) => a.id !== id));
+  }, [stagedActions]);
+
+  const clearStagedActions = useCallback(() => setStagedActions([]), []);
+  const stageActions = useCallback((actions: PredictiveAction[]) => setStagedActions(actions), []);
 
   // Main execute - checks autonomy settings
   const execute = useCallback(async (action: ActionIntent): Promise<ActionResult> => {

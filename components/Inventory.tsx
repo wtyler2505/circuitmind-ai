@@ -9,6 +9,8 @@ import { INITIAL_INVENTORY } from '../data/initialInventory';
 import InventoryList from './inventory/InventoryList';
 import { resizeImage } from './inventory/inventoryUtils';
 import { HardwareTerminal } from './layout/HardwareTerminal';
+import { BOMModal } from './inventory/BOMModal';
+import { MacroPanel } from './inventory/MacroPanel';
 
 import {
   identifyComponentFromImage,
@@ -62,8 +64,8 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
   const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
   const toast = useToast();
 
-  // Tabs: 'list', 'add', 'tools'
-  const [activeTab, setActiveTab] = useState<'list' | 'add' | 'tools'>('list');
+  // Tabs: 'list', 'add', 'tools', 'macros'
+  const [activeTab, setActiveTab] = useState<'list' | 'add' | 'tools' | 'macros'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<ComponentType | 'all'>('all');
 
@@ -90,6 +92,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
   // Tools State
   const [suggestions, setSuggestions] = useState<string>('');
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isBOMOpen, setIsBOMOpen] = useState(false);
 
   // --- Logic Extraction from App.tsx ---
 
@@ -661,6 +664,15 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
             >
               TOOLS
             </button>
+            <button
+              onClick={() => setActiveTab('macros')}
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-colors border-b-2 ${ activeTab === 'macros' 
+                  ? 'border-neon-amber text-white bg-white/5' 
+                  : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
+              }`}
+            >
+              MACROS
+            </button>
           </div>
         </div>
 
@@ -936,6 +948,12 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                     <img src="/assets/ui/action-load.png" alt="" className="w-4 h-4 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
                     <span className="text-[9px] font-bold tracking-[0.2em]">IMPORT JSON</span>
                   </label>
+                  <button
+                    onClick={() => setIsBOMOpen(true)}
+                    className="col-span-2 bg-neon-purple/10 hover:bg-neon-purple/20 text-neon-purple py-2 cut-corner-sm border border-neon-purple/30 flex items-center justify-center gap-2 transition-all mt-1"
+                  >
+                    <span className="text-[9px] font-bold tracking-[0.2em]">GENERATE PROJECT BOM</span>
+                  </button>
                 </div>
                 <div className="mt-2">
                   <button
@@ -981,8 +999,15 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
               </div>
             </div>
           )}
+
+          {/* Macros View */}
+          {activeTab === 'macros' && (
+            <MacroPanel />
+          )}
         </div>
       </div>
+
+      {isBOMOpen && <BOMModal onClose={() => setIsBOMOpen(false)} />}
     </>
   );
 };
