@@ -14,6 +14,7 @@ import { WiringDiagram, ElectronicComponent } from '../../types';
 import { getComponentShape } from './componentShapes';
 import { Primitives, Materials } from '../../services/threePrimitives';
 import { executeInWorker } from '../../services/threeCodeRunner';
+import { useTelemetry } from '../../contexts/TelemetryContext';
 
 interface Diagram3DViewProps {
   diagram: WiringDiagram | null;
@@ -1271,8 +1272,10 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
   const animationIdRef = useRef<number>(0);
   const componentsGroupRef = useRef<THREE.Group | null>(null);
   const wiresGroupRef = useRef<THREE.Group | null>(null);
+  const telemetryGroupRef = useRef<THREE.Group | null>(null);
   const envMapRef = useRef<THREE.Texture | null>(null);
   
+  const { liveData } = useTelemetry();
   const [missingModels, setMissingModels] = useState<ElectronicComponent[]>([]);
 
   // Create procedural environment map (studio HDRI simulation)
@@ -1466,10 +1469,13 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     // Component and wire groups
     const componentsGroup = new THREE.Group();
     const wiresGroup = new THREE.Group();
+    const telemetryGroup = new THREE.Group();
     scene.add(componentsGroup);
     scene.add(wiresGroup);
+    scene.add(telemetryGroup);
     componentsGroupRef.current = componentsGroup;
     wiresGroupRef.current = wiresGroup;
+    telemetryGroupRef.current = telemetryGroup;
 
     // Post-processing setup with SSAO and Bloom
     const composer = new EffectComposer(renderer);
@@ -1788,6 +1794,90 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     if (requestRender) requestRender();
 
   }, [diagram, positions]);
+
+  // Update telemetry sprites when liveData changes
+  useEffect(() => {
+    if (!telemetryGroupRef.current || !diagram || !sceneRef.current) return;
+    const group = telemetryGroupRef.current;
+    const scene = sceneRef.current;
+    const requestRender = (scene as any).userData.requestRender;
+
+    // Clear existing sprites
+    while (group.children.length > 0) {
+      const child = group.children[0];
+      disposeObject(child);
+      group.remove(child);
+    }
+
+    const scale = 0.5;
+    const offsetX = -200;
+    const offsetZ = -150;
+
+    // Create 3D sprites for each active data point
+    Object.entries(liveData).forEach(([key, packet]) => {
+      const [componentId, pin] = key.split(':');
+      
+      // Attempt to find the component in the diagram
+      let component = diagram.components.find(c => c.id === componentId);
+      
+      // If auto-mapped, we might not know which component yet, 
+      // but if there's only one of that type, we could guess.
+      // For now, we only show sprites for explicit IDs.
+      if (!component) return;
+
+      const pos = positions.get(component.id) || { x: 0, y: 0 };
+      const shape = getComponentShape(component.type || 'other', component.name || 'Unknown');
+      
+      const width = shape.width * scale;
+      const depth = shape.height * scale;
+
+      const pinOffset = getPinCoordinates(
+        component.type || 'other', 
+        component.name || 'Unknown', 
+        pin === 'default' ? '' : pin, 
+        width, 
+        depth
+      );
+
+      // Create a high-contrast label sprite
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = packet.value === 'HIGH' || packet.value === '1' ? '#00ff9d' : '#00f3ff';
+        ctx.beginPath();
+        ctx.roundRect(0, 0, 128, 64, 12);
+        ctx.fill();
+        
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 36px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(packet.value), 64, 32);
+      }
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      const spriteMaterial = new THREE.SpriteMaterial({ 
+        map: texture, 
+        transparent: true,
+        depthTest: false // Ensure labels are always visible
+      });
+      const sprite = new THREE.Sprite(spriteMaterial);
+      
+      // Position sprite above the pin
+      sprite.position.set(
+        pos.x * scale + offsetX + width / 2 + pinOffset.x,
+        3 + pinOffset.y + 15, // 15 units above pin
+        pos.y * scale + offsetZ + depth / 2 + pinOffset.z
+      );
+      
+      sprite.scale.set(24, 12, 1);
+      group.add(sprite);
+    });
+
+    if (requestRender) requestRender();
+  }, [liveData, diagram, positions]);
 
   // Handle generation click
   const handleGenerateClick = async (component: ElectronicComponent) => {
