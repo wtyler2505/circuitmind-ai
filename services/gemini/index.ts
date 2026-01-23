@@ -13,3 +13,5 @@ export * from './features/suggestions';
 export * from './features/hud';
 export * from './features/predictions';
 export * from './features/simulation';
+export * from './features/bom';
+export * from './features/datasheets';

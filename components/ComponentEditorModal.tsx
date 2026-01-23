@@ -9,7 +9,9 @@ import {
   generateComponentThumbnail,
   smartFillComponent,
   assistComponentEditor,
+  extractPinoutFromPDF,
 } from '../services/geminiService';
+import { datasheetProcessor } from '../services/datasheetProcessor';
 
 // Lazy load Three.js viewer (heavy dependency)
 const ThreeViewer = lazy(() => import('./ThreeViewer'));
@@ -96,10 +98,13 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isExtractingDatasheet, setIsExtractingDatasheet] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [is3DCodeApproved, setIs3DCodeApproved] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(false);
+
+  const datasheetInputRef = useRef<HTMLInputElement>(null);
 
   // AI Chat Assistant State
   const [showAiChat, setShowAiChat] = useState(false);
@@ -168,6 +173,37 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
       setIsImageLoading(true);
     }
   }, [editedImageUrl]);
+
+  const handleDatasheetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsExtractingDatasheet(true);
+    try {
+      const base64 = await datasheetProcessor.fileToBase64(file);
+      const metadata = await extractPinoutFromPDF(base64);
+      
+      if (metadata) {
+        if (metadata.pins.length > 0) {
+          const pinNames = metadata.pins.map(p => p.name).join(', ');
+          setEditedPins(pinNames);
+        }
+        
+        const specSummary = `Logic: ${metadata.specs.logicLevel}. Voltage: ${metadata.specs.voltageMin}V - ${metadata.specs.voltageMax}V. ${metadata.specs.currentLimit ? `Max Current: ${metadata.specs.currentLimit}mA.` : ''}`;
+        setEditedDescription(prev => prev ? `${prev}\n\n${specSummary}` : specSummary);
+        
+        toast.success(`Extracted ${metadata.pins.length} pins with ${Math.round(metadata.confidence * 100)}% confidence.`);
+      } else {
+        toast.error('Could not extract data from this datasheet.');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Error processing PDF datasheet.');
+    } finally {
+      setIsExtractingDatasheet(false);
+      if (datasheetInputRef.current) datasheetInputRef.current.value = '';
+    }
+  };
 
   const handleSave = () => {
     const pinsArray = editedPins
@@ -696,18 +732,52 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                   {/* DATASHEET URL */}
                   <div>
                     <label className="block text-xs font-mono text-slate-300 mb-1">
-                      DATASHEET URL
+                      DATASHEET
                       <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                         Optional
                       </span>
                     </label>
-                    <input
-                      type="url"
-                      value={editedDatasheetUrl}
-                      onChange={(e) => setEditedDatasheetUrl(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none"
-                      placeholder="https://example.com/datasheet.pdf"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={editedDatasheetUrl}
+                        onChange={(e) => setEditedDatasheetUrl(e.target.value)}
+                        className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none"
+                        placeholder="https://example.com/datasheet.pdf"
+                      />
+                      <button
+                        onClick={() => datasheetInputRef.current?.click()}
+                        disabled={isExtractingDatasheet}
+                        className="bg-neon-cyan/10 border border-neon-cyan/50 text-neon-cyan px-3 rounded hover:bg-neon-cyan hover:text-black disabled:opacity-80 transition-colors flex items-center justify-center gap-2 text-[10px] font-bold uppercase shrink-0"
+                        title="Extract pins from PDF"
+                      >
+                        {isExtractingDatasheet ? (
+                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        )}
+                        SCRAPE PDF
+                      </button>
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        ref={datasheetInputRef}
+                        onChange={handleDatasheetUpload}
+                      />
+                    </div>
                   </div>
 
                   {/* 3D MODEL URL */}
