@@ -165,6 +165,12 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   // Persistence Effects
   useEffect(() => {
+    // Update body class for mode-specific styling
+    document.body.classList.remove('mode-design', 'mode-wiring', 'mode-debug');
+    document.body.classList.add(`mode-${activeMode}`);
+  }, [activeMode]);
+
+  useEffect(() => {
     storageService.setItem('cm_inventory_open_default', String(isInventoryOpen));
   }, [isInventoryOpen]);
 

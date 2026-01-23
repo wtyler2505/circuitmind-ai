@@ -43,7 +43,15 @@
   --color-sensor-blue: #2563EB;
   --color-sensor-dark: #1D4ED8;
   --color-sensor-purple: #6D28D9;
+
+  /* Dynamic Accents */
+  --mode-accent: var(--color-neon-cyan);
 }
+
+/* Adaptive Mode Accents */
+.mode-design { --mode-accent: #00ff9d; } /* neon-green */
+.mode-wiring { --mode-accent: #00f3ff; } /* neon-cyan */
+.mode-debug  { --mode-accent: #ffaa00; } /* neon-amber */
 
 @keyframes scan {
   0% { transform: translateY(-100%); }
