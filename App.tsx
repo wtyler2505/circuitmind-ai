@@ -9,27 +9,30 @@ import { AssistantStateProvider } from './contexts/AssistantStateContext';
 import { HUDProvider } from './contexts/HUDContext';
 import { TelemetryProvider } from './contexts/TelemetryContext';
 import { SimulationProvider } from './contexts/SimulationContext';
+import { TutorialProvider } from './contexts/TutorialContext';
 import { INITIAL_INVENTORY } from './data/initialInventory';
 
 export default function App() {
   return (
     <LayoutProvider>
       <AssistantStateProvider>
-        <HUDProvider>
-          <TelemetryProvider>
+        <InventoryProvider initialData={INITIAL_INVENTORY}>
+          <ConversationProvider>
             <DiagramProvider>
-              <SimulationProvider>
-                <VoiceAssistantProvider>
-                  <ConversationProvider>
-                    <InventoryProvider initialData={INITIAL_INVENTORY}>
-                      <MainLayout />
-                    </InventoryProvider>
-                  </ConversationProvider>
-                </VoiceAssistantProvider>
-              </SimulationProvider>
+              <TelemetryProvider>
+                <HUDProvider>
+                  <SimulationProvider>
+                    <VoiceAssistantProvider>
+                      <TutorialProvider>
+                        <MainLayout />
+                      </TutorialProvider>
+                    </VoiceAssistantProvider>
+                  </SimulationProvider>
+                </HUDProvider>
+              </TelemetryProvider>
             </DiagramProvider>
-          </TelemetryProvider>
-        </HUDProvider>
+          </ConversationProvider>
+        </InventoryProvider>
       </AssistantStateProvider>
     </LayoutProvider>
   );

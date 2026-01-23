@@ -12,15 +12,10 @@
 - [Feature: Real-Time Data Integration (Hardware Telemetry)](./tracks/real-time-data-integration-har_20260123/spec.md) `status: done`
 - [Feature: Predictive Actions (The Proactive Partner)](./tracks/predictive-actions-the-proacti_20260123/spec.md) `status: done`
 - [Feature: Real-Time Simulation (Live Circuit Logic)](./tracks/real-time-simulation-live-circ_20260123/spec.md) `status: done`
+- [Feature: BOM Exporting (Bill of Materials)](./tracks/bom-exporting-bill-of-material_20260123/spec.md) `status: done`
+- [Feature: Interactive Tutorials (Engineering Bootcamp)](./tracks/interactive-tutorials-engineer_20260123/spec.md) `status: done`
 
-- [ ] **Track: BOM Exporting (Bill of Materials)**
-  *Link: [./conductor/tracks/bom-exporting-bill-of-material_20260123/](./conductor/tracks/bom-exporting-bill-of-material_20260123/)*
-
-- [ ] **Track: Interactive Tutorials (Engineering Bootcamp)**
-  *Link: [./conductor/tracks/interactive-tutorials-engineer_20260123/](./conductor/tracks/interactive-tutorials-engineer_20260123/)*
-
-- [ ] **Track: User Profile Management (Engineering Persona)**
-  *Link: [./conductor/tracks/user-profile-management-engine_20260123/](./conductor/tracks/user-profile-management-engine_20260123/)*
+- [ ] **Track: Smart Component Metadata (Datasheet Scraping)**
 
 - [ ] **Track: System Health Monitoring (Vitals)**
   *Link: [./conductor/tracks/system-health-monitoring-vital_20260123/](./conductor/tracks/system-health-monitoring-vital_20260123/)*
