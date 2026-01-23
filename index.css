@@ -405,6 +405,20 @@ body {
   animation: wire-glow 1s ease-in-out infinite;
 }
 
+@keyframes marching-ants {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+
+.wire-flow-ants {
+  animation: marching-ants 1s linear infinite;
+}
+
+.wire-error {
+  stroke: #ef4444 !important;
+  filter: drop-shadow(0 0 4px #ef4444);
+}
+
 /* Attention-grabbing ring animation for AI actions */
 @keyframes attention-ring {
   0% {

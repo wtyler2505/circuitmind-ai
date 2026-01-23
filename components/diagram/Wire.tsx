@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { WireConnection, ElectronicComponent } from '../../types';
+import { useSimulation } from '../../contexts/SimulationContext';
 
 const COMPONENT_WIDTH = 140;
 const COMPONENT_HEIGHT = 100;
@@ -99,6 +100,8 @@ const Wire = memo<WireProps>(function Wire({
   onEditClick,
   onDelete,
 }) {
+  const { result: simResult } = useSimulation();
+
   const { startX, startY, endX, endY } = useMemo(
     () => {
       if (!startPos || !endPos) return { startX: 0, startY: 0, endX: 0, endY: 0 };
@@ -106,6 +109,20 @@ const Wire = memo<WireProps>(function Wire({
     },
     [connection, startComponent, endComponent, startPos, endPos]
   );
+
+  const isActive = useMemo(() => {
+    if (!simResult) return false;
+    const p1 = `${connection.fromComponentId}:${connection.fromPin}`;
+    const p2 = `${connection.toComponentId}:${connection.toPin}`;
+    return simResult.pinStates[p1]?.logicState === 'HIGH' || simResult.pinStates[p2]?.logicState === 'HIGH';
+  }, [simResult, connection]);
+
+  const hasError = useMemo(() => {
+    if (!simResult) return false;
+    const p1 = `${connection.fromComponentId}:${connection.fromPin}`;
+    const p2 = `${connection.toComponentId}:${connection.toPin}`;
+    return simResult.pinStates[p1]?.logicState === 'ERROR' || simResult.pinStates[p2]?.logicState === 'ERROR';
+  }, [simResult, connection]);
 
   const pathD = useMemo(
     () => getSmartPath(startX, startY, endX, endY),
@@ -153,12 +170,25 @@ const Wire = memo<WireProps>(function Wire({
       {/* Main wire path */}
       <path
         d={pathD}
-        stroke={color}
+        stroke={hasError ? '#ef4444' : color}
         strokeWidth={isHighlighted ? 4 : 2}
         fill="none"
-        className={`transition-all duration-300 drop-shadow-[0_0_2px_rgba(0,0,0,0.8)] group-hover:stroke-white ${isHighlighted && highlight.pulse ? 'animate-pulse' : ''}`}
-        markerEnd={`url(#arrow-${(connection.color || '#00f3ff').replace('#', '')})`}
+        className={`transition-all duration-300 drop-shadow-[0_0_2px_rgba(0,0,0,0.8)] group-hover:stroke-white ${isHighlighted && highlight.pulse ? 'animate-pulse' : ''} ${isActive ? 'wire-active' : ''} ${hasError ? 'wire-error' : ''}`}
+        markerEnd={`url(#arrow-${(hasError ? '#ef4444' : (connection.color || '#00f3ff')).replace('#', '')})`}
       />
+
+      {/* Flow animation overlay */}
+      {isActive && !hasError && (
+        <path
+          d={pathD}
+          stroke="white"
+          strokeWidth="1"
+          fill="none"
+          strokeDasharray="4,8"
+          className="wire-flow-ants"
+          opacity="0.6"
+        />
+      )}
 
       {/* Wire label (shown on hover) */}
       <text
