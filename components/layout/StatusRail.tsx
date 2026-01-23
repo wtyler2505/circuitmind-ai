@@ -32,6 +32,14 @@ export const StatusRail = React.memo(() => {
           <span className="text-neon-cyan">NET</span>
           <span className="text-slate-300">{diagramComponentCount} / {diagramConnectionCount}</span>
         </div>
+        <div className="w-px h-3 bg-white/10" />
+        <div className="flex items-center gap-2">
+          <span className="text-neon-cyan">SYNC</span>
+          <span className="text-slate-300 flex items-center gap-1.5">
+            LOCAL
+            <div className="w-1.5 h-1.5 rounded-full bg-neon-green shadow-[0_0_5px_#00ff9d]" />
+          </span>
+        </div>
       </div>
 
       <SystemVitals />
