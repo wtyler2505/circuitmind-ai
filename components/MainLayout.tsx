@@ -54,7 +54,8 @@ export const MainLayout: React.FC = () => {
     generationMode, setGenerationMode, 
     imageSize, setImageSize, 
     aspectRatio, setAspectRatio, 
-    useDeepThinking, setUseDeepThinking 
+    useDeepThinking, setUseDeepThinking,
+    recentHistory, activeSelectionPath 
   } = useAssistantState();
   const conversationManager = useConversationContext();
   const { isVisible: isHUDVisible, setVisible: setHUDVisible } = useHUD();
@@ -287,12 +288,14 @@ export const MainLayout: React.FC = () => {
           : isSettingsOpen
             ? 'settings'
             : 'canvas',
-        viewport: { zoom, x: pan.x, y: pan.y }
+        viewport: { zoom, x: pan.x, y: pan.y },
+        recentHistory,
+        activeSelectionPath
       });
       setAIContext(context);
     };
     updateContext();
-  }, [diagram, inventory, canvasSelectionId, selectedComponent, isSettingsOpen]);
+  }, [diagram, inventory, canvasSelectionId, selectedComponent, isSettingsOpen, recentHistory, activeSelectionPath]);
 
   // ... (Proactive Suggestions logic remains)
 

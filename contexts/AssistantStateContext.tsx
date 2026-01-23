@@ -17,6 +17,10 @@ interface AssistantStateContextType {
   // History Buffer
   recentHistory: ActionDelta[];
   pushActionDelta: (delta: Omit<ActionDelta, 'timestamp'>) => void;
+
+  // Selection Path Awareness
+  activeSelectionPath: string | undefined;
+  setActiveSelectionPath: (path: string | undefined) => void;
 }
 
 const AssistantStateContext = createContext<AssistantStateContextType | undefined>(undefined);
@@ -27,6 +31,7 @@ export const AssistantStateProvider: React.FC<{ children: ReactNode }> = ({ chil
   const [aspectRatio, setAspectRatio] = useState<string>('16:9');
   const [useDeepThinking, setUseDeepThinking] = useState(false);
   const [recentHistory, setRecentHistory] = useState<ActionDelta[]>([]);
+  const [activeSelectionPath, setActiveSelectionPath] = useState<string | undefined>(undefined);
 
   const pushActionDelta = useCallback((delta: Omit<ActionDelta, 'timestamp'>) => {
     const newDelta = { ...delta, timestamp: Date.now() };
@@ -42,7 +47,8 @@ export const AssistantStateProvider: React.FC<{ children: ReactNode }> = ({ chil
       imageSize, setImageSize,
       aspectRatio, setAspectRatio,
       useDeepThinking, setUseDeepThinking,
-      recentHistory, pushActionDelta
+      recentHistory, pushActionDelta,
+      activeSelectionPath, setActiveSelectionPath
     }}>
       {children}
     </AssistantStateContext.Provider>

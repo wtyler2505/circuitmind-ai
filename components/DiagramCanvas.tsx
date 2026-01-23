@@ -13,6 +13,7 @@ import { Wire, DiagramNode, COMPONENT_WIDTH, COMPONENT_HEIGHT, SVG_GRADIENTS, SV
 import type { WireHighlightState, NodeHighlightState } from './diagram';
 import { diagramReducer, INITIAL_STATE, DiagramState, Point } from './diagram/diagramState';
 import { useHUD } from '../contexts/HUDContext';
+import { useAssistantState } from '../contexts/AssistantStateContext';
 
 type ViewMode = '2d' | '3d';
 
@@ -98,11 +99,14 @@ const DiagramCanvasRenderer = ({
 
     // HUD Integration
     const { addFragment, removeFragment } = useHUD();
+    const { setActiveSelectionPath, recentHistory } = useAssistantState();
     const activeFragments = useRef<Map<string, string>>(new Map());
 
     const handleComponentEnter = useCallback((e: React.MouseEvent, component: ElectronicComponent) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
+
+      setActiveSelectionPath(component.id);
 
       const id = addFragment({
         targetId: component.id,
@@ -115,6 +119,7 @@ const DiagramCanvasRenderer = ({
     }, [addFragment]);
 
     const handleComponentLeave = useCallback((e: React.MouseEvent, component: ElectronicComponent) => {
+      setActiveSelectionPath(undefined);
       const id = activeFragments.current.get(component.id);
       if (id) {
         removeFragment(id);
@@ -125,6 +130,8 @@ const DiagramCanvasRenderer = ({
     const handlePinEnter = useCallback((e: React.MouseEvent, componentId: string, pin: string) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
+
+      setActiveSelectionPath(`${componentId}.pins.${pin}`);
 
       const id = addFragment({
         targetId: `${componentId}-${pin}`,
@@ -137,6 +144,7 @@ const DiagramCanvasRenderer = ({
     }, [addFragment]);
 
     const handlePinLeave = useCallback((e: React.MouseEvent, componentId: string, pin: string) => {
+      setActiveSelectionPath(undefined);
       const id = activeFragments.current.get(`${componentId}-${pin}`);
       if (id) {
         removeFragment(id);
