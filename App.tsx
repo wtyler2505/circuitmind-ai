@@ -8,6 +8,7 @@ import { ConversationProvider } from './contexts/ConversationContext';
 import { AssistantStateProvider } from './contexts/AssistantStateContext';
 import { HUDProvider } from './contexts/HUDContext';
 import { TelemetryProvider } from './contexts/TelemetryContext';
+import { SimulationProvider } from './contexts/SimulationContext';
 import { INITIAL_INVENTORY } from './data/initialInventory';
 
 export default function App() {
@@ -16,15 +17,19 @@ export default function App() {
       <AssistantStateProvider>
         <HUDProvider>
           <TelemetryProvider>
-            <InventoryProvider initialData={INITIAL_INVENTORY}>
-          <DiagramProvider>
-            <VoiceAssistantProvider>
-              <ConversationProvider>
-                <MainLayout />
-              </ConversationProvider>
-            </VoiceAssistantProvider>
-          </DiagramProvider>
-        </InventoryProvider>
+            <DiagramProvider>
+              <SimulationProvider>
+                <VoiceAssistantProvider>
+                  <ConversationProvider>
+                    <InventoryProvider initialData={INITIAL_INVENTORY}>
+                      <MainLayout />
+                    </InventoryProvider>
+                  </ConversationProvider>
+                </VoiceAssistantProvider>
+              </SimulationProvider>
+            </DiagramProvider>
+          </TelemetryProvider>
+        </HUDProvider>
       </AssistantStateProvider>
     </LayoutProvider>
   );
