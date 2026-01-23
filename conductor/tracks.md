@@ -9,9 +9,7 @@
 - [Feature: Dynamic Content Injection (Tactical HUD)](./tracks/dynamic-content-injection-tact_20260123/spec.md) `status: done`
 - [Feature: Adaptive UI (Mode-Shifting Workspace)](./tracks/adaptive-ui-mode-shifting-work_20260123/spec.md) `status: done`
 - [Feature: Context-Aware Responses (Deep Awareness)](./tracks/context-aware-responses-deep-a_20260123/spec.md) `status: done`
-
-- [ ] **Track: Real-Time Data Integration (Hardware Telemetry)**
-  *Link: [./conductor/tracks/real-time-data-integration-har_20260123/](./conductor/tracks/real-time-data-integration-har_20260123/)*
+- [Feature: Real-Time Data Integration (Hardware Telemetry)](./tracks/real-time-data-integration-har_20260123/spec.md) `status: done`
 
 - [ ] **Track: Predictive Actions (The Proactive Partner)**
   *Link: [./conductor/tracks/predictive-actions-the-proacti_20260123/](./conductor/tracks/predictive-actions-the-proacti_20260123/)*
