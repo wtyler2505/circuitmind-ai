@@ -149,16 +149,19 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         console.error('Failed to parse layout snapshot', e);
       }
     } else {
-      // Default configurations for new modes
+      // Default configurations for new modes (Auto-transitions)
       if (mode === 'design') {
         setIsInventoryOpen(true);
         setIsAssistantOpen(false);
+        setInventoryPinned(true);
       } else if (mode === 'wiring') {
         setIsInventoryOpen(false);
         setIsAssistantOpen(true);
+        setAssistantPinned(true);
       } else if (mode === 'debug') {
         setIsInventoryOpen(false);
         setIsAssistantOpen(true);
+        setAssistantPinned(true);
       }
     }
   }, [activeMode, isInventoryOpen, isAssistantOpen, inventoryPinned, assistantPinned, inventoryWidth, assistantWidth]);
