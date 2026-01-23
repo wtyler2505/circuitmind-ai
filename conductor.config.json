@@ -1,0 +1,8 @@
+{
+  "product_definition": "conductor/product.md",
+  "product_guidelines": "conductor/product-guidelines.md",
+  "tech_stack": "conductor/tech-stack.md",
+  "workflow": "conductor/workflow.md",
+  "tracks_registry": "conductor/tracks.md",
+  "tracks_dir": "conductor/tracks/"
+}
