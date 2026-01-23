@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { ActionDelta } from '../types';
 
 type GenerationMode = 'chat' | 'image' | 'video';
 type ImageSize = '1K' | '2K' | '4K';
@@ -12,6 +13,10 @@ interface AssistantStateContextType {
   setAspectRatio: (ratio: string) => void;
   useDeepThinking: boolean;
   setUseDeepThinking: (enabled: boolean) => void;
+  
+  // History Buffer
+  recentHistory: ActionDelta[];
+  pushActionDelta: (delta: Omit<ActionDelta, 'timestamp'>) => void;
 }
 
 const AssistantStateContext = createContext<AssistantStateContextType | undefined>(undefined);
@@ -21,13 +26,23 @@ export const AssistantStateProvider: React.FC<{ children: ReactNode }> = ({ chil
   const [imageSize, setImageSize] = useState<ImageSize>('1K');
   const [aspectRatio, setAspectRatio] = useState<string>('16:9');
   const [useDeepThinking, setUseDeepThinking] = useState(false);
+  const [recentHistory, setRecentHistory] = useState<ActionDelta[]>([]);
+
+  const pushActionDelta = useCallback((delta: Omit<ActionDelta, 'timestamp'>) => {
+    const newDelta = { ...delta, timestamp: Date.now() };
+    setRecentHistory((prev) => {
+      const next = [newDelta, ...prev];
+      return next.slice(0, 10); // Keep last 10 actions
+    });
+  }, []);
 
   return (
     <AssistantStateContext.Provider value={{
       generationMode, setGenerationMode,
       imageSize, setImageSize,
       aspectRatio, setAspectRatio,
-      useDeepThinking, setUseDeepThinking
+      useDeepThinking, setUseDeepThinking,
+      recentHistory, pushActionDelta
     }}>
       {children}
     </AssistantStateContext.Provider>

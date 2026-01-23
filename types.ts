@@ -218,6 +218,13 @@ export interface ActionRecord {
 }
 
 // Context passed to AI for awareness
+export interface ActionDelta {
+  timestamp: number;
+  type: string;
+  targetId?: string;
+  description: string;
+}
+
 export interface AIContext {
   currentDiagramId?: string;
   currentDiagramTitle?: string;
@@ -225,8 +232,10 @@ export interface AIContext {
   connectionCount: number;
   selectedComponentId?: string;
   selectedComponentName?: string;
+  activeSelectionPath?: string; // e.g., "esp32-1.pins.GPIO13"
   componentList?: string[]; // List of "id: name" for context awareness
   recentActions: string[];
+  recentHistory?: ActionDelta[];
   activeView: 'canvas' | 'component-editor' | 'inventory' | 'settings';
   inventorySummary: string;
   userProfile?: any; // Avoiding circular dependency for now, or use loose typing
