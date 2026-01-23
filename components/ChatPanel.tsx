@@ -399,6 +399,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                   {context.componentCount}c
                 </span>
               )}
+              {context.activeSelectionPath && (
+                <span className="flex items-center gap-1 border-l border-white/10 pl-1.5 ml-0.5">
+                  <span className="text-neon-amber/70">FOCUS</span>
+                  <span className="text-slate-300">{context.activeSelectionPath.split('.').pop()}</span>
+                </span>
+              )}
+              {context.recentHistory && context.recentHistory.length > 0 && (
+                <span className="flex items-center gap-1 border-l border-white/10 pl-1.5 ml-0.5">
+                  <span className="text-neon-green/70">HIST</span>
+                  {context.recentHistory.length}
+                </span>
+              )}
             </div>
           )}
         </div>
