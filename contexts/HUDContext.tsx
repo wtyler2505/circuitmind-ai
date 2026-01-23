@@ -30,6 +30,16 @@ export const HUDProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const id = Math.random().toString(36).substring(2, 9);
     const newFragment = { ...fragment, id };
     setFragments((prev) => [...prev, newFragment]);
+
+    // Priority-based auto-dismissal (Decay)
+    // Priority 1: Persistent (High)
+    // Priority 2+: Ephemeral (Low)
+    if (fragment.priority >= 2) {
+      setTimeout(() => {
+        setFragments((prev) => prev.filter((f) => f.id !== id));
+      }, 5000);
+    }
+
     return id;
   }, []);
 
