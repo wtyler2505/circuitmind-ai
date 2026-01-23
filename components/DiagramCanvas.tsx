@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import { WiringDiagram, ElectronicComponent, WireConnection } from '../types';
 import { Wire, DiagramNode, COMPONENT_WIDTH, COMPONENT_HEIGHT, SVG_GRADIENTS, SVG_FILTERS, Diagram3DView } from './diagram';
+import { PredictiveGhost } from './diagram/PredictiveGhost';
 import type { WireHighlightState, NodeHighlightState } from './diagram';
 import { diagramReducer, INITIAL_STATE, DiagramState, Point } from './diagram/diagramState';
 import { useHUD } from '../contexts/HUDContext';
@@ -20,6 +21,9 @@ type ViewMode = '2d' | '3d';
 interface DiagramCanvasProps {
   diagram: WiringDiagram | null;
   selectedComponentId?: string | null;
+  stagedActions?: import('../services/predictionEngine').PredictiveAction[];
+  onStagedActionAccept?: (id: string) => void;
+  onStagedActionReject?: (id: string) => void;
   onComponentSelect?: (componentId: string) => void;
   onComponentContextMenu?: (componentId: string, x: number, y: number) => void;
   onComponentDoubleClick?: (component: ElectronicComponent) => void;
@@ -75,6 +79,9 @@ export interface DiagramCanvasRef {
 const DiagramCanvasRenderer = ({ 
   diagram, 
   selectedComponentId,
+  stagedActions = [],
+  onStagedActionAccept,
+  onStagedActionReject,
   onComponentSelect, 
   onComponentContextMenu,
   onComponentDoubleClick,
@@ -1097,6 +1104,15 @@ const DiagramCanvasRenderer = ({
               </defs>
               <rect x="-5000" y="-5000" width="10000" height="10000" fill="url(#grid)" opacity={snapToGrid ? 0.7 : 0.5} />
               {snapToGrid && <rect x="-5000" y="-5000" width="10000" height="10000" fill="url(#grid-major)" opacity="0.5" />}
+
+              <PredictiveGhost 
+                stagedActions={stagedActions}
+                diagram={diagram}
+                positions={state.nodePositions}
+                zoom={state.zoom}
+                onAccept={(id) => onStagedActionAccept?.(id)}
+                onReject={(id) => onStagedActionReject?.(id)}
+              />
 
               {renderConnections.map(({ conn, index }) => {
                 const wireHighlight = highlightedWires.get(index);

@@ -27,6 +27,7 @@ import { useAIActions } from '../hooks/useAIActions';
 import { useToast } from '../hooks/useToast';
 import { useInventorySync } from '../hooks/useInventorySync';
 import { buildAIContext } from '../services/aiContextBuilder';
+import { predictionEngine } from '../services/predictionEngine';
 import {
   explainComponent,
   generateComponent3DCode,
@@ -297,6 +298,22 @@ export const MainLayout: React.FC = () => {
     updateContext();
   }, [diagram, inventory, canvasSelectionId, selectedComponent, isSettingsOpen, recentHistory, activeSelectionPath]);
 
+  // Proactive Prediction Loop
+  useEffect(() => {
+    const runPredictions = async () => {
+      if (!aiContext || isLoading) return;
+      
+      // Heuristic: Only predict if we have components but few wires
+      if (aiContext.componentCount > 0) {
+        const predictions = await predictionEngine.predict(aiContext);
+        aiActions.stageActions(predictions);
+      }
+    };
+
+    const timer = setTimeout(runPredictions, 1500); // 1s debounce for stability
+    return () => clearTimeout(timer);
+  }, [aiContext, aiActions.stageActions, isLoading]);
+
   // ... (Proactive Suggestions logic remains)
 
   // Component Actions
@@ -445,6 +462,9 @@ export const MainLayout: React.FC = () => {
         ref={setCanvasRef}
         diagram={diagram}
         selectedComponentId={canvasSelectionId}
+        stagedActions={aiActions.stagedActions}
+        onStagedActionAccept={aiActions.acceptStagedAction}
+        onStagedActionReject={aiActions.rejectStagedAction}
         onComponentSelect={handleComponentSelect}
         onComponentContextMenu={handleComponentContextMenu}
         onComponentDoubleClick={handleOpenComponentInfo}
