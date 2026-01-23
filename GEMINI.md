@@ -45,6 +45,7 @@ npm run lint         # Lint code
 - **`contexts/*.tsx`**: Domain state providers.
 - **`services/geminiService.ts`**: Main entry point for Gemini AI integration.
 - **`hooks/useAIActions.ts`**: Central hub for dispatching AI actions.
+- **`conductor/index.md`**: **Conductor Index**. Single source of truth for product vision, tech stack, and active tracks.
 - **`CLAUDE.md`**: Detailed architectural documentation, pitfalls, and patterns.
 
 ## Development Conventions
