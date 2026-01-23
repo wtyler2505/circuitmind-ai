@@ -10,3 +10,4 @@ export * from './features/components';
 export * from './features/chat';
 export * from './features/media';
 export * from './features/suggestions';
+export * from './features/hud';

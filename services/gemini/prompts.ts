@@ -190,6 +190,40 @@ ${contextSection}
 ${components ? `Components: ${components.map(c => c.name).join(', ')}` : ''}
 ${connections ? `Connections: ${connections.length}` : ''}
 
-Return a JSON array of suggestion strings. Keep each under 100 characters.`;
-  }
+    Return a JSON array of suggestion strings. Keep each under 100 characters.`;
+
+  },
+
+
+
+  GENERATE_HUD_FRAGMENT: (name: string, type: string, context?: string) => `
+
+    You are an electronics technical advisor.
+
+    Generate a punchy, 1-sentence technical insight for an electronics component.
+
+    TARGET: ${name} (${type})
+
+    CONTEXT: ${context || 'General inquiry'}
+
+
+
+    RULES:
+
+    - Max 100 characters.
+
+    - Focus on pinouts, voltage, or common use cases.
+
+    - Use a futuristic, data-scan tone.
+
+    - NO fluff.
+
+
+
+    FRAGMENT:
+
+  `
+
 };
+
+
