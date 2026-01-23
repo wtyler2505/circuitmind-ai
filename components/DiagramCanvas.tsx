@@ -12,6 +12,7 @@ import { WiringDiagram, ElectronicComponent, WireConnection } from '../types';
 import { Wire, DiagramNode, COMPONENT_WIDTH, COMPONENT_HEIGHT, SVG_GRADIENTS, SVG_FILTERS, Diagram3DView } from './diagram';
 import type { WireHighlightState, NodeHighlightState } from './diagram';
 import { diagramReducer, INITIAL_STATE, DiagramState, Point } from './diagram/diagramState';
+import { useHUD } from '../contexts/HUDContext';
 
 type ViewMode = '2d' | '3d';
 
@@ -94,6 +95,54 @@ const DiagramCanvasRenderer = ({
     const [showMinimap, setShowMinimap] = useState(true);
     const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
     const [viewMode, setViewMode] = useState<ViewMode>('2d');
+
+    // HUD Integration
+    const { addFragment, removeFragment } = useHUD();
+    const activeFragments = useRef<Map<string, string>>(new Map());
+
+    const handleComponentEnter = useCallback((e: React.MouseEvent, component: ElectronicComponent) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const id = addFragment({
+        targetId: component.id,
+        type: 'info',
+        content: `${component.name}: ${component.description || 'Electronic Component'}`,
+        position: { x: e.clientX - rect.left + 20, y: e.clientY - rect.top - 20 },
+        priority: 1
+      });
+      activeFragments.current.set(component.id, id);
+    }, [addFragment]);
+
+    const handleComponentLeave = useCallback((e: React.MouseEvent, component: ElectronicComponent) => {
+      const id = activeFragments.current.get(component.id);
+      if (id) {
+        removeFragment(id);
+        activeFragments.current.delete(component.id);
+      }
+    }, [removeFragment]);
+
+    const handlePinEnter = useCallback((e: React.MouseEvent, componentId: string, pin: string) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const id = addFragment({
+        targetId: `${componentId}-${pin}`,
+        type: 'tip',
+        content: `PIN ${pin}: Interface line. Hover for specs.`,
+        position: { x: e.clientX - rect.left + 20, y: e.clientY - rect.top - 20 },
+        priority: 2
+      });
+      activeFragments.current.set(`${componentId}-${pin}`, id);
+    }, [addFragment]);
+
+    const handlePinLeave = useCallback((e: React.MouseEvent, componentId: string, pin: string) => {
+      const id = activeFragments.current.get(`${componentId}-${pin}`);
+      if (id) {
+        removeFragment(id);
+        activeFragments.current.delete(`${componentId}-${pin}`);
+      }
+    }, [removeFragment]);
 
     // Export feedback states
     const [svgExportStatus, setSvgExportStatus] = useState<'idle' | 'exporting' | 'done' | 'error'>('idle');
@@ -1088,6 +1137,10 @@ const DiagramCanvasRenderer = ({
                     onDoubleClick={onComponentDoubleClick}
                     onPinPointerDown={handlePinPointerDown}
                     onPinPointerUp={handlePinPointerUp}
+                    onMouseEnter={handleComponentEnter}
+                    onMouseLeave={handleComponentLeave}
+                    onPinEnter={handlePinEnter}
+                    onPinLeave={handlePinLeave}
                   />
                 );
               })}

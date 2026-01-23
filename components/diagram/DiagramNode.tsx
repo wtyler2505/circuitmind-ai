@@ -23,6 +23,10 @@ interface DiagramNodeProps {
   onDoubleClick?: (component: ElectronicComponent) => void;
   onPinPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, isRightSide: boolean) => void;
   onPinPointerUp: (e: React.PointerEvent, nodeId: string, pin: string) => void;
+  onMouseEnter?: (e: React.MouseEvent, component: ElectronicComponent) => void;
+  onMouseLeave?: (e: React.MouseEvent, component: ElectronicComponent) => void;
+  onPinEnter?: (e: React.MouseEvent, componentId: string, pin: string) => void;
+  onPinLeave?: (e: React.MouseEvent, componentId: string, pin: string) => void;
 }
 
 /**
@@ -83,6 +87,8 @@ interface PinProps {
   shape: ComponentShape;
   onPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, isRightSide: boolean) => void;
   onPointerUp: (e: React.PointerEvent, nodeId: string, pin: string) => void;
+  onMouseEnter?: (e: React.MouseEvent, nodeId: string, pin: string) => void;
+  onMouseLeave?: (e: React.MouseEvent, nodeId: string, pin: string) => void;
 }
 
 const Pin = memo<PinProps>(function Pin({
@@ -94,6 +100,8 @@ const Pin = memo<PinProps>(function Pin({
   shape,
   onPointerDown,
   onPointerUp,
+  onMouseEnter,
+  onMouseLeave,
 }) {
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => onPointerDown(e, nodeId, pin, isRightSide),
@@ -103,6 +111,16 @@ const Pin = memo<PinProps>(function Pin({
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => onPointerUp(e, nodeId, pin),
     [onPointerUp, nodeId, pin]
+  );
+
+  const handleMouseEnter = useCallback(
+    (e: React.MouseEvent) => onMouseEnter?.(e, nodeId, pin),
+    [onMouseEnter, nodeId, pin]
+  );
+
+  const handleMouseLeave = useCallback(
+    (e: React.MouseEvent) => onMouseLeave?.(e, nodeId, pin),
+    [onMouseLeave, nodeId, pin]
   );
 
   // Get smart pin color based on pin name/function
@@ -147,6 +165,8 @@ const Pin = memo<PinProps>(function Pin({
         strokeWidth="1.5"
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className="cursor-crosshair hover:brightness-125 transition-all"
         style={{ filter: isSpecialPin ? 'brightness(1.1)' : undefined }}
       />
@@ -611,6 +631,10 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
   onDoubleClick,
   onPinPointerDown,
   onPinPointerUp,
+  onMouseEnter,
+  onMouseLeave,
+  onPinEnter,
+  onPinLeave,
 }) {
   const isHighlighted = !!highlight;
 
@@ -624,6 +648,16 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => onPointerDown(e, component.id),
     [onPointerDown, component.id]
+  );
+
+  const handleMouseEnter = useCallback(
+    (e: React.MouseEvent) => onMouseEnter?.(e, component),
+    [onMouseEnter, component]
+  );
+
+  const handleMouseLeave = useCallback(
+    (e: React.MouseEvent) => onMouseLeave?.(e, component),
+    [onMouseLeave, component]
   );
 
   const handleClick = useCallback(
@@ -702,6 +736,8 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onDoubleClick={handleDoubleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Glow effect for highlighted/selected components */}
       {(isHighlighted || isSelected) && (
@@ -800,6 +836,8 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
           shape={shape}
           onPointerDown={onPinPointerDown}
           onPointerUp={onPinPointerUp}
+          onMouseEnter={onPinEnter}
+          onMouseLeave={onPinLeave}
         />
       ))}
 
