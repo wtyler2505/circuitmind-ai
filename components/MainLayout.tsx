@@ -30,6 +30,7 @@ import { useHUD } from '../contexts/HUDContext';
 import { useAIActions } from '../hooks/useAIActions';
 import { useToast } from '../hooks/useToast';
 import { useInventorySync } from '../hooks/useInventorySync';
+import { useSync } from '../hooks/useSync';
 import { buildAIContext } from '../services/aiContextBuilder';
 import { predictionEngine } from '../services/predictionEngine';
 import {
@@ -102,6 +103,9 @@ export const MainLayout: React.FC = () => {
     autoSync: true,
     devLogging: process.env.NODE_ENV === 'development',
   });
+
+  // Git-based Auto-snapshot
+  useSync();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
