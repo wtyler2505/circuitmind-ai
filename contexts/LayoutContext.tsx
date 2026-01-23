@@ -1,7 +1,22 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { storageService } from '../services/storage';
 
+export type UIMode = 'design' | 'wiring' | 'debug';
+
+interface LayoutSnapshot {
+  isInventoryOpen: boolean;
+  isAssistantOpen: boolean;
+  inventoryPinned: boolean;
+  assistantPinned: boolean;
+  inventoryWidth: number;
+  assistantWidth: number;
+}
+
 interface LayoutContextType {
+  // Mode
+  activeMode: UIMode;
+  setActiveMode: (mode: UIMode) => void;
+
   // Inventory
   isInventoryOpen: boolean;
   setInventoryOpen: (open: boolean) => void;
@@ -36,6 +51,15 @@ const assistantWidthRange = { min: 300, max: 560 };
 const clampWidth = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Mode State
+  const [activeMode, setActiveModeState] = useState<UIMode>(() => {
+    try {
+      return (localStorage.getItem('cm_active_mode') as UIMode) || 'design';
+    } catch {
+      return 'design';
+    }
+  });
+
   // Inventory State
   const [isInventoryOpen, setIsInventoryOpen] = useState(() => {
     try {
@@ -93,6 +117,52 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  // Snapshot Logic
+  const setActiveMode = useCallback((mode: UIMode) => {
+    // 1. Snapshot current layout
+    const snapshot: LayoutSnapshot = {
+      isInventoryOpen,
+      isAssistantOpen,
+      inventoryPinned,
+      assistantPinned,
+      inventoryWidth,
+      assistantWidth
+    };
+    storageService.setItem(`cm_layout_snapshot_${activeMode}`, JSON.stringify(snapshot));
+
+    // 2. Change mode
+    setActiveModeState(mode);
+    storageService.setItem('cm_active_mode', mode);
+
+    // 3. Load next snapshot or apply defaults
+    const saved = localStorage.getItem(`cm_layout_snapshot_${mode}`);
+    if (saved) {
+      try {
+        const next: LayoutSnapshot = JSON.parse(saved);
+        setIsInventoryOpen(next.isInventoryOpen);
+        setIsAssistantOpen(next.isAssistantOpen);
+        setInventoryPinned(next.inventoryPinned);
+        setAssistantPinned(next.assistantPinned);
+        setInventoryWidth(next.inventoryWidth);
+        setAssistantWidth(next.assistantWidth);
+      } catch (e) {
+        console.error('Failed to parse layout snapshot', e);
+      }
+    } else {
+      // Default configurations for new modes
+      if (mode === 'design') {
+        setIsInventoryOpen(true);
+        setIsAssistantOpen(false);
+      } else if (mode === 'wiring') {
+        setIsInventoryOpen(false);
+        setIsAssistantOpen(true);
+      } else if (mode === 'debug') {
+        setIsInventoryOpen(false);
+        setIsAssistantOpen(true);
+      }
+    }
+  }, [activeMode, isInventoryOpen, isAssistantOpen, inventoryPinned, assistantPinned, inventoryWidth, assistantWidth]);
+
   // Persistence Effects
   useEffect(() => {
     storageService.setItem('cm_inventory_open_default', String(isInventoryOpen));
@@ -120,6 +190,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   return (
     <LayoutContext.Provider value={{
+      activeMode, setActiveMode,
       isInventoryOpen, setInventoryOpen: setIsInventoryOpen,
       inventoryPinned, setInventoryPinned,
       inventoryWidth, setInventoryWidth,
