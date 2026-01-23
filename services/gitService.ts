@@ -1,5 +1,6 @@
 import git from 'isomorphic-git';
 import FS from '@isomorphic-git/lightning-fs';
+import http from 'isomorphic-git/http/web';
 
 const fs = new FS('circuitmind_git');
 const dir = '/repo';
@@ -40,6 +41,40 @@ class GitService {
     } catch (e) {
       console.error('Commit failed', e);
       return null;
+    }
+  }
+
+  async push(url: string) {
+    await this.init();
+    try {
+      return await git.push({
+        fs,
+        http,
+        dir,
+        url,
+        remote: 'peer',
+        force: true
+      });
+    } catch (e) {
+      console.error('Push failed', e);
+      throw e;
+    }
+  }
+
+  async pull(url: string) {
+    await this.init();
+    try {
+      return await git.pull({
+        fs,
+        http,
+        dir,
+        url,
+        remote: 'peer',
+        author: { name: 'User', email: 'user@circuitmind.ai' }
+      });
+    } catch (e) {
+      console.error('Pull failed', e);
+      throw e;
     }
   }
 

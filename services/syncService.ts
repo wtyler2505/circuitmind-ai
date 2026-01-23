@@ -1,6 +1,14 @@
 import { gitService } from './gitService';
 import { WiringDiagram, ElectronicComponent } from '../types';
 
+export interface PeerNode {
+  deviceId: string;
+  name: string;
+  lastIp: string;
+  pairingStatus: 'paired' | 'pending' | 'blocked';
+  lastSyncHash: string;
+}
+
 class SyncService {
   /**
    * Serializes current state and commits to local git.
@@ -21,6 +29,43 @@ class SyncService {
     } catch (e) {
       console.error('Snapshot failed', e);
       return null;
+    }
+  }
+
+  /**
+   * Pushes local history to a peer.
+   */
+  async pushToPeer(peer: PeerNode) {
+    const url = `http://${peer.lastIp}:3000/git`; // Assuming a local bridge
+    try {
+      await gitService.push(url);
+      console.log(`Pushed to peer: ${peer.name}`);
+    } catch (e) {
+      console.error(`Failed to push to ${peer.name}`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * Pulls history from a peer and updates local state.
+   */
+  async pullFromPeer(peer: PeerNode) {
+    const url = `http://${peer.lastIp}:3000/git`;
+    try {
+      await gitService.pull(url);
+      console.log(`Pulled from peer: ${peer.name}`);
+      
+      // After pull, we might need to refresh the UI
+      const diagramJson = await gitService.readFile('diagram.json');
+      const inventoryJson = await gitService.readFile('inventory.json');
+      
+      return {
+        diagram: JSON.parse(diagramJson),
+        inventory: JSON.parse(inventoryJson)
+      };
+    } catch (e) {
+      console.error(`Failed to pull from ${peer.name}`, e);
+      throw e;
     }
   }
 
