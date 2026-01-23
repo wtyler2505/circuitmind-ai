@@ -11,6 +11,7 @@ import {
   WiringDiagram,
   AIContext,
   ActionRecord,
+  ActionDelta,
 } from '../types';
 import { getRecentActions } from './storage';
 import { userProfileService, UserProfile } from './userProfileService';
@@ -54,6 +55,8 @@ export interface BuildContextOptions {
   selectedComponentId?: string | null;
   activeView?: 'canvas' | 'component-editor' | 'inventory' | 'settings';
   viewport?: { zoom: number; x: number; y: number };
+  recentHistory?: ActionDelta[];
+  activeSelectionPath?: string;
   includeDetailedDiagram?: boolean;
   includeFullInventory?: boolean;
 }
@@ -67,7 +70,9 @@ export async function buildAIContext(options: BuildContextOptions): Promise<AICo
     inventory,
     selectedComponentId,
     activeView = 'canvas',
-    viewport
+    viewport,
+    recentHistory = [],
+    activeSelectionPath,
   } = options;
 
   // Get User Profile
@@ -98,7 +103,9 @@ export async function buildAIContext(options: BuildContextOptions): Promise<AICo
       : undefined,
     selectedComponentId: selectedComponentId || undefined,
     selectedComponentName: selectedComponent?.name,
+    activeSelectionPath,
     recentActions: formatRecentActions(recentActionRecords),
+    recentHistory,
     activeView,
     inventorySummary: summarizeInventory(inventory),
     
@@ -156,6 +163,9 @@ export function buildContextPrompt(context: AIContext): string {
   // Selected component
   if (context.selectedComponentName) {
     sections.push(`\nSelected: ${context.selectedComponentName} (ID: ${context.selectedComponentId})`);
+    if (context.activeSelectionPath) {
+      sections.push(`Focus Path: ${context.activeSelectionPath}`);
+    }
   }
 
   // Active view
@@ -164,9 +174,18 @@ export function buildContextPrompt(context: AIContext): string {
   // Inventory summary
   sections.push(`\nInventory: ${context.inventorySummary}`);
 
-  // Recent actions
+  // Recent history (High fidelity)
+  if (context.recentHistory && context.recentHistory.length > 0) {
+    sections.push('\nTimeline Awareness (Recent Actions):');
+    context.recentHistory.forEach((h) => {
+      const time = new Date(h.timestamp).toLocaleTimeString();
+      sections.push(`  - [${time}] ${h.description} (${h.type})`);
+    });
+  }
+
+  // Recent actions (Log style)
   if (context.recentActions.length > 0) {
-    sections.push('\nRecent Actions:');
+    sections.push('\nSystem Logs:');
     context.recentActions.forEach((action) => sections.push(`  ${action}`));
   }
 
