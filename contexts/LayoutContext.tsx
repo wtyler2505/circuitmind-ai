@@ -41,6 +41,10 @@ interface LayoutContextType {
   isFocusMode: boolean;
   setFocusMode: (focus: boolean) => void;
 
+  // Performance
+  lowPerformanceMode: boolean;
+  setLowPerformanceMode: (enabled: boolean) => void;
+
   // Constants
   inventoryDefaultWidth: number;
   assistantDefaultWidth: number;
@@ -124,6 +128,15 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Focus Mode State
   const [isFocusMode, setIsFocusMode] = useState(false);
 
+  // Performance State
+  const [lowPerformanceMode, setLowPerformanceMode] = useState(() => {
+    try {
+      return localStorage.getItem('cm_low_performance_mode') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   // Snapshot Logic
   const setActiveMode = useCallback((mode: UIMode) => {
     // 1. Snapshot current layout
@@ -204,6 +217,15 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     storageService.setItem('cm_assistant_width', String(assistantWidth));
   }, [assistantWidth]);
 
+  useEffect(() => {
+    storageService.setItem('cm_low_performance_mode', String(lowPerformanceMode));
+    if (lowPerformanceMode) {
+      document.body.classList.add('low-performance');
+    } else {
+      document.body.classList.remove('low-performance');
+    }
+  }, [lowPerformanceMode]);
+
   return (
     <LayoutContext.Provider value={{
       activeMode, setActiveMode,
@@ -215,6 +237,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       assistantWidth, setAssistantWidth,
       isSettingsOpen, setSettingsOpen: setIsSettingsOpen,
       isFocusMode, setFocusMode: setIsFocusMode,
+      lowPerformanceMode, setLowPerformanceMode,
       inventoryDefaultWidth,
       assistantDefaultWidth
     }}>

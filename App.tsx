@@ -10,29 +10,32 @@ import { HUDProvider } from './contexts/HUDContext';
 import { TelemetryProvider } from './contexts/TelemetryContext';
 import { SimulationProvider } from './contexts/SimulationContext';
 import { TutorialProvider } from './contexts/TutorialContext';
+import { HealthProvider } from './contexts/HealthContext';
 import { INITIAL_INVENTORY } from './data/initialInventory';
 
 export default function App() {
   return (
     <LayoutProvider>
       <AssistantStateProvider>
-        <InventoryProvider initialData={INITIAL_INVENTORY}>
-          <ConversationProvider>
-            <DiagramProvider>
-              <TelemetryProvider>
-                <HUDProvider>
-                  <SimulationProvider>
-                    <VoiceAssistantProvider>
-                      <TutorialProvider>
-                        <MainLayout />
-                      </TutorialProvider>
-                    </VoiceAssistantProvider>
-                  </SimulationProvider>
-                </HUDProvider>
-              </TelemetryProvider>
-            </DiagramProvider>
-          </ConversationProvider>
-        </InventoryProvider>
+        <HealthProvider>
+          <InventoryProvider initialData={INITIAL_INVENTORY}>
+            <ConversationProvider>
+              <DiagramProvider>
+                <TelemetryProvider>
+                  <HUDProvider>
+                    <SimulationProvider>
+                      <VoiceAssistantProvider>
+                        <TutorialProvider>
+                          <MainLayout />
+                        </TutorialProvider>
+                      </VoiceAssistantProvider>
+                    </SimulationProvider>
+                  </HUDProvider>
+                </TelemetryProvider>
+              </DiagramProvider>
+            </ConversationProvider>
+          </InventoryProvider>
+        </HealthProvider>
       </AssistantStateProvider>
     </LayoutProvider>
   );

@@ -13,6 +13,7 @@ import {
 import { aiMetricsService } from "../../aiMetricsService";
 import { extractComponentMentions, extractSuggestedActions, parseJSONResponse } from "../parsers";
 import { ParsedAIResponse } from "../types";
+import { healthMonitor } from "../../healthMonitor";
 
 export const chatWithAI = async (
   message: string,
@@ -86,14 +87,18 @@ export const chatWithAI = async (
       .map((c) => c.web ? { title: c.web.title, uri: c.web.uri } : null)
       .filter((c): c is GroundingSource => c !== null);
       
-    aiMetricsService.logMetric({ model, operation: 'chatWithAI', latencyMs: Date.now() - startTime, success: true });
+    const latency = Date.now() - startTime;
+    healthMonitor.recordAiLatency(latency);
+    aiMetricsService.logMetric({ model, operation: 'chatWithAI', latencyMs: latency, success: true });
 
     return { 
       text: response.text || "...", 
       groundingSources 
     };
    } catch (error) {
-     aiMetricsService.logMetric({ model, operation: 'chatWithAI', latencyMs: Date.now() - startTime, success: false, error: String(error) });
+     const latency = Date.now() - startTime;
+     healthMonitor.recordAiLatency(latency);
+     aiMetricsService.logMetric({ model, operation: 'chatWithAI', latencyMs: latency, success: false, error: String(error) });
      console.error("Chat Error", error);
      return { text: "Connection error.", groundingSources: [] };
    }
@@ -206,7 +211,9 @@ export const chatWithContext = async (
     // Convert suggested actions
     const suggestedActions = extractSuggestedActions(parsed.suggestedActions);
 
-    const metricId = aiMetricsService.logMetric({ model, operation: 'chatWithContext', latencyMs: Date.now() - startTime, success: true });
+    const latency = Date.now() - startTime;
+    healthMonitor.recordAiLatency(latency);
+    const metricId = aiMetricsService.logMetric({ model, operation: 'chatWithContext', latencyMs: latency, success: true });
 
     return {
       text: parsed.message || "...",
@@ -217,7 +224,9 @@ export const chatWithContext = async (
       metricId // Return the ID
     };
   } catch (error) {
-    aiMetricsService.logMetric({ model, operation: 'chatWithContext', latencyMs: Date.now() - startTime, success: false, error: String(error) });
+    const latency = Date.now() - startTime;
+    healthMonitor.recordAiLatency(latency);
+    aiMetricsService.logMetric({ model, operation: 'chatWithContext', latencyMs: latency, success: false, error: String(error) });
     console.error("Context Chat Error:", error);
     return {
       text: "Connection error. Please try again.",

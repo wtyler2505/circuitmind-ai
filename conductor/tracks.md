@@ -15,9 +15,7 @@
 - [Feature: BOM Exporting (Bill of Materials)](./tracks/bom-exporting-bill-of-material_20260123/spec.md) `status: done`
 - [Feature: Interactive Tutorials (Engineering Bootcamp)](./tracks/interactive-tutorials-engineer_20260123/spec.md) `status: done`
 - [Feature: Smart Component Metadata (Datasheet Scraping)](./tracks/smart-component-metadata-datas_20260123/spec.md) `status: done`
-
-- [ ] **Track: System Health Monitoring (Vitals)**
-  *Link: [./conductor/tracks/system-health-monitoring-vital_20260123/](./conductor/tracks/system-health-monitoring-vital_20260123/)*
+- [Feature: System Health Monitoring (Vitals)](./tracks/system-health-monitoring-vital_20260123/spec.md) `status: done`
 
 - [ ] **Track: Automated Workflows (Macro Forge)**
   *Link: [./conductor/tracks/automated-workflows-macro-forg_20260123/](./conductor/tracks/automated-workflows-macro-forg_20260123/)*

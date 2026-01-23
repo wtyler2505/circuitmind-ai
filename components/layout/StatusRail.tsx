@@ -3,6 +3,7 @@ import { useInventory } from '../../contexts/InventoryContext';
 import { useDiagram } from '../../contexts/DiagramContext';
 import { useAssistantState } from '../../contexts/AssistantStateContext';
 import { useConversationContext } from '../../contexts/ConversationContext';
+import { SystemVitals } from './SystemVitals';
 
 export const StatusRail = React.memo(() => {
   const { inventory } = useInventory();
@@ -32,6 +33,8 @@ export const StatusRail = React.memo(() => {
           <span className="text-slate-300">{diagramComponentCount} / {diagramConnectionCount}</span>
         </div>
       </div>
+
+      <SystemVitals />
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 text-slate-500">
