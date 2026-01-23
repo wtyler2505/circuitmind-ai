@@ -3,6 +3,7 @@ import { useDiagram } from '../../contexts/DiagramContext';
 import { useVoiceAssistant } from '../../contexts/VoiceAssistantContext';
 import { useLayout } from '../../contexts/LayoutContext';
 import IconButton from '../IconButton';
+import { ModeSelector } from './ModeSelector';
 
 export const AppHeader = React.memo(() => {
   const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot, diagram } = useDiagram();
@@ -121,6 +122,8 @@ export const AppHeader = React.memo(() => {
           </button>
         </div>
       </div>
+
+      <ModeSelector />
 
       {/* Right Controls */}
       <div className="flex items-center gap-2">
