@@ -47,10 +47,10 @@ export const AppHeader = React.memo(() => {
           <img 
             src="/assets/ui/logo.png" 
             alt="CircuitMind AI" 
-            className="h-6 w-6 object-contain drop-shadow-[0_0_8px_rgba(0,243,255,0.5)] group-hover:drop-shadow-[0_0_12px_rgba(0,243,255,0.8)] transition-all duration-300" 
+            className="h-6 w-6 object-contain drop-shadow-[0_0_8px_var(--mode-accent)] group-hover:drop-shadow-[0_0_12px_var(--mode-accent)] transition-all duration-300" 
           />
           <h1 className="text-[10px] font-bold tracking-[0.3em] text-white panel-title leading-none">
-            CIRCUIT<span className="text-neon-cyan">MIND</span>
+            CIRCUIT<span className="text-mode-accent transition-colors duration-300">MIND</span>
           </h1>
         </div>
         
