@@ -7,9 +7,7 @@
 - [Chore: Port Legacy Plans](./tracks/port-legacy-plans_20260123/spec.md) `status: done`
 - [Chore: Legacy Plans Archive](./tracks/legacy-plans-archive_20260123/spec.md) `status: done`
 - [Feature: Dynamic Content Injection (Tactical HUD)](./tracks/dynamic-content-injection-tact_20260123/spec.md) `status: done`
-
-- [ ] **Track: Adaptive UI (Mode-Shifting Workspace)**
-  *Link: [./conductor/tracks/adaptive-ui-mode-shifting-work_20260123/](./conductor/tracks/adaptive-ui-mode-shifting-work_20260123/)*
+- [Feature: Adaptive UI (Mode-Shifting Workspace)](./tracks/adaptive-ui-mode-shifting-work_20260123/spec.md) `status: done`
 
 - [ ] **Track: Context-Aware Responses (Deep Awareness)**
   *Link: [./conductor/tracks/context-aware-responses-deep-a_20260123/](./conductor/tracks/context-aware-responses-deep-a_20260123/)*
