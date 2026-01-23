@@ -37,6 +37,10 @@ interface LayoutContextType {
   isSettingsOpen: boolean;
   setSettingsOpen: (open: boolean) => void;
 
+  // Focus Mode
+  isFocusMode: boolean;
+  setFocusMode: (focus: boolean) => void;
+
   // Constants
   inventoryDefaultWidth: number;
   assistantDefaultWidth: number;
@@ -116,6 +120,9 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   // Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Focus Mode State
+  const [isFocusMode, setIsFocusMode] = useState(false);
 
   // Snapshot Logic
   const setActiveMode = useCallback((mode: UIMode) => {
@@ -207,6 +214,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       assistantPinned, setAssistantPinned,
       assistantWidth, setAssistantWidth,
       isSettingsOpen, setSettingsOpen: setIsSettingsOpen,
+      isFocusMode, setFocusMode: setIsFocusMode,
       inventoryDefaultWidth,
       assistantDefaultWidth
     }}>

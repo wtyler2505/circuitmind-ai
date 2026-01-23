@@ -58,6 +58,7 @@ export const MainLayout: React.FC = () => {
   } = useAssistantState();
   const conversationManager = useConversationContext();
   const { isVisible: isHUDVisible, setVisible: setHUDVisible } = useHUD();
+  const { isFocusMode, setFocusMode } = useLayout();
 
   const toast = useToast();
 
@@ -102,6 +103,11 @@ export const MainLayout: React.FC = () => {
       if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setHUDVisible(!isHUDVisible);
         toast.show(isHUDVisible ? 'HUD DISABLED' : 'HUD ENABLED', 'info');
+      }
+
+      if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setFocusMode(!isFocusMode);
+        toast.show(isFocusMode ? 'FOCUS MODE OFF' : 'FOCUS MODE ON', 'info');
       }
     };
 

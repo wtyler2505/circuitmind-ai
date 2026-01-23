@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLayout } from '../../contexts/LayoutContext';
 
 interface AppLayoutProps {
@@ -19,21 +20,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   modals 
 }) => {
   const { 
+    activeMode,
     isInventoryOpen, inventoryPinned, inventoryWidth,
-    isAssistantOpen, assistantPinned, assistantWidth
+    isAssistantOpen, assistantPinned, assistantWidth,
+    isFocusMode
   } = useLayout();
 
-  const dockedInventoryWidth = isInventoryOpen && inventoryPinned ? inventoryWidth : 0;
-  const dockedAssistantWidth = isAssistantOpen && assistantPinned ? assistantWidth : 0;
+  const dockedInventoryWidth = isInventoryOpen && inventoryPinned && !isFocusMode ? inventoryWidth : 0;
+  const dockedAssistantWidth = isAssistantOpen && assistantPinned && !isFocusMode ? assistantWidth : 0;
 
   return (
     <div className="flex h-screen w-screen bg-cyber-dark text-slate-200 overflow-hidden font-sans">
       {/* Left Sidebar Slot */}
-      {inventory}
+      {!isFocusMode && inventory}
 
       {/* Main Area */}
       <div
-        className="flex-1 flex flex-col min-w-0 transition-all duration-300 ml-0 mr-0 sm:ml-[var(--inventory-width)] sm:mr-[var(--assistant-width)]"
+        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ml-0 mr-0 ${!isFocusMode ? 'sm:ml-[var(--inventory-width)] sm:mr-[var(--assistant-width)]' : ''}`}
         style={
           {
             '--inventory-width': `${dockedInventoryWidth}px`,
@@ -41,18 +44,29 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           } as React.CSSProperties
         }
       >
-        {header}
+        {!isFocusMode && header}
         
         {/* Canvas Area */}
-        <div className="flex-1 relative overflow-hidden bg-cyber-black canvas-grid border-y border-white/5">
-          {children}
+        <div className={`flex-1 relative overflow-hidden bg-cyber-black canvas-grid ${!isFocusMode ? 'border-y border-white/5' : ''}`}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeMode}
+              initial={{ opacity: 0, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, filter: 'blur(10px)' }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="w-full h-full"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {statusRail}
+        {!isFocusMode && statusRail}
       </div>
 
       {/* Right Sidebar Slot */}
-      {assistant}
+      {!isFocusMode && assistant}
 
       {/* Modals Layer */}
       {modals}
