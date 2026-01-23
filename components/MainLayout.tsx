@@ -7,6 +7,8 @@ import AssistantSidebar from './AssistantSidebar';
 import ChatPanel from './ChatPanel';
 import DiagramCanvas, { DiagramCanvasRef } from './DiagramCanvas';
 import { TacticalHUD } from './diagram/TacticalHUD';
+import { SimControls } from './layout/SimControls';
+import { HardwareTerminal } from './layout/HardwareTerminal';
 import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
@@ -431,6 +433,9 @@ export const MainLayout: React.FC = () => {
       statusRail={<StatusRail />}
       modals={
         <>
+          <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-30">
+            <SimControls />
+          </div>
           {selectedComponent && (
             <Suspense fallback={<div className="fixed inset-0 bg-black/50 z-50 text-neon-cyan">Loading...</div>}>
               <ComponentEditorModal

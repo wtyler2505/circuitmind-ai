@@ -11,9 +11,7 @@
 - [Feature: Context-Aware Responses (Deep Awareness)](./tracks/context-aware-responses-deep-a_20260123/spec.md) `status: done`
 - [Feature: Real-Time Data Integration (Hardware Telemetry)](./tracks/real-time-data-integration-har_20260123/spec.md) `status: done`
 - [Feature: Predictive Actions (The Proactive Partner)](./tracks/predictive-actions-the-proacti_20260123/spec.md) `status: done`
-
-- [ ] **Track: Real-Time Simulation (Live Circuit Logic)**
-  *Link: [./conductor/tracks/real-time-simulation-live-circ_20260123/](./conductor/tracks/real-time-simulation-live-circ_20260123/)*
+- [Feature: Real-Time Simulation (Live Circuit Logic)](./tracks/real-time-simulation-live-circ_20260123/spec.md) `status: done`
 
 - [ ] **Track: BOM Exporting (Bill of Materials)**
   *Link: [./conductor/tracks/bom-exporting-bill-of-material_20260123/](./conductor/tracks/bom-exporting-bill-of-material_20260123/)*

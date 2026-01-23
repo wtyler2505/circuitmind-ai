@@ -8,6 +8,7 @@ import { determineOrphanAction } from '../services/componentValidator';
 import { INITIAL_INVENTORY } from '../data/initialInventory';
 import InventoryList from './inventory/InventoryList';
 import { resizeImage } from './inventory/inventoryUtils';
+import { HardwareTerminal } from './layout/HardwareTerminal';
 
 import {
   identifyComponentFromImage,
@@ -909,6 +910,15 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
           {/* Tools View */}
           {activeTab === 'tools' && (
             <div className="p-3 space-y-4">
+              <div>
+                <h3 className="text-[11px] font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 uppercase tracking-[0.25em]">
+                  PHYSICAL LINK
+                </h3>
+                <div className="h-64 mb-4">
+                  <HardwareTerminal />
+                </div>
+              </div>
+
               <div>
                 <h3 className="text-[11px] font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 uppercase tracking-[0.25em]">
                   DATA MANAGEMENT
