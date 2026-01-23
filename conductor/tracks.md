@@ -8,9 +8,7 @@
 - [Chore: Legacy Plans Archive](./tracks/legacy-plans-archive_20260123/spec.md) `status: done`
 - [Feature: Dynamic Content Injection (Tactical HUD)](./tracks/dynamic-content-injection-tact_20260123/spec.md) `status: done`
 - [Feature: Adaptive UI (Mode-Shifting Workspace)](./tracks/adaptive-ui-mode-shifting-work_20260123/spec.md) `status: done`
-
-- [ ] **Track: Context-Aware Responses (Deep Awareness)**
-  *Link: [./conductor/tracks/context-aware-responses-deep-a_20260123/](./conductor/tracks/context-aware-responses-deep-a_20260123/)*
+- [Feature: Context-Aware Responses (Deep Awareness)](./tracks/context-aware-responses-deep-a_20260123/spec.md) `status: done`
 
 - [ ] **Track: Real-Time Data Integration (Hardware Telemetry)**
   *Link: [./conductor/tracks/real-time-data-integration-har_20260123/](./conductor/tracks/real-time-data-integration-har_20260123/)*
