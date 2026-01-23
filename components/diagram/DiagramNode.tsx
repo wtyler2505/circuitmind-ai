@@ -1,6 +1,8 @@
 import React, { memo, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ElectronicComponent } from '../../types';
 import { getComponentShape, calculatePinPositions, COLORS, type ComponentShape } from './componentShapes';
+import { useTelemetry } from '../../contexts/TelemetryContext';
 
 // Default dimensions (used for layout calculations)
 const COMPONENT_WIDTH = 180;
@@ -73,6 +75,68 @@ const getPinColor = (pinName: string): { fill: string; stroke: string; textColor
 
   // Digital pins - Default copper with gold tint
   return { fill: 'url(#gradient-copper)', stroke: '#7A7152', textColor: '#FDE68A' };
+};
+
+/**
+ * TelemetryOverlay component - floating data bubble for real-time pin values.
+ */
+const TelemetryOverlay: React.FC<{ 
+  pin: string; 
+  componentId: string; 
+  x: number; 
+  y: number; 
+  isRightSide: boolean 
+}> = ({ pin, componentId, x, y, isRightSide }) => {
+  const { liveData } = useTelemetry();
+  // Check for exact match or auto-mapped pin
+  const packet = liveData[`${componentId}:${pin}`] || liveData[`auto:${pin}`];
+
+  if (!packet) return null;
+
+  return (
+    <g transform={`translate(${isRightSide ? x + 12 : x - 12}, ${y})`} pointerEvents="none">
+      <AnimatePresence mode="wait">
+        <motion.g
+          key={`${packet.timestamp}-${packet.value}`}
+          initial={{ opacity: 0, x: isRightSide ? -5 : 5 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.2 }}
+        >
+          {/* Bubble background */}
+          <rect
+            x={isRightSide ? 0 : -36}
+            y={-7}
+            width="36"
+            height="14"
+            rx="2"
+            fill={packet.value === 'HIGH' || packet.value === '1' ? '#00ff9d' : '#00f3ff'}
+            className="shadow-lg"
+          />
+          {/* Value text */}
+          <text
+            x={isRightSide ? 18 : -18}
+            y={3}
+            textAnchor="middle"
+            fill="#000"
+            fontSize="8"
+            fontWeight="bold"
+            fontFamily="monospace"
+          >
+            {packet.value}
+          </text>
+          {/* Pulsing indicator */}
+          <circle
+            cx={isRightSide ? 0 : 0}
+            cy="0"
+            r="2"
+            fill="#fff"
+            className="animate-ping"
+          />
+        </motion.g>
+      </AnimatePresence>
+    </g>
+  );
 };
 
 /**
@@ -660,30 +724,10 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
     [onMouseLeave, component]
   );
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (onSelect) onSelect(component.id);
-    },
-    [onSelect, component.id]
-  );
-
-  const handleContextMenu = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (onContextMenu) onContextMenu(component.id, e.clientX, e.clientY);
-    },
-    [onContextMenu, component.id]
-  );
-
-  const handleDoubleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (onDoubleClick) onDoubleClick(component);
-    },
-    [onDoubleClick, component]
-  );
+  const { liveData } = useTelemetry();
+  const hasActiveTelemetry = useMemo(() => {
+    return Object.keys(liveData).some(key => key.startsWith(`${component.id}:`));
+  }, [liveData, component.id]);
 
   const strokeColor = isHighlighted
     ? highlight.color
@@ -726,7 +770,7 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
   return (
     <g
       transform={`translate(${position.x}, ${position.y})`}
-      className={`pointer-events-auto cursor-grab active:cursor-grabbing ${isHighlighted && highlight.pulse ? 'component-highlighted' : ''}`}
+      className={`pointer-events-auto cursor-grab active:cursor-grabbing ${isHighlighted && highlight.pulse ? 'component-highlighted' : ''} ${hasActiveTelemetry ? 'telemetry-active' : ''}`}
       style={
         isHighlighted
           ? ({ '--highlight-color': highlight.color } as React.CSSProperties)
@@ -826,19 +870,27 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
 
       {/* Render pins */}
       {pinPositions.map((pinDef, index) => (
-        <Pin
-          key={`pin-${pinDef.name}-${index}`}
-          pin={pinDef.name}
-          x={pinDef.x}
-          y={pinDef.y}
-          nodeId={component.id}
-          isRightSide={pinDef.side === 'right'}
-          shape={shape}
-          onPointerDown={onPinPointerDown}
-          onPointerUp={onPinPointerUp}
-          onMouseEnter={onPinEnter}
-          onMouseLeave={onPinLeave}
-        />
+        <React.Fragment key={`pin-wrapper-${pinDef.name}-${index}`}>
+          <Pin
+            pin={pinDef.name}
+            x={pinDef.x}
+            y={pinDef.y}
+            nodeId={component.id}
+            isRightSide={pinDef.side === 'right'}
+            shape={shape}
+            onPointerDown={onPinPointerDown}
+            onPointerUp={onPinPointerUp}
+            onMouseEnter={onPinEnter}
+            onMouseLeave={onPinLeave}
+          />
+          <TelemetryOverlay 
+            pin={pinDef.name}
+            componentId={component.id}
+            x={pinDef.x}
+            y={pinDef.y}
+            isRightSide={pinDef.side === 'right'}
+          />
+        </React.Fragment>
       ))}
 
       {/* Quantity badge */}

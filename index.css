@@ -380,6 +380,15 @@ body {
   animation: component-pulse 1.5s ease-in-out infinite;
 }
 
+@keyframes telemetry-heartbeat {
+  0%, 100% { filter: drop-shadow(0 0 2px #00ff9d); }
+  50% { filter: drop-shadow(0 0 8px #00ff9d); }
+}
+
+.telemetry-active {
+  animation: telemetry-heartbeat 2s ease-in-out infinite;
+}
+
 /* Wire highlight glow */
 @keyframes wire-glow {
   0%, 100% {
