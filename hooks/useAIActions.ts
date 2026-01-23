@@ -24,7 +24,7 @@ export function useAIActions(options: UseAIActionsOptions) {
   const { inventory, setInventory } = useInventory();
   const { diagram, updateDiagram, undo: handleUndo, redo: handleRedo, saveToQuickSlot: saveDiagram, loadFromQuickSlot: loadDiagram } = useDiagram();
   const { setInventoryOpen, setSettingsOpen } = useLayout();
-  const { setGenerationMode } = useAssistantState();
+  const { setGenerationMode, pushActionDelta } = useAssistantState();
   const { activeConversationId } = useConversationContext();
 
   const [pendingActions, setPendingActions] = useState<ActionIntent[]>([]);
@@ -64,6 +64,14 @@ export function useAIActions(options: UseAIActionsOptions) {
       }
     } catch (err) {
       result.error = err instanceof Error ? err.message : 'Unknown error';
+    }
+
+    if (result.success) {
+      pushActionDelta({
+        type: action.type,
+        targetId: (action.payload as any).componentId || (action.payload as any).nodeId || (action.payload as any).id,
+        description: action.label
+      });
     }
 
     addToHistory(result);
