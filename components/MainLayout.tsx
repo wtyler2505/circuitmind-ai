@@ -20,6 +20,7 @@ import { useVoiceAssistant } from '../contexts/VoiceAssistantContext';
 import { useLayout } from '../contexts/LayoutContext';
 import { useAssistantState } from '../contexts/AssistantStateContext';
 import { useConversationContext } from '../contexts/ConversationContext';
+import { useHUD } from '../contexts/HUDContext';
 
 // Hooks & Services
 import { useAIActions } from '../hooks/useAIActions';
@@ -56,6 +57,7 @@ export const MainLayout: React.FC = () => {
     useDeepThinking, setUseDeepThinking 
   } = useAssistantState();
   const conversationManager = useConversationContext();
+  const { isVisible: isHUDVisible, setVisible: setHUDVisible } = useHUD();
 
   const toast = useToast();
 
@@ -92,6 +94,20 @@ export const MainLayout: React.FC = () => {
     autoSync: true,
     devLogging: process.env.NODE_ENV === 'development',
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
+      
+      if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setHUDVisible(!isHUDVisible);
+        toast.show(isHUDVisible ? 'HUD DISABLED' : 'HUD ENABLED', 'info');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isHUDVisible, setHUDVisible, toast]);
 
   // Main Chat Handler
   const handleSendEnhancedMessage = useCallback(async (
