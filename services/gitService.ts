@@ -90,7 +90,33 @@ class GitService {
 
   async log() {
     await this.init();
-    return await git.log({ fs, dir, depth: 10 });
+    return await git.log({ fs, dir, depth: 50 });
+  }
+
+  async branch(name: string) {
+    await this.init();
+    await git.branch({ fs, dir, ref: name });
+  }
+
+  async checkout(name: string) {
+    await this.init();
+    await git.checkout({ fs, dir, ref: name });
+  }
+
+  async listBranches() {
+    await this.init();
+    return await git.listBranches({ fs, dir });
+  }
+
+  async currentBranch() {
+    await this.init();
+    return await git.currentBranch({ fs, dir });
+  }
+
+  async getCommit(sha: string) {
+    await this.init();
+    const commit = await git.readCommit({ fs, dir, oid: sha });
+    return commit;
   }
 }
 
