@@ -9,6 +9,7 @@ import { useDiagram } from '../contexts/DiagramContext';
 import { useLayout } from '../contexts/LayoutContext';
 import { useAssistantState } from '../contexts/AssistantStateContext';
 import { useConversationContext } from '../contexts/ConversationContext';
+import { PredictiveAction } from '../services/predictionEngine';
 
 export type { ActionResult } from './useActionHistory';
 
@@ -28,8 +29,25 @@ export function useAIActions(options: UseAIActionsOptions) {
   const { activeConversationId } = useConversationContext();
 
   const [pendingActions, setPendingActions] = useState<ActionIntent[]>([]);
+  const [stagedActions, setStagedActions] = useState<PredictiveAction[]>([]);
   const { autonomySettings, updateAutonomySettings, isActionSafe } = useAutonomySettings();
   const { actionHistory, addToHistory, recordUndo, undo, canUndo } = useActionHistory(updateDiagram);
+
+  // Staged Actions (Predictions)
+  const acceptStagedAction = useCallback(async (id: string) => {
+    const prediction = stagedActions.find((a) => a.id === id);
+    if (prediction) {
+      setStagedActions((prev) => prev.filter((a) => a.id !== id));
+      return await executeAction(prediction.action, false);
+    }
+  }, [stagedActions, executeAction]);
+
+  const rejectStagedAction = useCallback((id: string) => {
+    setStagedActions((prev) => prev.filter((a) => a.id !== id));
+  }, [stagedActions]);
+
+  const clearStagedActions = useCallback(() => setStagedActions([]), []);
+  const stageActions = useCallback((actions: PredictiveAction[]) => setStagedActions(actions), []);
 
   // Execute action via handler registry
   const executeAction = useCallback(async (action: ActionIntent, auto: boolean): Promise<ActionResult> => {
@@ -149,6 +167,11 @@ export function useAIActions(options: UseAIActionsOptions) {
     confirmAction,
     rejectAction,
     clearPendingActions,
+    stagedActions,
+    acceptStagedAction,
+    rejectStagedAction,
+    clearStagedActions,
+    stageActions,
     canUndo,
     undo,
     actionHistory,
