@@ -16,6 +16,7 @@ import { DebugWorkbench } from './layout/DebugWorkbench';
 import { AnalyticsDashboard } from './layout/AnalyticsDashboard';
 import { DashboardView } from './dashboard/DashboardView';
 import { Gatekeeper } from './auth/Gatekeeper';
+import { CyberToast } from './layout/CyberToast';
 import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
@@ -653,6 +654,7 @@ export const MainLayout: React.FC = () => {
         </div>
       )}
       <Gatekeeper />
+      <CyberToast />
     </AppLayout>
   );
 };

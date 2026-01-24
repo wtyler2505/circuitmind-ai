@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { simulationEngine, SimulationResult } from '../services/simulationEngine';
-import { useDiagram } from './DiagramContext';
+import { useNotify } from './NotificationContext';
 
 interface SimulationContextType {
   result: SimulationResult | null;
@@ -19,6 +19,7 @@ export const SimulationProvider: React.FC<{ children: ReactNode }> = ({ children
   const { diagram } = useDiagram();
   const [isSimulating, setIsSimulating] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
+  const { pushNotification } = useNotify();
 
   const runTick = useCallback(() => {
     if (!diagram) {
@@ -27,7 +28,16 @@ export const SimulationProvider: React.FC<{ children: ReactNode }> = ({ children
     }
     const res = simulationEngine.solve(diagram);
     setResult(res);
-  }, [diagram]);
+
+    if (res.status === 'failed') {
+      pushNotification({
+        severity: 'critical',
+        title: 'SIMULATION_CRASH',
+        message: 'Circuit logic failed. High risk of hardware damage detected.',
+        duration: 10000
+      });
+    }
+  }, [diagram, pushNotification]);
 
   // Run simulation loop when active
   useEffect(() => {

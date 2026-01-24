@@ -24,15 +24,9 @@
 - [Feature: Security Auditing (Hardware Guard)](./tracks/security-auditing-hardware-gua_20260123/spec.md) `status: done`
 - [Feature: Customizable Dashboards (Control Room)](./tracks/customizable-dashboards-contro_20260123/spec.md) `status: done`
 - [Feature: Role-Based Access Control (Secure Multi-User)](./tracks/role-based-access-control-secu_20260123/spec.md) `status: done`
-
-- [ ] **Track: API Integration Layer (Local Connect)**
-  *Link: [./conductor/tracks/api-integration-layer-local-co_20260123/](./conductor/tracks/api-integration-layer-local-co_20260123/)*
-
-- [ ] **Track: Data Visualization Engine (Futuristic Analytics)**
-  *Link: [./conductor/tracks/data-visualization-engine-futu_20260123/](./conductor/tracks/data-visualization-engine-futu_20260123/)*
-
-- [ ] **Track: Notification System (Comms Link)**
-  *Link: [./conductor/tracks/notification-system-comms-link_20260123/](./conductor/tracks/notification-system-comms-link_20260123/)*
+- [Feature: API Integration Layer (Local Connect)](./tracks/api-integration-layer-local-co_20260123/spec.md) `status: done`
+- [Feature: Data Visualization Engine (Futuristic Analytics)](./tracks/data-visualization-engine-futu_20260123/spec.md) `status: done`
+- [Feature: Notification System (Comms Link)](./tracks/notification-system-comms-link_20260123/spec.md) `status: done`
 
 - [ ] **Track: Offline Mode Support (Sovereign Engine)**
   *Link: [./conductor/tracks/offline-mode-support-sovereign_20260123/](./conductor/tracks/offline-mode-support-sovereign_20260123/)*
