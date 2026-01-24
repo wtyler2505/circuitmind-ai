@@ -12,6 +12,7 @@ import { HardwareTerminal } from './layout/HardwareTerminal';
 import { MentorOverlay } from './layout/MentorOverlay';
 import { BootcampPanel } from './layout/BootcampPanel';
 import { ProjectTimeline } from './layout/ProjectTimeline';
+import { DebugWorkbench } from './layout/DebugWorkbench';
 import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
@@ -80,7 +81,7 @@ export const MainLayout: React.FC = () => {
   const [aiContext, setAIContext] = useState<AIContext | null>(null);
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; componentId: string } | null>(null);
-  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history'>('chat');
+  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history' | 'diagnostic'>('chat');
 
   // Canvas Ref
   const canvasRef = useRef<DiagramCanvasRef>(null);
@@ -405,6 +406,16 @@ export const MainLayout: React.FC = () => {
                 >
                   HISTORY
                 </button>
+                <button
+                  onClick={() => setAssistantTab('diagnostic')}
+                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
+                    assistantTab === 'diagnostic'
+                      ? 'border-red-500 text-white bg-white/5'
+                      : 'border-transparent text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  DIAGNOSTIC
+                </button>
               </div>
 
               <div className="flex-1 overflow-hidden">
@@ -472,8 +483,10 @@ export const MainLayout: React.FC = () => {
                   />
                 ) : assistantTab === 'bootcamp' ? (
                   <BootcampPanel />
-                ) : (
+                ) : assistantTab === 'history' ? (
                   <ProjectTimeline />
+                ) : (
+                  <DebugWorkbench />
                 )}
               </div>
 
