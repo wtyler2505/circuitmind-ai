@@ -546,6 +546,16 @@ body {
 
 /* Utilities */
 
+@layer base {
+  .theme-high-contrast {
+    --mode-accent: #ffffff;
+    --panel-bg: #000000;
+    --text-primary: #ffffff;
+    --text-secondary: #ffff00;
+    --border-color: #ffffff;
+  }
+}
+
 @layer utilities {
 
   .focus-visible-ring {

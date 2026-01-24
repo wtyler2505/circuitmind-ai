@@ -35,11 +35,8 @@
 - [Feature: Error Reporting (Diagnostics Hub)](./tracks/error-reporting-diagnostics-hu_20260123/spec.md) `status: done`
 - [Feature: User Feedback Loop (Self-Correction)](./tracks/user-feedback-loop-self-correc_20260123/spec.md) `status: done`
 
-- [ ] **Track: Internationalization (Global Bench)**
-  *Link: [./conductor/tracks/internationalization-global-be_20260123/](./conductor/tracks/internationalization-global-be_20260123/)*
-
-- [ ] **Track: Accessibility Features (Inclusive Engineering)**
-  *Link: [./conductor/tracks/accessibility-features-inclusi_20260123/](./conductor/tracks/accessibility-features-inclusi_20260123/)*
+- [Feature: Internationalization (Global Bench)](./tracks/internationalization-global-be_20260123/spec.md) `status: done`
+- [Feature: Accessibility Features (Inclusive Engineering)](./tracks/accessibility-features-inclusi_20260123/spec.md) `status: done`
 
 - [ ] **Track: Smart Component Metadata (Datasheet Scraping)**
   *Link: [./conductor/tracks/smart-component-metadata-datas_20260123/](./conductor/tracks/smart-component-metadata-datas_20260123/)*

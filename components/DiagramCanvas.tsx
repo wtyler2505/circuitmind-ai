@@ -400,27 +400,33 @@ const DiagramCanvasRenderer = ({
       else dispatch({ type: 'ZOOM_IN', payload: scaleFactor });
     }, []);
 
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const modKey = isMac ? e.metaKey : e.ctrlKey;
-
-      if (modKey && e.key === '0') {
-        e.preventDefault();
-        dispatch({ type: 'RESET_VIEW' });
-      } else if (e.key === '+' || e.key === '=') {
-        e.preventDefault();
-        dispatch({ type: 'ZOOM_IN', payload: 0.2 });
-      } else if (e.key === '-') {
-        e.preventDefault();
-        dispatch({ type: 'ZOOM_OUT', payload: 0.2 });
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Canvas Movement
+    if (!selectedComponentId) {
+      if (e.key === 'ArrowUp') setPan(p => ({ ...p, y: p.y - 20 }));
+      if (e.key === 'ArrowDown') setPan(p => ({ ...p, y: p.y + 20 }));
+      if (e.key === 'ArrowLeft') setPan(p => ({ ...p, x: p.x - 20 }));
+      if (e.key === 'ArrowRight') setPan(p => ({ ...p, x: p.x + 20 }));
+    } else {
+      // Component Movement (if editable)
+      const step = e.shiftKey ? 10 : 1;
+      const diagramCopy = JSON.parse(JSON.stringify(diagram));
+      const comp = diagramCopy.components.find((c: any) => c.id === selectedComponentId);
+      
+      if (comp && onDiagramUpdate) {
+        if (e.key === 'ArrowUp') comp.position.y -= step;
+        if (e.key === 'ArrowDown') comp.position.y += step;
+        if (e.key === 'ArrowLeft') comp.position.x -= step;
+        if (e.key === 'ArrowRight') comp.position.x += step;
+        onDiagramUpdate(diagramCopy);
       }
-    }, []);
+    }
+  }, [selectedComponentId, diagram, onDiagramUpdate]);
 
-    useEffect(() => {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleKeyDown]);
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
     const handlePointerDown = useCallback((e: React.PointerEvent, nodeId?: string) => {
       e.stopPropagation();
