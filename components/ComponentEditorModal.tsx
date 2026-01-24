@@ -117,6 +117,29 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
     },
   ]);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [extractionLogs, setExtractionLogs] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (isExtractingDatasheet) {
+      const interval = setInterval(() => {
+        const logs = [
+          'Initializing Neural Vision...',
+          'Scanning Datasheet Structure...',
+          'Identifying Pin Configuration Table...',
+          'Extracting Electrical Characteristics...',
+          'Validating Logic Levels...',
+          'Normalizing Pin Labels...'
+        ];
+        setExtractionLogs(prev => {
+          const nextIndex = prev.length % logs.length;
+          return [...prev.slice(-4), logs[nextIndex]];
+        });
+      }, 800);
+      return () => clearInterval(interval);
+    } else {
+      setExtractionLogs([]);
+    }
+  }, [isExtractingDatasheet]);
 
   useEffect(() => {
     setEditedName(component.name);
@@ -385,6 +408,24 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
+      {isExtractingDatasheet && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-slate-900 border border-neon-cyan/50 p-6 cut-corner-md w-80 shadow-[0_0_30px_rgba(0,243,255,0.2)]">
+            <h3 className="text-neon-cyan font-bold uppercase tracking-widest mb-4 animate-pulse">
+              ANALYZING_DATASHEET
+            </h3>
+            <div className="font-mono text-[10px] text-slate-300 space-y-1 h-32 overflow-hidden border-l border-neon-cyan/20 pl-2">
+              {extractionLogs.map((log, i) => (
+                <div key={i} className="animate-fade-in opacity-80">
+                  <span className="text-neon-cyan mr-2">›</span>
+                  {log}
+                </div>
+              ))}
+              <div className="animate-pulse">_</div>
+            </div>
+          </div>
+        </div>
+      )}
       <div
         className={`bg-cyber-card border border-neon-cyan/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh] md:max-h-[80vh] transition-all duration-300 ${showAiChat ? 'w-full max-w-4xl' : 'w-full max-w-2xl'}`}
         onClick={(e) => e.stopPropagation()}

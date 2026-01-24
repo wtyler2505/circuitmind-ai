@@ -37,6 +37,4 @@
 
 - [Feature: Internationalization (Global Bench)](./tracks/internationalization-global-be_20260123/spec.md) `status: done`
 - [Feature: Accessibility Features (Inclusive Engineering)](./tracks/accessibility-features-inclusi_20260123/spec.md) `status: done`
-
-- [ ] **Track: Smart Component Metadata (Datasheet Scraping)**
-  *Link: [./conductor/tracks/smart-component-metadata-datas_20260123/](./conductor/tracks/smart-component-metadata-datas_20260123/)*
+- [Feature: Smart Component Metadata (Datasheet Scraping)](./tracks/smart-component-metadata-datas_20260123/spec.md) `status: done`
