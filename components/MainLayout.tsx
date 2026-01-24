@@ -35,7 +35,7 @@ import { useToast } from '../hooks/useToast';
 import { useInventorySync } from '../hooks/useInventorySync';
 import { useSync } from '../hooks/useSync';
 import { buildAIContext } from '../services/aiContextBuilder';
-import { predictionEngine } from '../services/predictionEngine';
+import { securityAuditor } from '../services/securityAuditor';
 import {
   explainComponent,
   generateComponent3DCode,
@@ -67,10 +67,32 @@ export const MainLayout: React.FC = () => {
     recentHistory, activeSelectionPath 
   } = useAssistantState();
   const conversationManager = useConversationContext();
-  const { isVisible: isHUDVisible, setVisible: setHUDVisible } = useHUD();
+  const { isVisible: isHUDVisible, setVisible: setHUDVisible, addFragment, clearHUD } = useHUD();
   const { isFocusMode, setFocusMode } = useLayout();
 
   const toast = useToast();
+
+  // Real-time Security Audit loop
+  useEffect(() => {
+    if (!diagram) return;
+    
+    const violations = securityAuditor.auditCircuitSafety(diagram);
+    const criticals = violations.filter(v => v.severity === 'high' || v.severity === 'critical');
+    
+    if (criticals.length > 0) {
+      criticals.forEach(v => {
+        addFragment({
+          targetId: v.location,
+          type: 'warning',
+          content: `SAFETY RISK: ${v.message}`,
+          position: { x: 50, y: 50 }, // Fixed for global warnings or dynamic if location matches component
+          priority: 1
+        });
+      });
+    } else {
+      // Clear safety warnings if resolved (HUD decay handles this mostly but we can be explicit)
+    }
+  }, [diagram, addFragment]);
 
   // Local State (Controllers)
   const [isLoading, setIsLoading] = useState(false);

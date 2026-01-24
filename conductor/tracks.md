@@ -20,9 +20,7 @@
 - [Feature: Cross-Platform Sync (Local-First Bridge)](./tracks/cross-platform-sync-local-firs_20260123/spec.md) `status: done`
 - [Feature: Version Control Integration (Time Machine)](./tracks/version-control-integration-ti_20260123/spec.md) `status: done`
 - [Feature: AI-Assisted Debugging (Circuit Eye)](./tracks/ai-assisted-debugging-circuit-_20260123/spec.md) `status: done`
-
-- [ ] **Track: Performance Analytics (Engineering Efficiency)**
-  *Link: [./conductor/tracks/performance-analytics-engineer_20260123/](./conductor/tracks/performance-analytics-engineer_20260123/)*
+- [Feature: Performance Analytics (Engineering Efficiency)](./tracks/performance-analytics-engineer_20260123/spec.md) `status: done`
 
 - [ ] **Track: Security Auditing (Hardware Guard)**
   *Link: [./conductor/tracks/security-auditing-hardware-gua_20260123/](./conductor/tracks/security-auditing-hardware-gua_20260123/)*
