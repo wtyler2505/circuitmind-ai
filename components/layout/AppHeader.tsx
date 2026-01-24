@@ -4,6 +4,7 @@ import { useVoiceAssistant } from '../../contexts/VoiceAssistantContext';
 import { useLayout } from '../../contexts/LayoutContext';
 import IconButton from '../IconButton';
 import { ModeSelector } from './ModeSelector';
+import { BOMModal } from '../inventory/BOMModal';
 
 export const AppHeader = React.memo(() => {
   const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot, diagram } = useDiagram();
@@ -13,6 +14,26 @@ export const AppHeader = React.memo(() => {
   // Feedback states for SAVE/LOAD buttons
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [loadStatus, setLoadStatus] = useState<'idle' | 'loading' | 'loaded' | 'empty'>('idle');
+  const [isBOMOpen, setIsBOMOpen] = useState(false);
+
+  // Version Control State
+  const [currentBranch, setCurrentBranch] = useState('master');
+  const [isCheckpointing, setIsCheckpointing] = useState(false);
+
+  const handleCheckpoint = async () => {
+    const msg = prompt('Enter checkpoint message:');
+    if (!msg) return;
+
+    setIsCheckpointing(true);
+    try {
+      await gitService.commit(msg);
+      alert('Checkpoint saved.');
+    } catch (e) {
+      alert('Checkpoint failed.');
+    } finally {
+      setIsCheckpointing(false);
+    }
+  };
 
   const handleSave = useCallback(() => {
     if (!diagram) {
@@ -120,6 +141,40 @@ export const AppHeader = React.memo(() => {
             <img src="/assets/ui/action-load.png" alt="" className={`w-3 h-3 ${loadStatus === 'idle' ? 'opacity-60' : ''}`} />
             {loadStatus === 'loaded' ? '✓ LOADED' : loadStatus === 'empty' ? 'EMPTY' : loadStatus === 'loading' ? '...' : 'LOAD'}
           </button>
+          <button
+            onClick={() => setIsBOMOpen(true)}
+            className="h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none border border-neon-purple/30 bg-neon-purple/5 text-neon-purple hover:bg-neon-purple hover:text-black"
+            title="Generate Bill of Materials"
+          >
+            BOM
+          </button>
+        </div>
+
+        <div className="w-px h-4 bg-white/10" />
+
+        {/* Branch / Timeline Group */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 border border-white/10 cut-corner-sm">
+            <svg className="w-3 h-3 text-neon-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            <select 
+              value={currentBranch}
+              onChange={(e) => setCurrentBranch(e.target.value)}
+              className="bg-transparent text-[9px] font-bold text-slate-300 focus:outline-none uppercase tracking-widest cursor-pointer"
+            >
+              <option value="master">MASTER</option>
+              <option value="dev">EXP_WIRING_01</option>
+            </select>
+          </div>
+          <button 
+            onClick={handleCheckpoint}
+            disabled={isCheckpointing}
+            className="h-7 px-3 bg-neon-amber/10 border border-neon-amber/30 text-neon-amber text-[9px] font-bold uppercase tracking-widest hover:bg-neon-amber hover:text-black transition-all cut-corner-sm flex items-center gap-2"
+          >
+            <div className={`w-1.5 h-1.5 rounded-full ${isCheckpointing ? 'bg-white animate-ping' : 'bg-neon-amber'}`} />
+            CHECKPOINT
+          </button>
         </div>
       </div>
 
@@ -158,6 +213,8 @@ export const AppHeader = React.memo(() => {
           className="bg-black/20 text-slate-400 border-white/5 hover:text-white hover:border-white/30 cut-corner-sm"
         />
       </div>
+
+      {isBOMOpen && <BOMModal onClose={() => setIsBOMOpen(false)} />}
     </div>
   );
 });

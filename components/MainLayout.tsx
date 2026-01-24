@@ -11,6 +11,7 @@ import { SimControls } from './layout/SimControls';
 import { HardwareTerminal } from './layout/HardwareTerminal';
 import { MentorOverlay } from './layout/MentorOverlay';
 import { BootcampPanel } from './layout/BootcampPanel';
+import { ProjectTimeline } from './layout/ProjectTimeline';
 import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
@@ -79,7 +80,7 @@ export const MainLayout: React.FC = () => {
   const [aiContext, setAIContext] = useState<AIContext | null>(null);
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; componentId: string } | null>(null);
-  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp'>('chat');
+  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history'>('chat');
 
   // Canvas Ref
   const canvasRef = useRef<DiagramCanvasRef>(null);
@@ -394,6 +395,16 @@ export const MainLayout: React.FC = () => {
                 >
                   BOOTCAMP
                 </button>
+                <button
+                  onClick={() => setAssistantTab('history')}
+                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
+                    assistantTab === 'history'
+                      ? 'border-neon-amber text-white bg-white/5'
+                      : 'border-transparent text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  HISTORY
+                </button>
               </div>
 
               <div className="flex-1 overflow-hidden">
@@ -459,10 +470,13 @@ export const MainLayout: React.FC = () => {
                       </div>
                     }
                   />
-                ) : (
+                ) : assistantTab === 'bootcamp' ? (
                   <BootcampPanel />
+                ) : (
+                  <ProjectTimeline />
                 )}
               </div>
+
             </div>
           </ErrorBoundary>
         </AssistantSidebar>
