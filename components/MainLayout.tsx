@@ -17,6 +17,7 @@ import { AnalyticsDashboard } from './layout/AnalyticsDashboard';
 import { DashboardView } from './dashboard/DashboardView';
 import { Gatekeeper } from './auth/Gatekeeper';
 import { CyberToast } from './layout/CyberToast';
+import { OmniSearch } from './layout/OmniSearch';
 import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
@@ -39,6 +40,7 @@ import { useInventorySync } from '../hooks/useInventorySync';
 import { useSync } from '../hooks/useSync';
 import { buildAIContext } from '../services/aiContextBuilder';
 import { securityAuditor } from '../services/securityAuditor';
+import { searchIndexer, IndexedDocument } from '../services/search/searchIndexer';
 import {
   explainComponent,
   generateComponent3DCode,
@@ -97,6 +99,38 @@ export const MainLayout: React.FC = () => {
     }
   }, [diagram, addFragment]);
 
+  // Global Search Indexing loop
+  useEffect(() => {
+    const docs: IndexedDocument[] = [];
+
+    // 1. Index Inventory
+    inventory.forEach(c => {
+      docs.push({
+        id: `inv-${c.id}`,
+        category: 'component',
+        title: c.name,
+        body: c.description,
+        tags: [c.type, ...(c.pins || [])],
+        reference: c
+      });
+    });
+
+    // 2. Index Diagram
+    if (diagram) {
+      diagram.components.forEach(c => {
+        docs.push({
+          id: `diag-comp-${c.id}`,
+          category: 'diagram',
+          title: `Project: ${c.name}`,
+          body: `Part of ${diagram.title}. Pins: ${c.pins?.join(', ')}`,
+          reference: c.id
+        });
+      });
+    }
+
+    searchIndexer.index(docs);
+  }, [inventory, diagram]);
+
   // Local State (Controllers)
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
@@ -109,6 +143,7 @@ export const MainLayout: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; componentId: string } | null>(null);
   const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history' | 'diagnostic' | 'analytics'>('chat');
   const [isDashboardVisible, setIsDashboardVisible] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Canvas Ref
   const canvasRef = useRef<DiagramCanvasRef>(null);
@@ -140,6 +175,11 @@ export const MainLayout: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
       
+      if (e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        setIsSearchOpen(!isSearchOpen);
+      }
+
       if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setHUDVisible(!isHUDVisible);
         toast.show(isHUDVisible ? 'HUD DISABLED' : 'HUD ENABLED', 'info');
@@ -380,6 +420,16 @@ export const MainLayout: React.FC = () => {
   const handleCanvasBackgroundClick = useCallback(() => {
     setCanvasSelectionId(null);
     setContextMenu(null);
+  }, []);
+
+  const handleSearchSelect = useCallback((doc: IndexedDocument) => {
+    setIsSearchOpen(false);
+    if (doc.category === 'component' || doc.category === 'diagram') {
+      const id = doc.category === 'component' ? doc.reference.id : doc.reference;
+      canvasRef.current?.highlightComponent(id, { color: '#00f3ff', duration: 3000, pulse: true });
+      canvasRef.current?.centerOnComponent(id, 1.2);
+      setCanvasSelectionId(id);
+    }
   }, []);
 
   const handleGenerate3D = useCallback(async (customPrompt?: string) => {
@@ -655,6 +705,11 @@ export const MainLayout: React.FC = () => {
       )}
       <Gatekeeper />
       <CyberToast />
+      <OmniSearch 
+        isOpen={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+        onSelect={handleSearchSelect} 
+      />
     </AppLayout>
   );
 };

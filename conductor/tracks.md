@@ -29,9 +29,7 @@
 - [Feature: Notification System (Comms Link)](./tracks/notification-system-comms-link_20260123/spec.md) `status: done`
 - [Feature: Offline Mode Support (Sovereign Engine)](./tracks/offline-mode-support-sovereign_20260123/spec.md) `status: done`
 - [Feature: Collaboration Tools (Team Link)](./tracks/collaboration-tools-team-link-_20260123/spec.md) `status: done`
-
-- [ ] **Track: Search & Indexing (Global Archive)**
-  *Link: [./conductor/tracks/search-indexing-global-archive_20260123/](./conductor/tracks/search-indexing-global-archive_20260123/)*
+- [Feature: Search & Indexing (Global Archive)](./tracks/search-indexing-global-archive_20260123/spec.md) `status: done`
 
 - [ ] **Track: Configuration Management (CircuitMind Dotfiles)**
   *Link: [./conductor/tracks/configuration-management-circu_20260123/](./conductor/tracks/configuration-management-circu_20260123/)*
