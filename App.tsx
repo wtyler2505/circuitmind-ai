@@ -12,6 +12,7 @@ import { SimulationProvider } from './contexts/SimulationContext';
 import { TutorialProvider } from './contexts/TutorialContext';
 import { HealthProvider } from './contexts/HealthContext';
 import { MacroProvider } from './contexts/MacroContext';
+import { DashboardProvider } from './contexts/DashboardContext';
 import { INITIAL_INVENTORY } from './data/initialInventory';
 
 export default function App() {
@@ -19,25 +20,27 @@ export default function App() {
     <LayoutProvider>
       <AssistantStateProvider>
         <HealthProvider>
-          <MacroProvider>
-            <InventoryProvider initialData={INITIAL_INVENTORY}>
-              <ConversationProvider>
-                <DiagramProvider>
-                  <TelemetryProvider>
-                    <HUDProvider>
-                      <SimulationProvider>
-                        <VoiceAssistantProvider>
-                          <TutorialProvider>
-                            <MainLayout />
-                          </TutorialProvider>
-                        </VoiceAssistantProvider>
-                      </SimulationProvider>
-                    </HUDProvider>
-                  </TelemetryProvider>
-                </DiagramProvider>
-              </ConversationProvider>
-            </InventoryProvider>
-          </MacroProvider>
+          <DashboardProvider>
+            <MacroProvider>
+              <InventoryProvider initialData={INITIAL_INVENTORY}>
+                <ConversationProvider>
+                  <DiagramProvider>
+                    <TelemetryProvider>
+                      <HUDProvider>
+                        <SimulationProvider>
+                          <VoiceAssistantProvider>
+                            <TutorialProvider>
+                              <MainLayout />
+                            </TutorialProvider>
+                          </VoiceAssistantProvider>
+                        </SimulationProvider>
+                      </HUDProvider>
+                    </TelemetryProvider>
+                  </DiagramProvider>
+                </ConversationProvider>
+              </InventoryProvider>
+            </MacroProvider>
+          </DashboardProvider>
         </HealthProvider>
       </AssistantStateProvider>
     </LayoutProvider>
