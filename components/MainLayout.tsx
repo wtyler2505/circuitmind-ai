@@ -13,6 +13,7 @@ import { MentorOverlay } from './layout/MentorOverlay';
 import { BootcampPanel } from './layout/BootcampPanel';
 import { ProjectTimeline } from './layout/ProjectTimeline';
 import { DebugWorkbench } from './layout/DebugWorkbench';
+import { AnalyticsDashboard } from './layout/AnalyticsDashboard';
 import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
@@ -81,7 +82,7 @@ export const MainLayout: React.FC = () => {
   const [aiContext, setAIContext] = useState<AIContext | null>(null);
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; componentId: string } | null>(null);
-  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history' | 'diagnostic'>('chat');
+  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history' | 'diagnostic' | 'analytics'>('chat');
 
   // Canvas Ref
   const canvasRef = useRef<DiagramCanvasRef>(null);
@@ -416,6 +417,16 @@ export const MainLayout: React.FC = () => {
                 >
                   DIAGNOSTIC
                 </button>
+                <button
+                  onClick={() => setAssistantTab('analytics')}
+                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
+                    assistantTab === 'analytics'
+                      ? 'border-neon-cyan text-white bg-white/5'
+                      : 'border-transparent text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  ANALYTICS
+                </button>
               </div>
 
               <div className="flex-1 overflow-hidden">
@@ -485,10 +496,13 @@ export const MainLayout: React.FC = () => {
                   <BootcampPanel />
                 ) : assistantTab === 'history' ? (
                   <ProjectTimeline />
-                ) : (
+                ) : assistantTab === 'diagnostic' ? (
                   <DebugWorkbench />
+                ) : (
+                  <AnalyticsDashboard />
                 )}
               </div>
+
 
             </div>
           </ErrorBoundary>

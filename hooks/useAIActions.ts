@@ -10,6 +10,7 @@ import { useLayout } from '../contexts/LayoutContext';
 import { useAssistantState } from '../contexts/AssistantStateContext';
 import { useConversationContext } from '../contexts/ConversationContext';
 import { useMacros } from '../contexts/MacroContext';
+import { engineeringMetricsService } from '../services/aiMetricsService';
 import { PredictiveAction } from '../services/predictionEngine';
 
 export type { ActionResult } from './useActionHistory';
@@ -72,6 +73,7 @@ export function useAIActions(options: UseAIActionsOptions) {
     }
 
     if (result.success) {
+      engineeringMetricsService.logEvent('action_execute', { type: action.type, label: action.label });
       if (isRecording) {
         addRecordedStep(action);
       }
