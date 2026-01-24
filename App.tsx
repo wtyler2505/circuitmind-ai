@@ -15,37 +15,46 @@ import { MacroProvider } from './contexts/MacroContext';
 import { DashboardProvider } from './contexts/DashboardContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { ToastProvider } from './hooks/useToast';
 import { INITIAL_INVENTORY } from './data/initialInventory';
+import { diagnosticsHub } from './services/error/diagnosticsHub';
+import { useEffect } from 'react';
 
 export default function App() {
+  useEffect(() => {
+    diagnosticsHub.init();
+  }, []);
+
   return (
     <LayoutProvider>
       <AssistantStateProvider>
         <HealthProvider>
           <AuthProvider>
-            <NotificationProvider>
-              <DashboardProvider>
-                <MacroProvider>
-                  <InventoryProvider initialData={INITIAL_INVENTORY}>
-                    <ConversationProvider>
-                      <DiagramProvider>
-                        <TelemetryProvider>
-                          <HUDProvider>
-                            <SimulationProvider>
-                              <VoiceAssistantProvider>
-                                <TutorialProvider>
-                                  <MainLayout />
-                                </TutorialProvider>
-                              </VoiceAssistantProvider>
-                            </SimulationProvider>
-                          </HUDProvider>
-                        </TelemetryProvider>
-                      </DiagramProvider>
-                    </ConversationProvider>
-                  </InventoryProvider>
-                </MacroProvider>
-              </DashboardProvider>
-            </NotificationProvider>
+            <ToastProvider>
+              <NotificationProvider>
+                <DashboardProvider>
+                  <MacroProvider>
+                    <InventoryProvider initialData={INITIAL_INVENTORY}>
+                      <ConversationProvider>
+                        <DiagramProvider>
+                          <TelemetryProvider>
+                            <HUDProvider>
+                              <SimulationProvider>
+                                <VoiceAssistantProvider>
+                                  <TutorialProvider>
+                                    <MainLayout />
+                                  </TutorialProvider>
+                                </VoiceAssistantProvider>
+                              </SimulationProvider>
+                            </HUDProvider>
+                          </TelemetryProvider>
+                        </DiagramProvider>
+                      </ConversationProvider>
+                    </InventoryProvider>
+                  </MacroProvider>
+                </DashboardProvider>
+              </NotificationProvider>
+            </ToastProvider>
           </AuthProvider>
         </HealthProvider>
       </AssistantStateProvider>

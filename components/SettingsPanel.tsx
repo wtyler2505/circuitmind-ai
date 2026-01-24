@@ -7,6 +7,7 @@ import IconButton from './IconButton';
 import { useLayout } from '../contexts/LayoutContext';
 import { DeveloperPortal } from './settings/DeveloperPortal';
 import { ConfigPortal } from './settings/ConfigPortal';
+import { DiagnosticsView } from './settings/DiagnosticsView';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -97,7 +98,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout' | 'dev' | 'config'>('api');
+  const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics'>('api');
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
   const toast = useToast();
   
@@ -363,6 +364,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             }`}
           >
             CONFIG
+          </button>
+          <button
+            onClick={() => setActiveTab('diagnostics')}
+            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+              activeTab === 'diagnostics' 
+                ? 'border-red-500 text-white bg-white/5' 
+                : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            DIAGNOSTICS
           </button>
         </div>
 
@@ -866,6 +877,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           {/* Config Tab */}
           {activeTab === 'config' && (
             <ConfigPortal />
+          )}
+
+          {/* Diagnostics Tab */}
+          {activeTab === 'diagnostics' && (
+            <DiagnosticsView />
           )}
         </div>
 
