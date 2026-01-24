@@ -14,6 +14,7 @@ import { EnhancedChatMessage, ActionIntent, Conversation, AIContext } from '../t
 import ChatMessage from './ChatMessage';
 import ConversationSwitcher from './ConversationSwitcher';
 import { aiMetricsService } from '../services/aiMetricsService';
+import { useConnectivity } from '../hooks/useConnectivity';
 import IconButton from './IconButton';
 
 interface ChatPanelProps {
@@ -187,6 +188,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { isOnline } = useConnectivity();
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -787,11 +790,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={!isOnline}
             placeholder={
+              !isOnline ? 'SATELLITE LINK OFFLINE...' :
               generationMode === 'chat' ? 'ENTER COMMAND...' :
               generationMode === 'image' ? 'IMAGE PROMPT...' : 'VIDEO PROMPT...'
             }
-            className="w-full bg-transparent px-3 py-2 text-[11px] text-white font-mono placeholder-slate-600 focus:outline-none resize-none"
+            className={`w-full bg-transparent px-3 py-2 text-[11px] text-white font-mono placeholder-slate-600 focus:outline-none resize-none ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
             rows={1}
             style={{ minHeight: '40px', maxHeight: '120px' }}
             onInput={(e) => {

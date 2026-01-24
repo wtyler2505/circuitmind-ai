@@ -14,6 +14,7 @@ import { aiMetricsService } from "../../aiMetricsService";
 import { extractComponentMentions, extractSuggestedActions, parseJSONResponse } from "../parsers";
 import { ParsedAIResponse } from "../types";
 import { healthMonitor } from "../../healthMonitor";
+import { connectivityService } from "../../connectivityService";
 
 export const chatWithAI = async (
   message: string,
@@ -22,6 +23,9 @@ export const chatWithAI = async (
   attachmentType?: 'image' | 'video' | 'document',
   useDeepThinking: boolean = false
 ): Promise<{ text: string, groundingSources: GroundingSource[] }> => {
+   if (!connectivityService.getIsOnline()) {
+     return { text: "Satellite Link Offline. AI reasoning is unavailable until connection is re-established.", groundingSources: [] };
+   }
    const startTime = Date.now();
    let model = MODELS.CHAT; 
    const ai = getAIClient();
@@ -115,6 +119,14 @@ export const chatWithContext = async (
     enableProactive?: boolean;
   }
 ): Promise<ContextAwareChatResponse> => {
+  if (!connectivityService.getIsOnline()) {
+    return {
+      text: "Satellite Link Offline. AI reasoning is unavailable until connection is re-established.",
+      componentMentions: [],
+      suggestedActions: [],
+      groundingSources: [],
+    };
+  }
   const { attachmentBase64, attachmentType, useDeepThinking = false, enableProactive = true } = options || {};
   const startTime = Date.now();
   let model = MODELS.CONTEXT_CHAT_DEFAULT;

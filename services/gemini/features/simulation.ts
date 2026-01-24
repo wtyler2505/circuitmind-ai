@@ -1,11 +1,15 @@
 import { getAIClient, MODELS } from '../client';
 import { PROMPTS } from '../prompts';
 import { SimulationResult } from '../../services/simulationEngine';
+import { connectivityService } from '../../connectivityService';
 
 /**
  * Uses Gemini to analyze simulation results for high-level logic errors or safety issues.
  */
 export const analyzeSimulation = async (result: SimulationResult): Promise<string> => {
+  if (!connectivityService.getIsOnline()) {
+    return 'Satellite Link Offline. AI analysis unavailable.';
+  }
   const genAI = getAIClient();
   const model = genAI.getGenerativeModel({ model: MODELS.CONTEXT_CHAT_DEFAULT });
 

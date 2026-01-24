@@ -5,6 +5,7 @@ import { useAssistantState } from '../../contexts/AssistantStateContext';
 import { useConversationContext } from '../../contexts/ConversationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
+import { useConnectivity } from '../../hooks/useConnectivity';
 import { SystemVitals } from './SystemVitals';
 
 export const StatusRail = React.memo(() => {
@@ -14,6 +15,7 @@ export const StatusRail = React.memo(() => {
   const { activeConversation } = useConversationContext();
   const { lock, currentUser } = useAuth();
   const { role } = usePermissions();
+  const { isOnline } = useConnectivity();
 
   const totalInventoryUnits = inventory.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
   const diagramComponentCount = diagram?.components?.length ?? 0;
@@ -42,6 +44,14 @@ export const StatusRail = React.memo(() => {
           <span className="text-slate-300 flex items-center gap-1.5">
             LOCAL
             <div className="w-1.5 h-1.5 rounded-full bg-neon-green shadow-[0_0_5px_#00ff9d]" />
+          </span>
+        </div>
+        <div className="w-px h-3 bg-white/10" />
+        <div className="flex items-center gap-2">
+          <span className={isOnline ? 'text-neon-cyan' : 'text-red-500'}>SAT</span>
+          <span className={`flex items-center gap-1.5 ${isOnline ? 'text-slate-300' : 'text-red-400'}`}>
+            {isOnline ? 'LINK_ESTABLISHED' : 'LINK_LOST'}
+            <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-neon-cyan' : 'bg-red-500 animate-pulse shadow-[0_0_5px_#ef4444]'}`} />
           </span>
         </div>
       </div>
