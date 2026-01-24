@@ -5,6 +5,7 @@ import { useLayout } from '../../contexts/LayoutContext';
 import IconButton from '../IconButton';
 import { ModeSelector } from './ModeSelector';
 import { BOMModal } from '../inventory/BOMModal';
+import { SecurityReport } from './SecurityReport';
 
 export const AppHeader = React.memo(() => {
   const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot, diagram } = useDiagram();
@@ -15,6 +16,7 @@ export const AppHeader = React.memo(() => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [loadStatus, setLoadStatus] = useState<'idle' | 'loading' | 'loaded' | 'empty'>('idle');
   const [isBOMOpen, setIsBOMOpen] = useState(false);
+  const [isSecurityOpen, setIsSecurityOpen] = useState(false);
 
   // Version Control State
   const [currentBranch, setCurrentBranch] = useState('master');
@@ -212,9 +214,24 @@ export const AppHeader = React.memo(() => {
           size="sm"
           className="bg-black/20 text-slate-400 border-white/5 hover:text-white hover:border-white/30 cut-corner-sm"
         />
+
+        <div className="w-px h-4 bg-white/10" />
+
+        <IconButton
+          label="Security Audit"
+          icon={
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          }
+          onClick={() => setIsSecurityOpen(true)}
+          size="sm"
+          className="bg-black/20 text-slate-400 border-white/5 hover:text-neon-cyan hover:border-neon-cyan/30 cut-corner-sm"
+        />
       </div>
 
       {isBOMOpen && <BOMModal onClose={() => setIsBOMOpen(false)} />}
+      {isSecurityOpen && <SecurityReport onClose={() => setIsSecurityOpen(false)} />}
     </div>
   );
 });
