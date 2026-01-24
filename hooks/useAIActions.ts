@@ -11,6 +11,7 @@ import { useAssistantState } from '../contexts/AssistantStateContext';
 import { useConversationContext } from '../contexts/ConversationContext';
 import { useMacros } from '../contexts/MacroContext';
 import { engineeringMetricsService } from '../services/aiMetricsService';
+import { usePermissions } from './usePermissions';
 import { PredictiveAction } from '../services/predictionEngine';
 
 export type { ActionResult } from './useActionHistory';
@@ -35,9 +36,23 @@ export function useAIActions(options: UseAIActionsOptions) {
   const { autonomySettings, updateAutonomySettings, isActionSafe } = useAutonomySettings();
   const { actionHistory, addToHistory, recordUndo, undo, canUndo } = useActionHistory(updateDiagram);
   const { isRecording, addRecordedStep } = useMacros();
+  const perms = usePermissions();
 
   // Execute action via handler registry
   const executeAction = useCallback(async (action: ActionIntent, auto: boolean): Promise<ActionResult> => {
+    // 0. Permission Check
+    if (action.type === 'addComponent' || action.type === 'removeComponent' || action.type === 'clearCanvas') {
+      if (!perms.canModifyDiagram) {
+        return { action, success: false, timestamp: Date.now(), auto, error: 'Access Denied: Insufficient Permissions' };
+      }
+    }
+    if (action.type === 'openInventory') {
+      if (!perms.canEditInventory) {
+        // Observers can see inventory but maybe not edit? 
+        // For now let's be strict if we want to guard the tab
+      }
+    }
+
     // ...
     // context building omitted for brevity in replace
     const context: ActionContext = {

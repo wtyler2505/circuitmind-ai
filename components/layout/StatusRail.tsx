@@ -3,6 +3,8 @@ import { useInventory } from '../../contexts/InventoryContext';
 import { useDiagram } from '../../contexts/DiagramContext';
 import { useAssistantState } from '../../contexts/AssistantStateContext';
 import { useConversationContext } from '../../contexts/ConversationContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { usePermissions } from '../../hooks/usePermissions';
 import { SystemVitals } from './SystemVitals';
 
 export const StatusRail = React.memo(() => {
@@ -10,6 +12,8 @@ export const StatusRail = React.memo(() => {
   const { diagram } = useDiagram();
   const { generationMode } = useAssistantState();
   const { activeConversation } = useConversationContext();
+  const { lock, currentUser } = useAuth();
+  const { role } = usePermissions();
 
   const totalInventoryUnits = inventory.reduce((acc, curr) => acc + (curr.quantity || 1), 0);
   const diagramComponentCount = diagram?.components?.length ?? 0;
@@ -59,6 +63,16 @@ export const StatusRail = React.memo(() => {
             {activeConversation?.title || 'UNTITLED'}
           </span>
         </div>
+        <div className="w-px h-3 bg-white/10" />
+        <button 
+          onClick={lock}
+          className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors uppercase"
+        >
+          <span className="text-[8px] border border-white/10 px-1">{role}</span>
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </button>
       </div>
     </div>
   );

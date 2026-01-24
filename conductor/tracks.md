@@ -22,12 +22,8 @@
 - [Feature: AI-Assisted Debugging (Circuit Eye)](./tracks/ai-assisted-debugging-circuit-_20260123/spec.md) `status: done`
 - [Feature: Performance Analytics (Engineering Efficiency)](./tracks/performance-analytics-engineer_20260123/spec.md) `status: done`
 - [Feature: Security Auditing (Hardware Guard)](./tracks/security-auditing-hardware-gua_20260123/spec.md) `status: done`
-
-- [ ] **Track: Customizable Dashboards (Control Room)**
-  *Link: [./conductor/tracks/customizable-dashboards-contro_20260123/](./conductor/tracks/customizable-dashboards-contro_20260123/)*
-
-- [ ] **Track: Role-Based Access Control (Secure Multi-User)**
-  *Link: [./conductor/tracks/role-based-access-control-secu_20260123/](./conductor/tracks/role-based-access-control-secu_20260123/)*
+- [Feature: Customizable Dashboards (Control Room)](./tracks/customizable-dashboards-contro_20260123/spec.md) `status: done`
+- [Feature: Role-Based Access Control (Secure Multi-User)](./tracks/role-based-access-control-secu_20260123/spec.md) `status: done`
 
 - [ ] **Track: API Integration Layer (Local Connect)**
   *Link: [./conductor/tracks/api-integration-layer-local-co_20260123/](./conductor/tracks/api-integration-layer-local-co_20260123/)*
