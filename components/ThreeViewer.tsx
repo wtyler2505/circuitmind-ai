@@ -5,19 +5,12 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import ErrorBoundary from './ErrorBoundary';
 import { Primitives, Materials } from '../services/threePrimitives';
 import { executeInWorker } from '../services/threeCodeRunner';
+import { securityAuditor } from '../services/securityAuditor';
 
 interface ThreeViewerProps {
   code?: string;
   modelUrl?: string;
 }
-
-const BLOCKED_CODE_TOKENS: { pattern: RegExp; label: string }[] = [
-  // Keeping fast-fail checks, though worker provides true sandbox
-  { pattern: /\bwindow\b/, label: 'window' },
-  { pattern: /\bdocument\b/, label: 'document' },
-  { pattern: /\blocalStorage\b/, label: 'localStorage' },
-  { pattern: /\bfetch\b/, label: 'fetch' },
-];
 
 const validateThreeCode = (code: string): string | null => {
   const trimmed = code.trim();
@@ -29,12 +22,9 @@ const validateThreeCode = (code: string): string | null => {
     }
   }
 
-  const blocked = BLOCKED_CODE_TOKENS.filter(({ pattern }) => pattern.test(trimmed)).map(
-    ({ label }) => label
-  );
-  
-  if (blocked.length > 0) {
-    return `Security violation: Code contains blocked tokens: ${blocked.join(', ')}`;
+  const violations = securityAuditor.scanAIGeneratedCode(trimmed);
+  if (violations.length > 0) {
+    return `Security violation: ${violations[0].message}`;
   }
   return null;
 };
