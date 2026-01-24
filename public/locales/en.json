@@ -1,0 +1,45 @@
+{
+  "app": {
+    "title": "CIRCUITMIND",
+    "status": {
+      "sync": "SYNC",
+      "local": "LOCAL",
+      "sat": "SAT",
+      "online": "LINK_ESTABLISHED",
+      "offline": "LINK_LOST"
+    }
+  },
+  "nav": {
+    "assistant": "ASSISTANT",
+    "bootcamp": "BOOTCAMP",
+    "history": "HISTORY",
+    "diagnostic": "DIAGNOSTIC",
+    "analytics": "ANALYTICS",
+    "audit": "AUDIT",
+    "settings": "SETTINGS"
+  },
+  "actions": {
+    "save": "SAVE",
+    "saved": "✓ SAVED",
+    "saving": "...",
+    "load": "LOAD",
+    "loaded": "✓ LOADED",
+    "undo": "UNDO",
+    "redo": "REDO",
+    "edit": "EDIT",
+    "delete": "DELETE",
+    "duplicate": "DUPLICATE",
+    "generate3d": "GENERATE 3D"
+  },
+  "inventory": {
+    "title": "COMPONENT_LIBRARY",
+    "search": "SEARCH_COMPONENTS",
+    "add": "ADD COMPONENT"
+  },
+  "chat": {
+    "placeholder": "ENTER COMMAND...",
+    "offline": "SATELLITE LINK OFFLINE...",
+    "thinking": "Thinking...",
+    "analyzing": "Analyzing..."
+  }
+}

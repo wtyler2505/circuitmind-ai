@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { serialService, TelemetryPacket } from '../services/serialService';
+import { vizEngine } from '../services/viz/vizEngine';
 
 interface TelemetryContextType {
   liveData: Record<string, TelemetryPacket>; // Key: compId:pin
@@ -29,6 +30,16 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
         ...prev,
         [key]: packet
       }));
+
+      // Feed vizEngine for high-speed charts
+      // Convert value to number if possible
+      const numVal = parseFloat(packet.value);
+      if (!isNaN(numVal)) {
+        vizEngine.addData(key, numVal);
+        // Also map to global streams for widgets
+        vizEngine.addData('main-osc', numVal);
+        if (packet.pin === 'D0') vizEngine.addData('d0-logic', numVal > 0 ? 1 : 0);
+      }
     });
 
     serialService.onRawData((line) => {

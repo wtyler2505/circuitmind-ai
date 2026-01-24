@@ -1,0 +1,45 @@
+{
+  "app": {
+    "title": "CIRCUITMIND",
+    "status": {
+      "sync": "SYNC",
+      "local": "LOCAL",
+      "sat": "SAT",
+      "online": "EN_LINEA",
+      "offline": "SIN_CONEXION"
+    }
+  },
+  "nav": {
+    "assistant": "ASISTENTE",
+    "bootcamp": "BOOTCAMP",
+    "history": "HISTORIAL",
+    "diagnostic": "DIAGNOSTICO",
+    "analytics": "ANALISIS",
+    "audit": "AUDITORIA",
+    "settings": "AJUSTES"
+  },
+  "actions": {
+    "save": "GUARDAR",
+    "saved": "✓ GUARDADO",
+    "saving": "...",
+    "load": "CARGAR",
+    "loaded": "✓ CARGADO",
+    "undo": "DESHACER",
+    "redo": "REHACER",
+    "edit": "EDITAR",
+    "delete": "ELIMINAR",
+    "duplicate": "DUPLICAR",
+    "generate3d": "GENERAR 3D"
+  },
+  "inventory": {
+    "title": "BIBLIOTECA_DE_COMPONENTES",
+    "search": "BUSCAR_COMPONENTES",
+    "add": "AGREGAR COMPONENTE"
+  },
+  "chat": {
+    "placeholder": "INGRESAR COMANDO...",
+    "offline": "ENLACE SATELITAL CAIDO...",
+    "thinking": "Pensando...",
+    "analyzing": "Analizando..."
+  }
+}

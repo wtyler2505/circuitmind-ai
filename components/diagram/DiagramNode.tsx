@@ -753,6 +753,31 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
     [onMouseLeave, component]
   );
 
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onSelect) onSelect(component.id);
+    },
+    [onSelect, component.id]
+  );
+
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onContextMenu) onContextMenu(component.id, e.clientX, e.clientY);
+    },
+    [onContextMenu, component.id]
+  );
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onDoubleClick) onDoubleClick(component);
+    },
+    [onDoubleClick, component]
+  );
+
   const { liveData } = useTelemetry();
   const hasActiveTelemetry = useMemo(() => {
     return Object.keys(liveData).some(key => key.startsWith(`${component.id}:`));

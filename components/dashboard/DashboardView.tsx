@@ -1,14 +1,22 @@
 import React from 'react';
-import { Responsive, WidthProvider } from 'react-grid-layout';
+import * as RGL from 'react-grid-layout';
 import { useDashboard, DashboardWidget } from '../../contexts/DashboardContext';
 import { WidgetWrapper } from './WidgetWrapper';
+
+// Multi-fallback resolver for react-grid-layout
+const lib = (RGL as any).default || RGL;
+const Responsive = lib.Responsive || lib;
+const WidthProvider = lib.WidthProvider;
+const ResponsiveGridLayout = WidthProvider ? WidthProvider(Responsive) : Responsive;
 
 // Import widget components
 import { SystemVitals } from '../layout/SystemVitals';
 import { HardwareTerminal } from '../layout/HardwareTerminal';
 import { ProjectTimeline } from '../layout/ProjectTimeline';
-
-const ResponsiveGridLayout = WidthProvider(Responsive);
+import { OscilloscopeWidget } from './OscilloscopeWidget';
+import { LogicAnalyzerWidget } from './LogicAnalyzerWidget';
+import { AnalogGauge } from './AnalogGauge';
+import { HeatmapWidget } from './HeatmapWidget';
 
 const WidgetRenderer: React.FC<{ widget: DashboardWidget }> = ({ widget }) => {
   switch (widget.type) {
@@ -18,6 +26,14 @@ const WidgetRenderer: React.FC<{ widget: DashboardWidget }> = ({ widget }) => {
       return <HardwareTerminal />;
     case 'timeline':
       return <ProjectTimeline />;
+    case 'oscilloscope':
+      return <OscilloscopeWidget streamId="main-osc" />;
+    case 'logic':
+      return <LogicAnalyzerWidget streamId="d0-logic" label="PIN_D0" />;
+    case 'gauge':
+      return <AnalogGauge value={Math.random() * 100} label="LOAD" />;
+    case 'heatmap':
+      return <HeatmapWidget points={[]} />;
     default:
       return <div className="p-4 text-slate-500 text-[10px]">Unknown Widget: {widget.type}</div>;
   }

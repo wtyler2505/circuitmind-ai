@@ -15,3 +15,9 @@ CircuitMind AI is an intelligent, futuristic workspace designed for electronics 
 - **3D Diagramming:** Three.js-powered visualization of components and wires.
 - **AI Assistant:** "Eve" / "Gemini" integration for chat, help, and diagram generation.
 - **Voice Control:** Hands-free operation for electronics bench work.
+- **Engineering Bootcamp:** Interactive quests and tutorials with real-time state validation.
+- **Smart Metadata Extraction:** Instant pinout and spec scraping from manufacturer PDF datasheets.
+- **Real-Time Simulation:** Logic propagation and DC nodal analysis with visual flow indicators.
+- **BOM Exporting:** Automated Bill of Materials generation with market price lookups.
+- **Macro Forge:** User-recordable and AI-authorable automated workflows for repetitive design tasks.
+- **Cross-Platform P2P Sync:** Seamless synchronization across local devices using Git-as-data for 100% privacy.

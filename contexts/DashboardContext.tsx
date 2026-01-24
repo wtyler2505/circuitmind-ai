@@ -55,7 +55,7 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [widgets]);
 
   const removeWidget = useCallback((id: string) => {
-    saveWidgets(widgets.filter(w => v.id !== id));
+    saveWidgets(widgets.filter(w => w.id !== id));
   }, [widgets]);
 
   const updateLayout = useCallback((layout: WidgetLayout[]) => {

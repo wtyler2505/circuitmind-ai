@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useDiagram } from './DiagramContext';
 import { simulationEngine, SimulationResult } from '../services/simulationEngine';
 import { useNotify } from './NotificationContext';
 
@@ -45,7 +46,7 @@ export const SimulationProvider: React.FC<{ children: ReactNode }> = ({ children
       // Immediate first tick
       runTick();
       
-      const interval = setInterval(runTick, 500); // 2Hz for battery saving, can be increased
+      const interval = setInterval(runTick, 500); // 2Hz for battery saving
       return () => clearInterval(interval);
     }
   }, [isSimulating, runTick]);

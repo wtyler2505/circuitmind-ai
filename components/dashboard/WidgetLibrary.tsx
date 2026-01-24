@@ -6,6 +6,10 @@ const AVAILABLE_WIDGETS = [
   { type: 'terminal', label: 'Hardware Terminal', description: 'Web Serial output logs.' },
   { type: 'bom', label: 'BOM Preview', description: 'Bill of Materials list.' },
   { type: 'timeline', label: 'Project Timeline', description: 'Git commit history.' },
+  { type: 'oscilloscope', label: 'Oscilloscope', description: 'High-speed waveform view.' },
+  { type: 'logic', label: 'Logic Analyzer', description: 'Digital signal transitions.' },
+  { type: 'gauge', label: 'Analog Gauge', description: 'Circular power/load meter.' },
+  { type: 'heatmap', label: 'Sensor Heatmap', description: '2D sensor distribution.' },
 ];
 
 export const WidgetLibrary: React.FC = () => {

@@ -7,19 +7,19 @@
     - [x] Generate custom icons for Actions (Add, Edit, Save, etc.).
     - [x] Generate "CircuitMind AI" logo.
 - [x] **Asset Integration**
-    - [ ] Save assets to `public/assets/ui/`.
+    - [x] Save assets to `public/assets/ui/`.
     - [x] Update `tailwind.config.js` with new patterns/colors.
     - [x] Update `index.css` for textured panels.
 - [x] **Component Polish**
-    - [ ] Update `Inventory.tsx` with new icons.
-    - [ ] Update `AssistantSidebar.tsx` with new visuals.
-    - [ ] Update `DiagramCanvas.tsx` controls.
+    - [x] Update `Inventory.tsx` with new icons.
+    - [x] Update `AssistantSidebar.tsx` with new visuals.
+    - [x] Update `DiagramCanvas.tsx` controls.
 - [x] **Visual Polish**
-    - [ ] Add geometric flourishes to corners.
-    - [ ] Implement scanning line animations.
-    - [ ] Enhance neon glows.
+    - [x] Add geometric flourishes to corners.
+    - [x] Implement scanning line animations.
+    - [x] Enhance neon glows.
 - [x] **Loading Experience**
-    - [ ] Create "Tech Boot" animation for `ThreeViewer` and initial load.
+    - [x] Create "Tech Boot" animation for `ThreeViewer` and initial load.
 
 ## Testing Strategy
 - **Visual Audit:** Compare "Before" and "After" screenshots.

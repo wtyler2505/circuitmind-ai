@@ -9,6 +9,7 @@ import { SecurityReport } from './SecurityReport';
 import { useDashboard } from '../../contexts/DashboardContext';
 import { WidgetLibrary } from '../dashboard/WidgetLibrary';
 import { CollaboratorList } from './CollaboratorList';
+import { gitService } from '../../services/gitService';
 
 export const AppHeader = React.memo(() => {
   const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot, diagram } = useDiagram();

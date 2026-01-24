@@ -8,6 +8,7 @@ import { useLayout } from '../contexts/LayoutContext';
 import { DeveloperPortal } from './settings/DeveloperPortal';
 import { ConfigPortal } from './settings/ConfigPortal';
 import { DiagnosticsView } from './settings/DiagnosticsView';
+import { LocalizationSettings } from './settings/LocalizationSettings';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -98,7 +99,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics'>('api');
+  const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale'>('api');
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
   const toast = useToast();
   
@@ -374,6 +375,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             }`}
           >
             DIAGNOSTICS
+          </button>
+          <button
+            onClick={() => setActiveTab('locale')}
+            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+              activeTab === 'locale' 
+                ? 'border-neon-cyan text-white bg-white/5' 
+                : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            LOCALE
           </button>
         </div>
 
@@ -882,6 +893,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           {/* Diagnostics Tab */}
           {activeTab === 'diagnostics' && (
             <DiagnosticsView />
+          )}
+
+          {/* Locale Tab */}
+          {activeTab === 'locale' && (
+            <LocalizationSettings />
           )}
         </div>
 
