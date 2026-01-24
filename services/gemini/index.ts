@@ -15,3 +15,4 @@ export * from './features/predictions';
 export * from './features/simulation';
 export * from './features/bom';
 export * from './features/datasheets';
+export * from './features/versioning';

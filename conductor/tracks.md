@@ -17,9 +17,7 @@
 - [Feature: Smart Component Metadata (Datasheet Scraping)](./tracks/smart-component-metadata-datas_20260123/spec.md) `status: done`
 - [Feature: System Health Monitoring (Vitals)](./tracks/system-health-monitoring-vital_20260123/spec.md) `status: done`
 - [Feature: Automated Workflows (Macro Forge)](./tracks/automated-workflows-macro-forg_20260123/spec.md) `status: done`
-
-- [ ] **Track: Cross-Platform Sync (Local-First Bridge)**
-  *Link: [./conductor/tracks/cross-platform-sync-local-firs_20260123/](./conductor/tracks/cross-platform-sync-local-firs_20260123/)*
+- [Feature: Cross-Platform Sync (Local-First Bridge)](./tracks/cross-platform-sync-local-firs_20260123/spec.md) `status: done`
 
 - [ ] **Track: Version Control Integration (Time Machine)**
   *Link: [./conductor/tracks/version-control-integration-ti_20260123/](./conductor/tracks/version-control-integration-ti_20260123/)*
