@@ -6,17 +6,21 @@ import IconButton from '../IconButton';
 import { ModeSelector } from './ModeSelector';
 import { BOMModal } from '../inventory/BOMModal';
 import { SecurityReport } from './SecurityReport';
+import { useDashboard } from '../../contexts/DashboardContext';
+import { WidgetLibrary } from '../dashboard/WidgetLibrary';
 
 export const AppHeader = React.memo(() => {
   const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot, diagram } = useDiagram();
   const { isLiveActive, liveStatus, toggleLiveMode } = useVoiceAssistant();
   const { setSettingsOpen } = useLayout();
+  const { isEditMode, setEditMode } = useDashboard();
 
   // Feedback states for SAVE/LOAD buttons
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [loadStatus, setLoadStatus] = useState<'idle' | 'loading' | 'loaded' | 'empty'>('idle');
   const [isBOMOpen, setIsBOMOpen] = useState(false);
   const [isSecurityOpen, setIsSecurityOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   // Version Control State
   const [currentBranch, setCurrentBranch] = useState('master');
@@ -177,6 +181,37 @@ export const AppHeader = React.memo(() => {
             <div className={`w-1.5 h-1.5 rounded-full ${isCheckpointing ? 'bg-white animate-ping' : 'bg-neon-amber'}`} />
             CHECKPOINT
           </button>
+        </div>
+
+        <div className="w-px h-4 bg-white/10" />
+
+        {/* Dashboard Group */}
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setEditMode(!isEditMode)}
+            className={`h-7 px-3 text-[9px] font-bold uppercase tracking-widest cut-corner-sm transition-all border ${
+              isEditMode 
+                ? 'bg-neon-cyan text-black border-neon-cyan shadow-[0_0_10px_#00f3ff]' 
+                : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/30'
+            }`}
+          >
+            {isEditMode ? 'EXIT_EDIT' : 'EDIT DASHBOARD'}
+          </button>
+          {isEditMode && (
+            <div className="relative">
+              <button 
+                onClick={() => setIsLibraryOpen(!isLibraryOpen)}
+                className="h-7 px-3 bg-slate-800 border border-slate-700 text-slate-300 text-[9px] font-bold uppercase tracking-widest hover:text-white transition-all cut-corner-sm"
+              >
+                ADD WIDGET
+              </button>
+              {isLibraryOpen && (
+                <div className="absolute top-10 right-0 w-64 bg-slate-900 border border-slate-700 shadow-2xl z-[150] cut-corner-md">
+                  <WidgetLibrary />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

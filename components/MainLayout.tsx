@@ -14,6 +14,7 @@ import { BootcampPanel } from './layout/BootcampPanel';
 import { ProjectTimeline } from './layout/ProjectTimeline';
 import { DebugWorkbench } from './layout/DebugWorkbench';
 import { AnalyticsDashboard } from './layout/AnalyticsDashboard';
+import { DashboardView } from './dashboard/DashboardView';
 import ErrorBoundary from './ErrorBoundary';
 
 // Lazy Components
@@ -105,6 +106,7 @@ export const MainLayout: React.FC = () => {
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; componentId: string } | null>(null);
   const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history' | 'diagnostic' | 'analytics'>('chat');
+  const [isDashboardVisible, setIsDashboardVisible] = useState(false);
 
   // Canvas Ref
   const canvasRef = useRef<DiagramCanvasRef>(null);
@@ -144,6 +146,11 @@ export const MainLayout: React.FC = () => {
       if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setFocusMode(!isFocusMode);
         toast.show(isFocusMode ? 'FOCUS MODE OFF' : 'FOCUS MODE ON', 'info');
+      }
+
+      if (e.key.toLowerCase() === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setIsDashboardVisible(!isDashboardVisible);
+        toast.show(isDashboardVisible ? 'CANVAS VIEW' : 'DASHBOARD VIEW', 'info');
       }
     };
 
@@ -565,21 +572,25 @@ export const MainLayout: React.FC = () => {
     >
       <TacticalHUD />
       <MentorOverlay />
-      <DiagramCanvas
-        ref={setCanvasRef}
-        diagram={diagram}
-        selectedComponentId={canvasSelectionId}
-        stagedActions={aiActions.stagedActions}
-        onStagedActionAccept={aiActions.acceptStagedAction}
-        onStagedActionReject={aiActions.rejectStagedAction}
-        onComponentSelect={handleComponentSelect}
-        onComponentContextMenu={handleComponentContextMenu}
-        onComponentDoubleClick={handleOpenComponentInfo}
-        onBackgroundClick={handleCanvasBackgroundClick}
-        onDiagramUpdate={updateDiagram}
-        onComponentDrop={/*...*/ undefined} // Kept inline in old code, I'll preserve it or fix if I replaced
-        onGenerate3D={/*...*/ undefined}
-      />
+      {isDashboardVisible ? (
+        <DashboardView />
+      ) : (
+        <DiagramCanvas
+          ref={setCanvasRef}
+          diagram={diagram}
+          selectedComponentId={canvasSelectionId}
+          stagedActions={aiActions.stagedActions}
+          onStagedActionAccept={aiActions.acceptStagedAction}
+          onStagedActionReject={aiActions.rejectStagedAction}
+          onComponentSelect={handleComponentSelect}
+          onComponentContextMenu={handleComponentContextMenu}
+          onComponentDoubleClick={handleOpenComponentInfo}
+          onBackgroundClick={handleCanvasBackgroundClick}
+          onDiagramUpdate={updateDiagram}
+          onComponentDrop={/*...*/ undefined}
+          onGenerate3D={/*...*/ undefined}
+        />
+      )}
       {contextMenu && (
         <div 
           className="fixed z-50 bg-slate-900 border border-slate-700 shadow-xl rounded-md py-1 min-w-[160px]"
