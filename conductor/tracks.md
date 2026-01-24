@@ -28,9 +28,7 @@
 - [Feature: Data Visualization Engine (Futuristic Analytics)](./tracks/data-visualization-engine-futu_20260123/spec.md) `status: done`
 - [Feature: Notification System (Comms Link)](./tracks/notification-system-comms-link_20260123/spec.md) `status: done`
 - [Feature: Offline Mode Support (Sovereign Engine)](./tracks/offline-mode-support-sovereign_20260123/spec.md) `status: done`
-
-- [ ] **Track: Collaboration Tools (Team Link)**
-  *Link: [./conductor/tracks/collaboration-tools-team-link-_20260123/](./conductor/tracks/collaboration-tools-team-link-_20260123/)*
+- [Feature: Collaboration Tools (Team Link)](./tracks/collaboration-tools-team-link-_20260123/spec.md) `status: done`
 
 - [ ] **Track: Search & Indexing (Global Archive)**
   *Link: [./conductor/tracks/search-indexing-global-archive_20260123/](./conductor/tracks/search-indexing-global-archive_20260123/)*

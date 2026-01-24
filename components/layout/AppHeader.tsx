@@ -8,6 +8,7 @@ import { BOMModal } from '../inventory/BOMModal';
 import { SecurityReport } from './SecurityReport';
 import { useDashboard } from '../../contexts/DashboardContext';
 import { WidgetLibrary } from '../dashboard/WidgetLibrary';
+import { CollaboratorList } from './CollaboratorList';
 
 export const AppHeader = React.memo(() => {
   const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot, diagram } = useDiagram();
@@ -81,6 +82,8 @@ export const AppHeader = React.memo(() => {
           </h1>
         </div>
         
+        <CollaboratorList />
+
         <div className="h-5 w-px bg-white/10 border-r border-black/50" />
 
         {/* Edit History Group */}
