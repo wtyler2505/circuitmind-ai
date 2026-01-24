@@ -14,6 +14,7 @@ import { BootcampPanel } from './layout/BootcampPanel';
 import { ProjectTimeline } from './layout/ProjectTimeline';
 import { DebugWorkbench } from './layout/DebugWorkbench';
 import { AnalyticsDashboard } from './layout/AnalyticsDashboard';
+import { SystemLogViewer } from './layout/SystemLogViewer';
 import { DashboardView } from './dashboard/DashboardView';
 import { Gatekeeper } from './auth/Gatekeeper';
 import { CyberToast } from './layout/CyberToast';
@@ -39,6 +40,7 @@ import { useToast } from '../hooks/useToast';
 import { useInventorySync } from '../hooks/useInventorySync';
 import { useSync } from '../hooks/useSync';
 import { buildAIContext } from '../services/aiContextBuilder';
+import { predictionEngine } from '../services/predictionEngine';
 import { securityAuditor } from '../services/securityAuditor';
 import { searchIndexer, IndexedDocument } from '../services/search/searchIndexer';
 import {
@@ -141,7 +143,7 @@ export const MainLayout: React.FC = () => {
   const [aiContext, setAIContext] = useState<AIContext | null>(null);
   const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; componentId: string } | null>(null);
-  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history' | 'diagnostic' | 'analytics'>('chat');
+  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history' | 'diagnostic' | 'analytics' | 'audit'>('chat');
   const [isDashboardVisible, setIsDashboardVisible] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -508,6 +510,16 @@ export const MainLayout: React.FC = () => {
                 >
                   ANALYTICS
                 </button>
+                <button
+                  onClick={() => setAssistantTab('audit')}
+                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
+                    assistantTab === 'audit'
+                      ? 'border-slate-400 text-white bg-white/5'
+                      : 'border-transparent text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  AUDIT
+                </button>
               </div>
 
               <div className="flex-1 overflow-hidden">
@@ -579,8 +591,10 @@ export const MainLayout: React.FC = () => {
                   <ProjectTimeline />
                 ) : assistantTab === 'diagnostic' ? (
                   <DebugWorkbench />
-                ) : (
+                ) : assistantTab === 'analytics' ? (
                   <AnalyticsDashboard />
+                ) : (
+                  <SystemLogViewer />
                 )}
               </div>
 

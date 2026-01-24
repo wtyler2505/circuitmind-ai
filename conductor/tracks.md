@@ -31,9 +31,7 @@
 - [Feature: Collaboration Tools (Team Link)](./tracks/collaboration-tools-team-link-_20260123/spec.md) `status: done`
 - [Feature: Search & Indexing (Global Archive)](./tracks/search-indexing-global-archive_20260123/spec.md) `status: done`
 - [Feature: Configuration Management (CircuitMind Dotfiles)](./tracks/configuration-management-circu_20260123/spec.md) `status: done`
-
-- [ ] **Track: Logging & Auditing (Black Box)**
-  *Link: [./conductor/tracks/logging-auditing-black-box-_20260123/](./conductor/tracks/logging-auditing-black-box-_20260123/)*
+- [Feature: Logging & Auditing (Black Box)](./tracks/logging-auditing-black-box-_20260123/spec.md) `status: done`
 
 - [ ] **Track: Error Reporting (Diagnostics Hub)**
   *Link: [./conductor/tracks/error-reporting-diagnostics-hu_20260123/](./conductor/tracks/error-reporting-diagnostics-hu_20260123/)*

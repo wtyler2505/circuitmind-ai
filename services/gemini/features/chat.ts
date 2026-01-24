@@ -15,6 +15,7 @@ import { extractComponentMentions, extractSuggestedActions, parseJSONResponse } 
 import { ParsedAIResponse } from "../types";
 import { healthMonitor } from "../../healthMonitor";
 import { connectivityService } from "../../connectivityService";
+import { auditService } from "../../logging/auditService";
 
 export const chatWithAI = async (
   message: string,
@@ -24,8 +25,17 @@ export const chatWithAI = async (
   useDeepThinking: boolean = false
 ): Promise<{ text: string, groundingSources: GroundingSource[] }> => {
    if (!connectivityService.getIsOnline()) {
+     auditService.log('warn', 'gemini-chat', 'AI requested but system is offline');
      return { text: "Satellite Link Offline. AI reasoning is unavailable until connection is re-established.", groundingSources: [] };
    }
+   
+   auditService.log('info', 'gemini-chat', `AI Request: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`, {
+     historyCount: history.length,
+     hasAttachment: !!attachmentBase64,
+     attachmentType,
+     useDeepThinking
+   });
+
    const startTime = Date.now();
    let model = MODELS.CHAT; 
    const ai = getAIClient();
@@ -94,6 +104,12 @@ export const chatWithAI = async (
     const latency = Date.now() - startTime;
     healthMonitor.recordAiLatency(latency);
     aiMetricsService.logMetric({ model, operation: 'chatWithAI', latencyMs: latency, success: true });
+    
+    auditService.log('info', 'gemini-chat', 'AI Response received', {
+      latency,
+      textLength: response.text?.length || 0,
+      groundingCount: groundingSources.length
+    });
 
     return { 
       text: response.text || "...", 
@@ -103,6 +119,8 @@ export const chatWithAI = async (
      const latency = Date.now() - startTime;
      healthMonitor.recordAiLatency(latency);
      aiMetricsService.logMetric({ model, operation: 'chatWithAI', latencyMs: latency, success: false, error: String(error) });
+     
+     auditService.log('error', 'gemini-chat', `AI Request failed: ${String(error)}`, { latency });
      console.error("Chat Error", error);
      return { text: "Connection error.", groundingSources: [] };
    }
@@ -120,6 +138,7 @@ export const chatWithContext = async (
   }
 ): Promise<ContextAwareChatResponse> => {
   if (!connectivityService.getIsOnline()) {
+    auditService.log('warn', 'gemini-context-chat', 'Context chat requested but system is offline');
     return {
       text: "Satellite Link Offline. AI reasoning is unavailable until connection is re-established.",
       componentMentions: [],
@@ -128,6 +147,13 @@ export const chatWithContext = async (
     };
   }
   const { attachmentBase64, attachmentType, useDeepThinking = false, enableProactive = true } = options || {};
+  
+  auditService.log('info', 'gemini-context-chat', `Context Chat Request: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`, {
+    hasAttachment: !!attachmentBase64,
+    useDeepThinking,
+    enableProactive
+  });
+
   const startTime = Date.now();
   let model = MODELS.CONTEXT_CHAT_DEFAULT;
   const ai = getAIClient();
@@ -227,6 +253,13 @@ export const chatWithContext = async (
     healthMonitor.recordAiLatency(latency);
     const metricId = aiMetricsService.logMetric({ model, operation: 'chatWithContext', latencyMs: latency, success: true });
 
+    auditService.log('info', 'gemini-context-chat', 'Context Chat Response received', {
+      latency,
+      mentionsCount: componentMentions.length,
+      actionsCount: suggestedActions.length,
+      isProactive: !!parsed.proactiveSuggestion
+    });
+
     return {
       text: parsed.message || "...",
       componentMentions,
@@ -239,6 +272,8 @@ export const chatWithContext = async (
     const latency = Date.now() - startTime;
     healthMonitor.recordAiLatency(latency);
     aiMetricsService.logMetric({ model, operation: 'chatWithContext', latencyMs: latency, success: false, error: String(error) });
+    
+    auditService.log('error', 'gemini-context-chat', `Context Chat failed: ${String(error)}`, { latency });
     console.error("Context Chat Error:", error);
     return {
       text: "Connection error. Please try again.",

@@ -12,6 +12,7 @@ import { useConversationContext } from '../contexts/ConversationContext';
 import { useMacros } from '../contexts/MacroContext';
 import { engineeringMetricsService } from '../services/aiMetricsService';
 import { usePermissions } from './usePermissions';
+import { auditService } from '../services/logging/auditService';
 import { PredictiveAction } from '../services/predictionEngine';
 
 export type { ActionResult } from './useActionHistory';
@@ -72,22 +73,29 @@ export function useAIActions(options: UseAIActionsOptions) {
       success: false,
       timestamp: Date.now(),
       auto,
-    };
+    }
 
     try {
       const handler = getHandler(action.type);
       if (!handler) {
         result.error = `Unknown action type: ${action.type}`;
+        auditService.log('error', 'action-handler', `Unknown action type: ${action.type}`);
       } else {
         const handlerResult = await handler(action.payload, context);
         result.success = handlerResult.success;
         result.error = handlerResult.error;
+        
+        if (!result.success) {
+          auditService.log('warn', 'action-handler', `Action failed: ${action.type}`, { error: result.error });
+        }
       }
     } catch (err) {
       result.error = err instanceof Error ? err.message : 'Unknown error';
+      auditService.log('error', 'action-handler', `Action crashed: ${action.type}`, { error: result.error });
     }
 
     if (result.success) {
+      auditService.log('info', 'action-handler', `Action executed: ${action.type}`, { label: action.label, auto });
       engineeringMetricsService.logEvent('action_execute', { type: action.type, label: action.label });
       if (isRecording) {
         addRecordedStep(action);
