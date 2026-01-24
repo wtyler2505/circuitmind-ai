@@ -5,6 +5,7 @@ import { getStoredApiKey, setStoredApiKey } from '../services/apiKeyStorage';
 import { datasetService } from '../services/datasetService';
 import IconButton from './IconButton';
 import { useLayout } from '../contexts/LayoutContext';
+import { DeveloperPortal } from './settings/DeveloperPortal';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -95,7 +96,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout'>('api');
+  const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout' | 'dev'>('api');
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
   const toast = useToast();
   
@@ -341,6 +342,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             }`}
           >
             LAYOUT
+          </button>
+          <button
+            onClick={() => setActiveTab('dev')}
+            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+              activeTab === 'dev' 
+                ? 'border-neon-green text-white bg-white/5' 
+                : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            DEVELOPER
           </button>
         </div>
 
@@ -834,6 +845,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                   </div>
                 </div>
             </div>
+          )}
+
+          {/* Developer Tab */}
+          {activeTab === 'dev' && (
+            <DeveloperPortal />
           )}
         </div>
 
