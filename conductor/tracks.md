@@ -33,9 +33,7 @@
 - [Feature: Configuration Management (CircuitMind Dotfiles)](./tracks/configuration-management-circu_20260123/spec.md) `status: done`
 - [Feature: Logging & Auditing (Black Box)](./tracks/logging-auditing-black-box-_20260123/spec.md) `status: done`
 - [Feature: Error Reporting (Diagnostics Hub)](./tracks/error-reporting-diagnostics-hu_20260123/spec.md) `status: done`
-
-- [ ] **Track: User Feedback Loop (Self-Correction)**
-  *Link: [./conductor/tracks/user-feedback-loop-self-correc_20260123/](./conductor/tracks/user-feedback-loop-self-correc_20260123/)*
+- [Feature: User Feedback Loop (Self-Correction)](./tracks/user-feedback-loop-self-correc_20260123/spec.md) `status: done`
 
 - [ ] **Track: Internationalization (Global Bench)**
   *Link: [./conductor/tracks/internationalization-global-be_20260123/](./conductor/tracks/internationalization-global-be_20260123/)*

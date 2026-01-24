@@ -15,6 +15,7 @@ import {
 } from '../types';
 import { getRecentActions } from './storage';
 import { userProfileService, UserProfile } from './userProfileService';
+import { correctionService, InteractionLesson } from './feedback/correctionService';
 
 /**
  * Summarize component counts by type
@@ -92,6 +93,15 @@ export async function buildAIContext(options: BuildContextOptions): Promise<AICo
       diagram?.components.find((c) => c.id === selectedComponentId)
     : null;
 
+  // Fetch relevant lessons based on current context
+  const contextKeywords = [
+    selectedComponent?.name,
+    activeView,
+    diagram?.title
+  ].filter(Boolean).join(' ');
+  
+  const relevantLessons = correctionService.getRelevantLessons(contextKeywords);
+
   // Build context
   const context: AIContext = {
     currentDiagramId: diagram?.title ? `diagram-${Date.now()}` : undefined,
@@ -112,6 +122,8 @@ export async function buildAIContext(options: BuildContextOptions): Promise<AICo
     // Loose typing for new fields until types.ts is fully propagated/compiled
     // @ts-ignore 
     userProfile,
+    // @ts-ignore
+    relevantLessons,
     viewport: viewport ? `Zoom: ${viewport.zoom.toFixed(1)}x, Pan: (${viewport.x}, ${viewport.y})` : 'Unknown',
   };
 
@@ -187,6 +199,14 @@ export function buildContextPrompt(context: AIContext): string {
   if (context.recentActions.length > 0) {
     sections.push('\nSystem Logs:');
     context.recentActions.forEach((action) => sections.push(`  ${action}`));
+  }
+
+  // Relevant Lessons
+  if (ctx.relevantLessons && ctx.relevantLessons.length > 0) {
+    sections.push('\nPRIOR USER CORRECTIONS (APPLY THESE):');
+    ctx.relevantLessons.forEach((l: InteractionLesson) => {
+      sections.push(`- When asked "${l.userPrompt}", do NOT say "${l.originalResponse}". Instead: ${l.correction}`);
+    });
   }
 
   sections.push('\n=== END STATE ===');
