@@ -1,7 +1,7 @@
 # Implementation Plan: User Profile Management
 
 ## 📋 Todo Checklist
-- [ ] **Infrastructure: Profile Storage**
+- [x] **Infrastructure: Profile Storage**
     - [ ] Create `services/userProfileService.ts` for IndexedDB/LocalStorage management.
     - [ ] Implement `createProfile`, `switchProfile`, and `updatePreferences`.
 - [ ] **Context: Application State**

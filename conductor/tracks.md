@@ -1,6 +1,7 @@
 # Tracks Registry
 
 ## Active Tracks
+- [Feature: User Profile Management (Engineering Persona)](./tracks/user-profile-management-engine_20260123/spec.md)
 
 ## Completed Tracks
 - [Feature: Improved UI Components](./tracks/improved-ui-components_20260123/spec.md) `status: done`

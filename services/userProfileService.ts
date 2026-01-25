@@ -1,94 +1,150 @@
-export type ExperienceLevel = 'beginner' | 'intermediate' | 'expert';
+// Removed uuid import
 
-export interface UserFact {
-  id: string;
-  content: string; // "User prefers through-hole components"
-  timestamp: number;
-  confidence: number; // 0-1
-}
+export type ExpertiseLevel = 'beginner' | 'intermediate' | 'pro';
+export type ThemePreference = 'cyber' | 'industrial' | 'minimal';
+export type AITone = 'sass' | 'technical' | 'concise';
 
 export interface UserProfile {
   id: string;
   name: string;
-  experienceLevel: ExperienceLevel;
+  expertise: ExpertiseLevel;
   preferences: {
-    verboseMode: boolean; // Does user want long explanations?
-    autoSave: boolean;
-    theme: 'cyber' | 'light' | 'dark';
-    preferredUnit: 'metric' | 'imperial';
+    theme: ThemePreference;
+    wiringColors: Record<string, string>; // e.g., { "VCC": "#ff0000" }
+    aiTone: AITone;
   };
-  learningProgress: {
-    topicsMastered: string[]; // ["Ohm's Law", "Microcontrollers"]
-    currentFocus: string;
+  stats: {
+    projectsCreated: number;
+    componentsMastered: string[];
   };
-  facts: UserFact[];
 }
 
-const STORAGE_KEY = 'cm_user_profile';
+const DB_NAME = 'CircuitMindProfiles';
+const DB_VERSION = 1;
+const STORE_NAME = 'profiles';
+const ACTIVE_PROFILE_KEY = 'cm_active_profile_id';
 
-export const userProfileService = {
-  getProfile: (): UserProfile => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e) { console.error(e); }
-    
-    // Default Profile
-    return {
-      id: 'default_user',
-      name: 'User',
-      experienceLevel: 'intermediate', // Default to middle
-      preferences: {
-        verboseMode: true,
-        autoSave: true,
-        theme: 'cyber',
-        preferredUnit: 'metric'
-      },
-      learningProgress: {
-        topicsMastered: [],
-        currentFocus: 'General Electronics'
-      },
-      facts: []
-    };
-  },
+class UserProfileService {
+  private dbPromise: Promise<IDBDatabase> | null = null;
 
-  saveProfile: (profile: UserProfile) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-  },
+  private async getDB(): Promise<IDBDatabase> {
+    if (this.dbPromise) return this.dbPromise;
 
-  updateExperience: (level: ExperienceLevel) => {
-    const profile = userProfileService.getProfile();
-    profile.experienceLevel = level;
-    userProfileService.saveProfile(profile);
-  },
+    this.dbPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-  addFact: (content: string) => {
-    const profile = userProfileService.getProfile();
-    profile.facts.push({
-      id: crypto.randomUUID(),
-      content,
-      timestamp: Date.now(),
-      confidence: 1.0
-    });
-    userProfileService.saveProfile(profile);
-  },
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
 
-  // "Teacher" Logic: Detect level based on query complexity
-  detectAndSetLevelFromQuery: (query: string) => {
-    const profile = userProfileService.getProfile();
-    const lower = query.toLowerCase();
-    
-    // Simple heuristics (can be replaced by AI classifier later)
-    if (lower.includes('what is') || lower.includes('how do i connect') || lower.includes('help')) {
-        // Leaning towards beginner, but don't downgrade expert immediately
-        // Only adjust if we see a pattern (TODO: implement pattern tracking)
-    } 
-    
-    if (lower.includes('impedance') || lower.includes('datasheet') || lower.includes('i2c address')) {
-        if (profile.experienceLevel === 'beginner') {
-             profile.experienceLevel = 'intermediate';
-             userProfileService.saveProfile(profile);
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
         }
-    }
+      };
+    });
+
+    return this.dbPromise;
   }
-};
+
+  async getProfile(id: string): Promise<UserProfile | undefined> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(id);
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async getAllProfiles(): Promise<UserProfile[]> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async saveProfile(profile: UserProfile): Promise<void> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.put(profile);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async createProfile(name: string, expertise: ExpertiseLevel = 'intermediate'): Promise<UserProfile> {
+    const newProfile: UserProfile = {
+      id: crypto.randomUUID(),
+      name,
+      expertise,
+      preferences: {
+        theme: 'cyber',
+        wiringColors: {
+          'VCC': '#ff0000',
+          'GND': '#000000',
+          'SDA': '#00ff00',
+          'SCL': '#ffff00'
+        },
+        aiTone: 'technical'
+      },
+      stats: {
+        projectsCreated: 0,
+        componentsMastered: []
+      }
+    };
+
+    await this.saveProfile(newProfile);
+    return newProfile;
+  }
+
+  getActiveProfileId(): string | null {
+    return localStorage.getItem(ACTIVE_PROFILE_KEY);
+  }
+
+  async getActiveProfile(): Promise<UserProfile> {
+    const id = this.getActiveProfileId();
+    if (id) {
+      const profile = await this.getProfile(id);
+      if (profile) return profile;
+    }
+
+    // Fallback: Check if any profiles exist, if so use first, else create default
+    const all = await this.getAllProfiles();
+    if (all.length > 0) {
+      this.switchProfile(all[0].id);
+      return all[0];
+    }
+
+    // Initialize Default
+    const defaultProfile = await this.createProfile('Default User', 'intermediate');
+    this.switchProfile(defaultProfile.id);
+    return defaultProfile;
+  }
+
+  switchProfile(id: string): void {
+    localStorage.setItem(ACTIVE_PROFILE_KEY, id);
+    // Ideally, we'd trigger an event here, but we'll handle reactivity in the Context
+  }
+
+  async updatePreferences(id: string, updates: Partial<UserProfile['preferences']>): Promise<UserProfile> {
+    const profile = await this.getProfile(id);
+    if (!profile) throw new Error(`Profile ${id} not found`);
+
+    profile.preferences = { ...profile.preferences, ...updates };
+    await this.saveProfile(profile);
+    return profile;
+  }
+}
+
+export const userProfileService = new UserProfileService();
