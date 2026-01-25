@@ -1,4 +1,5 @@
 import { GoogleGenAI, LiveServerMessage, Modality, Part } from "@google/genai";
+import { MODELS } from "./gemini/client";
 
 // Type for webkit prefixed AudioContext (Safari compatibility)
 type WebkitAudioContext = typeof AudioContext;
@@ -18,7 +19,7 @@ interface ExtendedSession {
 // Audio configuration constants
 const INPUT_SAMPLE_RATE = 16000;
 const OUTPUT_SAMPLE_RATE = 24000;
-const MODEL_NAME = 'gemini-2.5-flash-native-audio-preview-09-2025';
+const MODEL_NAME = MODELS.AUDIO_REALTIME;
 
 // Helper for Base64 encoding/decoding
 function encode(bytes: Uint8Array) {

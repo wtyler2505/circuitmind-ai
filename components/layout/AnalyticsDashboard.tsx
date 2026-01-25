@@ -56,7 +56,7 @@ export const AnalyticsDashboard: React.FC = () => {
         {/* Project Profile Chart */}
         <div className="space-y-3">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] border-b border-white/5 pb-1">Project Scorecard</h3>
-          <div className="h-48 w-full">
+          <div className="h-48 w-full min-h-[12rem]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={scorecardData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
@@ -75,7 +75,7 @@ export const AnalyticsDashboard: React.FC = () => {
         {/* AI Performance */}
         <div className="space-y-3">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] border-b border-white/5 pb-1">AI Link Latency (Last 10)</h3>
-          <div className="h-48 w-full">
+          <div className="h-48 w-full min-h-[12rem]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={aiLatencyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />

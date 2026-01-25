@@ -192,7 +192,7 @@ export const identifyComponentFromImage = async (imageBase64: string): Promise<P
   try {
     const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: MODELS.IMAGE, // Ensure this maps to a valid model like gemini-2.0-flash
       contents: {
         parts: [
           { inlineData: { mimeType: 'image/png', data: cleanBase64 } },

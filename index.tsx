@@ -2,6 +2,12 @@ import React, { Component, ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ToastProvider } from './hooks/useToast';
+import { Buffer } from 'buffer';
+
+// Polyfill Buffer for isomorphic-git
+if (typeof window !== 'undefined') {
+  window.Buffer = window.Buffer || Buffer;
+}
 
 interface GlobalErrorBoundaryProps {
   children: ReactNode;

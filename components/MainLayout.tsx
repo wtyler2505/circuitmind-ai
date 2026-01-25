@@ -65,7 +65,7 @@ export const MainLayout: React.FC = () => {
     loadingText: audioLoadingText, isProcessingAudio,
     registerVisualContextProvider, lastTranscription, clearTranscription
   } = useVoiceAssistant();
-  const { isSettingsOpen, setSettingsOpen, assistantPinned, isAssistantOpen, setAssistantPinned, setAssistantOpen } = useLayout();
+  const { isSettingsOpen, setSettingsOpen, settingsInitialTab, assistantPinned, isAssistantOpen, setAssistantPinned, setAssistantOpen } = useLayout();
   const { 
     generationMode, setGenerationMode, 
     imageSize, setImageSize, 
@@ -631,6 +631,7 @@ export const MainLayout: React.FC = () => {
               onClose={() => setSettingsOpen(false)}
               autonomySettings={aiActions.autonomySettings}
               onAutonomySettingsChange={aiActions.updateAutonomySettings}
+              initialTab={settingsInitialTab}
             />
           </Suspense>
         </>

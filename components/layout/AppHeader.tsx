@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDiagram } from '../../contexts/DiagramContext';
 import { useVoiceAssistant } from '../../contexts/VoiceAssistantContext';
 import { useLayout } from '../../contexts/LayoutContext';
+import { useUser } from '../../contexts/UserContext';
 import IconButton from '../IconButton';
 import { ModeSelector } from './ModeSelector';
 import { BOMModal } from '../inventory/BOMModal';
@@ -14,7 +15,8 @@ import { gitService } from '../../services/gitService';
 export const AppHeader = React.memo(() => {
   const { undo, redo, canUndo, canRedo, saveToQuickSlot, loadFromQuickSlot, diagram } = useDiagram();
   const { isLiveActive, liveStatus, toggleLiveMode } = useVoiceAssistant();
-  const { setSettingsOpen } = useLayout();
+  const { setSettingsOpen, setSettingsInitialTab } = useLayout();
+  const { user } = useUser();
   const { isEditMode, setEditMode } = useDashboard();
 
   // Feedback states for SAVE/LOAD buttons
@@ -219,7 +221,23 @@ export const AppHeader = React.memo(() => {
         </div>
       </div>
 
-      <ModeSelector />
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => {
+            setSettingsInitialTab('profile');
+            setSettingsOpen(true);
+          }}
+          className="h-7 px-3 flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 rounded text-xs text-slate-300 transition-colors cut-corner-sm group"
+          title="Switch Persona"
+        >
+          <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${
+            user?.expertise === 'pro' ? 'bg-neon-purple text-neon-purple' : 
+            user?.expertise === 'intermediate' ? 'bg-neon-cyan text-neon-cyan' : 'bg-neon-green text-neon-green'
+          }`} />
+          <span className="uppercase font-bold tracking-wider text-[9px] group-hover:text-white transition-colors">{user?.name || 'USER'}</span>
+        </button>
+        <ModeSelector />
+      </div>
 
       {/* Right Controls */}
       <div className="flex items-center gap-2">

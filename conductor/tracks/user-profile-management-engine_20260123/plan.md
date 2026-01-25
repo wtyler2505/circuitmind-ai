@@ -2,15 +2,15 @@
 
 ## 📋 Todo Checklist
 - [x] **Infrastructure: Profile Storage**
-    - [ ] Create `services/userProfileService.ts` for IndexedDB/LocalStorage management.
-    - [ ] Implement `createProfile`, `switchProfile`, and `updatePreferences`.
-- [ ] **Context: Application State**
-    - [ ] Create `contexts/UserContext.tsx` and `useUser` hook.
-    - [ ] Synchronize `UserContext` with `LayoutContext` and `AssistantStateContext`.
-- [ ] **UI: Profile Editor**
-    - [ ] Build `ProfileTab` in `SettingsPanel.tsx`.
-    - [ ] Add fields for "Engineering Level", "Preferred Wiring Colors", and "AI Tone".
-    - [ ] Implement a "Persona Switcher" in the Sidebar or Header.
+    - [x] Create `services/userProfileService.ts` for IndexedDB/LocalStorage management.
+    - [x] Implement `createProfile`, `switchProfile`, and `updatePreferences`.
+- [x] **Context: Application State**
+    - [x] Create `contexts/UserContext.tsx` and `useUser` hook.
+    - [x] Synchronize `UserContext` with `LayoutContext` and `AssistantStateContext`.
+- [x] **UI: Profile Editor**
+    - [x] Build `ProfileTab` in `SettingsPanel.tsx`.
+    - [x] Add fields for "Engineering Level", "Preferred Wiring Colors", and "AI Tone".
+    - [x] Implement a "Persona Switcher" in the Sidebar or Header.
 - [ ] **AI Integration: Persona Awareness**
     - [ ] Update `aiContextBuilder.ts` to include user metadata in the system prompt.
     - [ ] Refactor `geminiService.ts` to adjust "Eve's" personality based on the `sassLevel` preference.

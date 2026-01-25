@@ -19,6 +19,21 @@ class GitService {
 
     try {
       await git.init({ fs, dir });
+      
+      // Ensure master branch exists
+      const branches = await git.listBranches({ fs, dir });
+      if (!branches.includes('master')) {
+        // Create an initial commit to establish the branch
+        await fs.promises.writeFile(`${dir}/README.md`, '# CircuitMind AI Project Repository\n');
+        await git.add({ fs, dir, filepath: 'README.md' });
+        await git.commit({
+          fs,
+          dir,
+          message: 'Initial commit',
+          author: { name: 'System', email: 'system@circuitmind.ai' }
+        });
+      }
+
       this.initialized = true;
       console.log('Git repo initialized in IndexedDB');
     } catch (e) {

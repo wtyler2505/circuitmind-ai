@@ -36,6 +36,8 @@ interface LayoutContextType {
   // Settings
   isSettingsOpen: boolean;
   setSettingsOpen: (open: boolean) => void;
+  settingsInitialTab: 'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale';
+  setSettingsInitialTab: (tab: 'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale') => void;
 
   // Focus Mode
   isFocusMode: boolean;
@@ -124,6 +126,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   // Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale'>('api');
 
   // Focus Mode State
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -236,6 +239,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       assistantPinned, setAssistantPinned,
       assistantWidth, setAssistantWidth,
       isSettingsOpen, setSettingsOpen: setIsSettingsOpen,
+      settingsInitialTab, setSettingsInitialTab,
       isFocusMode, setFocusMode: setIsFocusMode,
       lowPerformanceMode, setLowPerformanceMode,
       inventoryDefaultWidth,

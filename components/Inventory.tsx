@@ -262,9 +262,10 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
   };
 
   const handleMouseLeave = (event: React.MouseEvent) => {
-    const nextTarget = event.relatedTarget as Node | null;
+    const nextTarget = event.relatedTarget;
+    // Ensure the target is a valid DOM node before checking containment
     if (
-      nextTarget &&
+      nextTarget instanceof Node &&
       (sidebarRef.current?.contains(nextTarget) || buttonRef.current?.contains(nextTarget))
     ) {
       return;

@@ -65,7 +65,7 @@ export const generateEditedImage = async (
     const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: MODELS.IMAGE_GEN,
       contents: {
         parts: [
           {
@@ -101,7 +101,7 @@ export const generateConceptImage = async (
   enableSearch: boolean = false
 ): Promise<string> => {
   const startTime = Date.now();
-  const model = MODELS.IMAGE;
+  const model = MODELS.IMAGE_GEN;
   
   if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
     const hasKey = await window.aistudio.hasSelectedApiKey();

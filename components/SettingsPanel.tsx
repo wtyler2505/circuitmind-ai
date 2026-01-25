@@ -9,97 +9,41 @@ import { DeveloperPortal } from './settings/DeveloperPortal';
 import { ConfigPortal } from './settings/ConfigPortal';
 import { DiagnosticsView } from './settings/DiagnosticsView';
 import { LocalizationSettings } from './settings/LocalizationSettings';
+import { ProfileSettings } from './settings/ProfileSettings';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   autonomySettings?: AIAutonomySettings;
   onAutonomySettingsChange?: (settings: AIAutonomySettings) => void;
+  initialTab?: 'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale';
 }
 
-// Human-readable labels for action types
-const ACTION_LABELS: Record<ActionType, { label: string; description: string; category: string }> =
-  {
-    // Canvas actions
-    highlight: { label: 'Highlight Component', description: 'Add visual glow to a component', category: 'Canvas' },
-    centerOn: { label: 'Center View', description: 'Pan canvas to focus on component', category: 'Canvas' },
-    zoomTo: { label: 'Zoom', description: 'Change zoom level', category: 'Canvas' },
-    panTo: { label: 'Pan', description: 'Move view to coordinates', category: 'Canvas' },
-    resetView: { label: 'Reset View', description: 'Reset pan and zoom to default', category: 'Canvas' },
-    highlightWire: { label: 'Highlight Wire', description: 'Add visual glow to a connection', category: 'Canvas' },
-
-    // Navigation actions
-    openInventory: { label: 'Open Inventory', description: 'Show component library sidebar', category: 'Navigation' },
-    closeInventory: { label: 'Close Inventory', description: 'Hide component library sidebar', category: 'Navigation' },
-    openSettings: { label: 'Open Settings', description: 'Show settings panel', category: 'Navigation' },
-    closeSettings: { label: 'Close Settings', description: 'Hide settings panel', category: 'Navigation' },
-    openComponentEditor: { label: 'Open Editor', description: 'Open component detail editor', category: 'Navigation' },
-    switchGenerationMode: { label: 'Switch Mode', description: 'Change AI generation mode', category: 'Navigation' },
-    toggleSidebar: { label: 'Toggle Sidebar', description: 'Expand/Collapse sidebars', category: 'Navigation' },
-    setTheme: { label: 'Set Theme', description: 'Change UI visual theme', category: 'Navigation' },
-
-    // Project actions
-    undo: { label: 'Undo', description: 'Revert last change', category: 'Project' },
-    redo: { label: 'Redo', description: 'Reapply reverted change', category: 'Project' },
-    saveDiagram: { label: 'Save Diagram', description: 'Save current state to local storage', category: 'Project' },
-    loadDiagram: { label: 'Load Diagram', description: 'Load state from local storage', category: 'Project' },
-
-    // Diagram modification actions
-    addComponent: { label: 'Add Component', description: 'Insert new component into diagram', category: 'Diagram' },
-    updateComponent: { label: 'Update Component', description: 'Modify component properties', category: 'Diagram' },
-    removeComponent: { label: 'Remove Component', description: 'Delete component from diagram', category: 'Diagram' },
-    clearCanvas: { label: 'Clear Canvas', description: 'Remove all components', category: 'Diagram' },
-    createConnection: { label: 'Create Connection', description: 'Wire two components together', category: 'Diagram' },
-    removeConnection: { label: 'Remove Connection', description: 'Delete wire from diagram', category: 'Diagram' },
-
-    // Form actions
-    fillField: { label: 'Fill Form Field', description: 'Auto-populate form input', category: 'Forms' },
-    saveComponent: { label: 'Save Component', description: 'Save component changes', category: 'Forms' },
-    
-    // Profile actions (Background)
-    setUserLevel: { label: 'Set Experience', description: 'Adjust AI teaching level', category: 'System' },
-    learnFact: { label: 'Learn Fact', description: 'Save user preference/fact', category: 'System' },
-    analyzeVisuals: { label: 'Analyze Visuals', description: 'Take canvas snapshot for AI', category: 'System' },
-  };
-
-const CATEGORIES = ['Canvas', 'Navigation', 'Project', 'Diagram', 'Forms', 'System'] as const;
-const INVENTORY_WIDTH_RANGE = { min: 280, max: 520, default: 360 };
-const ASSISTANT_WIDTH_RANGE = { min: 300, max: 560, default: 380 };
-
-type LayoutSnapshot = {
-  inventoryOpen: boolean;
-  inventoryPinned: boolean;
-  assistantOpen: boolean;
-  assistantPinned: boolean;
-  inventoryWidth: number;
-  assistantWidth: number;
-};
-
-// Default autonomy settings
-const getDefaultAutonomySettings = (): AIAutonomySettings => ({
-  autoExecuteSafeActions: true,
-  customSafeActions: [],
-  customUnsafeActions: [],
-});
-
-// Determine if action is safe based on settings
-const isActionSafe = (actionType: ActionType, settings: AIAutonomySettings): boolean => {
-  if (settings.customSafeActions.includes(actionType)) return true;
-  if (settings.customUnsafeActions.includes(actionType)) return false;
-  return ACTION_SAFETY[actionType] ?? false;
-};
+// ... (existing code)
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
   onClose,
   autonomySettings,
   onAutonomySettingsChange,
+  initialTab = 'api',
 }) => {
+  // ... (existing code)
+  
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [activeTab, setActiveTab] = useState<'api' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale'>('api');
+  const [activeTab, setActiveTab] = useState<'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale'>(initialTab);
+
+  // Sync activeTab when isOpen changes or initialTab changes
+  useEffect(() => {
+    if (isOpen) {
+        setActiveTab(initialTab);
+        // ... existing open logic
+    }
+  }, [isOpen, initialTab]);
+
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
   const toast = useToast();
   
@@ -124,6 +68,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      setActiveTab(initialTab);
       const stored = getStoredApiKey();
       setApiKey(stored || '');
       setSaved(false);
@@ -325,6 +270,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             }`}
           >
             API KEY
+          </button>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+              activeTab === 'profile' 
+                ? 'border-neon-pink text-white bg-white/5' 
+                : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            PROFILE
           </button>
           <button
             onClick={() => setActiveTab('ai')}
@@ -574,6 +529,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </div>
               </div>
             </>
+          )}
+
+          {/* Profile Tab */}
+          {activeTab === 'profile' && (
+            <ProfileSettings />
           )}
 
           {/* AI Autonomy Tab */}

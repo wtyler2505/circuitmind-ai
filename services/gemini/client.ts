@@ -4,23 +4,26 @@ import { GoogleGenAI } from "@google/genai";
 // Model Configurations
 // =====================================
 export const MODELS = {
-  WIRING: 'gemini-3-pro-preview',
-  CHAT: 'gemini-2.5-flash-lite-preview',
-  VISION: 'gemini-3-pro-preview', // Pro for high detail
-  IMAGE: 'gemini-3-pro-image-preview',
-  VIDEO: 'veo-3.1-fast-generate-preview',
-  THINKING: 'gemini-3-pro-preview',
-  THUMBNAIL: 'gemini-3-pro-image-preview',
+  WIRING: 'gemini-2.5-pro',
+  CHAT: 'gemini-2.5-flash',
+  VISION: 'gemini-2.5-pro', 
+  IMAGE: 'gemini-2.5-flash', // Multimodal Input
+  IMAGE_GEN: 'imagen-3.0-generate-001', 
+  VIDEO: 'veo-2.0-generate-001',
+  THINKING: 'gemini-2.5-flash', // Thinking is supported on 2.5 Flash
+  THUMBNAIL: 'imagen-3.0-generate-001',
+  
   // Specific internal usages
-  SMART_FILL: 'gemini-2.5-pro',
-  ASSIST_EDITOR: 'gemini-2.5-pro',
+  SMART_FILL: 'gemini-2.5-flash',
+  ASSIST_EDITOR: 'gemini-2.5-flash',
   AUTO_ID: 'gemini-2.5-flash',
   PART_FINDER: 'gemini-2.5-flash',
   SUGGEST_PROJECTS: 'gemini-2.5-flash',
-  TTS: 'gemini-2.5-flash-preview-tts',
+  TTS: 'gemini-2.5-flash-tts', 
   AUDIO_TRANSCRIPTION: 'gemini-2.5-flash',
+  AUDIO_REALTIME: 'gemini-2.5-flash-live', 
   EMBEDDING: 'text-embedding-004',
-  CODE_GEN: 'gemini-2.5-pro',
+  CODE_GEN: 'gemini-2.5-pro', 
   CONTEXT_CHAT_DEFAULT: 'gemini-2.5-flash',
   CONTEXT_CHAT_COMPLEX: 'gemini-2.5-pro'
 };
