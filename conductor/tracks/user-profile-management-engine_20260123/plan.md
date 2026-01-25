@@ -11,12 +11,12 @@
     - [x] Build `ProfileTab` in `SettingsPanel.tsx`.
     - [x] Add fields for "Engineering Level", "Preferred Wiring Colors", and "AI Tone".
     - [x] Implement a "Persona Switcher" in the Sidebar or Header.
-- [ ] **AI Integration: Persona Awareness**
-    - [ ] Update `aiContextBuilder.ts` to include user metadata in the system prompt.
-    - [ ] Refactor `geminiService.ts` to adjust "Eve's" personality based on the `sassLevel` preference.
-- [ ] **Refinement: Defaults & Sync**
-    - [ ] Implement automatic wiring color application based on profile.
-    - [ ] Add "Export/Import Profile" functionality.
+- [x] **AI Integration: Persona Awareness**
+    - [x] Update `aiContextBuilder.ts` to include user metadata in the system prompt.
+    - [x] Refactor `geminiService.ts` to adjust "Eve's" personality based on the `sassLevel` preference.
+- [x] **Refinement: Defaults & Sync**
+    - [x] Implement automatic wiring color application based on profile.
+    - [x] Add "Export/Import Profile" functionality.
 
 ## Testing Strategy
 - **Unit Tests:** Verify profile switching logic and data persistence.

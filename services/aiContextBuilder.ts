@@ -77,7 +77,7 @@ export async function buildAIContext(options: BuildContextOptions): Promise<AICo
   } = options;
 
   // Get User Profile
-  const userProfile = userProfileService.getProfile();
+  const userProfile = await userProfileService.getActiveProfile();
 
   // Get recent actions from storage
   let recentActionRecords: ActionRecord[] = [];
@@ -144,10 +144,10 @@ export function buildContextPrompt(context: AIContext): string {
   // User Profile
   if (ctx.userProfile) {
       const p = ctx.userProfile as UserProfile;
-      sections.push(`\nUser: ${p.name} (${p.experienceLevel})`);
-      sections.push(`Preferences: ${p.preferences.verboseMode ? 'Detailed' : 'Concise'} explanations.`);
-      if (p.facts.length > 0) {
-          sections.push(`Memory: ${p.facts.map((f:any) => f.content).join('; ')}`);
+      sections.push(`\nUser: ${p.name} (${p.expertise})`);
+      sections.push(`Tone Preference: ${p.preferences.aiTone}`);
+      if (p.preferences.theme) {
+          sections.push(`Visual Theme: ${p.preferences.theme}`);
       }
   }
 

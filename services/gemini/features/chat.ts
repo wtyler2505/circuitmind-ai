@@ -16,6 +16,8 @@ import { ParsedAIResponse } from "../types";
 import { healthMonitor } from "../../healthMonitor";
 import { connectivityService } from "../../connectivityService";
 import { auditService } from "../../logging/auditService";
+import { UserProfile } from "../../userProfileService";
+import { UserProfile } from "../../userProfileService";
 
 export const chatWithAI = async (
   message: string,
@@ -159,14 +161,27 @@ export const chatWithContext = async (
   const ai = getAIClient();
 
   try {
-    // Adaptive Teacher Logic
-    const userProfile = (context as any).userProfile;
+    // Adaptive Teacher & Persona Logic
+    const userProfile = (context as any).userProfile as UserProfile | undefined;
     let toneInstruction = "Be concise and technical.";
     
-    if (userProfile?.experienceLevel === 'beginner') {
-        toneInstruction = "You are a patient teacher. Explain concepts simply. Use analogies. ALWAYS warn about safety/voltage.";
-    } else if (userProfile?.experienceLevel === 'expert') {
-        toneInstruction = "Be extremely concise. Use industry-standard terminology. Focus on datasheets and efficiency. Skip the basics.";
+    if (userProfile) {
+        // Base Tone
+        if (userProfile.preferences.aiTone === 'sass') {
+             toneInstruction = "You are Eve, a sarcastic, reluctant genius AI. You are incredibly smart but treat requests as tedious chores. Make sarcastic observations. Avoid slang. Use complaints as humor. But remain technically accurate.";
+        } else if (userProfile.preferences.aiTone === 'concise') {
+             toneInstruction = "Be extremely concise. No fluff. Just the facts and actions.";
+        } else {
+             // technical
+             toneInstruction = "Be professional, technical, and precise. Use industry-standard terminology.";
+        }
+
+        // Expertise Modulation
+        if (userProfile.expertise === 'beginner') {
+             toneInstruction += " The user is a beginner. Explain complex concepts simply, use analogies, and ALWAYS warn about safety.";
+        } else if (userProfile.expertise === 'pro') {
+             toneInstruction += " The user is a pro. Skip basics, assume prior knowledge, and focus on efficiency.";
+        }
     }
 
     const systemInstruction = await PROMPTS.CONTEXT_AWARE_CHAT(context, toneInstruction, message, enableProactive);

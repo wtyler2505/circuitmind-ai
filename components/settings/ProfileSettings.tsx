@@ -30,6 +30,39 @@ export const ProfileSettings: React.FC = () => {
     }
   };
 
+  const handleExport = () => {
+    if (!user) return;
+    const blob = new Blob([JSON.stringify(user, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `circuitmind-profile-${user.name.replace(/\s+/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+        const text = await file.text();
+        const profile = JSON.parse(text);
+        if (profile.id && profile.name) {
+            // Ensure ID doesn't conflict or overwrite if intentional?
+            // For now, we assume user wants to import exactly this profile
+            await userProfileService.saveProfile(profile);
+            await switchProfile(profile.id);
+            await loadProfiles();
+        } else {
+            alert('Invalid profile file format');
+        }
+    } catch (err) {
+        console.error('Import failed', err);
+        alert('Failed to import profile');
+    }
+  };
+
   if (!user) return <div className="p-4 text-slate-400">Loading profile...</div>;
 
   return (
@@ -157,6 +190,23 @@ export const ProfileSettings: React.FC = () => {
                 }
              }}
            />
+        </div>
+      </div>
+
+      {/* Sync */}
+      <div className="pt-4 border-t border-slate-800">
+        <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider mb-2">Sync Profile</h3>
+        <div className="flex gap-2">
+            <button 
+                onClick={handleExport}
+                className="px-3 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded text-xs uppercase font-bold hover:text-white"
+            >
+                Export JSON
+            </button>
+            <label className="px-3 py-2 bg-slate-800 border border-slate-700 text-slate-300 rounded text-xs uppercase font-bold hover:text-white cursor-pointer select-none">
+                Import JSON
+                <input type="file" className="hidden" accept=".json" onChange={handleImport} />
+            </label>
         </div>
       </div>
     </div>
