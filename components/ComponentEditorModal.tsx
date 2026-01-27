@@ -22,7 +22,7 @@ interface ComponentEditorModalProps {
   onSave: (component: ElectronicComponent) => void;
   explanation: string;
   isGenerating3D: boolean;
-  onGenerate3D: (prompt?: string) => void;
+  onGenerate3D: (name: string, type: string, prompt?: string, imageUrl?: string, precision?: 'draft' | 'masterpiece') => void;
 }
 
 interface ChatMessage {
@@ -92,6 +92,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
   const [editedThreeDModelUrl, setEditedThreeDModelUrl] = useState(component.threeDModelUrl || '');
   const [editedImageUrl, setEditedImageUrl] = useState(component.imageUrl || '');
   const [editedQuantity, setEditedQuantity] = useState(component.quantity || 1);
+  const [editedPrecisionLevel, setEditedPrecisionLevel] = useState<'draft' | 'masterpiece'>(component.precisionLevel || 'draft');
 
   const [imagePrompt, setImagePrompt] = useState('');
   const [threeDPrompt, setThreeDPrompt] = useState('');
@@ -150,6 +151,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
     setEditedThreeDModelUrl(component.threeDModelUrl || '');
     setEditedImageUrl(component.imageUrl || '');
     setEditedQuantity(component.quantity || 1);
+    setEditedPrecisionLevel(component.precisionLevel || 'draft');
   }, [component]);
 
   useEffect(() => {
@@ -167,7 +169,8 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
       editedDatasheetUrl !== (component.datasheetUrl || '') ||
       editedThreeDModelUrl !== (component.threeDModelUrl || '') ||
       editedImageUrl !== (component.imageUrl || '') ||
-      editedQuantity !== (component.quantity || 1);
+      editedQuantity !== (component.quantity || 1) ||
+      editedPrecisionLevel !== (component.precisionLevel || 'draft');
 
     setHasChanges(isDirty);
   }, [
@@ -179,6 +182,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
     editedThreeDModelUrl,
     editedImageUrl,
     editedQuantity,
+    editedPrecisionLevel,
     component,
   ]);
 
@@ -243,6 +247,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
       threeDModelUrl: editedThreeDModelUrl,
       imageUrl: editedImageUrl,
       quantity: editedQuantity,
+      precisionLevel: editedPrecisionLevel,
     });
     setHasChanges(false);
     setActiveTab('info');
@@ -374,7 +379,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
         ...prev,
         { id: Date.now().toString(), role: 'user', text: 'Generate a 3D model code for this.' },
       ]);
-      onGenerate3D(threeDPrompt);
+      onGenerate3D(editedName, editedType, threeDPrompt, editedImageUrl, editedPrecisionLevel);
       setActiveTab('3d');
     }
   };
@@ -572,7 +577,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                   {/* NAME + AI ASSIST */}
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <label className="text-xs font-mono text-slate-300">
+                      <label htmlFor="editedName" className="text-xs font-mono text-slate-300">
                         NAME
                         <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                           Required
@@ -627,6 +632,8 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                       </div>
                     </div>
                     <input
+                      id="editedName"
+                      name="editedName"
                       type="text"
                       value={editedName}
                       onChange={(e) => setEditedName(e.target.value)}
@@ -637,13 +644,15 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                   {/* TYPE & QUANTITY */}
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="block text-xs font-mono text-slate-300 mb-1">
+                      <label htmlFor="editedType" className="block text-xs font-mono text-slate-300 mb-1">
                         TYPE
                         <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                           Required
                         </span>
                       </label>
                       <select
+                        id="editedType"
+                        name="editedType"
                         value={editedType}
                         onChange={(e) => setEditedType(e.target.value as ComponentType)}
                         className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-white focus:border-neon-green focus:outline-none"
@@ -656,13 +665,15 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                       </select>
                     </div>
                     <div className="w-28">
-                      <label className="block text-xs font-mono text-slate-300 mb-1">
+                      <label htmlFor="editedQuantity" className="block text-xs font-mono text-slate-300 mb-1">
                         QUANTITY
                         <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                           Required
                         </span>
                       </label>
                       <input
+                        id="editedQuantity"
+                        name="editedQuantity"
                         type="number"
                         min="0"
                         value={editedQuantity}
@@ -685,13 +696,15 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
                   {/* DESCRIPTION */}
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label htmlFor="editedDescription" className="block text-xs font-mono text-slate-300 mb-1">
                       DESCRIPTION
                       <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                         Optional
                       </span>
                     </label>
                     <textarea
+                      id="editedDescription"
+                      name="editedDescription"
                       value={editedDescription}
                       onChange={(e) => setEditedDescription(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none h-24 resize-none transition-all"
@@ -701,13 +714,15 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
                   {/* PINS */}
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label htmlFor="editedPins" className="block text-xs font-mono text-slate-300 mb-1">
                       PINS
                       <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                         Optional
                       </span>
                     </label>
                     <input
+                      id="editedPins"
+                      name="editedPins"
                       type="text"
                       value={editedPins}
                       onChange={(e) => setEditedPins(e.target.value)}
@@ -729,7 +744,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
                   {/* IMAGE URL */}
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label htmlFor="editedImageUrl" className="block text-xs font-mono text-slate-300 mb-1">
                       IMAGE URL
                       <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                         Optional
@@ -737,6 +752,8 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                     </label>
                     <div className="flex gap-2">
                       <input
+                        id="editedImageUrl"
+                        name="editedImageUrl"
                         type="text"
                         value={editedImageUrl}
                         onChange={(e) => setEditedImageUrl(e.target.value)}
@@ -772,7 +789,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
                   {/* DATASHEET URL */}
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label htmlFor="editedDatasheetUrl" className="block text-xs font-mono text-slate-300 mb-1">
                       DATASHEET
                       <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                         Optional
@@ -780,6 +797,8 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                     </label>
                     <div className="flex gap-2">
                       <input
+                        id="editedDatasheetUrl"
+                        name="editedDatasheetUrl"
                         type="url"
                         value={editedDatasheetUrl}
                         onChange={(e) => setEditedDatasheetUrl(e.target.value)}
@@ -812,6 +831,8 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                         SCRAPE PDF
                       </button>
                       <input
+                        id="datasheetUpload"
+                        name="datasheetUpload"
                         type="file"
                         accept="application/pdf"
                         className="hidden"
@@ -823,13 +844,15 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
                   {/* 3D MODEL URL */}
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label htmlFor="editedThreeDModelUrl" className="block text-xs font-mono text-slate-300 mb-1">
                       3D MODEL URL (GLB/GLTF)
                       <span className="ml-2 text-[9px] text-slate-300 uppercase tracking-widest">
                         Optional
                       </span>
                     </label>
                     <input
+                      id="editedThreeDModelUrl"
+                      name="editedThreeDModelUrl"
                       type="url"
                       value={editedThreeDModelUrl}
                       onChange={(e) => setEditedThreeDModelUrl(e.target.value)}
@@ -998,13 +1021,13 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
 
             {activeTab === '3d' && (
               <div className="flex flex-col h-full min-h-[300px] md:min-h-[400px]">
-                <div className="mb-4 space-y-3">
+                <div className="mb-4 space-y-4">
                   <div className="flex justify-between items-center">
                     <h4 className="text-sm font-bold text-neon-purple font-mono">
                       INTERACTIVE 3D VIEW
                     </h4>
                     <button
-                      onClick={() => onGenerate3D(threeDPrompt)}
+                      onClick={() => onGenerate3D(editedName, editedType, threeDPrompt, editedImageUrl, editedPrecisionLevel)}
                       disabled={isGenerating3D}
                       className="text-xs bg-slate-800 border border-slate-600 hover:border-neon-purple hover:text-neon-purple px-3 py-1 rounded transition-colors disabled:opacity-80"
                     >
@@ -1014,6 +1037,28 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
                           ? 'REGENERATE'
                           : 'GENERATE 3D MODEL'}
                     </button>
+                  </div>
+
+                  <div className="flex items-center gap-4 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                    <div className="flex-1">
+                      <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-2">PRECISION LEVEL</label>
+                      <div className="flex gap-2">
+                        {(['draft', 'masterpiece'] as const).map((level) => (
+                          <button
+                            key={level}
+                            onClick={() => setEditedPrecisionLevel(level)}
+                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase transition-all border ${editedPrecisionLevel === level ? 'bg-neon-purple/20 border-neon-purple text-neon-purple shadow-[0_0_10px_rgba(188,19,254,0.2)]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}
+                          >
+                            {level}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="w-1/3 text-[9px] text-slate-500 font-mono leading-tight italic border-l border-slate-800 pl-3">
+                      {editedPrecisionLevel === 'masterpiece' 
+                        ? 'Highest fidelity. PBR materials & procedural details.' 
+                        : 'Fast generation. Basic shapes & colors.'}
+                    </div>
                   </div>
                   
                   <div className="space-y-1">

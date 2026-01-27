@@ -82,17 +82,15 @@
 
 - [Feature: Neural-Link Gesture System](./tracks/feature-neural-link-gestures_20260125/spec.md) `status: done`
 
+- [Bug: Fix Neural-Link Gesture Issues](./tracks/bug-fix-neural-link-gesture-is_20260127/spec.md) `status: done`
+
+- [Feature: Enhanced 3D Component Generation (Masterpiece Edition)](./tracks/enhanced-3d-component-generati_20260127/spec.md) `status: done`
 
 
-- [ ] **Track: bug/fix-neural-link-gesture-issues**
-
-
-  *Link: [./conductor/tracks/bug-fix-neural-link-gesture-is_20260127/](./conductor/tracks/bug-fix-neural-link-gesture-is_20260127/)*
-
-- [ ] **Track: Enhanced 3D Component Generation (Masterpiece Edition)**
-  *Link: [./conductor/tracks/enhanced-3d-component-generati_20260127/](./conductor/tracks/enhanced-3d-component-generati_20260127/)*
 
 - [ ] **Track: Omni-Audit Remediation: Complete System Cleanup**
+
+
   *Link: [./conductor/tracks/omni-audit-remediation-complet_20260127/](./conductor/tracks/omni-audit-remediation-complet_20260127/)*
 
 - [ ] **Track: Security & Visual Integrity Remediation**

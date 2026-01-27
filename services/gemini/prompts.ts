@@ -81,31 +81,90 @@ export const PROMPTS = {
 
   GENERATE_VIDEO: (prompt?: string) => prompt || "A cinematic, futuristic visualization of an electronic circuit, 4k",
 
-  GENERATE_3D_CODE: (name: string, type: string, instructions: string | undefined, dimensionHint: string) => `
-        You are an expert 3D programmer using Three.js. Your goal is to create a MASTERPIECE 3D model.
+  ANALYZE_COMPONENT_VISUALS: `
+    Analyze this image of an electronic component or PCB.
+    You are an expert computer vision system for PCB reverse engineering.
+    
+    TASK: Generate a STRUCTURED TOPOLOGICAL MAP of the component.
+    
+    Identify:
+    1. MAIN BODY: Shape (rectangle, square, circle), Approximate dimensions (if inferrable, otherwise use nominals), Base color.
+    2. FEATURES:
+       - Every major sub-component (IC, Connector, Switch, LED).
+       - Its TYPE (chip, usb, jack, header, button, led, passive).
+       - Its SEMANTIC ANCHOR: 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'center', 'left', 'right', 'top', 'bottom'.
+       - Its OFFSET from that anchor in mm (approximate).
+    
+    OUTPUT FORMAT: Return ONLY a JSON object:
+    {
+      "body": { "shape": "rectangle", "width": 50, "length": 30, "color": "0x004400" },
+      "features": [
+        { "type": "usb", "anchor": "left", "offset": { "x": 2, "z": 0 }, "label": "USB-B" },
+        { "type": "chip", "anchor": "center", "offset": { "x": 0, "z": 0 }, "label": "ATMEGA328" },
+        { "type": "header", "anchor": "top", "offset": { "x": 0, "z": 2 }, "label": "Digital Pins" }
+      ],
+      "markings": ["Logo at top-right", "Text 'Arduino' in middle"]
+    }
+  `,
+
+  GENERATE_3D_CODE: (name: string, type: string, instructions: string | undefined, dimensionHint: string, visualAnalysis: string = "", precisionLevel: 'draft' | 'masterpiece' = 'draft') => `
+        You are a Master 3D Electronic Component Architect from the year 2026.
+        Your goal is to create a MUSEUM-QUALITY 3D model that is engineering-accurate and visually breathtaking.
         
         COMPONENT: "${name}" (${type})
+        MODE: ${precisionLevel.toUpperCase()} EDITION. 
+        ${precisionLevel === 'masterpiece' 
+          ? 'Focus on extreme realism: Use PBR materials, procedural textures, solder fillets for ALL leads, and high-detail assembly layering.' 
+          : 'Focus on speed and performance: Use basic primitives and colors, skip micro-details like fillets or silk-screen markings unless essential.'}
+
         ${instructions ? `USER REFINEMENT: "${instructions}"` : ''}
         ${dimensionHint}
+        ${visualAnalysis ? `TOPOLOGICAL MAP (FROM IMAGE ANALYSIS): 
+        ${visualAnalysis}` : ''}
         
-        STEP 1: SEARCH
-        Find exact visual specifications, colors, and layout. 
-        Note the silkscreen text, logos, and specific IC markings (e.g. "ATMEGA328P").
+        CRITICAL ARCHITECTURAL RULES:
+        1. LAYOUT ENGINE (MANDATORY): You MUST use 'Primitives.createLayout(width, length)' for ALL placement.
+           - DO NOT guess coordinates like 'mcu.position.set(10, 0, 5)'. 
+           - DO USE anchors: 'layout.place(mcu, "center", { x: 0, z: 0 })'.
+        2. ASSEMBLY LAYERING: Build models in engineering order:
+           - Layer 0: PCB ('Primitives.createPCB')
+           - Layer 1: Flux Residue ('Primitives.createFluxResidue') around main ICs.
+           - Layer 2: Major Components (ICs, Connectors).
+           - Layer 3: Details (Labels, SilkScreen, BondWires for delidded parts).
+        3. REALISM & VARIABILITY: 
+           - Use 'Primitives.createSolderFillet' for every SMD pin contact point.
+           - Apply 'Primitives.applyVariability(obj)' to major components for manufacturing realism.
+        4. TEXTURAL STORYTELLING: Every masterpiece has a story. Add:
+           - Silkscreen markings: 'Primitives.createSilkscreenLogo("MADE BY CIRCUITMIND", "#ffffff")'.
+           - Revision numbers: 'REV 2.0', 'QC PASSED'.
+           - Part Numbers: Detailed labels on top of ICs (e.g., 'MEGA328P-AU').
+        5. SUB-COMPONENTS: Instantiate every feature found in the TOPOLOGICAL MAP. Use 'Primitives.createWire' for any jumping connections or modular boards.
         
-        STEP 2: GENERATE ASSEMBLY CODE
-        The function signature is: (THREE, Primitives, Materials) => THREE.Group
+        ASSEMBLY CODE STRUCTURE:
+        IMPORTANT: Your output will be injected into a 'new Function' body. 
+        DO NOT output a function signature. DO NOT use a wrapper.
+        Output ONLY the statements.
         
-        Requirements:
-        1. Use 'Primitives' and 'Materials' for ALL geometry and physics-based realism.
-        2. Create a 'const group = new THREE.Group();'.
-        3. START with the PCB: 'const pcb = Primitives.createPCB(width, length, color, true);'.
-        4. ADD MARKINGS: Use 'Primitives.createLabel(text, size, color)' for chip markings and silk-screen.
-        5. ADD SUB-COMPONENTS: Use 'createICBody', 'createUSBPort', 'createDCJack', 'createOscillator', 'createButton', and 'createHeader'.
-        6. Place every header, capacitor, and connector individually at its searched/grounded coordinate.
-        7. SHADER REALISM: Ensure you use 'Materials.GOLD()', 'Materials.SILVER()', and 'Materials.SILICON()' for distinct metal/die finishes.
-        8. Centered at (0,0,0) X/Z, bottom at y=0.
-        9. END with 'return group;'.
-        10. Output ONLY raw JavaScript. No markdown. No comments unless critical.
+        Example of CORRECT output:
+        const group = new THREE.Group();
+        const pcbWidth = 50;
+        const pcbLength = 30;
+        const layout = Primitives.createLayout(pcbWidth, pcbLength);
+        
+        const pcb = Primitives.createPCB(pcbWidth, pcbLength, 0x004400, true);
+        group.add(pcb);
+        
+        const usb = Primitives.createUSBPort('B');
+        layout.place(usb, 'left', { x: 5, y: 3 }); 
+        group.add(usb);
+        
+        const mcu = Primitives.createICBody(10, 10, 1.5);
+        layout.place(mcu, 'center');
+        group.add(mcu);
+        
+        return group;
+
+        Output ONLY raw JavaScript code. No markdown. No comments.
       `,
       
   CONTEXT_AWARE_CHAT: async (context: AIContext, toneInstruction: string, message: string, enableProactive: boolean) => {
@@ -170,7 +229,7 @@ You MUST respond with a valid JSON object matching this schema:
     { 
       "type": "actionType", 
       "label": "Button Label", 
-      "payloadJson": "{\"param\":\"val\"}", 
+      "payloadJson": "{"param":"val"}", 
       "safe": true/false 
     }
   ],

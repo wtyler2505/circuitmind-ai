@@ -11,6 +11,7 @@ export interface ElectronicComponent {
   imageUrl?: string;
   threeCode?: string; // Generated javascript code for Three.js mesh
   threeDModelUrl?: string; // URL to a GLB/GLTF model
+  precisionLevel?: 'draft' | 'masterpiece'; // 3D generation fidelity
 }
 
 export interface WireConnection {
@@ -238,7 +239,8 @@ export interface AIContext {
   recentHistory?: ActionDelta[];
   activeView: 'canvas' | 'component-editor' | 'inventory' | 'settings';
   inventorySummary: string;
-  userProfile?: any; // Avoiding circular dependency for now, or use loose typing
+  userProfile?: unknown; 
+  relevantLessons?: unknown[];
   viewport?: string;
 }
 

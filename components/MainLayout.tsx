@@ -6,9 +6,9 @@ import Inventory from './Inventory';
 import AssistantSidebar from './AssistantSidebar';
 import ChatPanel from './ChatPanel';
 import DiagramCanvas, { DiagramCanvasRef } from './DiagramCanvas';
+import { NeuralCursor } from './diagram/NeuralCursor';
 import { TacticalHUD } from './diagram/TacticalHUD';
 import { SimControls } from './layout/SimControls';
-import { HardwareTerminal } from './layout/HardwareTerminal';
 import { MentorOverlay } from './layout/MentorOverlay';
 import { BootcampPanel } from './layout/BootcampPanel';
 import { ProjectTimeline } from './layout/ProjectTimeline';
@@ -33,73 +33,334 @@ import { useLayout } from '../contexts/LayoutContext';
 import { useAssistantState } from '../contexts/AssistantStateContext';
 import { useConversationContext } from '../contexts/ConversationContext';
 import { useHUD } from '../contexts/HUDContext';
+import { useSelection } from '../contexts/SelectionContext';
 
 // Hooks & Services
 import { useAIActions } from '../hooks/useAIActions';
-import { useToast } from '../hooks/useToast';
-import { useInventorySync } from '../hooks/useInventorySync';
-import { useSync } from '../hooks/useSync';
-import { buildAIContext } from '../services/aiContextBuilder';
-import { predictionEngine } from '../services/predictionEngine';
+import { useToastApi } from '../hooks/useToast';
+import { useNeuralLink } from '../hooks/useNeuralLink';
+import { gestureMetricsService } from '../services/gesture/GestureMetricsService';
 import { securityAuditor } from '../services/securityAuditor';
-import { searchIndexer, IndexedDocument } from '../services/search/searchIndexer';
-import {
-  explainComponent,
-  generateComponent3DCode,
-  generateWiringDiagram,
-  generateEditedImage,
-  generateConceptImage,
-  generateCircuitVideo,
-  chatWithContext,
-  chatWithAI,
-  generateProactiveSuggestions,
-} from '../services/geminiService';
-import { ElectronicComponent, EnhancedChatMessage, AIContext, ACTION_SAFETY } from '../types';
+import { searchIndexer, type IndexedDocument } from '../services/search/searchIndexer';
+import { predictionEngine } from '../services/predictionEngine';
+import { buildAIContext } from '../services/aiContextBuilder';
+import { chatWithAI, chatWithContext } from '../services/gemini/features/chat';
+import { generateEditedImage, generateConceptImage, generateCircuitVideo } from '../services/gemini/features/media';
+import { generateWiringDiagram } from '../services/gemini/features/wiring';
+import { explainComponent, generateComponent3DCode } from '../services/gemini/features/components';
+import useInventorySync from '../hooks/useInventorySync';
+import { useSync } from '../hooks/useSync';
 
+// UI Components
+import { AssistantTabs, type AssistantTabType } from './layout/assistant/AssistantTabs';
+
+// Types
+import { 
+  type ElectronicComponent, 
+  type AIContext, 
+  type EnhancedChatMessage,
+  ACTION_SAFETY 
+} from '../types';
+// ... (imports)
 export const MainLayout: React.FC = () => {
   // Contexts
-  const { inventory, setInventory } = useInventory(); // Needed for sync/generation
+  const { 
+    isInventoryOpen: _isInventoryOpen, 
+    setInventoryOpen: _setInventoryOpen,
+    isAssistantOpen,
+    setAssistantOpen,
+    assistantPinned,
+    setAssistantPinned,
+    isFocusMode,
+    setFocusMode,
+    activeSidebar: _activeSidebar,
+    setActiveSidebar: _setActiveSidebar,
+    inventoryWidth: _inventoryWidth,
+    setInventoryWidth: _setInventoryWidth,
+    assistantWidth: _assistantWidth,
+    setAssistantWidth: _setAssistantWidth,
+    settingsInitialTab,
+    isSettingsOpen,
+    setSettingsOpen,
+    neuralLinkEnabled
+  } = useLayout();
+
+  const toast = useToastApi();
+
+  const [assistantTab, setAssistantTab] = useState<AssistantTabType>('chat');
+  const [proactiveSuggestions] = useState<string[]>([]);
+
+  // Neural Link (Gestures)
+  const { 
+    isActive: isNeuralLinkActive, 
+    isInitializing: isNeuralLinkLoading,
+    startTracking: startNeuralLink, 
+    stopTracking: stopNeuralLink,
+    result: gestureResult,
+    getSnapshotBlob: getCameraSnapshot,
+    isEngaged: isHandEngaged,
+    error: neuralLinkError
+  } = useNeuralLink();
+
+  useEffect(() => {
+    if (neuralLinkEnabled) {
+      startNeuralLink();
+    } else {
+      stopNeuralLink();
+    }
+  }, [neuralLinkEnabled, startNeuralLink, stopNeuralLink]);
+
+  const { inventory, setInventory } = useInventory();
   const { diagram, updateDiagram } = useDiagram();
   const { 
     isRecording, startRecording, stopRecording, 
     loadingText: audioLoadingText, isProcessingAudio,
-    registerVisualContextProvider, lastTranscription, clearTranscription
+    registerVisualContextProvider, unregisterVisualContextProvider, 
+    lastTranscription, clearTranscription
   } = useVoiceAssistant();
-  const { isSettingsOpen, setSettingsOpen, settingsInitialTab, assistantPinned, isAssistantOpen, setAssistantPinned, setAssistantOpen } = useLayout();
+
   const { 
     generationMode, setGenerationMode, 
     imageSize, setImageSize, 
     aspectRatio, setAspectRatio, 
     useDeepThinking, setUseDeepThinking,
-    recentHistory, activeSelectionPath 
+    recentHistory
   } = useAssistantState();
-  const conversationManager = useConversationContext();
-  const { isVisible: isHUDVisible, setVisible: setHUDVisible, addFragment, clearHUD } = useHUD();
-  const { isFocusMode, setFocusMode } = useLayout();
 
-  const toast = useToast();
+  const { 
+    selectedComponentId: canvasSelectionId, 
+    setSelectedComponentId: setCanvasSelectionId,
+    activeSelectionPath
+  } = useSelection();
+
+  const conversationManager = useConversationContext();
+  
+  const { 
+    isVisible: hudIsVisible, 
+    setVisible: setHudVisible, 
+    addFragment, 
+    removeFragment 
+  } = useHUD();
+
+  // Register Camera visual context
+  useEffect(() => {
+    if (isNeuralLinkActive) {
+      registerVisualContextProvider('camera', getCameraSnapshot);
+    } else {
+      unregisterVisualContextProvider('camera');
+    }
+    return () => unregisterVisualContextProvider('camera');
+  }, [isNeuralLinkActive, getCameraSnapshot, registerVisualContextProvider, unregisterVisualContextProvider]);
+
+  const loadingToastId = useRef<string | null>(null);
+  useEffect(() => {
+    if (isNeuralLinkLoading) {
+      if (!loadingToastId.current) {
+        loadingToastId.current = 'neural-link-loading';
+        toast.info('Neural Link: Loading tracking engine...', 0, undefined, loadingToastId.current);
+      }
+    } else if (loadingToastId.current) {
+      toast.removeToast(loadingToastId.current);
+      toast.success('Neural Link: Ready', 2000, undefined, 'neural-link-ready');
+      loadingToastId.current = null;
+    }
+  }, [isNeuralLinkLoading, toast]);
+
+  useEffect(() => {
+    if (neuralLinkError) {
+      // Use a stable ID for the error to prevent spamming
+      toast.error(`Neural Link Error: ${neuralLinkError}`, 5000, undefined, 'neural-link-error');
+    }
+  }, [neuralLinkError, toast]);
+
+  const isPinchingRef = useRef(false);
+  const isPanningRef = useRef(false);
+  const lastHandPosRef = useRef<{ x: number; y: number; timestamp: number } | null>(null);
+  const swipeCooldownRef = useRef<number>(0);
+  const lastElementRef = useRef<Element | null>(null);
+  const lastElementPosRef = useRef<{x: number, y: number} | null>(null);
+
+  useEffect(() => {
+    if (!isNeuralLinkActive || !gestureResult || gestureResult.landmarks.length === 0) {
+      lastHandPosRef.current = null;
+      lastElementRef.current = null;
+      lastElementPosRef.current = null;
+      return;
+    }
+
+    const landmarks = gestureResult.landmarks[0];
+    const indexTip = landmarks[8];
+    const thumbTip = landmarks[4];
+
+    // 1. Detect Pinch (Selection / Drag) - Use 2D distance for stability
+    const dx = indexTip.x - thumbTip.x;
+    const dy = indexTip.y - thumbTip.y;
+    const distance = Math.sqrt(dx*dx + dy*dy);
+
+    const isCurrentlyPinching = distance < 0.1;
+
+    // 2. Detect Palm (Panning / Swiping)
+    const middleTip = landmarks[12];
+    const ringTip = landmarks[16];
+    const pinkyTip = landmarks[20];
+    
+    const isPalmOpen = indexTip.y < landmarks[6].y && 
+                       middleTip.y < landmarks[10].y && 
+                       ringTip.y < landmarks[14].y && 
+                       pinkyTip.y < landmarks[18].y;
+
+    const rect = canvasRef.current?.getContainerRect();
+    if (!rect) return;
+
+    const clientX = rect.left + (1 - indexTip.x) * rect.width;
+    const clientY = rect.top + indexTip.y * rect.height;
+
+    // Throttle elementFromPoint (Forced Reflow optimization)
+    let currentElement = lastElementRef.current;
+    const distFromLastSearch = lastElementPosRef.current 
+      ? Math.sqrt(Math.pow(clientX - lastElementPosRef.current.x, 2) + Math.pow(clientY - lastElementPosRef.current.y, 2))
+      : Infinity;
+
+    if (distFromLastSearch > 10 || !currentElement) {
+      currentElement = document.elementFromPoint(clientX, clientY);
+      lastElementRef.current = currentElement;
+      lastElementPosRef.current = { x: clientX, y: clientY };
+    }
+
+    // 3. Detect Swipe (Mode Changes)
+    if (isPalmOpen && !isCurrentlyPinching) {
+      const now = performance.now();
+      if (lastHandPosRef.current && now > swipeCooldownRef.current) {
+        const deltaX = indexTip.x - lastHandPosRef.current.x;
+        const deltaTime = now - lastHandPosRef.current.timestamp;
+        const velocity = deltaX / deltaTime;
+
+        // Velocity threshold for swipe
+        if (Math.abs(velocity) > 0.001) { 
+          const direction = velocity > 0 ? 'left' : 'right';
+          const tabs: AssistantTabType[] = ['chat', 'bootcamp', 'history', 'analytics', 'audit'];
+          const currentIndex = tabs.indexOf(assistantTab);
+          
+          if (direction === 'left' && currentIndex < tabs.length - 1) {
+            console.log("Gesture: Swipe Left");
+            setAssistantTab(tabs[currentIndex + 1]);
+            toast.info(`Tab: ${tabs[currentIndex + 1]}`, 1000, undefined, 'swipe-tab');
+            swipeCooldownRef.current = now + 800;
+          } else if (direction === 'right' && currentIndex > 0) {
+            console.log("Gesture: Swipe Right");
+            setAssistantTab(tabs[currentIndex - 1]);
+            toast.info(`Tab: ${tabs[currentIndex - 1]}`, 1000, undefined, 'swipe-tab');
+            swipeCooldownRef.current = now + 800;
+          }
+        }
+      }
+      lastHandPosRef.current = { x: indexTip.x, y: indexTip.y, timestamp: now };
+    } else {
+      lastHandPosRef.current = null;
+    }
+
+    const createSyntheticEvent = (type: string) => new PointerEvent(type, {
+      clientX, clientY, bubbles: true, cancelable: true, pointerId: 1, // Use standard pointerId
+      pointerType: 'mouse', buttons: 1, isPrimary: true, view: window,
+      detail: 1, screenX: clientX, screenY: clientY
+    });
+
+    const dispatchSafeEvent = (element: Element | null, type: string) => {
+      if (!element) return;
+      
+      // Temporarily monkey-patch setPointerCapture/releasePointerCapture 
+      // because synthetic events don't have a real pointerId that browsers accept for capture.
+      const originalSet = element.setPointerCapture;
+      const originalRelease = element.releasePointerCapture;
+      
+      // Some libs check for these before calling
+      element.setPointerCapture = () => {};
+      element.releasePointerCapture = () => {};
+      
+      try {
+        const event = createSyntheticEvent(type);
+        element.dispatchEvent(event);
+      } catch (e) {
+        console.warn('Synthetic event dispatch failed:', e);
+      } finally {
+        // Restore original methods
+        element.setPointerCapture = originalSet;
+        element.releasePointerCapture = originalRelease;
+      }
+    };
+
+    // Handle Panning Start/Move/End
+    if (isPalmOpen && !isCurrentlyPinching) {
+      if (!isPanningRef.current) {
+        console.log(`Gesture: Pan Start at (${Math.round(clientX)}, ${Math.round(clientY)}) on`, currentElement?.tagName);
+        isPanningRef.current = true;
+        dispatchSafeEvent(currentElement, 'pointerdown');
+      } else {
+        dispatchSafeEvent(currentElement, 'pointermove');
+      }
+    } else if (isPanningRef.current) {
+      console.log("Gesture: Pan End");
+      isPanningRef.current = false;
+      dispatchSafeEvent(currentElement, 'pointerup');
+    }
+
+    // Handle Pinch Start/Move/End
+    if (isCurrentlyPinching && !isPanningRef.current) {
+      if (!isPinchingRef.current) {
+        console.log(`Gesture: Pinch Start at (${Math.round(clientX)}, ${Math.round(clientY)}) on`, currentElement?.tagName);
+        const startTime = performance.now();
+        isPinchingRef.current = true;
+        
+        if (currentElement) {
+          dispatchSafeEvent(currentElement, 'pointerdown');
+          gestureMetricsService.logMetric({
+            gestureType: 'PINCH_SELECT', confidence: 1 - distance, success: true,
+            latencyMs: performance.now() - startTime
+          });
+        }
+      } else {
+        dispatchSafeEvent(currentElement, 'pointermove');
+      }
+    } else if (!isCurrentlyPinching && isPinchingRef.current) {
+      console.log("Gesture: Pinch End");
+      isPinchingRef.current = false;
+      dispatchSafeEvent(currentElement, 'pointerup');
+    }
+  }, [isNeuralLinkActive, gestureResult, isHandEngaged, assistantTab, setAssistantTab, toast]);
 
   // Real-time Security Audit loop
+  const activeSecurityFragments = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!diagram) return;
     
     const violations = securityAuditor.auditCircuitSafety(diagram);
     const criticals = violations.filter(v => v.severity === 'high' || v.severity === 'critical');
     
+    const currentBatch = new Set<string>();
     if (criticals.length > 0) {
       criticals.forEach(v => {
+        const fragId = `sec-warn-${v.location}`;
+        currentBatch.add(fragId);
         addFragment({
+          id: fragId,
           targetId: v.location,
           type: 'warning',
           content: `SAFETY RISK: ${v.message}`,
-          position: { x: 50, y: 50 }, // Fixed for global warnings or dynamic if location matches component
+          position: { x: 50, y: 50 },
           priority: 1
         });
+        activeSecurityFragments.current.add(fragId);
       });
-    } else {
-      // Clear safety warnings if resolved (HUD decay handles this mostly but we can be explicit)
     }
-  }, [diagram, addFragment]);
+
+    // Cleanup fragments that are no longer active
+    activeSecurityFragments.current.forEach(id => {
+      if (!currentBatch.has(id)) {
+        removeFragment(id);
+        activeSecurityFragments.current.delete(id);
+      }
+    });
+  }, [diagram, addFragment, removeFragment]);
 
   // Global Search Indexing loop
   useEffect(() => {
@@ -137,13 +398,9 @@ export const MainLayout: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
   const [selectedComponent, setSelectedComponent] = useState<ElectronicComponent | null>(null); // For Modal
-  const [canvasSelectionId, setCanvasSelectionId] = useState<string | null>(null); // For Canvas Visual Selection
   const [modalContent, setModalContent] = useState<string>('');
-  const [isGenerating3D, setIsGenerating3D] = useState(false);
   const [aiContext, setAIContext] = useState<AIContext | null>(null);
-  const [proactiveSuggestions, setProactiveSuggestions] = useState<string[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; componentId: string } | null>(null);
-  const [assistantTab, setAssistantTab] = useState<'chat' | 'bootcamp' | 'history' | 'diagnostic' | 'analytics' | 'audit'>('chat');
   const [isDashboardVisible, setIsDashboardVisible] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -154,9 +411,11 @@ export const MainLayout: React.FC = () => {
     (canvasRef as React.MutableRefObject<DiagramCanvasRef | null>).current = node;
     // Register with Voice Assistant
     if (node) {
-      registerVisualContextProvider(node.getSnapshotBlob);
+      registerVisualContextProvider('canvas', node.getSnapshotBlob);
+    } else {
+      unregisterVisualContextProvider('canvas');
     }
-  }, [registerVisualContextProvider]);
+  }, [registerVisualContextProvider, unregisterVisualContextProvider]);
 
   // AI Actions Hook
   const aiActions = useAIActions({
@@ -183,24 +442,24 @@ export const MainLayout: React.FC = () => {
       }
 
       if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        setHUDVisible(!isHUDVisible);
-        toast.show(isHUDVisible ? 'HUD DISABLED' : 'HUD ENABLED', 'info');
+        setHudVisible(!hudIsVisible);
+        toast.info(!hudIsVisible ? 'HUD ENABLED' : 'HUD DISABLED');
       }
 
       if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setFocusMode(!isFocusMode);
-        toast.show(isFocusMode ? 'FOCUS MODE OFF' : 'FOCUS MODE ON', 'info');
+        toast.info(!isFocusMode ? 'FOCUS MODE ON' : 'FOCUS MODE OFF');
       }
 
       if (e.key.toLowerCase() === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setIsDashboardVisible(!isDashboardVisible);
-        toast.show(isDashboardVisible ? 'CANVAS VIEW' : 'DASHBOARD VIEW', 'info');
+        toast.info(!isDashboardVisible ? 'DASHBOARD VIEW' : 'CANVAS VIEW');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isHUDVisible, setHUDVisible, toast]);
+  }, [hudIsVisible, setHudVisible, isFocusMode, setFocusMode, isDashboardVisible, setIsDashboardVisible, isSearchOpen, setIsSearchOpen, toast]);
 
   // Main Chat Handler
   const handleSendEnhancedMessage = useCallback(async (
@@ -348,7 +607,7 @@ export const MainLayout: React.FC = () => {
     }
   }, [
     isLoading, generationMode, imageSize, aspectRatio, inventory, 
-    aiContext, aiActions, useDeepThinking, conversationManager, updateDiagram, toast
+    aiContext, aiActions, useDeepThinking, conversationManager, updateDiagram
   ]);
 
   // Handle Voice Transcription
@@ -357,7 +616,7 @@ export const MainLayout: React.FC = () => {
       handleSendEnhancedMessage(lastTranscription);
       clearTranscription();
     }
-  }, [lastTranscription, handleSendEnhancedMessage]);
+  }, [lastTranscription, handleSendEnhancedMessage, clearTranscription]);
 
   // AI Context Builder
   useEffect(() => {
@@ -397,7 +656,7 @@ export const MainLayout: React.FC = () => {
 
     const timer = setTimeout(runPredictions, 1500); // 1s debounce for stability
     return () => clearTimeout(timer);
-  }, [aiContext, aiActions.stageActions, isLoading]);
+  }, [aiContext, aiActions, isLoading]);
 
   // ... (Proactive Suggestions logic remains)
 
@@ -412,17 +671,17 @@ export const MainLayout: React.FC = () => {
   const handleComponentSelect = useCallback((componentId: string) => {
     setCanvasSelectionId(componentId);
     setContextMenu(null); // Close context menu on select
-  }, []);
+  }, [setCanvasSelectionId]);
 
   const handleComponentContextMenu = useCallback((componentId: string, x: number, y: number) => {
     setCanvasSelectionId(componentId); // Select on right click too
     setContextMenu({ x, y, componentId });
-  }, []);
+  }, [setCanvasSelectionId]);
 
   const handleCanvasBackgroundClick = useCallback(() => {
     setCanvasSelectionId(null);
     setContextMenu(null);
-  }, []);
+  }, [setCanvasSelectionId]);
 
   const handleSearchSelect = useCallback((doc: IndexedDocument) => {
     setIsSearchOpen(false);
@@ -432,11 +691,7 @@ export const MainLayout: React.FC = () => {
       canvasRef.current?.centerOnComponent(id, 1.2);
       setCanvasSelectionId(id);
     }
-  }, []);
-
-  const handleGenerate3D = useCallback(async (customPrompt?: string) => {
-    // ... (rest of logic)
-  }, [selectedComponent, setInventory, updateDiagram, toast]);
+  }, [setCanvasSelectionId]);
 
   // ... (Chat logic)
 
@@ -448,9 +703,79 @@ export const MainLayout: React.FC = () => {
     });
     canvasRef.current?.centerOnComponent(componentId, 1.2);
     setCanvasSelectionId(componentId); // Update selection
-  }, []);
+  }, [setCanvasSelectionId]);
 
   // ... (Visual Analysis listener)
+
+  const [isGenerating3D, setIsGenerating3D] = useState(false);
+  const { updateItem } = useInventory(); // Destructure updateItem
+
+  const handleGenerate3D = useCallback(async (name?: string, type?: string, prompt?: string, imageUrl?: string, precision?: 'draft' | 'masterpiece') => {
+    if (!selectedComponent && !name) return;
+    
+    const targetName = name || selectedComponent?.name || '';
+    const targetType = type || selectedComponent?.type || 'other';
+    const targetImage = imageUrl || selectedComponent?.imageUrl;
+    const targetPrecision = precision || selectedComponent?.precisionLevel || 'draft';
+    const isRegenerate = Boolean(selectedComponent?.threeCode);
+
+    setIsGenerating3D(true);
+    toast.info(isRegenerate ? 'Regenerating 3D Geometry...' : 'Synthesizing 3D Geometry...');
+    
+    try {
+      const code = await generateComponent3DCode(
+        targetName,
+        targetType,
+        prompt,
+        true, // Always bypass cache when explicitly requested from button
+        targetImage,
+        targetPrecision
+      );
+      
+      const updated = { 
+        ...(selectedComponent || {}), 
+        name: targetName,
+        type: targetType as ElectronicComponent['type'],
+        threeCode: code,
+        precisionLevel: targetPrecision
+      } as ElectronicComponent;
+      
+      // Update local state for immediate modal feedback
+      setSelectedComponent(updated);
+      
+      // Sync to global inventory using context helper
+      updateItem(updated);
+      
+      // If part of diagram, update diagram too
+      if (diagram?.components.some(c => c.id === updated.id)) {
+        updateDiagram({
+          ...diagram,
+          components: diagram.components.map(c => c.id === updated.id ? updated : c)
+        });
+      }
+      
+      toast.success(isRegenerate ? '3D Geometry Refined' : '3D Geometry Synthesized');
+    } catch (error) {
+      console.error('3D Generation Error:', error);
+      toast.error(`Generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsGenerating3D(false);
+    }
+  }, [selectedComponent, diagram, updateDiagram, updateItem, toast]);
+
+
+  const handleComponentDrop = useCallback((component: ElectronicComponent, x: number, y: number) => {
+    if (!diagram) return;
+    const newComponent = { ...component, id: `comp-${Date.now()}`, position: { x, y } };
+    updateDiagram({
+      ...diagram,
+      components: [...diagram.components, newComponent]
+    });
+  }, [diagram, updateDiagram]);
+
+  const handleComponentDoubleClick = useCallback((component: ElectronicComponent) => {
+    handleOpenComponentInfo(component);
+  }, [handleOpenComponentInfo]);
 
   return (
     <AppLayout
@@ -459,68 +784,10 @@ export const MainLayout: React.FC = () => {
         <AssistantSidebar>
           <ErrorBoundary>
             <div className="flex flex-col h-full overflow-hidden">
-              <div className="flex bg-slate-900 border-b border-white/5 shrink-0">
-                <button
-                  onClick={() => setAssistantTab('chat')}
-                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
-                    assistantTab === 'chat'
-                      ? 'border-neon-cyan text-white bg-white/5'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  ASSISTANT
-                </button>
-                <button
-                  onClick={() => setAssistantTab('bootcamp')}
-                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
-                    assistantTab === 'bootcamp'
-                      ? 'border-neon-purple text-white bg-white/5'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  BOOTCAMP
-                </button>
-                <button
-                  onClick={() => setAssistantTab('history')}
-                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
-                    assistantTab === 'history'
-                      ? 'border-neon-amber text-white bg-white/5'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  HISTORY
-                </button>
-                <button
-                  onClick={() => setAssistantTab('diagnostic')}
-                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
-                    assistantTab === 'diagnostic'
-                      ? 'border-red-500 text-white bg-white/5'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  DIAGNOSTIC
-                </button>
-                <button
-                  onClick={() => setAssistantTab('analytics')}
-                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
-                    assistantTab === 'analytics'
-                      ? 'border-neon-cyan text-white bg-white/5'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  ANALYTICS
-                </button>
-                <button
-                  onClick={() => setAssistantTab('audit')}
-                  className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-all border-b-2 ${
-                    assistantTab === 'audit'
-                      ? 'border-slate-400 text-white bg-white/5'
-                      : 'border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
-                >
-                  AUDIT
-                </button>
-              </div>
+              <AssistantTabs 
+                activeTab={assistantTab} 
+                onTabChange={setAssistantTab} 
+              />
 
               <div className="flex-1 overflow-hidden">
                 {assistantTab === 'chat' ? (
@@ -551,6 +818,8 @@ export const MainLayout: React.FC = () => {
                     onImageSizeChange={setImageSize}
                     aspectRatio={aspectRatio}
                     onAspectRatioChange={setAspectRatio}
+                    isExpanded={isAssistantOpen}
+                    onToggleExpand={() => setAssistantOpen(!isAssistantOpen)}
                     className="h-full border-none rounded-none"
                     headerActions={
                       <div className="flex items-center gap-1">
@@ -642,38 +911,55 @@ export const MainLayout: React.FC = () => {
       {isDashboardVisible ? (
         <DashboardView />
       ) : (
-        <DiagramCanvas
-          ref={setCanvasRef}
-          diagram={diagram}
-          selectedComponentId={canvasSelectionId}
-          stagedActions={aiActions.stagedActions}
-          onStagedActionAccept={aiActions.acceptStagedAction}
-          onStagedActionReject={aiActions.rejectStagedAction}
-          onComponentSelect={handleComponentSelect}
-          onComponentContextMenu={handleComponentContextMenu}
-          onComponentDoubleClick={handleOpenComponentInfo}
-          onBackgroundClick={handleCanvasBackgroundClick}
-          onDiagramUpdate={updateDiagram}
-          onComponentDrop={/*...*/ undefined}
-          onGenerate3D={/*...*/ undefined}
-        />
+          <>
+            <DiagramCanvas
+              ref={setCanvasRef}
+              diagram={diagram}
+              selectedComponentId={canvasSelectionId}
+              stagedActions={aiActions.stagedActions}
+              onStagedActionAccept={aiActions.acceptStagedAction}
+              onStagedActionReject={aiActions.rejectStagedAction}
+              onComponentSelect={handleComponentSelect}
+              onComponentContextMenu={handleComponentContextMenu}
+              onComponentDoubleClick={handleComponentDoubleClick}
+              onDiagramUpdate={updateDiagram}
+              onComponentDrop={handleComponentDrop}
+              onBackgroundClick={handleCanvasBackgroundClick}
+              onGenerate3D={async (comp) => {
+                handleComponentDoubleClick(comp);
+                await handleGenerate3D(comp.name, comp.type);
+              }}
+            />
+            {isNeuralLinkActive && (
+              <NeuralCursor 
+                landmarks={gestureResult?.landmarks[0] || null} 
+                isEngaged={isHandEngaged || false}
+                containerRect={canvasRef.current?.getContainerRect() || null}
+              />
+            )}
+          </>
       )}
       {contextMenu && (
         <div 
-          className="fixed z-50 bg-slate-900 border border-slate-700 shadow-xl rounded-md py-1 min-w-[160px]"
+          className="fixed z-50 bg-cyber-black panel-surface border border-neon-cyan/20 shadow-2xl py-1 min-w-[180px] panel-frame animate-fade-in-right"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
+          <div className="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5 mb-1 flex items-center gap-2">
+            <div className="w-1 h-1 bg-neon-cyan animate-pulse" />
+            Component Actions
+          </div>
           <button 
-            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-neon-cyan/10 hover:text-neon-cyan transition-colors flex items-center gap-2 group"
             onClick={() => {
               const comp = diagram?.components.find(c => c.id === contextMenu.componentId);
               if (comp) handleOpenComponentInfo(comp);
             }}
           >
+            <svg className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
             Edit
           </button>
           <button 
-            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-neon-cyan/10 hover:text-neon-cyan transition-colors flex items-center gap-2 group"
             onClick={() => {
                const comp = diagram?.components.find(c => c.id === contextMenu.componentId);
                if (comp) {
@@ -690,20 +976,22 @@ export const MainLayout: React.FC = () => {
                }
             }}
           >
+            <svg className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
             Duplicate
           </button>
           <button 
-            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-neon-cyan/10 hover:text-neon-cyan transition-colors flex items-center gap-2 group"
             onClick={() => {
                const comp = diagram?.components.find(c => c.id === contextMenu.componentId);
-               if (comp) handleOpenComponentInfo(comp); // Open modal which has 3D gen
+               if (comp) handleOpenComponentInfo(comp); 
             }}
           >
+            <svg className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" /></svg>
             Generate 3D
           </button>
-          <div className="h-px bg-slate-700 my-1" />
+          <div className="h-px bg-white/5 my-1 mx-2" />
           <button 
-            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-800 hover:text-red-300"
+            className="w-full text-left px-4 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-2 group"
             onClick={() => {
                const newDiagram = {
                    ...diagram!,
@@ -714,6 +1002,7 @@ export const MainLayout: React.FC = () => {
                setContextMenu(null);
             }}
           >
+            <svg className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             Delete
           </button>
         </div>
