@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { ElectronicComponent } from '../../../types';
 import { partStorageService } from '../../../services/partStorageService';
 import { FzpzLoader } from '../../../services/fzpzLoader';
@@ -78,13 +79,22 @@ export const FzpzVisual: React.FC<FzpzVisualProps> = ({ component }) => {
     .replace(/<svg[^>]*>/i, '')
     .replace(/<\/svg>/i, '');
 
+  // SECURITY: Sanitize SVG to prevent XSS from malicious FZPZ files
+  const sanitizedContent = DOMPurify.sanitize(innerContent, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    ADD_TAGS: ['use', 'symbol', 'defs', 'clipPath', 'mask'],
+    ADD_ATTR: ['xlink:href', 'clip-path', 'mask', 'transform', 'viewBox'],
+    FORBID_TAGS: ['script', 'style'],
+    FORBID_ATTR: ['onclick', 'onload', 'onerror', 'onmouseover']
+  });
+
   const width = component.footprint?.width || 10;
   const height = component.footprint?.height || 10;
 
   return (
-    <g 
+    <g
       className="fzpz-content"
-      dangerouslySetInnerHTML={{ __html: innerContent }}
+      dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   );
 };
