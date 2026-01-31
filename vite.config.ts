@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
         }),
         VitePWA({
           registerType: 'autoUpdate',
-          includeAssets: ['favicon.ico', 'assets/ui/*.png', 'assets/ui/*.svg'],
+          includeAssets: ['favicon.ico', 'assets/ui/*.webp', 'assets/ui/*.png', 'assets/ui/*.svg'],
           manifest: {
             name: 'CircuitMind AI',
             short_name: 'CircuitMind',
@@ -30,6 +30,9 @@ export default defineConfig(({ mode }) => {
             theme_color: '#050508',
             background_color: '#050508',
             display: 'standalone',
+            // PWA manifest icons use PNG format for maximum browser/OS compatibility
+            // WebP support in PWA manifests is limited on older Android/iOS devices
+            // Logo assets are pre-optimized and included in includeAssets above
             icons: [
               {
                 src: '/assets/ui/logo.png',
@@ -44,7 +47,7 @@ export default defineConfig(({ mode }) => {
             ]
           },
           workbox: {
-            globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+            globPatterns: ['**/*.{js,css,html,ico,png,webp,svg}'],
             runtimeCaching: [
               {
                 urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

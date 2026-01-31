@@ -76,7 +76,7 @@ export const AppHeader = React.memo(() => {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 select-none group">
           <img 
-            src="/assets/ui/logo.png" 
+            src="/assets/ui/logo.webp" 
             alt="CircuitMind AI" 
             className="h-6 w-6 object-contain drop-shadow-[0_0_8px_var(--mode-accent)] group-hover:drop-shadow-[0_0_12px_var(--mode-accent)] transition-all duration-300" 
           />
@@ -94,7 +94,7 @@ export const AppHeader = React.memo(() => {
           <IconButton
             label="Undo"
             icon={
-              <img src="/assets/ui/action-undo.png" alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
+              <img src="/assets/ui/action-undo.webp" alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
             }
             onClick={undo}
             disabled={!canUndo}
@@ -105,7 +105,7 @@ export const AppHeader = React.memo(() => {
           <IconButton
             label="Redo"
             icon={
-              <img src="/assets/ui/action-redo.png" alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
+              <img src="/assets/ui/action-redo.webp" alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
             }
             onClick={redo}
             disabled={!canRedo}
@@ -133,7 +133,7 @@ export const AppHeader = React.memo(() => {
             }`}
             title="Save to Quick Slot"
           >
-            <img src="/assets/ui/action-save.png" alt="" className={`w-3 h-3 ${saveStatus === 'idle' ? 'opacity-60 group-hover:opacity-100' : ''}`} />
+            <img src="/assets/ui/action-save.webp" alt="" className={`w-3 h-3 ${saveStatus === 'idle' ? 'opacity-60 group-hover:opacity-100' : ''}`} />
             {saveStatus === 'saved' ? '✓ SAVED' : saveStatus === 'error' ? 'NO DATA' : saveStatus === 'saving' ? '...' : 'SAVE'}
           </button>
           <button
@@ -150,7 +150,7 @@ export const AppHeader = React.memo(() => {
             }`}
             title="Load from Quick Slot"
           >
-            <img src="/assets/ui/action-load.png" alt="" className={`w-3 h-3 ${loadStatus === 'idle' ? 'opacity-60' : ''}`} />
+            <img src="/assets/ui/action-load.webp" alt="" className={`w-3 h-3 ${loadStatus === 'idle' ? 'opacity-60' : ''}`} />
             {loadStatus === 'loaded' ? '✓ LOADED' : loadStatus === 'empty' ? 'EMPTY' : loadStatus === 'loading' ? '...' : 'LOAD'}
           </button>
           <button
@@ -251,7 +251,7 @@ export const AppHeader = React.memo(() => {
         <IconButton
           label={isLiveActive ? "Disable Voice Mode" : "Enable Voice Mode"}
           icon={
-            <img src="/assets/ui/action-voice.png" alt="" className={`w-3.5 h-3.5 ${isLiveActive ? '' : 'opacity-60 group-hover:opacity-100'}`} />
+            <img src="/assets/ui/action-voice.webp" alt="" className={`w-3.5 h-3.5 ${isLiveActive ? '' : 'opacity-60 group-hover:opacity-100'}`} />
           }
           onClick={toggleLiveMode}
           size="sm"
@@ -265,7 +265,7 @@ export const AppHeader = React.memo(() => {
         <IconButton
           label="Settings"
           icon={
-            <img src="/assets/ui/action-settings.png" alt="" className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+            <img src="/assets/ui/action-settings.webp" alt="" className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
           }
           onClick={() => setSettingsOpen(true)}
           size="sm"

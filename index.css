@@ -134,15 +134,15 @@ body {
   z-index: 0;
 }
 
-.panel-carbon::before { background-image: url('/assets/ui/pattern-carbon.png'); opacity: 0.05; }
-.panel-brushed::before { background-image: url('/assets/ui/pattern-brushed.png'); opacity: 0.04; }
-.panel-circuit::before { background-image: url('/assets/ui/pattern-circuit.png'); opacity: 0.08; background-size: 512px; }
-.panel-loading::before { background-image: url('/assets/ui/loading.png'); opacity: 0.15; background-size: 256px; animation: scan 4s linear infinite; }
+.panel-carbon::before { background-image: url('/assets/ui/pattern-carbon.webp'); opacity: 0.05; }
+.panel-brushed::before { background-image: url('/assets/ui/pattern-brushed.webp'); opacity: 0.04; }
+.panel-circuit::before { background-image: url('/assets/ui/pattern-circuit.webp'); opacity: 0.08; background-size: 512px; }
+.panel-loading::before { background-image: url('/assets/ui/loading.webp'); opacity: 0.15; background-size: 256px; animation: scan 4s linear infinite; }
 
 .loading-tech {
   width: 40px;
   height: 40px;
-  background-image: url('/assets/ui/loading.png');
+  background-image: url('/assets/ui/loading.webp');
   background-size: contain;
   background-repeat: no-repeat;
   animation: rotate-tech 3s linear infinite;
@@ -246,7 +246,7 @@ body {
   right: 2px;
   width: 16px;
   height: 16px;
-  background-image: url('/assets/ui/flourish.png');
+  background-image: url('/assets/ui/flourish.webp');
   background-size: contain;
   background-repeat: no-repeat;
   opacity: 0.3;

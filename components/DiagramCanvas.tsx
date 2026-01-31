@@ -998,7 +998,7 @@ const DiagramCanvasRenderer = ({
             title="Zoom In"
             aria-label="Zoom in"
           >
-            <img src="/assets/ui/action-zoom-in.png" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
+            <img src="/assets/ui/action-zoom-in.webp" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:block leading-none">Zoom In</span>
           </button>
           <button
@@ -1008,7 +1008,7 @@ const DiagramCanvasRenderer = ({
             title="Zoom Out"
             aria-label="Zoom out"
           >
-            <img src="/assets/ui/action-zoom-out.png" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
+            <img src="/assets/ui/action-zoom-out.webp" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:block leading-none">Zoom Out</span>
           </button>
           <div
@@ -1025,7 +1025,7 @@ const DiagramCanvasRenderer = ({
             title="Reset View"
             aria-label="Reset view"
           >
-            <img src="/assets/ui/action-load.png" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
+            <img src="/assets/ui/action-load.webp" alt="" className="w-5 h-5 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:block leading-none">Reset</span>
           </button>
         </div>
@@ -1072,7 +1072,7 @@ const DiagramCanvasRenderer = ({
             title={snapToGrid ? 'Snap to Grid: ON' : 'Snap to Grid: OFF'}
             aria-pressed={snapToGrid}
           >
-            <img src="/assets/ui/action-grid.png" alt="" className={`w-4 h-4 ${snapToGrid ? '' : 'opacity-70'}`} onError={(e) => (e.currentTarget.style.display = 'none')} />
+            <img src="/assets/ui/action-grid.webp" alt="" className={`w-4 h-4 ${snapToGrid ? '' : 'opacity-70'}`} onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:inline">{snapToGrid ? 'Grid ON' : 'Grid OFF'}</span>
           </button>
           <button
@@ -1086,7 +1086,7 @@ const DiagramCanvasRenderer = ({
             title={viewMode === '3d' ? 'Switch to 2D View' : 'Switch to 3D View'}
             aria-pressed={viewMode === '3d'}
           >
-            <img src={`/assets/ui/${viewMode === '3d' ? 'action-2d' : 'action-3d'}.png`} alt="" className={`w-4 h-4 ${viewMode === '3d' ? 'opacity-90' : 'opacity-70'}`} onError={(e) => (e.currentTarget.style.display = 'none')} />
+            <img src={`/assets/ui/${viewMode === '3d' ? 'action-2d' : 'action-3d'}.webp`} alt="" className={`w-4 h-4 ${viewMode === '3d' ? 'opacity-90' : 'opacity-70'}`} onError={(e) => (e.currentTarget.style.display = 'none')} />
             <span className="hidden md:inline">{viewMode === '3d' ? '2D' : '3D'}</span>
           </button>
           <div className="flex gap-1">
@@ -1112,7 +1112,7 @@ const DiagramCanvasRenderer = ({
               ) : svgExportStatus === 'exporting' ? (
                 <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
               ) : (
-                <img src="/assets/ui/action-save.png" alt="" className="w-4 h-4 opacity-80 invert" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                <img src="/assets/ui/action-save.webp" alt="" className="w-4 h-4 opacity-80 invert" onError={(e) => (e.currentTarget.style.display = 'none')} />
               )}
               <span className="hidden md:inline">
                 {svgExportStatus === 'done' ? 'DONE' : svgExportStatus === 'error' ? 'ERROR' : svgExportStatus === 'exporting' ? '...' : 'SVG'}
@@ -1140,7 +1140,7 @@ const DiagramCanvasRenderer = ({
               ) : pngExportStatus === 'exporting' ? (
                 <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
               ) : (
-                <img src="/assets/ui/action-save.png" alt="" className="w-4 h-4 opacity-80 invert" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                <img src="/assets/ui/action-save.webp" alt="" className="w-4 h-4 opacity-80 invert" onError={(e) => (e.currentTarget.style.display = 'none')} />
               )}
               <span className="hidden md:inline">
                 {pngExportStatus === 'done' ? 'DONE' : pngExportStatus === 'error' ? 'ERROR' : pngExportStatus === 'exporting' ? '...' : 'PNG'}
@@ -1160,7 +1160,7 @@ const DiagramCanvasRenderer = ({
             />
           </div>
         ) : (
-          <svg ref={svgRef} className="w-full h-full pointer-events-none">
+          <svg ref={svgRef} className="w-full h-full pointer-events-none" data-testid="diagram-svg">
             <g transform={`translate(${state.pan.x}, ${state.pan.y}) scale(${state.zoom})`}>
               <defs>
                 <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">

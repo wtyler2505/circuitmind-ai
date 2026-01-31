@@ -55,10 +55,10 @@ export default {
         },
       },
       backgroundImage: {
-        'pattern-carbon': "url('/assets/ui/pattern-carbon.png')",
-        'pattern-brushed': "url('/assets/ui/pattern-brushed.png')",
-        'pattern-circuit': "url('/assets/ui/pattern-circuit.png')",
-        'pattern-loading': "url('/assets/ui/loading.png')",
+        'pattern-carbon': "url('/assets/ui/pattern-carbon.webp')",
+        'pattern-brushed': "url('/assets/ui/pattern-brushed.webp')",
+        'pattern-circuit': "url('/assets/ui/pattern-circuit.webp')",
+        'pattern-loading': "url('/assets/ui/loading.webp')",
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

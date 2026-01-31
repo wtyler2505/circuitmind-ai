@@ -291,7 +291,7 @@ const ThreeViewerContent = forwardRef<ThreeViewerRef, ThreeViewerProps>(({ code,
       {!hasContent && !error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center text-slate-300 p-6 pointer-events-none z-20">
           <div className="w-20 h-20 flex items-center justify-center">
-            <img src="/assets/ui/logo.png" alt="" className="w-16 h-16 object-contain opacity-40 grayscale animate-pulse-slow" />
+            <img src="/assets/ui/logo.webp" alt="" className="w-16 h-16 object-contain opacity-40 grayscale animate-pulse-slow" />
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-bold text-slate-100 uppercase tracking-[0.2em]">No 3D model yet.</h3>

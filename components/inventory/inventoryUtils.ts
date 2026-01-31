@@ -39,7 +39,7 @@ export const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800):
 
 // Helper for type icons
 export const getTypeIcon = (type: string) => {
-  const iconPath = `/assets/ui/icon-${type}.png`;
+  const iconPath = `/assets/ui/icon-${type}.webp`;
   // We return an IMG element logic that can be used in JSX
   // However, since this was returning JSX, we need to return React Element.
   // The onError handler needs to attach to the DOM element.

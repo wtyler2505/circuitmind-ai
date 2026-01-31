@@ -49,7 +49,7 @@ export const Gatekeeper: React.FC = () => {
         </div>
 
         <div className="text-center space-y-2 mb-8">
-          <img src="/assets/ui/logo.png" alt="Logo" className="w-12 h-12 mx-auto mb-4 grayscale brightness-200" />
+          <img src="/assets/ui/logo.webp" alt="Logo" className="w-12 h-12 mx-auto mb-4 grayscale brightness-200" />
           <h2 className="text-sm font-bold text-white uppercase tracking-[0.4em] panel-title">
             {isSetup ? 'ACCESS_RESTRICTED' : 'INITIAL_ENCRYPTION'}
           </h2>

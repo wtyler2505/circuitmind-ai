@@ -550,7 +550,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
         aria-label={isPinned ? 'Unlock inventory' : 'Open inventory'}
       >
         <img 
-          src={`/assets/ui/${isPinned ? 'action-settings' : 'icon-microcontroller'}.png`} 
+          src={`/assets/ui/${isPinned ? 'action-settings' : 'icon-microcontroller'}.webp`} 
           alt="" 
           className={`w-5 h-5 transition-all ${isPinned ? 'animate-pulse-slow' : 'group-hover:scale-110'}`}
           onError={(e) => (e.currentTarget.style.opacity = '0')}
@@ -587,7 +587,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
         <div className="px-3 pt-3 pb-0 bg-cyber-black panel-rail border-b border-white/5 flex flex-col gap-2 shrink-0">
           <div className="flex justify-between items-center">
             <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-[0.2em] panel-title">
-              <img src="/assets/ui/logo.png" alt="" className="w-4 h-4" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              <img src="/assets/ui/logo.webp" alt="" className="w-4 h-4" onError={(e) => (e.currentTarget.style.display = 'none')} />
               ASSET MANAGER
             </h2>
             <div className="flex items-center gap-1">
@@ -899,12 +899,12 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                     onClick={handleExport}
                     className="bg-white/5 hover:bg-white/10 text-slate-300 py-2 cut-corner-sm border border-white/10 flex flex-col items-center gap-1 transition-all group"
                   >
-                    <img src="/assets/ui/action-save.png" alt="" className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    <img src="/assets/ui/action-save.webp" alt="" className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" onError={(e) => (e.currentTarget.style.display = 'none')} />
                     <span className="text-[9px] font-bold tracking-[0.2em]">EXPORT JSON</span>
                   </button>
                   <label className="bg-white/5 hover:bg-white/10 text-slate-300 py-2 cut-corner-sm border border-white/10 flex flex-col items-center gap-1 cursor-pointer transition-all group">
                     <input type="file" accept=".json" className="hidden" onChange={handleImport} />
-                    <img src="/assets/ui/action-load.png" alt="" className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    <img src="/assets/ui/action-load.webp" alt="" className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" onError={(e) => (e.currentTarget.style.display = 'none')} />
                     <span className="text-[9px] font-bold tracking-[0.2em]">IMPORT JSON</span>
                   </label>
                   <button

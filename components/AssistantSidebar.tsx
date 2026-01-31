@@ -101,7 +101,7 @@ const AssistantSidebar: React.FC<AssistantSidebarProps> = ({ children }) => {
         aria-label={isPinned ? 'Unlock assistant sidebar' : 'Open assistant sidebar'}
       >
         <img 
-          src={`/assets/ui/${isPinned ? 'action-voice' : 'logo'}.png`} 
+          src={`/assets/ui/${isPinned ? 'action-voice' : 'logo'}.webp`} 
           alt="" 
           className={`w-5 h-5 transition-all ${isPinned ? 'animate-pulse' : 'group-hover:scale-110'}`}
           onError={(e) => (e.currentTarget.style.opacity = '0')}
