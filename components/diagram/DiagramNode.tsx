@@ -4,6 +4,7 @@ import { ElectronicComponent } from '../../types';
 import { getComponentShape, calculatePinPositions, COLORS, type ComponentShape } from './componentShapes';
 import { useTelemetry } from '../../contexts/TelemetryContext';
 import { useSimulation } from '../../contexts/SimulationContext';
+import { BreadboardVisual } from './parts/Breadboard';
 
 // Default dimensions (used for layout calculations)
 const COMPONENT_WIDTH = 180;
@@ -656,7 +657,7 @@ const ActuatorDetails: React.FC = () => (
   </g>
 );
 
-const PowerDetails: React.FC<{ width: number }> = ({ width }) => (
+const PowerDetails: React.FC<{ width: number }> = ({ width: _width }) => (
   <g className="pointer-events-none">
     {/* Battery cells */}
     <rect x="10" y="12" width="25" height="26" fill="#1E1E1E" stroke="#22C55E" strokeWidth="1"/>
@@ -805,6 +806,11 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
 
   // Render component-specific details based on shape type
   const renderDetails = () => {
+    // Special part visuals
+    if (component.name.toLowerCase().includes('breadboard')) {
+        return <BreadboardVisual component={component} />;
+    }
+
     switch (shape.type) {
       case 'resistor':
         return <ResistorDetails />;
