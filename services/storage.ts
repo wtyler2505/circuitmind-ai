@@ -18,7 +18,8 @@ const STORES = {
   STATE: 'app_state',
   ACTION_HISTORY: 'action_history',
   CONVERSATIONS: 'conversations',
-  MESSAGES: 'messages'
+  MESSAGES: 'messages',
+  PARTS: 'parts' // Store for binary FZPZ data and cached views
 };
 
 const openDB = (): Promise<IDBDatabase> => {
@@ -43,6 +44,9 @@ const openDB = (): Promise<IDBDatabase> => {
       if (!db.objectStoreNames.contains(STORES.MESSAGES)) {
         const messageStore = db.createObjectStore(STORES.MESSAGES, { keyPath: 'id' });
         messageStore.createIndex('conversationId', 'conversationId', { unique: false });
+      }
+      if (!db.objectStoreNames.contains(STORES.PARTS)) {
+        db.createObjectStore(STORES.PARTS, { keyPath: 'id' });
       }
     };
 
@@ -111,11 +115,48 @@ export const storageService = {
 // INDEXED DB OPERATIONS (Action History)
 // ============================================================================
 
+/**
+ * Sanitizes an object to ensure it's serializable for IndexedDB.
+ * Removes non-cloneable objects like Events, Functions, etc.
+ * Handles circular references gracefully.
+ */
+const sanitizeForDB = (obj: unknown): unknown => {
+  try {
+    // structuredClone is native and handles circular refs + many types better than JSON
+    return window.structuredClone(obj);
+  } catch (_e) {
+    // If it fails (e.g. contains functions or complex circular refs), 
+    // use a robust custom stringifier that drops circularities.
+    try {
+      const cache = new Set();
+      const stringified = JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (cache.has(value)) return '[Circular]';
+          cache.add(value);
+        }
+        return value;
+      });
+      return JSON.parse(stringified);
+    } catch (err) {
+      console.error('Failed to sanitize object for DB:', err, obj);
+      return null;
+    }
+  }
+};
+
 export const recordAction = async (action: ActionRecord) => {
+  if (!action || !action.id) {
+    console.error('Cannot record action: Missing ID');
+    return;
+  }
+
   const db = await openDB();
+  const sanitizedAction = sanitizeForDB(action);
+  if (!sanitizedAction) return;
+
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORES.ACTION_HISTORY, 'readwrite');
-    tx.objectStore(STORES.ACTION_HISTORY).put(action);
+    tx.objectStore(STORES.ACTION_HISTORY).put(sanitizedAction);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -137,6 +178,7 @@ export const getRecentActions = async (limit: number = 10): Promise<ActionRecord
 };
 
 export const deleteAction = async (id: string) => {
+  if (!id) return;
   const db = await openDB();
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORES.ACTION_HISTORY, 'readwrite');
@@ -151,10 +193,18 @@ export const deleteAction = async (id: string) => {
 // ============================================================================
 
 export const saveConversation = async (conv: Conversation) => {
+  if (!conv || !conv.id) {
+    console.error('Cannot save conversation: Missing ID');
+    return;
+  }
+
   const db = await openDB();
+  const sanitizedConv = sanitizeForDB(conv);
+  if (!sanitizedConv) return;
+
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORES.CONVERSATIONS, 'readwrite');
-    tx.objectStore(STORES.CONVERSATIONS).put(conv);
+    tx.objectStore(STORES.CONVERSATIONS).put(sanitizedConv);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -174,6 +224,7 @@ export const listConversations = async (limit: number = 50): Promise<Conversatio
 };
 
 export const deleteConversation = async (id: string) => {
+  if (!id) return;
   const db = await openDB();
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction([STORES.CONVERSATIONS, STORES.MESSAGES], 'readwrite');
@@ -201,16 +252,29 @@ export const getPrimaryConversation = async (): Promise<Conversation | null> => 
 };
 
 export const saveMessage = async (msg: EnhancedChatMessage) => {
+  if (!msg || !msg.id) {
+    console.error('Cannot save message: Missing ID');
+    return;
+  }
+
   const db = await openDB();
+  const sanitizedMsg = sanitizeForDB(msg);
+  if (!sanitizedMsg) return;
+
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORES.MESSAGES, 'readwrite');
-    tx.objectStore(STORES.MESSAGES).put(msg);
+    tx.objectStore(STORES.MESSAGES).put(sanitizedMsg);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
 };
 
 export const loadMessages = async (conversationId: string): Promise<EnhancedChatMessage[]> => {
+  if (!conversationId) {
+    console.warn('loadMessages called without conversationId');
+    return [];
+  }
+
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORES.MESSAGES, 'readonly');
@@ -229,13 +293,20 @@ export const loadMessages = async (conversationId: string): Promise<EnhancedChat
 // ============================================================================
 
 export const saveInventoryToDB = async (items: ElectronicComponent[]) => {
+  if (!Array.isArray(items)) return;
+
   const db = await openDB();
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORES.INVENTORY, 'readwrite');
     const store = tx.objectStore(STORES.INVENTORY);
     
     store.clear().onsuccess = () => {
-      items.forEach(item => store.put(item));
+      items.forEach(item => {
+        const sanitized = sanitizeForDB(item);
+        if (sanitized && sanitized.id) {
+          store.put(sanitized);
+        }
+      });
     };
 
     tx.oncomplete = () => resolve();

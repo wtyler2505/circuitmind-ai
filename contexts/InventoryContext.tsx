@@ -1,29 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { ElectronicComponent } from '../types';
 import { storageService } from '../services/storage';
-
-// Auto-generated from electronics_inventory_tier5.json - 63 components
-// This is the same initial data as in App.tsx
-// In a real app, this might be loaded from a JSON file or API
-const INITIAL_INVENTORY: ElectronicComponent[] = [
-  {
-    id: '1',
-    name: 'Arduino Uno R3',
-    type: 'microcontroller',
-    description:
-      '5V Arduino microcontroller with ATmega328P, 14 digital I/O (6 PWM), 6 analog inputs. Most widely supported, beginner-friendly.',
-    pins: [
-      'SDA', 'SCL', 'MOSI', 'MISO', 'SCK', 'SS', 'TX', 'RX', 'VCC', 'GND',
-      'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13',
-      'A0', 'A1', 'A2', 'A3', 'A4', 'A5',
-    ],
-    quantity: 2,
-    datasheetUrl: 'https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf',
-    imageUrl: 'https://store.arduino.cc/cdn/shop/products/A000066_03.front_934x700.jpg',
-  },
-  // ... (I will need to copy the full list or import it if I extract it to a data file)
-  // For now, I'll extract the data to a separate file to keep this clean.
-];
+import { INITIAL_INVENTORY } from '../data/initialInventory';
+import { FzpzLoader } from '../services/fzpzLoader';
+import { partStorageService } from '../services/partStorageService';
 
 interface InventoryContextType {
   inventory: ElectronicComponent[];
@@ -33,35 +13,41 @@ interface InventoryContextType {
   removeItem: (id: string) => void;
   removeMany: (ids: string[]) => void;
   updateMany: (items: ElectronicComponent[]) => void;
+  loadPartData: (id: string) => Promise<ElectronicComponent | null>;
+  isLoading: boolean;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
-// Helper to load initial state
-const loadInitialInventory = (): ElectronicComponent[] => {
-  try {
-    const saved = localStorage.getItem('cm_inventory');
-    if (saved) return JSON.parse(saved);
-    
-    // Fallback to importing the large initial list
-    // Since I can't easily import the local variable from App.tsx, 
-    // I should probably move that data to a separate file first.
-    return []; 
-  } catch (e: unknown) {
-    console.error(e instanceof Error ? e.message : 'Failed to load inventory');
-    return [];
-  }
-};
-
 export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: ElectronicComponent[] }> = ({ children, initialData }) => {
-  const [inventory, setInventory] = useState<ElectronicComponent[]>(() => {
-    const saved = loadInitialInventory();
-    return saved.length > 0 ? saved : (initialData || []);
-  });
+  const [inventory, setInventory] = useState<ElectronicComponent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize inventory
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const saved = await storageService.getItem('cm_inventory');
+        if (saved) {
+          setInventory(JSON.parse(saved));
+        } else {
+          setInventory(INITIAL_INVENTORY);
+        }
+      } catch (e) {
+        console.error('Failed to load inventory', e);
+        setInventory(INITIAL_INVENTORY);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    init();
+  }, []);
 
   useEffect(() => {
-    storageService.setItem('cm_inventory', JSON.stringify(inventory));
-  }, [inventory]);
+    if (!isLoading) {
+      storageService.setItem('cm_inventory', JSON.stringify(inventory));
+    }
+  }, [inventory, isLoading]);
 
   const addItem = (item: ElectronicComponent) => {
     setInventory((prev) => [...prev, item]);
@@ -84,6 +70,68 @@ export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: El
     setInventory((prev) => prev.map((i) => updates.get(i.id) || i));
   };
 
+  /**
+   * Lazy-loads binary FZPZ data and footprints for a component.
+   * Checks cache first, then fetches and parses.
+   */
+  const loadPartData = useCallback(async (id: string): Promise<ElectronicComponent | null> => {
+    const comp = inventory.find(i => i.id === id);
+    if (!comp) return null;
+
+    // If already loaded in memory, return it
+    if (comp.fzpzSource && comp.footprint) return comp;
+
+    try {
+      // Check IndexedDB cache
+      const cached = await partStorageService.getPart(id);
+      if (cached) {
+        const updated = { 
+          ...comp, 
+          fzpzSource: cached.binary,
+          // Note: We might need to re-parse the XML to get the full footprint if not cached
+          // But for now let's assume we need to re-load if footprint is missing
+        };
+        
+        // If footprint is missing, re-parse the binary
+        if (!updated.footprint) {
+          const part = await FzpzLoader.load(cached.binary);
+          updated.footprint = part.component.footprint;
+        }
+
+        updateItem(updated);
+        return updated;
+      }
+
+      // Fetch from URL
+      if (!comp.fzpzUrl) return comp;
+
+      const response = await fetch(comp.fzpzUrl);
+      const buffer = await response.arrayBuffer();
+      const part = await FzpzLoader.load(buffer);
+
+      const loadedComp = {
+        ...comp,
+        fzpzSource: buffer,
+        footprint: part.component.footprint,
+        description: part.component.description || comp.description
+      };
+
+      // Save to cache
+      await partStorageService.savePart({
+        id,
+        binary: buffer,
+        breadboardSvg: part.svgs.breadboard,
+        lastUsed: Date.now()
+      });
+
+      updateItem(loadedComp);
+      return loadedComp;
+    } catch (e) {
+      console.error(`Failed to load FZPZ for ${id}`, e);
+      return comp;
+    }
+  }, [inventory]);
+
   return (
     <InventoryContext.Provider value={{ 
       inventory, 
@@ -92,7 +140,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: El
       updateItem, 
       removeItem,
       removeMany,
-      updateMany
+      updateMany,
+      loadPartData,
+      isLoading
     }}>
       {children}
     </InventoryContext.Provider>
