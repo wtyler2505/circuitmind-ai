@@ -21,7 +21,6 @@ class GestureEngine {
 
   async init(): Promise<void> {
     if (this.isInitialized) return;
-    console.log('GestureEngine: Starting worker initialization...');
 
     return new Promise((resolve, reject) => {
       try {
@@ -39,7 +38,6 @@ class GestureEngine {
           const { type, payload } = event.data;
 
           if (type === 'INIT_COMPLETE') {
-            console.log('GestureEngine: Worker initialized successfully');
             this.isInitialized = true;
             clearTimeout(timeout);
             resolve();

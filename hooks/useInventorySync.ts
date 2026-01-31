@@ -10,14 +10,11 @@ import type { ElectronicComponent, WiringDiagram } from '../types';
 import {
   validateDiagramInventoryConsistency,
   syncDiagramWithInventory,
-  logValidationResult,
 } from '../services/componentValidator';
 
 interface UseInventorySyncOptions {
   /** Enable auto-sync when inventory changes (default: true) */
   autoSync?: boolean;
-  /** Log validation results in development (default: true in dev) */
-  devLogging?: boolean;
   /** Debounce time for validation in ms (default: 300) */
   debounceMs?: number;
   /** Callback when sync occurs */
@@ -53,7 +50,6 @@ export function useInventorySync(
 ): UseInventorySyncReturn {
   const {
     autoSync = true,
-    devLogging = process.env.NODE_ENV === 'development',
     debounceMs = 300,
     onSync,
     onValidationFail,
@@ -80,16 +76,12 @@ export function useInventorySync(
 
     const result = validateDiagramInventoryConsistency(diagram, inventory);
 
-    if (devLogging) {
-      logValidationResult(result, 'Inventory-Canvas Sync');
-    }
-
     if (!result.isValid && onValidationFail) {
       onValidationFail(result.mismatches);
     }
 
     return result;
-  }, [diagram, inventory, devLogging, onValidationFail]);
+  }, [diagram, inventory, onValidationFail]);
 
   /**
    * Manually sync diagram with inventory
@@ -108,10 +100,6 @@ export function useInventorySync(
       updateDiagram(syncedDiagram);
       lastSyncTimeRef.current = Date.now();
 
-      if (devLogging) {
-        console.log(`🔄 Inventory Sync: Updated ${changeCount} component(s)`);
-      }
-
       if (onSync) {
         onSync(changeCount);
       }
@@ -119,7 +107,7 @@ export function useInventorySync(
 
     isSyncingRef.current = false;
     return changeCount;
-  }, [diagram, inventory, updateDiagram, devLogging, onSync]);
+  }, [diagram, inventory, updateDiagram, onSync]);
 
   /**
    * Debounced sync triggered by inventory changes
@@ -172,7 +160,7 @@ export function useInventorySync(
    * Validate on diagram changes
    */
   useEffect(() => {
-    if (!diagram || !devLogging) return;
+    if (!diagram || process.env.NODE_ENV !== 'development') return;
 
     // Validate when diagram loads or changes
     // We use a small timeout to let the sync effect finish if it's racing
@@ -190,7 +178,7 @@ export function useInventorySync(
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [diagram, devLogging, validateNow]);
+  }, [diagram, validateNow]);
 
   return {
     syncNow,
@@ -223,15 +211,7 @@ export function useDevValidation(
 
     debounceTimerRef.current = setTimeout(() => {
       const result = validateDiagramInventoryConsistency(diagram, inventory);
-
-      if (!result.isValid) {
-        console.group('🔴 INVENTORY-CANVAS CONSISTENCY VIOLATION');
-        console.log(`${result.mismatches.length} mismatch(es) detected`);
-        result.mismatches.forEach(m => {
-          console.log(`  • [${m.field}] ${m.diagramComponentName}: expected ${JSON.stringify(m.expected)}, got ${JSON.stringify(m.actual)}`);
-        });
-        console.groupEnd();
-      }
+      // Validation runs silently - check result in dev tools if needed
     }, debounceMs);
 
     return () => {

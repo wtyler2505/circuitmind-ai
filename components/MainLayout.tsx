@@ -244,12 +244,10 @@ const MainLayoutComponent: React.FC = () => {
           const currentIndex = tabs.indexOf(assistantTab);
           
           if (direction === 'left' && currentIndex < tabs.length - 1) {
-            console.log("Gesture: Swipe Left");
             setAssistantTab(tabs[currentIndex + 1]);
             toast.info(`Tab: ${tabs[currentIndex + 1]}`, 1000, undefined, 'swipe-tab');
             swipeCooldownRef.current = now + 800;
           } else if (direction === 'right' && currentIndex > 0) {
-            console.log("Gesture: Swipe Right");
             setAssistantTab(tabs[currentIndex - 1]);
             toast.info(`Tab: ${tabs[currentIndex - 1]}`, 1000, undefined, 'swipe-tab');
             swipeCooldownRef.current = now + 800;
@@ -294,14 +292,12 @@ const MainLayoutComponent: React.FC = () => {
     // Handle Panning Start/Move/End
     if (isPalmOpen && !isCurrentlyPinching) {
       if (!isPanningRef.current) {
-        console.log(`Gesture: Pan Start at (${Math.round(clientX)}, ${Math.round(clientY)}) on`, currentElement?.tagName);
         isPanningRef.current = true;
         dispatchSafeEvent(currentElement, 'pointerdown');
       } else {
         dispatchSafeEvent(currentElement, 'pointermove');
       }
     } else if (isPanningRef.current) {
-      console.log("Gesture: Pan End");
       isPanningRef.current = false;
       dispatchSafeEvent(currentElement, 'pointerup');
     }
@@ -309,7 +305,6 @@ const MainLayoutComponent: React.FC = () => {
     // Handle Pinch Start/Move/End
     if (isCurrentlyPinching && !isPanningRef.current) {
       if (!isPinchingRef.current) {
-        console.log(`Gesture: Pinch Start at (${Math.round(clientX)}, ${Math.round(clientY)}) on`, currentElement?.tagName);
         const startTime = performance.now();
         isPinchingRef.current = true;
         
@@ -324,7 +319,6 @@ const MainLayoutComponent: React.FC = () => {
         dispatchSafeEvent(currentElement, 'pointermove');
       }
     } else if (!isCurrentlyPinching && isPinchingRef.current) {
-      console.log("Gesture: Pinch End");
       isPinchingRef.current = false;
       dispatchSafeEvent(currentElement, 'pointerup');
     }
@@ -428,7 +422,6 @@ const MainLayoutComponent: React.FC = () => {
   // Sync Inventory <-> Diagram
   useInventorySync(inventory, diagram, updateDiagram, {
     autoSync: true,
-    devLogging: process.env.NODE_ENV === 'development',
   });
 
   // Git-based Auto-snapshot

@@ -476,29 +476,6 @@ export function removeOrphanedComponents(
 // ============================================
 
 /**
- * Log validation results to console (dev mode only)
- */
-export function logValidationResult(result: ValidationResult, label = 'Validation'): void {
-  if (result.isValid) {
-    console.log(`✅ ${label}: All ${result.totalChecked} components in sync`);
-    return;
-  }
-
-  console.group(`❌ ${label}: ${result.mismatches.length} mismatch(es) found`);
-  console.log(`Synced: ${result.syncedCount}/${result.totalChecked}`);
-  console.log(`Orphaned: ${result.orphanedCount}`);
-
-  for (const m of result.mismatches) {
-    const icon = m.severity === 'error' ? '🔴' : '🟡';
-    console.log(`${icon} [${m.field}] ${m.diagramComponentName} (${m.diagramComponentId})`);
-    console.log(`   Expected: ${JSON.stringify(m.expected)}`);
-    console.log(`   Actual:   ${JSON.stringify(m.actual)}`);
-  }
-
-  console.groupEnd();
-}
-
-/**
  * Validates a 3D model's dimensions against expected standards.
  * Returns a score from 0-1 and any specific deviations.
  */

@@ -47,7 +47,6 @@ class GitService {
       }
 
       this.initialized = true;
-      console.log('Git repo initialized in IndexedDB');
     } catch (e) {
       console.error('Failed to init git repo', e);
     }

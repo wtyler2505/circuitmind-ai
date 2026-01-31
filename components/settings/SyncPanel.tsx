@@ -45,7 +45,6 @@ export const SyncPanel: React.FC = () => {
       const data = await syncService.pullFromPeer(peer);
       alert(`Pulled from ${peer.name}. Reloading state...`);
       // In a real app, we'd update context/state here
-      console.log('Pulled data:', data);
     } catch (e) {
       alert(`Pull failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
     } finally {

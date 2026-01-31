@@ -43,10 +43,9 @@ class WebRTCService {
   private setupDataChannel() {
     if (!this.dataChannel) return;
 
-    this.dataChannel.onopen = () => console.log('Data channel open');
-    this.dataChannel.onclose = () => console.log('Data channel closed');
+    this.dataChannel.onopen = () => {};
+    this.dataChannel.onclose = () => {};
     this.dataChannel.onmessage = (event) => {
-      console.log('Received message:', event.data);
       // Handle Git packfile or JSON data
     };
   }

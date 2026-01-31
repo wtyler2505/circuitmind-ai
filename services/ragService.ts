@@ -31,8 +31,6 @@ export const ragService = {
   },
 
   async bootstrapKnowledge() {
-    console.log("Bootstrapping Knowledge Base...");
-    
     // Chunk strategy: Split by double newline (paragraphs) or headers
     for (const doc of DOCS_BUNDLE) {
        // Simple chunking

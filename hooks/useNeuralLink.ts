@@ -30,13 +30,11 @@ export function useNeuralLink() {
   const startTracking = useCallback(async () => {
     if (isActiveRef.current || isInitializingRef.current) return;
     
-    console.log('Neural Link: Initializing engine...');
     setIsInitializing(true);
     isInitializingRef.current = true;
     try {
       setError(null);
       await gestureEngine.init();
-      console.log('Neural Link: Engine initialized. Requesting camera...');
 
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera API not supported in this browser/context');
@@ -51,8 +49,6 @@ export function useNeuralLink() {
         audio: false
       });
 
-      console.log('Neural Link: Camera stream obtained.');
-
       if (!videoRef.current) {
         videoRef.current = document.createElement('video');
         videoRef.current.setAttribute('playsinline', '');
@@ -65,7 +61,6 @@ export function useNeuralLink() {
       });
 
       await videoRef.current.play();
-      console.log('Neural Link: Video playing. Starting tracking loop...');
 
       setIsActive(true);
       isActiveRef.current = true;

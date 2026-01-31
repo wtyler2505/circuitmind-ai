@@ -42,7 +42,6 @@ class DiagnosticsHub {
     };
 
     this.initialized = true;
-    console.log('Diagnostics Hub initialized');
   }
 
   reportError(error: Omit<CaughtError, 'id' | 'timestamp'>) {

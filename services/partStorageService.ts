@@ -54,7 +54,7 @@ export const partStorageService = {
     });
   },
 
-  private openDB(): Promise<IDBDatabase> {
+  openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME);
       request.onsuccess = () => resolve(request.result);

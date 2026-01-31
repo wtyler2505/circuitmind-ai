@@ -214,8 +214,6 @@ export const performDeepSpecSearch = async (name: string, type: string): Promise
                         name.toLowerCase().includes('shield') ||
                         name.toLowerCase().includes('hat');
 
-  console.log(`[Deep Spec Search] Analyzing ${name} (${type}) - Mode: ${isLikelyBoard ? 'BOARD' : 'COMPONENT'}`);
-
   const prompt = isLikelyBoard 
     ? `
       Search for the mechanical specifications of the electronic board/module "${name}".
@@ -266,7 +264,6 @@ export const performDeepSpecSearch = async (name: string, type: string): Promise
     if (response.text) {
         const cleaned = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
         const data = JSON.parse(cleaned);
-        console.log(`[Deep Spec Search] Success:`, data);
         return data;
     }
   } catch (e) {
@@ -295,7 +292,6 @@ export const generateComponent3DCode = async (
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
-        console.log(`[Cache Hit] 3D Code for ${componentName}`);
         return cached;
       }
     } catch (e) {
@@ -309,7 +305,6 @@ export const generateComponent3DCode = async (
   let deepSpec: any = null;
 
   if (!standard && !board) {
-    console.log(`[Spec Extraction] Hunting dimensions for ${componentName}...`);
     deepSpec = await performDeepSpecSearch(componentName, componentType);
     
     // If deep search found a component package that matches a standard, snap to it?
@@ -364,7 +359,6 @@ export const generateComponent3DCode = async (
   let visualAnalysis = "";
   if (imageUrl && !board) { // Only needed if we don't have a hard-coded board map
       try {
-          console.log(`[Visual Analysis] Looking at ${componentName}...`);
           // Fetch the image to get base64/blob for Gemini
           // Note: In a real app, might need a proxy or CORS handling. 
           // Assuming imageUrl is accessible or a data URI.
@@ -413,7 +407,6 @@ export const generateComponent3DCode = async (
     let code = response.text || "";
     
     // 2.5. Self-Correction Pass (Review & Refine)
-    console.log(`[Self-Correction] Reviewing 3D architecture for ${componentName}...`);
     const correctionPrompt = `
         Review the following 3D model code for an electronic component.
         CHECK FOR:

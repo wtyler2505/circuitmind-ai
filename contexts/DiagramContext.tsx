@@ -52,7 +52,6 @@ export const DiagramProvider: React.FC<{ children: ReactNode }> = ({ children })
     const { diagram: migrated, repairedCount } = migrateLegacyDiagram(history.present, inventory);
     
     if (repairedCount > 0) {
-      console.log(`🔧 Diagram Migration: Repaired ${repairedCount} legacy components.`);
       setHistory(prev => ({
         ...prev,
         present: migrated

@@ -24,8 +24,6 @@ class CollabService {
       const diagram = this.sharedDiagram?.toJSON() as WiringDiagram;
       if (diagram) onUpdate(diagram);
     });
-
-    console.log(`Joined collaboration room: ${roomId}`);
   }
 
   /**

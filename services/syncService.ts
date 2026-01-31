@@ -24,7 +24,6 @@ class SyncService {
       await gitService.writeFile('inventory.json', JSON.stringify(data.inventory, null, 2));
       
       const sha = await gitService.commit(`Auto-snapshot: ${new Date().toISOString()}`);
-      console.log(`State snapshotted: ${sha}`);
       return sha;
     } catch (e) {
       console.error('Snapshot failed', e);
@@ -39,7 +38,6 @@ class SyncService {
     const url = `http://${peer.lastIp}:3000/git`; // Assuming a local bridge
     try {
       await gitService.push(url);
-      console.log(`Pushed to peer: ${peer.name}`);
     } catch (e) {
       console.error(`Failed to push to ${peer.name}`, e);
       throw e;
@@ -53,7 +51,6 @@ class SyncService {
     const url = `http://${peer.lastIp}:3000/git`;
     try {
       await gitService.pull(url);
-      console.log(`Pulled from peer: ${peer.name}`);
       
       // After pull, we might need to refresh the UI
       const diagramJson = await gitService.readFile('diagram.json');
