@@ -1,95 +1,23 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo } from 'react';
 import { WireConnection, ElectronicComponent } from '../../types';
-import { useSimulation } from '../../contexts/SimulationContext';
-
-const COMPONENT_WIDTH = 140;
-const COMPONENT_HEIGHT = 100;
-
-export interface WireHighlightState {
-  color: string;
-  pulse: boolean;
-}
+import { BezierWire } from './wiring/BezierWire';
 
 interface WireProps {
   connection: WireConnection;
   index: number;
-  startComponent: ElectronicComponent | undefined;
-  endComponent: ElectronicComponent | undefined;
-  startPos: { x: number; y: number } | undefined;
-  endPos: { x: number; y: number } | undefined;
-  highlight?: WireHighlightState;
-  onEditClick: (index: number) => void;
+  startComponent?: ElectronicComponent;
+  endComponent?: ElectronicComponent;
+  startPos?: { x: number; y: number };
+  endPos?: { x: number; y: number };
+  highlight?: { color: string; pulse: boolean };
+  onEditClick?: (index: number) => void;
   onDelete?: (index: number) => void;
 }
 
-/**
- * Calculate smart Bezier path between two points.
- * Uses cubic bezier for smooth curves, falls back to Manhattan routing
- * when components are too close horizontally.
- */
-const getSmartPath = (x1: number, y1: number, x2: number, y2: number): string => {
-  const isReversed = x1 > x2;
-  const controlDist = Math.abs(x2 - x1) * 0.5;
+const COMPONENT_WIDTH = 120;
+const COMPONENT_HEIGHT = 80;
 
-  // Manhattan/zig-zag route for close horizontal components
-  if (isReversed && Math.abs(x1 - x2) < 100) {
-    const midY = (y1 + y2) / 2;
-    return `M ${x1} ${y1} L ${x1 + 20} ${y1} L ${x1 + 20} ${midY} L ${x2 - 20} ${midY} L ${x2 - 20} ${y2} L ${x2} ${y2}`;
-  }
-
-  // Smooth cubic bezier curve
-  const cp1x = x1 + (isReversed ? -controlDist : controlDist);
-  const cp2x = x2 + (isReversed ? controlDist : -controlDist);
-
-  return `M ${x1} ${y1} C ${cp1x} ${y1}, ${cp2x} ${y2}, ${x2} ${y2}`;
-};
-
-/**
- * Calculate wire endpoint coordinates based on pin positions.
- */
-const calculateWireEndpoints = (
-  connection: WireConnection,
-  startComponent: ElectronicComponent | undefined,
-  endComponent: ElectronicComponent | undefined,
-  startPos: { x: number; y: number },
-  endPos: { x: number; y: number }
-) => {
-  let startX = startPos.x;
-  let startY = startPos.y;
-  const startPinIdx = (startComponent?.pins || []).indexOf(connection.fromPin);
-
-  if (startPinIdx !== -1) {
-    const isLeft = endPos.x < startPos.x;
-    startX += isLeft ? 0 : COMPONENT_WIDTH;
-    startY += 40 + startPinIdx * 15;
-  } else {
-    // Fallback: bottom-center for missing pins
-    startX += COMPONENT_WIDTH / 2;
-    startY += COMPONENT_HEIGHT + 10;
-  }
-
-  let endX = endPos.x;
-  let endY = endPos.y;
-  const endPinIdx = (endComponent?.pins || []).indexOf(connection.toPin);
-
-  if (endPinIdx !== -1) {
-    const isLeft = endPos.x < startPos.x;
-    endX += isLeft ? COMPONENT_WIDTH : 0;
-    endY += 40 + endPinIdx * 15;
-  } else {
-    // Fallback: bottom-center for missing pins
-    endX += COMPONENT_WIDTH / 2;
-    endY += COMPONENT_HEIGHT + 10;
-  }
-
-  return { startX, startY, endX, endY };
-};
-
-/**
- * Wire component for rendering connections between diagram nodes.
- * Memoized to prevent unnecessary re-renders.
- */
-const Wire = memo<WireProps>(function Wire({
+export const Wire: React.FC<WireProps> = memo(({
   connection,
   index,
   startComponent,
@@ -98,136 +26,72 @@ const Wire = memo<WireProps>(function Wire({
   endPos,
   highlight,
   onEditClick,
-  onDelete,
-}) {
-  const { result: simResult } = useSimulation();
+  onDelete
+}) => {
+  if (!startComponent || !endComponent || !startPos || !endPos) return null;
 
-  const { startX, startY, endX, endY } = useMemo(
-    () => {
-      if (!startPos || !endPos) return { startX: 0, startY: 0, endX: 0, endY: 0 };
-      return calculateWireEndpoints(connection, startComponent, endComponent, startPos, endPos);
-    },
-    [connection, startComponent, endComponent, startPos, endPos]
-  );
+  // Calculate start point
+  const startPinIdx = (startComponent.pins || []).indexOf(connection.fromPin);
+  let x1 = startPos.x;
+  let y1 = startPos.y;
+  
+  if (startPinIdx !== -1) {
+    x1 += endPos.x < startPos.x ? 0 : COMPONENT_WIDTH;
+    y1 += 40 + startPinIdx * 15;
+  } else {
+    x1 += COMPONENT_WIDTH / 2;
+    y1 += COMPONENT_HEIGHT / 2;
+  }
 
-  const isActive = useMemo(() => {
-    if (!simResult) return false;
-    const p1 = `${connection.fromComponentId}:${connection.fromPin}`;
-    const p2 = `${connection.toComponentId}:${connection.toPin}`;
-    return simResult.pinStates[p1]?.logicState === 'HIGH' || simResult.pinStates[p2]?.logicState === 'HIGH';
-  }, [simResult, connection]);
-
-  const hasError = useMemo(() => {
-    if (!simResult) return false;
-    const p1 = `${connection.fromComponentId}:${connection.fromPin}`;
-    const p2 = `${connection.toComponentId}:${connection.toPin}`;
-    return simResult.pinStates[p1]?.logicState === 'ERROR' || simResult.pinStates[p2]?.logicState === 'ERROR';
-  }, [simResult, connection]);
-
-  const pathD = useMemo(
-    () => getSmartPath(startX, startY, endX, endY),
-    [startX, startY, endX, endY]
-  );
-
-  // Skip rendering if positions are missing
-  if (!startPos || !endPos) return null;
-
-  const isHighlighted = !!highlight;
-  const color = isHighlighted ? highlight.color : connection.color || '#00f3ff';
-  const midX = (startX + endX) / 2;
-  const midY = (startY + endY) / 2;
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEditClick(index);
-  };
+  // Calculate end point
+  const endPinIdx = (endComponent.pins || []).indexOf(connection.toPin);
+  let x2 = endPos.x;
+  let y2 = endPos.y;
+  
+  if (endPinIdx !== -1) {
+    x2 += endPos.x < startPos.x ? COMPONENT_WIDTH : 0;
+    y2 += 40 + endPinIdx * 15;
+  } else {
+    x2 += COMPONENT_WIDTH / 2;
+    y2 += COMPONENT_HEIGHT / 2;
+  }
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
+    onDelete?.(index);
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onDelete) {
-      onDelete(index);
-    }
+    onEditClick?.(index);
   };
 
   return (
-    <g className="pointer-events-auto group" onClick={handleClick} onContextMenu={handleContextMenu}>
-      {/* Invisible wider path for easier click targeting */}
-      <path d={pathD} stroke="transparent" strokeWidth="20" fill="none" />
-
-      {/* Glow effect for highlighted wires */}
-      {isHighlighted && (
-        <path
-          d={pathD}
-          stroke={highlight.color}
-          strokeWidth="8"
-          fill="none"
-          opacity="0.3"
-          className={highlight.pulse ? 'animate-pulse' : ''}
-        />
-      )}
-
-      {/* Main wire path */}
-      <path
-        d={pathD}
-        stroke={hasError ? '#ef4444' : color}
-        strokeWidth={isHighlighted ? 4 : 2}
-        fill="none"
-        className={`transition-all duration-300 drop-shadow-[0_0_2px_rgba(0,0,0,0.8)] group-hover:stroke-white ${isHighlighted && highlight.pulse ? 'animate-pulse' : ''} ${isActive ? 'wire-active' : ''} ${hasError ? 'wire-error' : ''}`}
-        markerEnd={`url(#arrow-${(hasError ? '#ef4444' : (connection.color || '#00f3ff')).replace('#', '')})`}
+    <g 
+      onContextMenu={handleContextMenu}
+      onDoubleClick={handleDoubleClick}
+      className="cursor-pointer hover:opacity-80 transition-opacity"
+    >
+      <BezierWire 
+        start={{ x: x1, y: y1 }}
+        end={{ x: x2, y: y2 }}
+        points={connection.path}
+        color={highlight?.color || connection.color}
+        selected={!!highlight}
       />
-
-      {/* Flow animation overlay */}
-      {isActive && !hasError && (
-        <path
-          d={pathD}
-          stroke="white"
-          strokeWidth="1"
-          fill="none"
-          strokeDasharray="4,8"
-          className="wire-flow-ants"
-          opacity="0.6"
-        />
-      )}
-
-      {/* Wire label (shown on hover) */}
-      <text
-        x={midX}
-        y={midY - 5}
-        textAnchor="middle"
-        fill={color}
-        fontSize="10"
-        className="opacity-0 group-hover:opacity-100 bg-black"
-      >
-        {connection.description}
-      </text>
-
-      {/* Delete button (shown on hover) */}
-      {onDelete && (
-        <g
-          className="opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(index);
-          }}
-        >
-          <circle
-            cx={midX + 15}
-            cy={midY - 5}
-            r="8"
-            fill="#1e293b"
-            stroke="#ef4444"
-            strokeWidth="1.5"
-          />
+      
+      {connection.description && (
+        <g transform={`translate(${(x1 + x2) / 2}, ${(y1 + y2) / 2})`}>
+          <rect x="-40" y="-10" width="80" height="20" rx="4" fill="#0f172a" stroke="#334155" />
           <text
-            x={midX + 15}
-            y={midY - 1}
+            x="0"
+            y="4"
             textAnchor="middle"
-            fill="#ef4444"
-            fontSize="12"
-            fontWeight="bold"
+            fill="#e2e8f0"
+            fontSize="10"
+            fontFamily="monospace"
           >
-            ×
+            {connection.description}
           </text>
         </g>
       )}
@@ -235,7 +99,4 @@ const Wire = memo<WireProps>(function Wire({
   );
 });
 
-export default Wire;
-
-// Re-export utility for use elsewhere
-export { getSmartPath, calculateWireEndpoints, COMPONENT_WIDTH, COMPONENT_HEIGHT };
+Wire.displayName = 'Wire';
