@@ -11,10 +11,9 @@ import React, {
 import { WiringDiagram, ElectronicComponent, WireConnection } from '../types';
 import { Wire, DiagramNode, COMPONENT_WIDTH, COMPONENT_HEIGHT, SVG_GRADIENTS, SVG_FILTERS, Diagram3DView } from './diagram';
 import { PredictiveGhost } from './diagram/PredictiveGhost';
-import type { WireHighlightState, NodeHighlightState } from './diagram';
-import { diagramReducer, INITIAL_STATE, DiagramState, Point } from './diagram/diagramState';
+import { diagramReducer, INITIAL_STATE } from './diagram/diagramState';
 import { useHUD } from '../contexts/HUDContext';
-import { useAssistantState } from '../contexts/AssistantStateContext';
+import { useSelection } from '../contexts/SelectionContext';
 import { useUser } from '../contexts/UserContext';
 
 type ViewMode = '2d' | '3d';
@@ -75,6 +74,7 @@ export interface DiagramCanvasRef {
   
   // Visuals
   getSnapshotBlob: () => Promise<Blob | null>;
+  getContainerRect: () => DOMRect | null;
 }
 
 // Helper to resolve wire color based on user preferences
@@ -114,6 +114,7 @@ const DiagramCanvasRenderer = ({
     const { user } = useUser();
     const containerRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement>(null);
+    const view3DRef = useRef<{ getSnapshotBlob: () => Promise<Blob | null> }>(null);
 
     // Reducer for interaction state
     const [state, dispatch] = useReducer(diagramReducer, INITIAL_STATE);
@@ -128,14 +129,12 @@ const DiagramCanvasRenderer = ({
 
     // HUD Integration
     const { addFragment, removeFragment } = useHUD();
-    const { setActiveSelectionPath, recentHistory } = useAssistantState();
+    const { setActiveSelectionPath } = useSelection();
     const activeFragments = useRef<Map<string, string>>(new Map());
 
     const handleComponentEnter = useCallback((e: React.MouseEvent, component: ElectronicComponent) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
-
-      setActiveSelectionPath(component.id);
 
       const id = addFragment({
         targetId: component.id,
@@ -154,7 +153,7 @@ const DiagramCanvasRenderer = ({
         removeFragment(id);
         activeFragments.current.delete(component.id);
       }
-    }, [removeFragment]);
+    }, [removeFragment, setActiveSelectionPath]);
 
     const handlePinEnter = useCallback((e: React.MouseEvent, componentId: string, pin: string) => {
       const rect = containerRef.current?.getBoundingClientRect();
@@ -170,7 +169,7 @@ const DiagramCanvasRenderer = ({
         priority: 2
       });
       activeFragments.current.set(`${componentId}-${pin}`, id);
-    }, [addFragment]);
+    }, [addFragment, setActiveSelectionPath]);
 
     const handlePinLeave = useCallback((e: React.MouseEvent, componentId: string, pin: string) => {
       setActiveSelectionPath(undefined);
@@ -179,14 +178,14 @@ const DiagramCanvasRenderer = ({
         removeFragment(id);
         activeFragments.current.delete(`${componentId}-${pin}`);
       }
-    }, [removeFragment]);
+    }, [removeFragment, setActiveSelectionPath]);
 
     // Export feedback states
     const [svgExportStatus, setSvgExportStatus] = useState<'idle' | 'exporting' | 'done' | 'error'>('idle');
     const [pngExportStatus, setPngExportStatus] = useState<'idle' | 'exporting' | 'done' | 'error'>('idle');
 
     // Grid settings
-    const GRID_SIZE = 20;
+    const GRID_SIZE = 10; // 0.1 inch at 100px/inch base scale
     const VIRTUALIZATION_THRESHOLD = 100;
     const VIEWPORT_PADDING = 240;
 
@@ -198,10 +197,12 @@ const DiagramCanvasRenderer = ({
       new Map()
     );
 
+    const containerRectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
+
     // Helper to calculate cursor position in diagram coordinates
     const getDiagramPos = useCallback((clientX: number, clientY: number) => {
-      if (!containerRef.current) return { x: 0, y: 0 };
-      const rect = containerRef.current.getBoundingClientRect();
+      const rect = containerRectRef.current;
+      if (!rect) return { x: 0, y: 0 };
       return {
         x: (clientX - rect.left - state.pan.x) / state.zoom,
         y: (clientY - rect.top - state.pan.y) / state.zoom,
@@ -211,14 +212,37 @@ const DiagramCanvasRenderer = ({
     useEffect(() => {
       if (!containerRef.current) return;
       const node = containerRef.current;
+      
+      let resizeTimer: ReturnType<typeof setTimeout>;
       const updateViewport = () => {
-        setViewportSize({ width: node.clientWidth, height: node.clientHeight });
+        const rect = node.getBoundingClientRect();
+        
+        // Only update if size actually changed beyond a tiny threshold to prevent ResizeObserver loops
+        setViewportSize((prev) => {
+          if (containerRectRef.current && Math.abs(prev.width - rect.width) < 1 && Math.abs(prev.height - rect.height) < 1) {
+            return prev;
+          }
+          containerRectRef.current = rect;
+          return { width: rect.width, height: rect.height };
+        });
       };
+
       updateViewport();
+      
       if (typeof ResizeObserver === 'undefined') return;
-      const observer = new ResizeObserver(() => updateViewport());
+      
+      const observer = new ResizeObserver(() => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          window.requestAnimationFrame(updateViewport);
+        }, 16);
+      });
+      
       observer.observe(node);
-      return () => observer.disconnect();
+      return () => {
+        observer.disconnect();
+        clearTimeout(resizeTimer);
+      };
     }, []);
 
     // Expose imperative API
@@ -329,6 +353,11 @@ const DiagramCanvasRenderer = ({
         getAllComponentPositions: () => new Map(state.nodePositions),
         
         getSnapshotBlob: async () => {
+          // If in 3D mode, delegate to the 3D viewer
+          if (viewMode === '3d' && view3DRef.current) {
+            return view3DRef.current.getSnapshotBlob();
+          }
+
           if (!svgRef.current || !diagram) return null;
           const svg = svgRef.current;
           const bbox = svg.getBBox();
@@ -370,8 +399,9 @@ const DiagramCanvasRenderer = ({
             img.src = url;
           });
         },
+        getContainerRect: () => containerRef.current?.getBoundingClientRect() || null,
       }),
-      [state.zoom, state.pan, state.nodePositions, highlightedComponents, highlightedWires, diagram]
+      [state.zoom, state.pan, state.nodePositions, highlightedComponents, highlightedWires, diagram, viewMode]
     );
 
     // Initial Layout Calculation
@@ -423,27 +453,40 @@ const DiagramCanvasRenderer = ({
     }, []);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Only handle if not in an input
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
     // Canvas Movement
     if (!selectedComponentId) {
-      if (e.key === 'ArrowUp') setPan(p => ({ ...p, y: p.y - 20 }));
-      if (e.key === 'ArrowDown') setPan(p => ({ ...p, y: p.y + 20 }));
-      if (e.key === 'ArrowLeft') setPan(p => ({ ...p, x: p.x - 20 }));
-      if (e.key === 'ArrowRight') setPan(p => ({ ...p, x: p.x + 20 }));
-    } else {
-      // Component Movement (if editable)
+      const step = 20;
+      if (e.key === 'ArrowUp') dispatch({ type: 'SET_PAN', payload: { x: state.pan.x, y: state.pan.y - step } });
+      if (e.key === 'ArrowDown') dispatch({ type: 'SET_PAN', payload: { x: state.pan.x, y: state.pan.y + step } });
+      if (e.key === 'ArrowLeft') dispatch({ type: 'SET_PAN', payload: { x: state.pan.x - step, y: state.pan.y } });
+      if (e.key === 'ArrowRight') dispatch({ type: 'SET_PAN', payload: { x: state.pan.x + step, y: state.pan.y } });
+    } else if (diagram) {
+      // Component Movement
       const step = e.shiftKey ? 10 : 1;
-      const diagramCopy = JSON.parse(JSON.stringify(diagram));
-      const comp = diagramCopy.components.find((c: any) => c.id === selectedComponentId);
+      const comp = diagram.components.find((c) => c.id === selectedComponentId);
       
       if (comp && onDiagramUpdate) {
-        if (e.key === 'ArrowUp') comp.position.y -= step;
-        if (e.key === 'ArrowDown') comp.position.y += step;
-        if (e.key === 'ArrowLeft') comp.position.x -= step;
-        if (e.key === 'ArrowRight') comp.position.x += step;
-        onDiagramUpdate(diagramCopy);
+        const newComponents = diagram.components.map(c => {
+          if (c.id === selectedComponentId) {
+            const pos = state.nodePositions.get(c.id) || { x: 0, y: 0 };
+            let nx = pos.x;
+            let ny = pos.y;
+            if (e.key === 'ArrowUp') ny -= step;
+            if (e.key === 'ArrowDown') ny += step;
+            if (e.key === 'ArrowLeft') nx -= step;
+            if (e.key === 'ArrowRight') nx += step;
+            return { ...c, position: { x: nx, y: ny } };
+          }
+          return c;
+        });
+        
+        onDiagramUpdate({ ...diagram, components: newComponents });
       }
     }
-  }, [selectedComponentId, diagram, onDiagramUpdate]);
+  }, [selectedComponentId, diagram, onDiagramUpdate, state.pan, state.nodePositions]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -452,7 +495,11 @@ const DiagramCanvasRenderer = ({
 
     const handlePointerDown = useCallback((e: React.PointerEvent, nodeId?: string) => {
       e.stopPropagation();
-      (e.target as Element).setPointerCapture(e.pointerId);
+      try {
+        (e.target as Element).setPointerCapture(e.pointerId);
+      } catch (_err) {
+        // Ignore errors from synthetic events (Neural Link)
+      }
       const pointerPos = { x: e.clientX, y: e.clientY };
 
       if (nodeId) {
@@ -462,18 +509,35 @@ const DiagramCanvasRenderer = ({
       }
     }, []);
 
+    const rafId = useRef<number | null>(null);
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
-      e.preventDefault();
-      const pointerPos = { x: e.clientX, y: e.clientY };
-      const diagramPos = getDiagramPos(e.clientX, e.clientY);
-      dispatch({ 
-        type: 'POINTER_MOVE', 
-        payload: { pointerPos, diagramPos, snapToGrid, gridSize: GRID_SIZE } 
+      // Capture coordinates before the event potentially gets recycled
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+
+      if (rafId.current) return;
+
+      rafId.current = window.requestAnimationFrame(() => {
+        const pointerPos = { x: clientX, y: clientY };
+        const diagramPos = getDiagramPos(clientX, clientY);
+        dispatch({ 
+          type: 'POINTER_MOVE', 
+          payload: { pointerPos, diagramPos, snapToGrid, gridSize: GRID_SIZE } 
+        });
+        rafId.current = null;
       });
     }, [getDiagramPos, snapToGrid, GRID_SIZE]);
 
     const handlePointerUp = useCallback((e: React.PointerEvent) => {
-      (e.target as Element).releasePointerCapture(e.pointerId);
+      if (rafId.current) {
+        window.cancelAnimationFrame(rafId.current);
+        rafId.current = null;
+      }
+      try {
+        (e.target as Element).releasePointerCapture(e.pointerId);
+      } catch (_err) {
+        // Ignore errors from synthetic events
+      }
       const wasDragging = state.interactionMode === 'dragging_node';
       const wasPanning = state.interactionMode === 'panning';
       if (!wasDragging && !wasPanning && onBackgroundClick) {
@@ -499,10 +563,10 @@ const DiagramCanvasRenderer = ({
       e.preventDefault();
       dispatch({ type: 'SET_DRAG_OVER', payload: false });
       const componentData = e.dataTransfer.getData('application/json');
-      if (componentData && containerRef.current && onComponentDrop) {
+      if (componentData && containerRectRef.current && onComponentDrop) {
         try {
           const component = JSON.parse(componentData) as ElectronicComponent;
-          const rect = containerRef.current.getBoundingClientRect();
+          const rect = containerRectRef.current;
           let x = (e.clientX - rect.left - state.pan.x) / state.zoom;
           let y = (e.clientY - rect.top - state.pan.y) / state.zoom;
           x -= COMPONENT_WIDTH / 2;
@@ -513,8 +577,8 @@ const DiagramCanvasRenderer = ({
             y = Math.round(y / GRID_SIZE) * GRID_SIZE;
           }
           onComponentDrop(component, x, y);
-        } catch (err) {
-          console.error('Drop failed', err);
+        } catch (_err) {
+          console.error('Drop failed', _err);
         }
       }
     }, [state.pan, state.zoom, snapToGrid, GRID_SIZE, onComponentDrop]);
@@ -787,8 +851,8 @@ const DiagramCanvasRenderer = ({
         URL.revokeObjectURL(url);
         setSvgExportStatus('done');
         setTimeout(() => setSvgExportStatus('idle'), 1500);
-      } catch (e) {
-        console.error('SVG export failed:', e);
+      } catch (_e) {
+        console.error('SVG export failed:', _e);
         setSvgExportStatus('error');
         setTimeout(() => setSvgExportStatus('idle'), 1500);
       }
@@ -852,8 +916,8 @@ const DiagramCanvasRenderer = ({
             }, 'image/png');
           };
           img.src = url;
-        } catch (e) {
-          console.error('PNG export failed:', e);
+        } catch (_e) {
+          console.error('PNG export failed:', _e);
           setPngExportStatus('error');
           setTimeout(() => setPngExportStatus('idle'), 1500);
         }
@@ -1088,6 +1152,7 @@ const DiagramCanvasRenderer = ({
         {viewMode === '3d' ? (
           <div className="w-full h-full">
             <Diagram3DView
+              ref={view3DRef}
               diagram={diagram}
               positions={state.nodePositions}
               onComponentClick={(component) => onComponentSelect?.(component.id)}
@@ -1098,8 +1163,8 @@ const DiagramCanvasRenderer = ({
           <svg ref={svgRef} className="w-full h-full pointer-events-none">
             <g transform={`translate(${state.pan.x}, ${state.pan.y}) scale(${state.zoom})`}>
               <defs>
-                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke={snapToGrid ? '#334155' : '#1e293b'} strokeWidth={snapToGrid ? 0.8 : 0.5} />
+                <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke={snapToGrid ? '#334155' : '#1e293b'} strokeWidth={snapToGrid ? 0.5 : 0.3} />
                 </pattern>
                 <pattern id="grid-major" width="100" height="100" patternUnits="userSpaceOnUse">
                   <path d="M 100 0 L 0 0 0 100" fill="none" stroke={snapToGrid ? '#475569' : 'transparent'} strokeWidth="1" />
@@ -1273,12 +1338,12 @@ const DiagramCanvasRenderer = ({
                   const color = comp.type === 'microcontroller' ? '#00979D' : comp.type === 'sensor' ? '#6D28D9' : comp.type === 'actuator' ? '#E62C2E' : comp.type === 'power' ? '#22C55E' : '#475569';
                   return <rect key={comp.id} x={pos.x} y={pos.y} width={COMPONENT_WIDTH} height={COMPONENT_HEIGHT} fill={color} opacity="0.8" />;
                 })}
-                {containerRef.current && (
+                {containerRectRef.current && (
                   <rect
                     x={-state.pan.x / state.zoom}
                     y={-state.pan.y / state.zoom}
-                    width={containerRef.current.clientWidth / state.zoom}
-                    height={containerRef.current.clientHeight / state.zoom}
+                    width={containerRectRef.current.width / state.zoom}
+                    height={containerRectRef.current.height / state.zoom}
                     fill="none"
                     stroke="#00F3FF"
                     strokeWidth={Math.max(2, 4 / state.zoom)}
