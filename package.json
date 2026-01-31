@@ -16,8 +16,10 @@
     "test:visual": "playwright test scripts/capture-screenshots.ts"
   },
   "dependencies": {
+    "@google/gemini-cli": "^0.26.0",
     "@google/genai": "^1.34.0",
     "@isomorphic-git/lightning-fs": "^4.6.2",
+    "@mediapipe/tasks-vision": "^0.10.32",
     "@types/js-yaml": "^4.0.9",
     "@types/react-grid-layout": "^1.3.6",
     "axe-core": "^4.11.1",
@@ -30,6 +32,7 @@
     "isomorphic-git": "^1.36.2",
     "js-yaml": "^4.1.1",
     "jspdf": "^4.0.0",
+    "jszip": "^3.10.1",
     "minisearch": "^7.2.0",
     "papaparse": "^5.5.3",
     "qrcode.react": "^4.2.0",
@@ -42,6 +45,8 @@
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "three": "^0.182.0",
+    "virtua": "^0.48.3",
+    "xml-js": "^1.6.11",
     "y-webrtc": "^10.3.0",
     "yjs": "^13.6.29"
   },
