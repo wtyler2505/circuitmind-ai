@@ -1,6 +1,7 @@
 import './threeWorkerPolyfill';
 import * as THREE from 'three';
 import { Primitives as BasePrimitives, Materials as BaseMaterials } from './threePrimitives';
+import { validateThreeCode } from './threeCodeValidator';
 
 // Safety Proxy for Materials: Return IC_BODY if a hallucinated material is requested
 const Materials = new Proxy(BaseMaterials, {
@@ -42,13 +43,23 @@ self.onmessage = async (e: MessageEvent) => {
   }
 
   try {
-    // 1. Create Function
+    // SECURITY: Validate code before execution
+    const validation = validateThreeCode(code);
+    if (!validation.valid) {
+      self.postMessage({ 
+        success: false, 
+        error: `Code validation failed: ${validation.errors.join(', ')}` 
+      });
+      return;
+    }
+
+    // 1. Create Function (now validated)
     const createMesh = new Function('THREE', 'Primitives', 'Materials', code);
 
     // 2. Execute
     const componentGroup = createMesh(THREE, Primitives, Materials);
 
-    // 3. Validate
+    // 3. Validate result
     if (!componentGroup || !(componentGroup instanceof THREE.Object3D)) {
       throw new Error('Code did not return a valid THREE.Object3D.');
     }
