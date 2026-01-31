@@ -9,6 +9,7 @@ export interface ElectronicComponent {
   lowStock?: boolean; // New field for bulk actions
   datasheetUrl?: string; // New field for documentation
   imageUrl?: string;
+  fzpzUrl?: string; // URL to the .fzpz asset
   threeCode?: string; // Generated javascript code for Three.js mesh
   threeDModelUrl?: string; // URL to a GLB/GLTF model
   precisionLevel?: 'draft' | 'masterpiece'; // 3D generation fidelity

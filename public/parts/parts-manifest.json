@@ -1,0 +1,78 @@
+[
+  {
+    "id": "Arduino_Uno_R3_a88cc83c",
+    "name": "Arduino Uno R3",
+    "type": "microcontroller",
+    "description": "MCU",
+    "fzpzUrl": "/parts/Arduino_Uno_R3.fzpz",
+    "pins": [
+      "NC",
+      "IOREF",
+      "RESET",
+      "3.3V",
+      "5V",
+      "GND",
+      "GND",
+      "VIN",
+      "A0",
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A5",
+      "D0",
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D5",
+      "D6",
+      "D7",
+      "D8",
+      "D9",
+      "D10",
+      "D11",
+      "D12",
+      "D13",
+      "GND",
+      "AREF",
+      "SDA",
+      "SCL"
+    ]
+  },
+  {
+    "id": "DHT11_28081550",
+    "name": "DHT11",
+    "type": "sensor",
+    "description": "S",
+    "fzpzUrl": "/parts/DHT11.fzpz",
+    "pins": [
+      "VCC",
+      "DATA",
+      "NC",
+      "GND"
+    ]
+  },
+  {
+    "id": "LED_5mm_Red_f7efb7de",
+    "name": "LED 5mm Red",
+    "type": "actuator",
+    "description": "LED",
+    "fzpzUrl": "/parts/LED_5mm_Red.fzpz",
+    "pins": [
+      "anode",
+      "cathode"
+    ]
+  },
+  {
+    "id": "Resistor_220_Ohm_81020ded",
+    "name": "Resistor 220 Ohm",
+    "type": "other",
+    "description": "R",
+    "fzpzUrl": "/parts/Resistor_220_Ohm.fzpz",
+    "pins": [
+      "pin1",
+      "pin2"
+    ]
+  }
+]
