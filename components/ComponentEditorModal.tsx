@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense, memo } from 'react';
 import { ElectronicComponent } from '../types';
 import { useToast } from '../hooks/useToast';
 
@@ -70,7 +70,7 @@ const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promis
   });
 };
 
-const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
+const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
   component,
   onClose,
   onSave,
@@ -1311,5 +1311,7 @@ const ComponentEditorModal: React.FC<ComponentEditorModalProps> = ({
     </div>
   );
 };
+
+const ComponentEditorModal = memo(ComponentEditorModalComponent);
 
 export default ComponentEditorModal;

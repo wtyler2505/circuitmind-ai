@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, lazy, Suspense, useEffect } from 'react';
+import React, { useState, useRef, useCallback, lazy, Suspense, useEffect, memo } from 'react';
 import { AppLayout } from './layout/AppLayout';
 import { AppHeader } from './layout/AppHeader';
 import { StatusRail } from './layout/StatusRail';
@@ -64,7 +64,7 @@ import {
   ACTION_SAFETY 
 } from '../types';
 // ... (imports)
-export const MainLayout: React.FC = () => {
+const MainLayoutComponent: React.FC = () => {
   // Contexts
   const { 
     isInventoryOpen: _isInventoryOpen, 
@@ -1019,3 +1019,5 @@ export const MainLayout: React.FC = () => {
     </AppLayout>
   );
 };
+
+export const MainLayout = memo(MainLayoutComponent);

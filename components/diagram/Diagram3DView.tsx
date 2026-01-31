@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef, useCallback, useState, memo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -1233,7 +1233,7 @@ const disposeObject = (obj: THREE.Object3D) => {
 // MAIN COMPONENT
 // ============================================================================
 
-const Diagram3DView = React.forwardRef<{ getSnapshotBlob: () => Promise<Blob | null> }, Diagram3DViewProps>(
+const Diagram3DViewComponent = React.forwardRef<{ getSnapshotBlob: () => Promise<Blob | null> }, Diagram3DViewProps>(
   ({ diagram, positions, onComponentClick: _onComponentClick, onGenerate3D }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -1942,5 +1942,7 @@ const Diagram3DView = React.forwardRef<{ getSnapshotBlob: () => Promise<Blob | n
     </div>
   );
 });
+
+const Diagram3DView = memo(Diagram3DViewComponent);
 
 export default Diagram3DView;
