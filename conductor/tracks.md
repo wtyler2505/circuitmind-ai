@@ -86,18 +86,8 @@
 
 - [Feature: Enhanced 3D Component Generation (Masterpiece Edition)](./tracks/enhanced-3d-component-generati_20260127/spec.md) `status: done`
 
+- [Feature: 2D Engine Upgrade (Fritzing Parity)](./tracks/feature-2d-engine-upgrade-frit_20260131/spec.md) `status: done`
+
 
 
 - [ ] **Track: Omni-Audit Remediation: Complete System Cleanup**
-
-
-  *Link: [./conductor/tracks/omni-audit-remediation-complet_20260127/](./conductor/tracks/omni-audit-remediation-complet_20260127/)*
-
-- [ ] **Track: Security & Visual Integrity Remediation**
-  *Link: [./conductor/tracks/security-visual-integrity-reme_20260127/](./conductor/tracks/security-visual-integrity-reme_20260127/)*
-
-- [ ] **Track: Structural Refactoring & Complexity Reduction**
-  *Link: [./conductor/tracks/structural-refactoring-complex_20260127/](./conductor/tracks/structural-refactoring-complex_20260127/)*
-
-- [ ] **Track: Performance & Code Quality Hardening**
-  *Link: [./conductor/tracks/performance-code-quality-harde_20260127/](./conductor/tracks/performance-code-quality-harde_20260127/)*
