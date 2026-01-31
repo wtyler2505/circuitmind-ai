@@ -97,21 +97,98 @@ export class FzpzLoader {
   private static extractFootprint(fzp: ElementCompact, breadboardSvg?: string): ComponentFootprint | undefined {
     if (!breadboardSvg) return undefined;
     
-    // Naive parsing of SVG dimensions for now
-    // TODO: Use a real DOMParser or regex to get width/height/viewBox
-    const widthMatch = breadboardSvg.match(/width=["']([\d.]+)in["']/);
-    const heightMatch = breadboardSvg.match(/height=["']([\d.]+)in["']/);
-    
-    let width = 10; // Default 1 inch
+    // Parse SVG dimensions
+    let width = 10;
     let height = 10;
     
-    if (widthMatch) width = parseFloat(widthMatch[1]) * 10; // in -> 0.1in units
-    if (heightMatch) height = parseFloat(heightMatch[1]) * 10;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(breadboardSvg, 'image/svg+xml');
+    const svgEl = doc.querySelector('svg');
+    
+    if (svgEl) {
+      // Try to get viewBox first
+      const viewBox = svgEl.getAttribute('viewBox');
+      if (viewBox) {
+        const [, , w, h] = viewBox.split(/\s+/).map(parseFloat);
+        // Fritzing SVGs are usually in 1/1000 inch units if viewBox is used without units? 
+        // Actually, we need to respect the unit system.
+        // For simplicity, let's look at width/height attributes which usually have units
+        const wAttr = svgEl.getAttribute('width');
+        const hAttr = svgEl.getAttribute('height');
+        
+        const parseUnit = (val: string | null): number => {
+            if (!val) return 1;
+            if (val.endsWith('in')) return parseFloat(val) * 10; // 1in = 10 units
+            if (val.endsWith('mm')) return parseFloat(val) / 2.54; // 2.54mm = 1 unit
+            if (val.endsWith('px')) return parseFloat(val) / 100; // Assume 100dpi
+            return parseFloat(val); // Unknown, assume raw
+        };
+        
+        width = parseUnit(wAttr) || (w / 100); // Fallback
+        height = parseUnit(hAttr) || (h / 100);
+      }
+    }
+    
+    const pins: ComponentFootprint['pins'] = [];
+    
+    // Map connectors
+    const connectors = fzp.module.connectors.connector;
+    const connectorArray = Array.isArray(connectors) ? connectors : [connectors];
+    
+    connectorArray.forEach((c: any) => {
+        const id = c._attributes.id;
+        const breadboardLayer = c.views?.breadboardView?.p;
+        const svgId = breadboardLayer?._attributes?.svgId;
+        
+        if (svgId && doc) {
+            const el = doc.getElementById(svgId);
+            if (el) {
+                // Get centroid of the element
+                // In a real DOM, we'd use getBBox(), but in jsdom/simulated environment it's hard.
+                // We'll try to read cx/cy if circle, or x/y if rect
+                let x = 0, y = 0;
+                if (el.tagName === 'circle') {
+                    x = parseFloat(el.getAttribute('cx') || '0');
+                    y = parseFloat(el.getAttribute('cy') || '0');
+                } else if (el.tagName === 'rect') {
+                    x = parseFloat(el.getAttribute('x') || '0') + parseFloat(el.getAttribute('width') || '0') / 2;
+                    y = parseFloat(el.getAttribute('y') || '0') + parseFloat(el.getAttribute('height') || '0') / 2;
+                } else if (el.tagName === 'g') {
+                    // Try to find a child circle or rect
+                    const child = el.querySelector('circle, rect');
+                    if (child) {
+                         if (child.tagName === 'circle') {
+                            x = parseFloat(child.getAttribute('cx') || '0');
+                            y = parseFloat(child.getAttribute('cy') || '0');
+                        }
+                    }
+                }
+                
+                // Scale coordinates if viewBox is vastly different from width/height
+                // This is a naive implementation; rigorous matrix transform needed for production
+                // Assuming SVG coordinates match the unit scale roughly or we normalize
+                // For "God Mode" parts, we enforce units. For wild parts, it's wild west.
+                
+                // Normalize to 0.1" grid units
+                // If width is in inches (e.g. 1in), and coord is 500 (mil), we need to divide by 100
+                const svgWidthRaw = parseFloat(svgEl?.getAttribute('viewBox')?.split(/\s+/)[2] || '100');
+                const scaleX = width / svgWidthRaw;
+                const scaleY = height / (parseFloat(svgEl?.getAttribute('viewBox')?.split(/\s+/)[3] || '100'));
+                
+                pins.push({
+                    id,
+                    x: x * scaleX,
+                    y: y * scaleY,
+                    svgElementId: svgId
+                });
+            }
+        }
+    });
     
     return {
       width,
       height,
-      pins: [] // TODO: Map connectors
+      pins
     };
   }
 }
