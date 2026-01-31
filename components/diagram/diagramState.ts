@@ -1,5 +1,3 @@
-import { WiringDiagram } from '../../types';
-
 export interface Point {
   x: number;
   y: number;
@@ -115,11 +113,11 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
       };
       
     case 'POINTER_MOVE': {
-      const { pointerPos, diagramPos, snapToGrid, gridSize = 20 } = action.payload;
+      const { pointerPos, diagramPos, snapToGrid, gridSize = 10 } = action.payload; // Default 10px grid
       const dx = pointerPos.x - state.lastPointerPos.x;
       const dy = pointerPos.y - state.lastPointerPos.y;
       
-      let newState = {
+      const newState = {
         ...state,
         lastPointerPos: pointerPos,
         cursorPos: diagramPos,
@@ -133,13 +131,18 @@ export function diagramReducer(state: DiagramState, action: DiagramAction): Diag
       } else if (state.interactionMode === 'dragging_node' && state.activeNodeId) {
         const currentPos = state.nodePositions.get(state.activeNodeId);
         if (currentPos) {
+          // Calculate new position based on delta
           let newX = currentPos.x + dx / state.zoom;
           let newY = currentPos.y + dy / state.zoom;
           
           if (snapToGrid) {
-            newX = snap(newX, gridSize);
-            newY = snap(newY, gridSize);
+            newX = Math.round(newX / gridSize) * gridSize;
+            newY = Math.round(newY / gridSize) * gridSize;
           }
+          
+          // Collision detection placeholder
+          // In a full implementation, we would check intersection with other rects here
+          // and prevent update if overlapping.
           
           const newPositions = new Map(state.nodePositions);
           newPositions.set(state.activeNodeId, { x: newX, y: newY });
