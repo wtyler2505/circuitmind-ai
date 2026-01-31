@@ -1,5 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { storageService } from '../services/storage';
 
 interface Props {
   children: ReactNode;

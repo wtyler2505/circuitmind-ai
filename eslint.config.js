@@ -9,7 +9,7 @@ import prettierConfig from 'eslint-config-prettier';
 export default [
   // Ignore patterns
   {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js', '*.config.ts', 'docs/**', 'ref/**', 'scripts/**'],
+    ignores: ['dist/**', 'node_modules/**', 'public/**', '*.config.js', '*.config.ts', 'docs/**', 'ref/**', 'scripts/**'],
   },
 
   // Base JS recommended rules
@@ -58,6 +58,8 @@ export default [
         HTMLAudioElement: 'readonly',
         MediaRecorder: 'readonly',
         MediaStream: 'readonly',
+        ReadableStream: 'readonly',
+        WritableStream: 'readonly',
         ReadableStreamDefaultReader: 'readonly',
         TextDecoderStream: 'readonly',
         SpeechRecognition: 'readonly',
@@ -106,6 +108,11 @@ export default [
         DragEvent: 'readonly',
         ClipboardEvent: 'readonly',
         PointerEvent: 'readonly',
+        Worker: 'readonly',
+        createImageBitmap: 'readonly',
+        ImageData: 'readonly',
+        ImageBitmap: 'readonly',
+        DOMRect: 'readonly',
         // DOM types
         Element: 'readonly',
         Node: 'readonly',

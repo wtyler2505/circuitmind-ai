@@ -5,7 +5,7 @@ import { WiringDiagram } from '../types';
 class CollabService {
   private doc: Y.Doc | null = null;
   private provider: WebrtcProvider | null = null;
-  private sharedDiagram: Y.Map<any> | null = null;
+  private sharedDiagram: Y.Map<unknown> | null = null;
 
   /**
    * Joins a collaboration room.

@@ -152,7 +152,10 @@ export function useConversations(): UseConversationsReturn {
   }, []);
 
   // Create a new conversation
-  const createConversation = useCallback(async (isPrimary = false): Promise<string> => {
+  const createConversation = useCallback(async (isPrimaryArg: any = false): Promise<string> => {
+    // If called as an event handler, the first arg is an event object.
+    // We want to ensure it's a strict boolean.
+    const isPrimary = typeof isPrimaryArg === 'boolean' ? isPrimaryArg : false;
     const conversation = await createConversationInternal(isPrimary);
     return conversation.id;
   }, [createConversationInternal]);

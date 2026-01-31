@@ -1,4 +1,4 @@
-import { WiringDiagram, ElectronicComponent, WireConnection } from "../types";
+import { WiringDiagram } from "../types";
 
 export interface CircuitIssue {
   severity: 'critical' | 'warning' | 'info';

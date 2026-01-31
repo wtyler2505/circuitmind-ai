@@ -15,7 +15,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   const userPerms = usePermissions();
 
   const hasAll = permissions.every(p => {
-    const val = (userPerms as any)[p];
+    const val = (userPerms as Record<string, unknown>)[p as string];
     return typeof val === 'boolean' ? val : false;
   });
 

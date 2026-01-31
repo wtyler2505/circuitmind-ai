@@ -91,3 +91,6 @@
 
 
 - [ ] **Track: Omni-Audit Remediation: Complete System Cleanup**
+
+- [ ] **Track: Feature: FZPZ Asset Integration & God-Tier Inventory Upgrade**
+  *Link: [./conductor/tracks/feature-fzpz-asset-integration_20260131/](./conductor/tracks/feature-fzpz-asset-integration_20260131/)*

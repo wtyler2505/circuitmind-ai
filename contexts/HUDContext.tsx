@@ -13,7 +13,7 @@ export interface HUDFragment {
 
 interface HUDContextType {
   fragments: HUDFragment[];
-  addFragment: (fragment: Omit<HUDFragment, 'id'>) => string;
+  addFragment: (fragment: Omit<HUDFragment, 'id'> & { id?: string }) => string;
   removeFragment: (id: string) => void;
   clearHUD: () => void;
   isVisible: boolean;
@@ -26,10 +26,21 @@ export const HUDProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [fragments, setFragments] = useState<HUDFragment[]>([]);
   const [isVisible, setVisible] = useState(true);
 
-  const addFragment = useCallback((fragment: Omit<HUDFragment, 'id'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    const newFragment = { ...fragment, id };
-    setFragments((prev) => [...prev, newFragment]);
+  const addFragment = useCallback((fragment: Omit<HUDFragment, 'id'> & { id?: string }) => {
+    const id = fragment.id || Math.random().toString(36).substring(2, 9);
+    
+    setFragments((prev) => {
+      const existingIdx = prev.findIndex(f => f.id === id);
+      const newFragment = { ...fragment, id } as HUDFragment;
+      
+      if (existingIdx !== -1) {
+        // Update existing fragment
+        const next = [...prev];
+        next[existingIdx] = newFragment;
+        return next;
+      }
+      return [...prev, newFragment];
+    });
 
     // Priority-based auto-dismissal (Decay)
     // Priority 1: Persistent (High)
@@ -51,15 +62,17 @@ export const HUDProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setFragments([]);
   }, []);
 
+  const contextValue = React.useMemo(() => ({
+    fragments,
+    addFragment,
+    removeFragment,
+    clearHUD,
+    isVisible,
+    setVisible
+  }), [fragments, addFragment, removeFragment, clearHUD, isVisible]);
+
   return (
-    <HUDContext.Provider value={{
-      fragments,
-      addFragment,
-      removeFragment,
-      clearHUD,
-      isVisible,
-      setVisible
-    }}>
+    <HUDContext.Provider value={contextValue}>
       {children}
     </HUDContext.Provider>
   );

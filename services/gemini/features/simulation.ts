@@ -1,6 +1,5 @@
 import { getAIClient, MODELS } from '../client';
-import { PROMPTS } from '../prompts';
-import { SimulationResult } from '../../services/simulationEngine';
+import { SimulationResult } from '../../simulationEngine';
 import { connectivityService } from '../../connectivityService';
 
 /**
@@ -11,7 +10,6 @@ export const analyzeSimulation = async (result: SimulationResult): Promise<strin
     return 'Satellite Link Offline. AI analysis unavailable.';
   }
   const genAI = getAIClient();
-  const model = genAI.getGenerativeModel({ model: MODELS.CONTEXT_CHAT_DEFAULT });
 
   const resultStr = JSON.stringify(result);
   const prompt = `
@@ -28,8 +26,11 @@ export const analyzeSimulation = async (result: SimulationResult): Promise<strin
   `;
 
   try {
-    const response = await model.generateContent(prompt);
-    return response.response.text();
+    const response = await genAI.models.generateContent({
+      model: MODELS.CONTEXT_CHAT_DEFAULT,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
+    });
+    return response.text || '';
   } catch (error) {
     console.error('Simulation analysis failed:', error);
     return 'Analysis unavailable due to system error.';

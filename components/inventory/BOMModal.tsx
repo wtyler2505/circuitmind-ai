@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import Papa from 'papaparse';
-import { bomService, BOMReport, BOMItem } from '../../services/bomService';
+import { bomService, BOMReport } from '../../services/bomService';
 import { fetchPartDetails } from '../../services/geminiService';
 import { useDiagram } from '../../contexts/DiagramContext';
 import { useInventory } from '../../contexts/InventoryContext';
@@ -44,7 +44,7 @@ export const BOMModal: React.FC<BOMModalProps> = ({ onClose }) => {
         totalEstimatedCost
       });
       toast.success('BOM enriched with market data.');
-    } catch (e) {
+    } catch (_e) {
       toast.error('Enrichment failed.');
     } finally {
       setIsEnriching(false);

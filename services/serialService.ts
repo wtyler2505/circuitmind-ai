@@ -16,8 +16,15 @@ export interface SerialOptions {
   baudRate: number;
 }
 
+interface SerialPort {
+  open: (options: SerialOptions) => Promise<void>;
+  close: () => Promise<void>;
+  readable: ReadableStream<Uint8Array>;
+  writable: WritableStream<Uint8Array>;
+}
+
 class SerialService {
-  private port: any | null = null;
+  private port: SerialPort | null = null;
   private reader: ReadableStreamDefaultReader<string> | null = null;
   private onDataCallback: ((packet: TelemetryPacket) => void) | null = null;
   private onRawDataCallback: ((data: string) => void) | null = null;
@@ -31,7 +38,7 @@ class SerialService {
       if (!('serial' in navigator)) {
         throw new Error('Web Serial API not supported in this browser.');
       }
-      this.port = await (navigator as any).serial.requestPort();
+      this.port = await (navigator as unknown as { serial: { requestPort: () => Promise<SerialPort> } }).serial.requestPort();
       return true;
     } catch (e) {
       console.error('Serial port request failed:', e);

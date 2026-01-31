@@ -12,7 +12,7 @@ export interface EngineeringEvent {
   id: string;
   timestamp: number;
   type: 'action_execute' | 'diagram_update' | 'ai_suggestion_accept' | 'ai_suggestion_reject' | 'checkpoint_created';
-  payload: any;
+  payload: Record<string, unknown>;
 }
 
 const METRICS_STORAGE_KEY = 'cm_ai_metrics';
@@ -30,15 +30,35 @@ class EngineeringMetricsService {
     const newMetric = { ...metric, id, timestamp: Date.now() };
     metrics.push(newMetric);
     
-    if (metrics.length > 500) metrics.splice(0, metrics.length - 500);
+    if (metrics.length > 1000) metrics.splice(0, metrics.length - 1000);
     localStorage.setItem(METRICS_STORAGE_KEY, JSON.stringify(metrics));
     return id;
+  }
+
+  getAverageLatency(operation?: string): number {
+    let metrics = this.getAiMetrics();
+    if (operation) {
+      metrics = metrics.filter(m => m.operation === operation);
+    }
+    if (metrics.length === 0) return 0;
+    const sum = metrics.reduce((acc, m) => acc + m.latencyMs, 0);
+    return Math.round(sum / metrics.length);
+  }
+
+  getSuccessRate(operation?: string): number {
+    let metrics = this.getAiMetrics();
+    if (operation) {
+      metrics = metrics.filter(m => m.operation === operation);
+    }
+    if (metrics.length === 0) return 100;
+    const successes = metrics.filter(m => m.success).length;
+    return Math.round((successes / metrics.length) * 100);
   }
 
   /**
    * Logs a generic engineering event.
    */
-  logEvent(type: EngineeringEvent['type'], payload: any): void {
+  logEvent(type: EngineeringEvent['type'], payload: Record<string, unknown>): void {
     const stored = localStorage.getItem(EVENTS_STORAGE_KEY);
     const events: EngineeringEvent[] = stored ? JSON.parse(stored) : [];
     
@@ -78,7 +98,9 @@ export const engineeringMetricsService = new EngineeringMetricsService();
 
 // Legacy compatibility shim
 export const aiMetricsService = {
-  logMetric: (m: any) => engineeringMetricsService.logAiMetric(m),
+  logMetric: (m: Omit<AIMetric, 'id' | 'timestamp'>) => engineeringMetricsService.logAiMetric(m),
   recordFeedback: (id: string, s: number) => engineeringMetricsService.recordAiFeedback(id, s),
-  getMetrics: () => engineeringMetricsService.getAiMetrics()
+  getMetrics: () => engineeringMetricsService.getAiMetrics(),
+  getAverageLatency: (op?: string) => engineeringMetricsService.getAverageLatency(op),
+  getSuccessRate: (op?: string) => engineeringMetricsService.getSuccessRate(op)
 };

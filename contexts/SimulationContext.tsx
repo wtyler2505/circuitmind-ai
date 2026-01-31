@@ -30,8 +30,9 @@ export const SimulationProvider: React.FC<{ children: ReactNode }> = ({ children
     const res = simulationEngine.solve(diagram);
     setResult(res);
 
-    if (res.status === 'failed') {
+    if (res.isShortCircuit) {
       pushNotification({
+        id: 'simulation-short-circuit',
         severity: 'critical',
         title: 'SIMULATION_CRASH',
         message: 'Circuit logic failed. High risk of hardware damage detected.',

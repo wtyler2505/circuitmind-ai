@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNotify, AppNotification } from '../../contexts/NotificationContext';
+import { useNotify } from '../../contexts/NotificationContext';
 
 export const CommsLog: React.FC = () => {
   const { history, clearAll } = useNotify();

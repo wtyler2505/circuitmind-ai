@@ -306,6 +306,72 @@ export function determineOrphanAction(
 // ============================================
 
 /**
+ * Migration mapping for legacy component IDs
+ */
+const LEGACY_ID_MAP: Record<string, string> = {
+  'mcu': 'mcu-arduino-uno-r3',
+  'mcu1': 'mcu-arduino-uno-r3',
+  'pot': 'other-potentiometer',
+  'pot1': 'other-potentiometer',
+  'servo': 'actuator-servo',
+  'servo1': 'actuator-servo',
+  'sensor': 'sensor-hcsr04',
+  'hcsr04': 'sensor-hcsr04',
+  'dht11': 'sensor-dht11',
+  'lcd': 'display-lcd1602',
+};
+
+/**
+ * Repairs a legacy diagram by mapping old IDs to new semantic inventory IDs
+ */
+export function migrateLegacyDiagram(
+  diagram: WiringDiagram,
+  inventory: ElectronicComponent[]
+): { diagram: WiringDiagram; repairedCount: number } {
+  let repairedCount = 0;
+  const inventoryIds = new Set(inventory.map(i => i.id));
+
+  const migratedComponents = diagram.components.map(comp => {
+    // Already has a valid reference?
+    if (comp.sourceInventoryId && inventoryIds.has(comp.sourceInventoryId)) {
+      return comp;
+    }
+
+    // Try to find mapping for legacy ID or prefix
+    const baseId = comp.sourceInventoryId || comp.id.split('-')[0];
+    const newSourceId = LEGACY_ID_MAP[baseId] || LEGACY_ID_MAP[comp.name.toLowerCase()] || undefined;
+
+    if (newSourceId && inventoryIds.has(newSourceId)) {
+      repairedCount++;
+      return {
+        ...comp,
+        sourceInventoryId: newSourceId
+      };
+    }
+
+    // Fallback: try finding by name exact match
+    const byName = inventory.find(i => i.name === comp.name);
+    if (byName) {
+      repairedCount++;
+      return {
+        ...comp,
+        sourceInventoryId: byName.id
+      };
+    }
+
+    return comp;
+  });
+
+  return {
+    diagram: {
+      ...diagram,
+      components: migratedComponents
+    },
+    repairedCount
+  };
+}
+
+/**
  * Sync a diagram component with its inventory source
  * Returns the updated component (or original if no source found)
  */
@@ -430,4 +496,30 @@ export function logValidationResult(result: ValidationResult, label = 'Validatio
   }
 
   console.groupEnd();
+}
+
+/**
+ * Validates a 3D model's dimensions against expected standards.
+ * Returns a score from 0-1 and any specific deviations.
+ */
+export function verifyModelDimensions(
+  model: any, // Three.js Object3D (as JSON or instance)
+  expected: { width: number, length: number, height: number }
+): { score: number; deviations: string[] } {
+  const deviations: string[] = [];
+  
+  // Calculate bounding box from JSON data if necessary
+  // For simplicity here, we assume we are checking the dimensions already extracted
+  // In reality, ThreeViewer will call this after loading.
+  
+  const widthDiff = Math.abs(model.width - expected.width);
+  const lengthDiff = Math.abs(model.length - expected.length);
+  const heightDiff = Math.abs(model.height - expected.height);
+
+  if (widthDiff > expected.width * 0.1) deviations.push(`Width mismatch: ${model.width}mm vs ${expected.width}mm`);
+  if (lengthDiff > expected.length * 0.1) deviations.push(`Length mismatch: ${model.length}mm vs ${expected.length}mm`);
+  if (heightDiff > expected.height * 0.2) deviations.push(`Height mismatch: ${model.height}mm vs ${expected.height}mm`);
+
+  const score = Math.max(0, 1 - (deviations.length * 0.3));
+  return { score, deviations };
 }

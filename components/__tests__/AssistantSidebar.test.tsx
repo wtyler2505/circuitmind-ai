@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '../../tests/test-utils';
 import AssistantSidebar from '../AssistantSidebar';
-import { LayoutProvider, useLayout } from '../../contexts/LayoutContext';
+import { useLayout } from '../../contexts/LayoutContext';
 
 // Mock the context
 vi.mock('../../contexts/LayoutContext', async () => {

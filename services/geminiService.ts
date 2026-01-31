@@ -2,9 +2,12 @@
 // This file now serves as a facade, re-exporting functionality from the modular structure.
 // See services/gemini/ for the implementation details.
 
+import { WiringDiagram } from '../types';
+import { getAIClient, MODELS } from './gemini/client';
+
 // Tool: Spatial Narrator
 export const describeDiagram = async (diagram: WiringDiagram): Promise<string> => {
-  const model = getAIClient().getGenerativeModel({ model: MODELS.CHAT });
+  const ai = getAIClient();
   
   const prompt = `
     Analyze this wiring diagram for a blind engineer using a screen reader.
@@ -19,8 +22,11 @@ export const describeDiagram = async (diagram: WiringDiagram): Promise<string> =
     4. Keep it concise but technically accurate.
   `;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  const response = await ai.models.generateContent({
+    model: MODELS.CHAT,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }]
+  });
+  return response.text || '';
 };
 
 // Tool: Explain Component

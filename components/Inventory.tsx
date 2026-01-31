@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useEffect, useCallback, useDeferredValue } from 'react';
 import { ElectronicComponent } from '../types';
 import { useToast } from '../hooks/useToast';
 import { useInventory } from '../contexts/InventoryContext';
@@ -34,7 +34,6 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
     addItem, 
     removeItem, 
     removeMany, 
-    updateMany,
     setInventory 
   } = useInventory();
 
@@ -66,8 +65,10 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
 
   // Tabs: 'list', 'add', 'tools', 'macros'
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'tools' | 'macros'>('list');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<ComponentType | 'all'>('all');
+  const [searchQuery, updateSearchQuery] = useState(''); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  // const [activeCategory, setActiveCategory] = useState<ComponentType | 'all'>('all'); // Unused state
+
 
   // Selection State
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -139,17 +140,17 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
     // Let's defer the check? No, user interaction needs immediate feedback.
     // We'll use the diagram dependency.
     const currentDiagram = diagram || { title: '', components: [], connections: [], explanation: '' };
-    const { action, reason } = determineOrphanAction(id, currentDiagram);
+    const { action, reason: _reason } = determineOrphanAction(id, currentDiagram);
 
     if (action === 'block') {
-      console.error(`❌ Cannot delete: ${reason}`);
-      toast.error(reason);
+      console.error(`❌ Cannot delete: ${_reason}`);
+      toast.error(_reason);
       return;
     }
 
     if (action === 'warn') {
       const confirmed = window.confirm(
-        `⚠️ ${reason}\n\nDo you want to remove it from all diagrams?`
+        `⚠️ ${_reason}\n\nDo you want to remove it from all diagrams?`
       );
       if (!confirmed) return;
     }
@@ -193,7 +194,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
     const okIds: string[] = [];
 
     for (const id of ids) {
-      const { action, reason } = determineOrphanAction(id, currentDiagram);
+      const { action, reason: _reason } = determineOrphanAction(id, currentDiagram);
       if (action === 'block') {
         blockedIds.push(id);
       } else if (action === 'warn') {
@@ -583,7 +584,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
           <div className="h-full w-full bg-neon-cyan/0 hover:bg-neon-cyan/50 transition-colors duration-200" />
         </div>
         
-        <div className="px-3 pt-3 pb-0 bg-[#050608] border-b border-white/5 flex flex-col gap-2 shrink-0">
+        <div className="px-3 pt-3 pb-0 bg-cyber-black panel-rail border-b border-white/5 flex flex-col gap-2 shrink-0">
           <div className="flex justify-between items-center">
             <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-[0.2em] panel-title">
               <img src="/assets/ui/logo.png" alt="" className="w-4 h-4" onError={(e) => (e.currentTarget.style.display = 'none')} />
@@ -593,7 +594,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="md:hidden h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-white border border-transparent hover:border-white/20 cut-corner-sm"
+                className="md:hidden h-8 w-8 inline-flex items-center justify-center text-slate-400 hover:text-white border border-transparent hover:border-white/20 cut-corner-sm transition-colors"
                 title="Close inventory"
                 aria-label="Close inventory"
               >
@@ -604,9 +605,9 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
               <button
                 type="button"
                 onClick={() => updatePinned(!isPinned)}
-                className={`hidden md:inline-flex h-6 w-6 items-center justify-center transition-colors cut-corner-sm border ${ isPinned 
-                    ? 'text-neon-cyan border-neon-cyan/30 bg-neon-cyan/5' 
-                    : 'text-slate-500 border-transparent hover:text-white hover:border-white/20'
+                className={`hidden md:inline-flex h-6 w-6 items-center justify-center transition-all cut-corner-sm border ${ isPinned 
+                    ? 'text-neon-cyan border-neon-cyan/30 bg-neon-cyan/10 shadow-[0_0_10px_rgba(0,243,255,0.2)]' 
+                    : 'text-slate-500 border-white/10 hover:text-white hover:border-white/30 hover:bg-white/5'
                 }`}
                 title={isPinned ? 'Unlock sidebar' : 'Lock sidebar open'}
                 aria-label={isPinned ? 'Unlock sidebar' : 'Lock sidebar open'}
@@ -625,13 +626,13 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
           </div>
 
           <div className="grid grid-cols-2 gap-1 text-[9px] uppercase tracking-[0.15em] font-mono">
-            <div className="bg-white/5 border border-white/5 px-2 py-1 flex items-center justify-between">
+            <div className="bg-white/5 border border-white/5 px-2 py-1 flex items-center justify-between panel-surface">
               <span className="text-slate-500">Total</span>
               <span className="text-neon-cyan">{inventoryStats.totalUnits}</span>
             </div>
-            <div className="bg-white/5 border border-white/5 px-2 py-1 flex items-center justify-between">
+            <div className="bg-white/5 border border-white/5 px-2 py-1 flex items-center justify-between panel-surface">
               <span className="text-slate-500">Low Stock</span>
-              <span className={inventoryStats.lowStockCount > 0 ? 'text-amber-400' : 'text-slate-400'}>
+              <span className={inventoryStats.lowStockCount > 0 ? 'text-neon-amber drop-shadow-[0_0_5px_rgba(255,170,0,0.5)]' : 'text-slate-400'}>
                 {inventoryStats.lowStockCount}
               </span>
             </div>
@@ -640,8 +641,8 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
           <div className="flex border-b border-white/5 mt-1">
             <button
               onClick={() => setActiveTab('list')}
-              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-colors border-b-2 ${ activeTab === 'list' 
-                  ? 'border-neon-cyan text-white bg-white/5' 
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'list' 
+                  ? 'border-neon-cyan text-white bg-neon-cyan/5' 
                   : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
               }`}
             >
@@ -649,8 +650,8 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
             </button>
             <button
               onClick={() => setActiveTab('add')}
-              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-colors border-b-2 ${ activeTab === 'add' 
-                  ? 'border-neon-green text-white bg-white/5' 
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'add' 
+                  ? 'border-neon-green text-white bg-neon-green/5' 
                   : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
               }`}
             >
@@ -658,8 +659,8 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
             </button>
             <button
               onClick={() => setActiveTab('tools')}
-              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-colors border-b-2 ${ activeTab === 'tools' 
-                  ? 'border-neon-purple text-white bg-white/5' 
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'tools' 
+                  ? 'border-neon-purple text-white bg-neon-purple/5' 
                   : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
               }`}
             >
@@ -667,8 +668,8 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
             </button>
             <button
               onClick={() => setActiveTab('macros')}
-              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-colors border-b-2 ${ activeTab === 'macros' 
-                  ? 'border-neon-amber text-white bg-white/5' 
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'macros' 
+                  ? 'border-neon-amber text-white bg-neon-amber/5' 
                   : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
               }`}
             >
@@ -677,84 +678,31 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-[#020203]">
+        <div className="flex-1 flex flex-col relative bg-cyber-dark min-h-0 overflow-hidden">
           {/* List View */}
           {activeTab === 'list' && (
-            <div className="p-2 space-y-2 pb-20 md:pb-16">
-              <div className="flex flex-wrap gap-1 mb-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveCategory('all')}
-                  className={`px-2 py-1 text-[9px] uppercase tracking-wider border cut-corner-sm transition-all flex items-center gap-1.5 ${ activeCategory === 'all'
-                      ? 'border-neon-cyan text-black bg-neon-cyan'
-                      : 'border-white/10 text-slate-400 bg-black/20 hover:border-white/30'
-                  }`}
-                >
-                  All
-                </button>
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-2 py-1 text-[9px] uppercase tracking-wider border cut-corner-sm transition-all flex items-center gap-1.5 ${ activeCategory === cat
-                        ? 'border-neon-cyan text-black bg-neon-cyan'
-                        : 'border-white/10 text-slate-400 bg-black/20 hover:border-white/30'
-                    }`}
-                  >
-                    <img 
-                      src={`/assets/ui/icon-${cat === 'microcontroller' ? 'microcontroller' : cat === 'sensor' ? 'sensor' : cat === 'actuator' ? 'actuator' : cat === 'power' ? 'power' : 'other'}.png`} 
-                      alt="" 
-                      className={`w-3 h-3 ${activeCategory === cat ? 'invert' : 'opacity-70'}`}
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
-                    />
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative mb-3">
-                <input
-                  type="text"
-                  placeholder="FILTER ID / NAME..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 px-3 py-2 text-[10px] text-white placeholder-slate-600 focus:border-neon-cyan focus:outline-none transition-colors cut-corner-sm font-mono tracking-wide"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2 top-2 text-slate-500 hover:text-white"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              <InventoryList
-                items={items}
-                searchQuery={searchQuery}
-                activeCategory={activeCategory}
-                selectedIds={selectedIds}
-                brokenImages={brokenImages}
-                onToggleSelection={toggleSelection}
-                onDragStart={handleDragStart}
-                onDoubleClick={onSelect}
-                onAddToCanvas={handleAddToCanvas}
-                onEdit={onSelect}
-                onRemove={handleRemoveItem}
-                onImageError={markBrokenImage}
-                onClearSelection={clearSelection}
-                onBulkDelete={handleBulkDelete}
-              />
-            </div>
+            <InventoryList
+              items={items}
+              searchQuery={deferredSearchQuery}
+              activeCategory="all"
+              selectedIds={selectedIds}
+              brokenImages={brokenImages}
+              onToggleSelection={toggleSelection}
+              onDragStart={handleDragStart}
+              onDoubleClick={onSelect}
+              onAddToCanvas={handleAddToCanvas}
+              onEdit={onSelect}
+              onRemove={handleRemoveItem}
+              onImageError={markBrokenImage}
+              onClearSelection={clearSelection}
+              onBulkDelete={handleBulkDelete}
+            />
           )}
 
           {/* Add View */}
           {activeTab === 'add' && (
-            <div className="p-3 space-y-4">
-              <div className="bg-slate-900/80 border border-neon-cyan/20 p-3 cut-corner-md space-y-2">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
+              <div className="bg-cyber-black/80 panel-surface border border-neon-cyan/20 p-3 cut-corner-md space-y-2 panel-frame">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-bold text-neon-cyan flex items-center gap-2 uppercase tracking-[0.2em]">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -762,7 +710,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                     </svg>
                     PART FINDER
                   </label>
-                  <span className="text-[9px] font-mono text-slate-300 uppercase tracking-widest">Optional</span>
+                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Optional</span>
                 </div>
                 <div className="flex gap-2">
                   <input
@@ -771,29 +719,29 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                     onChange={(e) => setFinderQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleFinderSearch()}
                     placeholder="Describe part..."
-                    className="flex-1 bg-black border border-slate-700 cut-corner-sm px-3 py-1.5 text-[11px] text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none"
+                    className="flex-1 bg-black border border-white/10 cut-corner-sm px-3 py-1.5 text-[11px] text-white placeholder-slate-600 focus:border-neon-cyan focus:outline-none transition-colors"
                   />
                   <button
                     onClick={handleFinderSearch}
                     disabled={isFinderLoading || !finderQuery}
-                    className="bg-neon-cyan text-black font-bold px-3 py-1.5 cut-corner-sm text-[11px] tracking-[0.2em] hover:bg-white disabled:opacity-80"
+                    className="bg-neon-cyan text-black font-bold px-3 py-1.5 cut-corner-sm text-[11px] tracking-[0.2em] hover:bg-white disabled:opacity-50 transition-all shadow-[0_0_10px_rgba(0,243,255,0.3)] hover:shadow-[0_0_20px_rgba(0,243,255,0.5)]"
                   >
                     {isFinderLoading ? '...' : 'FIND'}
                   </button>
                 </div>
                 {finderResults.length > 0 && (
-                  <div className="mt-2 space-y-1 max-h-40 overflow-y-auto custom-scrollbar border-t border-slate-800 pt-2">
+                  <div className="mt-2 space-y-1 max-h-40 overflow-y-auto custom-scrollbar border-t border-white/10 pt-2">
                     {finderResults.map((result, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleSelectFinderResult(result)}
-                        className="w-full text-left p-1.5 cut-corner-sm bg-slate-800/50 hover:bg-neon-cyan/20 border border-transparent hover:border-neon-cyan/50 transition-colors group"
+                        className="w-full text-left p-1.5 cut-corner-sm bg-white/5 hover:bg-neon-cyan/20 border border-transparent hover:border-neon-cyan/50 transition-all group"
                       >
                         <div className="flex justify-between items-center">
                           <span className="font-bold text-[11px] text-white group-hover:text-neon-cyan">
                             {result.name}
                           </span>
-                          <span className="text-[9px] uppercase text-slate-300 bg-black/30 px-1 cut-corner-sm">
+                          <span className="text-[9px] uppercase text-slate-400 bg-black/50 px-1 cut-corner-sm border border-white/5">
                             {result.type}
                           </span>
                         </div>
@@ -803,7 +751,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                 )}
               </div>
 
-              <div className="bg-slate-900/50 p-3 cut-corner-md border border-dashed border-slate-700 text-center relative overflow-hidden group">
+              <div className="bg-cyber-black/50 p-3 cut-corner-md border border-dashed border-white/20 text-center relative overflow-hidden group hover:border-neon-cyan/50 transition-colors">
                 {newItemImage && (
                   <div className="absolute inset-0 bg-black z-0">
                     <img src={newItemImage} alt="Preview" className="w-full h-full object-cover opacity-50" />
@@ -813,42 +761,44 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isAiLoading}
-                  className="w-full py-3 flex flex-col items-center gap-2 text-slate-300 hover:text-neon-cyan transition-colors relative z-10"
+                  className="w-full py-3 flex flex-col items-center gap-2 text-slate-400 hover:text-neon-cyan transition-all relative z-10"
                 >
                   {isAiLoading ? (
                     <div className="loading-tech scale-75"></div>
                   ) : (
-                    <svg className="w-6 h-6 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-6 h-6 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   )}
-                  <span className="text-[11px] font-bold uppercase tracking-wider shadow-black drop-shadow-md">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-shadow-glow">
                     {isAiLoading ? 'ANALYZING...' : newItemImage ? 'RETAKE PHOTO' : 'SCAN COMPONENT PHOTO'}
                   </span>
                 </button>
               </div>
 
-              <div className="cut-corner-md border border-slate-800/80 bg-slate-900/40 p-3 space-y-3">
+              <div className="cut-corner-md border border-white/10 bg-cyber-black/40 p-3 space-y-3 panel-surface">
                 <div className="flex items-center justify-between">
                   <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-widest">Basics</h4>
-                  <span className="text-[9px] font-mono text-slate-300 uppercase tracking-widest">Required</span>
+                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Required</span>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-mono text-slate-300 mb-1">COMPONENT NAME</label>
+                  <label htmlFor="newItemName" className="block text-[11px] font-mono text-slate-400 mb-1">COMPONENT NAME</label>
                   <div className="flex gap-2">
                     <input
+                      id="newItemName"
+                      name="newItemName"
                       type="text"
                       value={newItemName}
                       onChange={(e) => setNewItemName(e.target.value)}
                       placeholder="e.g., NE555 Timer"
-                      className="flex-1 bg-slate-950 border border-slate-700 cut-corner-sm px-3 py-1.5 text-[11px] text-white placeholder-slate-300 focus:border-neon-cyan focus:outline-none"
+                      className="flex-1 bg-black border border-white/10 cut-corner-sm px-3 py-1.5 text-[11px] text-white placeholder-slate-600 focus:border-neon-cyan focus:outline-none transition-colors"
                     />
                     <button
                       type="button"
                       onClick={handleAutoGenerateImage}
                       disabled={!newItemName || isGeneratingImage}
-                      className="h-9 w-9 inline-flex items-center justify-center bg-slate-800 border border-slate-600 text-neon-purple cut-corner-sm hover:bg-slate-700"
+                      className="h-9 w-9 inline-flex items-center justify-center bg-white/5 border border-white/10 text-neon-purple cut-corner-sm hover:bg-white/10 transition-all hover:border-neon-purple/50"
                     >
                       {isGeneratingImage ? (
                         <div className="loading-tech scale-50" style={{ filter: 'drop-shadow(0 0 4px #bd00ff)' }}></div>
@@ -863,11 +813,13 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
 
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="block text-[11px] font-mono text-slate-300 mb-1">TYPE</label>
+                    <label htmlFor="newItemType" className="block text-[11px] font-mono text-slate-400 mb-1">TYPE</label>
                     <select
+                      id="newItemType"
+                      name="newItemType"
                       value={newItemType}
                       onChange={(e) => setNewItemType(e.target.value as ComponentType)}
-                      className="w-full bg-slate-950 border border-slate-700 cut-corner-sm px-2 py-1.5 text-[11px] text-white focus:border-neon-cyan focus:outline-none"
+                      className="w-full bg-black border border-white/10 cut-corner-sm px-2 py-1.5 text-[11px] text-white focus:border-neon-cyan focus:outline-none transition-colors appearance-none"
                     >
                       {CATEGORIES.map((c) => (
                         <option key={c} value={c}>{c.toUpperCase()}</option>
@@ -875,37 +827,43 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                     </select>
                   </div>
                   <div className="w-20">
-                    <label className="block text-[11px] font-mono text-slate-300 mb-1">QTY</label>
+                    <label htmlFor="newItemQty" className="block text-[11px] font-mono text-slate-400 mb-1">QTY</label>
                     <input
+                      id="newItemQty"
+                      name="newItemQty"
                       type="number"
                       min="1"
                       value={newItemQty}
                       onChange={(e) => setNewItemQty(parseInt(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-700 cut-corner-sm px-2 py-1.5 text-[11px] text-white focus:border-neon-cyan focus:outline-none"
+                      className="w-full bg-black border border-white/10 cut-corner-sm px-2 py-1.5 text-[11px] text-white focus:border-neon-cyan focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="cut-corner-md border border-slate-800/80 bg-slate-900/40 p-3 space-y-3">
+              <div className="cut-corner-md border border-white/10 bg-cyber-black/40 p-3 space-y-3 panel-surface">
                 <div>
-                  <label className="block text-[11px] font-mono text-slate-300 mb-1">DESCRIPTION</label>
+                  <label htmlFor="newItemDesc" className="block text-[11px] font-mono text-slate-400 mb-1">DESCRIPTION</label>
                   <textarea
+                    id="newItemDesc"
+                    name="newItemDesc"
                     value={newItemDesc}
                     onChange={(e) => setNewItemDesc(e.target.value)}
                     rows={2}
                     placeholder="Short summary..."
-                    className="w-full bg-slate-950 border border-slate-700 cut-corner-sm px-3 py-1.5 text-[11px] text-white resize-none focus:border-neon-cyan focus:outline-none"
+                    className="w-full bg-black border border-white/10 cut-corner-sm px-3 py-1.5 text-[11px] text-white resize-none focus:border-neon-cyan focus:outline-none transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-mono text-slate-300 mb-1">PINS</label>
+                  <label htmlFor="newItemPins" className="block text-[11px] font-mono text-slate-400 mb-1">PINS</label>
                   <input
+                    id="newItemPins"
+                    name="newItemPins"
                     type="text"
                     value={newItemPins}
                     onChange={(e) => setNewItemPins(e.target.value)}
                     placeholder="VCC, GND, OUT..."
-                    className="w-full bg-slate-950 border border-slate-700 cut-corner-sm px-3 py-1.5 text-[11px] text-white font-mono focus:border-neon-cyan focus:outline-none"
+                    className="w-full bg-black border border-white/10 cut-corner-sm px-3 py-1.5 text-[11px] text-white font-mono focus:border-neon-cyan focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -913,7 +871,7 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
               <button
                 onClick={handleAdd}
                 disabled={!newItemName}
-                className="w-full bg-neon-cyan text-black font-bold py-2.5 cut-corner-sm hover:bg-white transition-colors uppercase tracking-[0.25em] text-[11px] shadow-lg disabled:opacity-80 disabled:cursor-not-allowed"
+                className="w-full bg-neon-cyan text-black font-bold py-2.5 cut-corner-sm hover:bg-white transition-all uppercase tracking-[0.25em] text-[11px] shadow-[0_0_20px_rgba(0,243,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ADD TO INVENTORY
               </button>
@@ -922,9 +880,9 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
 
           {/* Tools View */}
           {activeTab === 'tools' && (
-            <div className="p-3 space-y-4">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
               <div>
-                <h3 className="text-[11px] font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 uppercase tracking-[0.25em]">
+                <h3 className="text-[11px] font-bold text-slate-400 mb-2 border-b border-white/10 pb-1 uppercase tracking-[0.25em]">
                   PHYSICAL LINK
                 </h3>
                 <div className="h-64 mb-4">
@@ -933,25 +891,25 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
               </div>
 
               <div>
-                <h3 className="text-[11px] font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 uppercase tracking-[0.25em]">
+                <h3 className="text-[11px] font-bold text-slate-400 mb-2 border-b border-white/10 pb-1 uppercase tracking-[0.25em]">
                   DATA MANAGEMENT
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={handleExport}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 cut-corner-sm border border-slate-600 flex flex-col items-center gap-1"
+                    className="bg-white/5 hover:bg-white/10 text-slate-300 py-2 cut-corner-sm border border-white/10 flex flex-col items-center gap-1 transition-all group"
                   >
-                    <img src="/assets/ui/action-save.png" alt="" className="w-4 h-4 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    <img src="/assets/ui/action-save.png" alt="" className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" onError={(e) => (e.currentTarget.style.display = 'none')} />
                     <span className="text-[9px] font-bold tracking-[0.2em]">EXPORT JSON</span>
                   </button>
-                  <label className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 cut-corner-sm border border-slate-600 flex flex-col items-center gap-1 cursor-pointer">
+                  <label className="bg-white/5 hover:bg-white/10 text-slate-300 py-2 cut-corner-sm border border-white/10 flex flex-col items-center gap-1 cursor-pointer transition-all group">
                     <input type="file" accept=".json" className="hidden" onChange={handleImport} />
-                    <img src="/assets/ui/action-load.png" alt="" className="w-4 h-4 opacity-80" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    <img src="/assets/ui/action-load.png" alt="" className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" onError={(e) => (e.currentTarget.style.display = 'none')} />
                     <span className="text-[9px] font-bold tracking-[0.2em]">IMPORT JSON</span>
                   </label>
                   <button
                     onClick={() => setIsBOMOpen(true)}
-                    className="col-span-2 bg-neon-purple/10 hover:bg-neon-purple/20 text-neon-purple py-2 cut-corner-sm border border-neon-purple/30 flex items-center justify-center gap-2 transition-all mt-1"
+                    className="col-span-2 bg-neon-purple/5 hover:bg-neon-purple/10 text-neon-purple py-2 cut-corner-sm border border-neon-purple/20 flex items-center justify-center gap-2 transition-all mt-1 hover:border-neon-purple/50"
                   >
                     <span className="text-[9px] font-bold tracking-[0.2em]">GENERATE PROJECT BOM</span>
                   </button>
@@ -959,9 +917,9 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                 <div className="mt-2">
                   <button
                     onClick={handleReset}
-                    className="w-full bg-red-900/20 hover:bg-red-900/50 text-red-400 py-2 cut-corner-sm border border-red-900/50 flex items-center justify-center gap-2 transition-colors"
+                    className="w-full bg-red-500/5 hover:bg-red-500/10 text-red-400 py-2 cut-corner-sm border border-red-500/20 flex items-center justify-center gap-2 transition-all hover:border-red-500/50"
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                     <span className="text-[10px] font-bold">RESET TO DEFAULTS</span>
@@ -970,13 +928,13 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
               </div>
 
               <div>
-                <h3 className="text-[11px] font-bold text-slate-300 mb-2 border-b border-slate-800 pb-1 uppercase tracking-[0.25em]">
+                <h3 className="text-[11px] font-bold text-slate-400 mb-2 border-b border-white/10 pb-1 uppercase tracking-[0.25em]">
                   AI ANALYSIS
                 </h3>
                 <button
                   onClick={handleSuggestProjects}
                   disabled={isSuggesting}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-left p-2.5 cut-corner-sm border border-slate-600 group"
+                  className="w-full bg-white/5 hover:bg-white/10 text-left p-2.5 cut-corner-sm border border-white/10 group transition-all"
                 >
                   <div className="flex items-center gap-2 mb-1 text-neon-cyan font-bold text-[11px]">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -984,15 +942,15 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
                     </svg>
                     {isSuggesting ? 'THINKING...' : 'WHAT CAN I BUILD?'}
                   </div>
-                  <div className="text-[10px] text-slate-300 group-hover:text-white">
+                  <div className="text-[10px] text-slate-400 group-hover:text-slate-200 transition-colors">
                     Ask Gemini to suggest projects based on your current inventory.
                   </div>
                 </button>
                 {suggestions && (
-                  <div className="mt-3 p-2.5 bg-slate-900 border border-slate-700 cut-corner-sm text-[11px] text-slate-300 markdown prose prose-invert max-w-none">
+                  <div className="mt-3 p-2.5 bg-cyber-black panel-surface border border-white/10 cut-corner-sm text-[11px] text-slate-300 markdown prose prose-invert max-w-none">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-[10px] text-neon-purple font-mono uppercase">Ideas</span>
-                      <button onClick={() => setSuggestions('')} className="text-slate-300 hover:text-white">&times;</button>
+                      <span className="text-[10px] text-neon-purple font-mono uppercase tracking-widest">Ideas</span>
+                      <button onClick={() => setSuggestions('')} className="text-slate-500 hover:text-white">&times;</button>
                     </div>
                     <div className="whitespace-pre-wrap leading-relaxed">{suggestions}</div>
                   </div>
@@ -1003,7 +961,9 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
 
           {/* Macros View */}
           {activeTab === 'macros' && (
-            <MacroPanel />
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <MacroPanel />
+            </div>
           )}
         </div>
       </div>

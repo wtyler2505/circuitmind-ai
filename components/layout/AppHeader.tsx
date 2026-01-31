@@ -38,7 +38,7 @@ export const AppHeader = React.memo(() => {
     try {
       await gitService.commit(msg);
       alert('Checkpoint saved.');
-    } catch (e) {
+    } catch (_e) {
       alert('Checkpoint failed.');
     } finally {
       setIsCheckpointing(false);
@@ -100,7 +100,7 @@ export const AppHeader = React.memo(() => {
             disabled={!canUndo}
             size="sm"
             variant="ghost"
-            className="bg-black/20 border border-white/5 cut-corner-sm hover:text-white"
+            className="bg-white/5 border border-white/10 cut-corner-sm hover:text-white transition-all"
           />
           <IconButton
             label="Redo"
@@ -111,7 +111,7 @@ export const AppHeader = React.memo(() => {
             disabled={!canRedo}
             size="sm"
             variant="ghost"
-            className="bg-black/20 border border-white/5 cut-corner-sm hover:text-white"
+            className="bg-white/5 border border-white/10 cut-corner-sm hover:text-white transition-all"
           />
         </div>
 
@@ -122,31 +122,31 @@ export const AppHeader = React.memo(() => {
           <button
             onClick={handleSave}
             disabled={saveStatus !== 'idle'}
-            className={`h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none focus-visible-ring rounded-none flex items-center gap-1.5 ${
+            className={`h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none focus-visible-ring flex items-center gap-1.5 border ${
               saveStatus === 'saved'
-                ? 'bg-green-500 border-green-400 text-white shadow-[0_0_12px_rgba(34,197,94,0.5)]'
+                ? 'bg-neon-green/20 border-neon-green text-neon-green shadow-[0_0_12px_rgba(0,255,157,0.3)]'
                 : saveStatus === 'error'
                 ? 'bg-red-500/20 border-red-500/50 text-red-400'
                 : saveStatus === 'saving'
                 ? 'bg-neon-cyan/30 border-neon-cyan/50 text-neon-cyan animate-pulse'
-                : 'bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan hover:text-black group'
+                : 'bg-white/5 border-white/10 text-slate-400 hover:bg-neon-cyan/10 hover:border-neon-cyan/40 hover:text-neon-cyan group'
             }`}
             title="Save to Quick Slot"
           >
-            <img src="/assets/ui/action-save.png" alt="" className={`w-3 h-3 ${saveStatus === 'idle' ? 'opacity-60 group-hover:invert' : ''}`} />
+            <img src="/assets/ui/action-save.png" alt="" className={`w-3 h-3 ${saveStatus === 'idle' ? 'opacity-60 group-hover:opacity-100' : ''}`} />
             {saveStatus === 'saved' ? '✓ SAVED' : saveStatus === 'error' ? 'NO DATA' : saveStatus === 'saving' ? '...' : 'SAVE'}
           </button>
           <button
             onClick={handleLoad}
             disabled={loadStatus !== 'idle'}
-            className={`h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none focus-visible-ring rounded-none flex items-center gap-1.5 ${
+            className={`h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none focus-visible-ring flex items-center gap-1.5 border ${
               loadStatus === 'loaded'
-                ? 'bg-green-500 border-green-400 text-white shadow-[0_0_12px_rgba(34,197,94,0.5)]'
+                ? 'bg-neon-green/20 border-neon-green text-neon-green shadow-[0_0_12px_rgba(0,255,157,0.3)]'
                 : loadStatus === 'empty'
-                ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                ? 'bg-neon-amber/20 border-neon-amber text-neon-amber'
                 : loadStatus === 'loading'
                 ? 'bg-white/20 border-white/30 text-white animate-pulse'
-                : 'bg-black/20 border border-white/10 text-slate-300 hover:text-white hover:border-white/30 group'
+                : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white hover:border-white/30 group'
             }`}
             title="Load from Quick Slot"
           >
@@ -155,7 +155,7 @@ export const AppHeader = React.memo(() => {
           </button>
           <button
             onClick={() => setIsBOMOpen(true)}
-            className="h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none border border-neon-purple/30 bg-neon-purple/5 text-neon-purple hover:bg-neon-purple hover:text-black"
+            className="h-7 px-3 text-[9px] font-bold tracking-[0.2em] transition-all cut-corner-sm leading-none border border-white/10 bg-white/5 text-slate-400 hover:bg-neon-purple/10 hover:text-neon-purple hover:border-neon-purple/40"
             title="Generate Bill of Materials"
           >
             BOM
@@ -166,14 +166,14 @@ export const AppHeader = React.memo(() => {
 
         {/* Branch / Timeline Group */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 border border-white/10 cut-corner-sm">
-            <svg className="w-3 h-3 text-neon-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 border border-white/10 cut-corner-sm group hover:border-neon-amber/30 transition-colors">
+            <svg className="w-3 h-3 text-neon-amber opacity-70 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
             <select 
               value={currentBranch}
               onChange={(e) => setCurrentBranch(e.target.value)}
-              className="bg-transparent text-[9px] font-bold text-slate-300 focus:outline-none uppercase tracking-widest cursor-pointer"
+              className="bg-transparent text-[9px] font-bold text-slate-400 focus:outline-none uppercase tracking-widest cursor-pointer group-hover:text-white transition-colors"
             >
               <option value="master">MASTER</option>
               <option value="dev">EXP_WIRING_01</option>
@@ -182,9 +182,9 @@ export const AppHeader = React.memo(() => {
           <button 
             onClick={handleCheckpoint}
             disabled={isCheckpointing}
-            className="h-7 px-3 bg-neon-amber/10 border border-neon-amber/30 text-neon-amber text-[9px] font-bold uppercase tracking-widest hover:bg-neon-amber hover:text-black transition-all cut-corner-sm flex items-center gap-2"
+            className="h-7 px-3 bg-neon-amber/5 border border-neon-amber/30 text-neon-amber text-[9px] font-bold uppercase tracking-widest hover:bg-neon-amber hover:text-black transition-all cut-corner-sm flex items-center gap-2"
           >
-            <div className={`w-1.5 h-1.5 rounded-full ${isCheckpointing ? 'bg-white animate-ping' : 'bg-neon-amber'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full ${isCheckpointing ? 'bg-white animate-ping' : 'bg-neon-amber shadow-[0_0_5px_#ffaa00]'}`} />
             CHECKPOINT
           </button>
         </div>
@@ -207,12 +207,12 @@ export const AppHeader = React.memo(() => {
             <div className="relative">
               <button 
                 onClick={() => setIsLibraryOpen(!isLibraryOpen)}
-                className="h-7 px-3 bg-slate-800 border border-slate-700 text-slate-300 text-[9px] font-bold uppercase tracking-widest hover:text-white transition-all cut-corner-sm"
+                className="h-7 px-3 bg-white/5 border border-white/10 text-slate-400 text-[9px] font-bold uppercase tracking-widest hover:text-white hover:border-white/30 transition-all cut-corner-sm"
               >
                 ADD WIDGET
               </button>
               {isLibraryOpen && (
-                <div className="absolute top-10 right-0 w-64 bg-slate-900 border border-slate-700 shadow-2xl z-[150] cut-corner-md">
+                <div className="absolute top-10 right-0 w-64 bg-cyber-black panel-surface border border-white/10 shadow-2xl z-[150] cut-corner-md panel-frame animate-fade-up">
                   <WidgetLibrary />
                 </div>
               )}
@@ -227,10 +227,10 @@ export const AppHeader = React.memo(() => {
             setSettingsInitialTab('profile');
             setSettingsOpen(true);
           }}
-          className="h-7 px-3 flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 rounded text-xs text-slate-300 transition-colors cut-corner-sm group"
+          className="h-7 px-3 flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 rounded-none text-xs text-slate-400 transition-all cut-corner-sm group"
           title="Switch Persona"
         >
-          <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${
+          <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] transition-all duration-500 ${
             user?.expertise === 'pro' ? 'bg-neon-purple text-neon-purple' : 
             user?.expertise === 'intermediate' ? 'bg-neon-cyan text-neon-cyan' : 'bg-neon-green text-neon-green'
           }`} />
@@ -242,23 +242,23 @@ export const AppHeader = React.memo(() => {
       {/* Right Controls */}
       <div className="flex items-center gap-2">
         {isLiveActive && (
-          <div className="flex items-center gap-2 px-2 py-1 bg-red-950/30 border border-red-500/30 cut-corner-sm">
-            <div className="w-1.5 h-1.5 bg-red-500 animate-pulse shadow-[0_0_8px_#ef4444]" />
-            <span className="text-[9px] font-mono text-red-400 uppercase tracking-widest leading-none">{liveStatus}</span>
+          <div className="flex items-center gap-2 px-2 py-1 bg-red-500/10 border border-red-500/30 cut-corner-sm animate-pulse">
+            <div className="w-1.5 h-1.5 bg-red-500 shadow-[0_0_8px_#ef4444]" />
+            <span className="text-[9px] font-mono text-red-400 uppercase tracking-widest leading-none font-bold">{liveStatus}</span>
           </div>
         )}
         
         <IconButton
           label={isLiveActive ? "Disable Voice Mode" : "Enable Voice Mode"}
           icon={
-            <img src="/assets/ui/action-voice.png" alt="" className={`w-3.5 h-3.5 ${isLiveActive ? '' : 'opacity-60'}`} />
+            <img src="/assets/ui/action-voice.png" alt="" className={`w-3.5 h-3.5 ${isLiveActive ? '' : 'opacity-60 group-hover:opacity-100'}`} />
           }
           onClick={toggleLiveMode}
           size="sm"
-          className={`cut-corner-sm ${
+          className={`cut-corner-sm transition-all ${
             isLiveActive 
-              ? 'bg-red-500 text-white border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
-              : 'bg-black/20 text-slate-400 border-white/5 hover:text-neon-cyan hover:border-neon-cyan/30'
+              ? 'bg-red-500/20 text-red-400 border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
+              : 'bg-white/5 text-slate-400 border-white/10 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5'
           }`}
         />
         
@@ -269,7 +269,7 @@ export const AppHeader = React.memo(() => {
           }
           onClick={() => setSettingsOpen(true)}
           size="sm"
-          className="bg-black/20 text-slate-400 border-white/5 hover:text-white hover:border-white/30 cut-corner-sm"
+          className="bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-white/30 cut-corner-sm transition-all"
         />
 
         <div className="w-px h-4 bg-white/10" />
@@ -283,7 +283,7 @@ export const AppHeader = React.memo(() => {
           }
           onClick={() => setIsSecurityOpen(true)}
           size="sm"
-          className="bg-black/20 text-slate-400 border-white/5 hover:text-neon-cyan hover:border-neon-cyan/30 cut-corner-sm"
+          className="bg-white/5 text-slate-400 border-white/10 hover:text-neon-cyan hover:border-neon-cyan/30 cut-corner-sm transition-all"
         />
       </div>
 

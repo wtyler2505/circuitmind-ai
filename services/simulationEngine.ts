@@ -27,7 +27,7 @@ class SimulationEngine {
    */
   solve(diagram: WiringDiagram): SimulationResult {
     const pinStates: Record<string, SimNodeState> = {};
-    let isShortCircuit = false;
+    const isShortCircuit = false;
     const warnings: string[] = [];
 
     // 1. Initialize all pins to FLOATING

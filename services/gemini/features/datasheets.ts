@@ -1,19 +1,11 @@
 import { getAIClient, MODELS } from '../client';
-import { ScrapedMetadata } from '../../services/datasheetProcessor';
+import { ScrapedMetadata } from '../../datasheetProcessor';
 
 /**
  * Uses Gemini Multimodal (Vision/Doc) to extract pinouts and specs from a PDF datasheet.
  */
 export const extractPinoutFromPDF = async (base64Data: string): Promise<ScrapedMetadata | null> => {
   const genAI = getAIClient();
-  const model = genAI.getGenerativeModel({ 
-    model: MODELS.CONTEXT_CHAT_DEFAULT, // Standard flash model supports PDFs
-    generationConfig: {
-      temperature: 0.1,
-      responseMimeType: "application/json",
-    }
-  });
-
   const prompt = `
     Analyze this electronics datasheet PDF. 
     1. Identify the pin configuration/pinout section.
@@ -35,18 +27,29 @@ export const extractPinoutFromPDF = async (base64Data: string): Promise<ScrapedM
   `;
 
   try {
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: "application/pdf"
+    const result = await genAI.models.generateContent({
+      model: MODELS.CONTEXT_CHAT_DEFAULT,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                data: base64Data,
+                mimeType: "application/pdf"
+              }
+            },
+            { text: prompt }
+          ]
         }
-      },
-      prompt
-    ]);
+      ],
+      config: {
+        temperature: 0.1,
+        responseMimeType: "application/json",
+      }
+    });
 
-    const text = result.response.text();
-    return JSON.parse(text);
+    return JSON.parse(result.text || 'null');
   } catch (error) {
     console.error('Datasheet extraction failed:', error);
     return null;

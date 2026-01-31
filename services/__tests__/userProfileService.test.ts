@@ -64,10 +64,10 @@ describe('UserProfileService', () => {
   });
 
   it('should create a new profile with defaults', async () => {
-    const profile = await userProfileService.createProfile('Test User', 'expert');
+    const profile = await userProfileService.createProfile('Test User', 'pro');
     
     expect(profile.name).toBe('Test User');
-    expect(profile.expertise).toBe('expert');
+    expect(profile.expertise).toBe('pro');
     expect(profile.id).toBeDefined();
     expect(mockStore.has(profile.id)).toBe(true);
   });

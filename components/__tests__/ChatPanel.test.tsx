@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { render } from '../../tests/test-utils';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
@@ -19,30 +19,15 @@ const mockMessages: EnhancedChatMessage[] = [
 
 const baseProps = {
   conversations: [],
-  activeConversationId: 'conv-1',
-  messages: mockMessages,
+  activeConversationId: null,
+  messages: [],
   onSwitchConversation: vi.fn(),
   onCreateConversation: vi.fn(),
   onDeleteConversation: vi.fn(),
   onRenameConversation: vi.fn(),
   onSendMessage: vi.fn(),
-  isLoading: false,
-  loadingText: '',
-  onComponentClick: vi.fn(),
-  onActionClick: vi.fn(),
-  onSuggestionClick: vi.fn(),
-  generationMode: 'chat' as const,
-  onModeChange: vi.fn(),
-  useDeepThinking: false,
-  onDeepThinkingChange: vi.fn(),
-  isRecording: false,
-  onStartRecording: vi.fn(),
-  onStopRecording: vi.fn(),
-  imageSize: '1K' as const,
-  onImageSizeChange: vi.fn(),
-  aspectRatio: '16:9',
-  onAspectRatioChange: vi.fn(),
-  onToggleExpand: vi.fn(), // Added this to render minimize button
+  isExpanded: true,
+  onToggleExpand: vi.fn(),
 };
 
 describe('ChatPanel', () => {

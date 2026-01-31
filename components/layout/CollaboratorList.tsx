@@ -2,8 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { collabService } from '../../services/collabService';
 import { useAuth } from '../../contexts/AuthContext';
 
+interface PeerState {
+  user: {
+    name: string;
+    color: string;
+  };
+}
+
 export const CollaboratorList: React.FC = () => {
-  const [peers, setPeers] = useState<any[]>([]);
+  const [peers, setPeers] = useState<PeerState[]>([]);
   const { currentUser } = useAuth();
 
   useEffect(() => {

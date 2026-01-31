@@ -170,3 +170,26 @@ dht_pins = [
 generate_fzpz("DHT11", dht_pins, type_cat='sensor', properties={
     'width_in': 0.6, 'height_in': 0.6, 'color': '#3B82F6', 'label': 'S', 'family': 'Sensor'
 })
+
+# 5. Breadboard (Large - 830 points)
+# 63 columns of 5 rows x 2 sides
+bb_pins = []
+for col in range(63):
+    for row in range(5):
+        bb_pins.append({'name': f'pin_{col}_{row}', 'x': 100 + col*100, 'y': 100 + row*100})
+        bb_pins.append({'name': f'pin_{col}_{row+5}', 'x': 100 + col*100, 'y': 800 + row*100})
+# Power rails
+for col in range(50):
+    bb_pins.append({'name': f'vcc_top_{col}', 'x': 100 + col*120, 'y': 20})
+    bb_pins.append({'name': f'gnd_top_{col}', 'x': 100 + col*120, 'y': 60})
+
+generate_fzpz("Breadboard Large", bb_pins, type_cat='other', properties={
+    'width_in': 6.5, 'height_in': 2.1, 'color': '#F5F5F4', 'label': 'BB', 'family': 'Breadboard'
+})
+
+# 6. ESP32 DevKit V1
+esp_pins = [{'name': f'P{i}', 'x': 100 if i < 15 else 500, 'y': 100 + (i%15)*100} for i in range(30)]
+generate_fzpz("ESP32 DevKit V1", esp_pins, type_cat='microcontroller', properties={
+    'width_in': 1.1, 'height_in': 2.0, 'color': '#1E1E1E', 'label': 'MCU', 'family': 'ESP32'
+})
+

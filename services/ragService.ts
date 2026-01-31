@@ -49,7 +49,7 @@ export const ragService = {
     }
   },
   
-  async addDocument(id: string, content: string, metadata: any) {
+  async addDocument(id: string, content: string, metadata: KnowledgeChunk['metadata']) {
     // Generate embedding
     const embedding = await embedText(content);
     

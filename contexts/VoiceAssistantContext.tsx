@@ -14,7 +14,8 @@ interface VoiceAssistantContextType {
   liveStatus: string;
   toggleLiveMode: () => Promise<void>;
   
-  registerVisualContextProvider: (provider: () => Promise<Blob | null>) => void;
+  registerVisualContextProvider: (id: string, provider: () => Promise<Blob | null>) => void;
+  unregisterVisualContextProvider: (id: string) => void;
   
   // Event for when a transcription is ready
   lastTranscription: string | null;
@@ -40,13 +41,21 @@ export const VoiceAssistantProvider: React.FC<{ children: ReactNode }> = ({ chil
   const liveSessionRef = useRef<LiveSession | null>(null);
   
   // Visual Context
-  const visualContextProviderRef = useRef<(() => Promise<Blob | null>) | null>(null);
+  const visualContextProvidersRef = useRef<Map<string, () => Promise<Blob | null>>>(new Map());
 
-  const registerVisualContextProvider = useCallback((provider: () => Promise<Blob | null>) => {
-    visualContextProviderRef.current = provider;
+  const registerVisualContextProvider = useCallback((id: string, provider: () => Promise<Blob | null>) => {
+    visualContextProvidersRef.current.set(id, provider);
     // Update live session if active
     if (liveSessionRef.current) {
-      liveSessionRef.current.setVisualContextProvider(provider);
+      liveSessionRef.current.setVisualContextProviders(Array.from(visualContextProvidersRef.current.values()));
+    }
+  }, []);
+
+  const unregisterVisualContextProvider = useCallback((id: string) => {
+    visualContextProvidersRef.current.delete(id);
+    // Update live session if active
+    if (liveSessionRef.current) {
+      liveSessionRef.current.setVisualContextProviders(Array.from(visualContextProvidersRef.current.values()));
     }
   }, []);
 
@@ -134,8 +143,8 @@ export const VoiceAssistantProvider: React.FC<{ children: ReactNode }> = ({ chil
         }
       });
 
-      if (visualContextProviderRef.current) {
-        liveSessionRef.current.setVisualContextProvider(visualContextProviderRef.current);
+      if (visualContextProvidersRef.current.size > 0) {
+        liveSessionRef.current.setVisualContextProviders(Array.from(visualContextProvidersRef.current.values()));
       }
 
       await liveSessionRef.current.connect();
@@ -155,6 +164,7 @@ export const VoiceAssistantProvider: React.FC<{ children: ReactNode }> = ({ chil
       liveStatus,
       toggleLiveMode,
       registerVisualContextProvider,
+      unregisterVisualContextProvider,
       lastTranscription,
       clearTranscription
     }}>

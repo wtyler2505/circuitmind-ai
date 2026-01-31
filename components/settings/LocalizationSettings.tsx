@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { unitConverter, MeasurementSystem, SymbolStandard } from '../../services/localization/unitConverter';
 
 export const LocalizationSettings: React.FC = () => {
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   // In a real app, these would be in a Context or UserProfile
   const [unitSystem, setUnitSystem] = React.useState<MeasurementSystem>('metric');
   const [symbolStd, setSymbolStd] = React.useState<SymbolStandard>('ieee');

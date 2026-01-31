@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { WiringDiagram } from '../types';
 import { storageService } from '../services/storage';
+import { migrateLegacyDiagram } from '../services/componentValidator';
+import { useInventory } from './InventoryContext';
 
 interface HistoryState {
   past: WiringDiagram[];
@@ -25,6 +27,9 @@ interface DiagramContextType {
 const DiagramContext = createContext<DiagramContextType | undefined>(undefined);
 
 export const DiagramProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { inventory } = useInventory();
+  const migrationRan = useRef(false);
+
   const [history, setHistory] = useState<HistoryState>(() => {
     let savedPresent = null;
     try {
@@ -39,6 +44,23 @@ export const DiagramProvider: React.FC<{ children: ReactNode }> = ({ children })
       future: [],
     };
   });
+
+  // Run Migration on mount (once inventory is loaded)
+  useEffect(() => {
+    if (migrationRan.current || inventory.length === 0 || !history.present) return;
+    
+    const { diagram: migrated, repairedCount } = migrateLegacyDiagram(history.present, inventory);
+    
+    if (repairedCount > 0) {
+      console.log(`🔧 Diagram Migration: Repaired ${repairedCount} legacy components.`);
+      setHistory(prev => ({
+        ...prev,
+        present: migrated
+      }));
+    }
+    
+    migrationRan.current = true;
+  }, [inventory, history.present]);
 
   // Auto-save Diagram
   useEffect(() => {

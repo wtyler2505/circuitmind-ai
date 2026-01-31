@@ -8,7 +8,7 @@ export interface IndexedDocument {
   title: string;
   body: string;
   tags?: string[];
-  reference?: any;
+  reference?: unknown;
 }
 
 class SearchIndexer {
@@ -38,7 +38,7 @@ class SearchIndexer {
    * Performs a search across the index.
    */
   search(query: string, category?: SearchableCategory) {
-    const searchOptions = category ? { filter: (res: any) => res.category === category } : undefined;
+    const searchOptions = category ? { filter: (res: IndexedDocument) => res.category === category } : undefined;
     return this.miniSearch.search(query, searchOptions);
   }
 

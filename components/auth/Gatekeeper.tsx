@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export const Gatekeeper: React.FC = () => {
   const { isLocked, isSetup, login, setup } = useAuth();
@@ -24,7 +24,7 @@ export const Gatekeeper: React.FC = () => {
       } else {
         await setup(pin);
       }
-    } catch (err) {
+    } catch (_err) {
       setError(true);
     } finally {
       setLoading(false);
@@ -59,6 +59,15 @@ export const Gatekeeper: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Hidden username field for accessibility/password managers */}
+          <input 
+            type="text" 
+            name="username" 
+            value="engineer" 
+            readOnly 
+            style={{ display: 'none' }} 
+            autoComplete="username" 
+          />
           <div className="relative">
             <input 
               type="password" 
@@ -67,6 +76,7 @@ export const Gatekeeper: React.FC = () => {
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               placeholder="••••"
               autoFocus
+              autoComplete={isSetup ? 'current-password' : 'new-password'}
               className={`w-full bg-black/60 border ${error ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-slate-700 focus:border-neon-cyan'} text-center text-2xl tracking-[0.5em] py-4 text-white font-mono focus:outline-none transition-all cut-corner-sm`}
             />
             {error && (

@@ -39,6 +39,31 @@ const BOARD_MAPS: Record<string, BoardComponentMap> = {
       { type: 'OSCILLATOR', name: '16MHz', x: -5, z: 5 },
       { type: 'BUTTON', name: 'Reset', x: -30, z: 22 },
     ]
+  },
+  "ESP32-WROOM-32": {
+    name: "ESP32 DevKit V1",
+    width: 28.0,
+    length: 54.6,
+    components: [
+      { type: 'CHIP', name: 'ESP32-WROOM', x: 0, z: -15, params: { width: 18, length: 25.5, height: 3 } },
+      { type: 'USB', name: 'Micro-USB', x: 0, z: 25, rotation: 0 },
+      { type: 'HEADER', name: 'Left Pins', x: -12, z: 0, params: { count: 15, pitch: 2.54 } },
+      { type: 'HEADER', name: 'Right Pins', x: 12, z: 0, params: { count: 15, pitch: 2.54 } },
+      { type: 'BUTTON', name: 'EN', x: -8, z: 20 },
+      { type: 'BUTTON', name: 'BOOT', x: 8, z: 20 },
+    ]
+  },
+  "RASPBERRY-PI-PICO": {
+    name: "Raspberry Pi Pico",
+    width: 21.0,
+    length: 51.0,
+    components: [
+      { type: 'CHIP', name: 'RP2040', x: 0, z: 0, params: { width: 7, length: 7, height: 1 } },
+      { type: 'USB', name: 'Micro-USB', x: 0, z: -24, rotation: Math.PI },
+      { type: 'HEADER', name: 'Left', x: -9, z: 0, params: { count: 20, pitch: 2.54 } },
+      { type: 'HEADER', name: 'Right', x: 9, z: 0, params: { count: 20, pitch: 2.54 } },
+      { type: 'BUTTON', name: 'BOOTSEL', x: 0, z: -15 },
+    ]
   }
 };
 

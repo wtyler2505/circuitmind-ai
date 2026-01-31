@@ -1,15 +1,14 @@
-import { ActionIntent } from '../../types';
 
 export interface APIRequest {
   method: 'GET' | 'POST' | 'DELETE' | 'PUT';
   path: string;
-  body?: any;
+  body?: unknown;
   headers: Record<string, string>;
 }
 
 export interface APIResponse {
   status: number;
-  body: any;
+  body: unknown;
 }
 
 class APIDispatcher {

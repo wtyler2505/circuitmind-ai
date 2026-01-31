@@ -1,30 +1,30 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '../../tests/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ThreeViewer from '../ThreeViewer';
 
 vi.mock('three', () => {
   class Object3D {
-    position = { sub: vi.fn(), y: 0 };
+    position = { sub: vi.fn(), y: 0, set: vi.fn() };
     scale = { setScalar: vi.fn(), x: 1, y: 1 };
+    rotation = { x: 0, y: 0, z: 0 };
     traverse = vi.fn();
-  }
-  class Scene {
-    background = null;
-    fog = null;
     add = vi.fn();
     remove = vi.fn();
-    traverse = vi.fn();
+  }
+  class Scene extends Object3D {
+    background = null;
+    fog = null;
     clear = vi.fn();
   }
   class Color {
     constructor() {}
+    set() {}
   }
   class Fog {
     constructor() {}
   }
-  class PerspectiveCamera {
+  class PerspectiveCamera extends Object3D {
     aspect = 1;
-    position = { set: vi.fn() };
     lookAt = vi.fn();
     updateProjectionMatrix = vi.fn();
   }
@@ -36,25 +36,24 @@ vi.mock('three', () => {
     render = vi.fn();
     dispose = vi.fn();
     forceContextLoss = vi.fn();
+    getSize() { return { width: 0, height: 0 }; }
   }
-  class AmbientLight {
+  class AmbientLight extends Object3D {
     intensity = 0;
     color = { set: vi.fn() };
-    constructor() {}
+    constructor() { super(); }
   }
-  class DirectionalLight {
+  class DirectionalLight extends Object3D {
     intensity = 0;
     color = { set: vi.fn() };
-    position = { set: vi.fn() };
     shadow = { mapSize: { width: 0, height: 0 }, camera: { near: 0, far: 0 } };
-    constructor() {}
+    constructor() { super(); }
   }
-  class PointLight {
-    position = { set: vi.fn() };
-    constructor() {}
+  class PointLight extends Object3D {
+    constructor() { super(); }
   }
-  class GridHelper {
-    constructor() {}
+  class GridHelper extends Object3D {
+    constructor() { super(); }
   }
   class Box3 {
     setFromObject() {
@@ -63,6 +62,8 @@ vi.mock('three', () => {
     isEmpty() {
       return true;
     }
+    getSize() { return new Vector3(); }
+    getCenter() { return new Vector3(); }
   }
   class Vector3 {
     x = 0;
@@ -71,6 +72,8 @@ vi.mock('three', () => {
     multiplyScalar() {
       return this;
     }
+    sub() { return this; }
+    set() { return this; }
   }
   class Material {
     dispose = vi.fn();
@@ -90,9 +93,12 @@ vi.mock('three', () => {
     dispose = vi.fn();
     constructor() {}
   }
-  class Mesh {
+  class Mesh extends Object3D {
     geometry = new BoxGeometry();
     material = new MeshStandardMaterial();
+    constructor() { super(); }
+  }
+  class CanvasTexture {
     constructor() {}
   }
   return {
@@ -113,6 +119,33 @@ vi.mock('three', () => {
     MeshBasicMaterial,
     BoxGeometry,
     Mesh,
+    CanvasTexture,
+    RepeatWrapping: 1000,
+    ACESFilmicToneMapping: 4,
+    PCFSoftShadowMap: 1,
+    DoubleSide: 2,
+    AdditiveBlending: 2,
+    PMREMGenerator: class {
+      constructor() {}
+      compileEquirectangularShader() {}
+      fromScene() { return { texture: { dispose: vi.fn() }, dispose: vi.fn() }; }
+      dispose() {}
+    },
+    RectAreaLight: class {
+      constructor() {}
+      position = { set: vi.fn() };
+      lookAt = vi.fn();
+    },
+    PlaneGeometry: class {
+      constructor() {}
+      dispose() {}
+    },
+    Clock: class {
+      getElapsedTime() { return 0; }
+    },
+    ObjectLoader: class {
+      parse() { return new Object3D(); }
+    },
   };
 });
 

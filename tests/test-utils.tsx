@@ -6,6 +6,17 @@ import { LayoutProvider } from '../contexts/LayoutContext';
 import { VoiceAssistantProvider } from '../contexts/VoiceAssistantContext';
 import { ConversationProvider } from '../contexts/ConversationContext';
 import { AssistantStateProvider } from '../contexts/AssistantStateContext';
+import { HUDProvider } from '../contexts/HUDContext';
+import { TelemetryProvider } from '../contexts/TelemetryContext';
+import { SimulationProvider } from '../contexts/SimulationContext';
+import { TutorialProvider } from '../contexts/TutorialContext';
+import { HealthProvider } from '../contexts/HealthContext';
+import { MacroProvider } from '../contexts/MacroContext';
+import { DashboardProvider } from '../contexts/DashboardContext';
+import { AuthProvider } from '../contexts/AuthContext';
+import { UserProvider } from '../contexts/UserContext';
+import { SelectionProvider } from '../contexts/SelectionContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
 import { ToastProvider } from '../hooks/useToast';
 import { ElectronicComponent } from '../types';
 
@@ -16,21 +27,43 @@ interface CustomRenderOptions extends RenderOptions {
 const customRender = (ui: React.ReactElement, options?: CustomRenderOptions) => {
   const AllTheProviders = ({ children }: { children: ReactNode }) => {
     return (
-      <ToastProvider>
-        <LayoutProvider>
-          <AssistantStateProvider>
-            <InventoryProvider initialData={options?.inventory}>
-              <DiagramProvider>
-                <VoiceAssistantProvider>
-                  <ConversationProvider>
-                    {children}
-                  </ConversationProvider>
-                </VoiceAssistantProvider>
-              </DiagramProvider>
-            </InventoryProvider>
-          </AssistantStateProvider>
-        </LayoutProvider>
-      </ToastProvider>
+      <LayoutProvider>
+        <AssistantStateProvider>
+          <HealthProvider>
+            <AuthProvider>
+              <UserProvider>
+                <ToastProvider>
+                  <NotificationProvider>
+                    <DashboardProvider>
+                      <MacroProvider>
+                        <InventoryProvider initialData={options?.inventory}>
+                          <ConversationProvider>
+                            <DiagramProvider>
+                              <SelectionProvider>
+                                <TelemetryProvider>
+                                  <HUDProvider>
+                                    <SimulationProvider>
+                                      <VoiceAssistantProvider>
+                                        <TutorialProvider>
+                                          {children}
+                                        </TutorialProvider>
+                                      </VoiceAssistantProvider>
+                                    </SimulationProvider>
+                                  </HUDProvider>
+                                </TelemetryProvider>
+                              </SelectionProvider>
+                            </DiagramProvider>
+                          </ConversationProvider>
+                        </InventoryProvider>
+                      </MacroProvider>
+                    </DashboardProvider>
+                  </NotificationProvider>
+                </ToastProvider>
+              </UserProvider>
+            </AuthProvider>
+          </HealthProvider>
+        </AssistantStateProvider>
+      </LayoutProvider>
     );
   };
 

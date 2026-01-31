@@ -44,6 +44,10 @@
   --color-sensor-dark: #1D4ED8;
   --color-sensor-purple: #6D28D9;
 
+  /* Contrast Overrides for Accessibility (Tailwind v4 syntax) */
+  --color-slate-500: #94a3b8; /* Standard slate-400 equivalent for better contrast */
+  --color-slate-600: #cbd5e1; /* Standard slate-300 equivalent for better contrast */
+
   /* Dynamic Accents */
   --mode-accent: var(--color-neon-cyan);
   --color-mode-accent: var(--mode-accent);

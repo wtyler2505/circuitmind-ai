@@ -26,22 +26,19 @@ export interface Toast {
   action?: ToastAction;
 }
 
-interface ToastContextValue {
-  toasts: Toast[];
-  addToast: (type: ToastType, message: string, duration?: number, action?: ToastAction) => string;
+// ============================================
+// Contexts
+// ============================================
+
+const ToastStateContext = createContext<Toast[]>([]);
+const ToastApiContext = createContext<{
+  addToast: (type: ToastType, message: string, duration?: number, action?: ToastAction, id?: string) => string;
   removeToast: (id: string) => void;
-  // Convenience methods
-  success: (message: string, duration?: number, action?: ToastAction) => string;
-  error: (message: string, duration?: number, action?: ToastAction) => string;
-  warning: (message: string, duration?: number, action?: ToastAction) => string;
-  info: (message: string, duration?: number, action?: ToastAction) => string;
-}
-
-// ============================================
-// Context
-// ============================================
-
-const ToastContext = createContext<ToastContextValue | null>(null);
+  success: (message: string, duration?: number, action?: ToastAction, id?: string) => string;
+  error: (message: string, duration?: number, action?: ToastAction, id?: string) => string;
+  warning: (message: string, duration?: number, action?: ToastAction, id?: string) => string;
+  info: (message: string, duration?: number, action?: ToastAction, id?: string) => string;
+} | null>(null);
 
 // ============================================
 // Provider
@@ -59,13 +56,15 @@ export function ToastProvider({ children }: ToastProviderProps) {
   }, []);
 
   const addToast = useCallback(
-    (type: ToastType, message: string, duration = 4000, action?: ToastAction) => {
-      const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    (type: ToastType, message: string, duration = 4000, action?: ToastAction, manualId?: string) => {
+      const id = manualId || `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const toast: Toast = { id, type, message, duration, action };
 
-      setToasts(prev => [...prev, toast]);
+      setToasts(prev => {
+        if (prev.some(t => t.id === id)) return prev;
+        return [...prev, toast];
+      });
 
-      // Auto-dismiss
       if (duration > 0) {
         setTimeout(() => removeToast(id), duration);
       }
@@ -75,44 +74,61 @@ export function ToastProvider({ children }: ToastProviderProps) {
     [removeToast]
   );
 
-  // Convenience methods
-  const success = useCallback(
-    (msg: string, dur?: number, action?: ToastAction) => addToast('success', msg, dur, action),
-    [addToast]
-  );
-  const error = useCallback(
-    (msg: string, dur?: number, action?: ToastAction) =>
-      addToast('error', msg, dur ?? 6000, action),
-    [addToast]
-  );
-  const warning = useCallback(
-    (msg: string, dur?: number, action?: ToastAction) =>
-      addToast('warning', msg, dur ?? 5000, action),
-    [addToast]
-  );
-  const info = useCallback(
-    (msg: string, dur?: number, action?: ToastAction) => addToast('info', msg, dur, action),
-    [addToast]
-  );
+  const success = useCallback((msg: string, dur?: number, act?: ToastAction, id?: string) => addToast('success', msg, dur, act, id), [addToast]);
+  const error = useCallback((msg: string, dur?: number, act?: ToastAction, id?: string) => addToast('error', msg, dur ?? 6000, act, id), [addToast]);
+  const warning = useCallback((msg: string, dur?: number, act?: ToastAction, id?: string) => addToast('warning', msg, dur ?? 5000, act, id), [addToast]);
+  const info = useCallback((msg: string, dur?: number, act?: ToastAction, id?: string) => addToast('info', msg, dur, act, id), [addToast]);
+
+  const api = React.useMemo(() => ({
+    addToast, removeToast, success, error, warning, info
+  }), [addToast, removeToast, success, error, warning, info]);
 
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast, success, error, warning, info }}>
-      {children}
-      <ToastContainer toasts={toasts} onDismiss={removeToast} />
-    </ToastContext.Provider>
+    <ToastStateContext.Provider value={toasts}>
+      <ToastApiContext.Provider value={api}>
+        {children}
+        <ToastContainer toasts={toasts} onDismiss={removeToast} />
+      </ToastApiContext.Provider>
+    </ToastStateContext.Provider>
   );
 }
 
 // ============================================
-// Hook
+// Hooks
 // ============================================
 
-export function useToast(): ToastContextValue {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
+/**
+ * Hook for components that only need to trigger toasts.
+ * Returns a stable API that won't trigger re-renders when toasts change.
+ */
+export function useToastApi() {
+  const api = useContext(ToastApiContext);
+  if (!api) {
+    throw new Error('useToastApi must be used within a ToastProvider');
   }
-  return context;
+  return api;
+}
+
+/**
+ * Hook for components that need to display the list of toasts.
+ */
+export function useToasts() {
+  return useContext(ToastStateContext);
+}
+
+/**
+ * Legacy hook for backward compatibility. 
+ * NOTE: Using this in useEffect dependencies will cause infinite loops 
+ * if any toast is added/removed. Use useToastApi() instead.
+ */
+export function useToast() {
+  const toasts = useToasts();
+  const api = useToastApi();
+  
+  return React.useMemo(() => ({
+    toasts,
+    ...api
+  }), [toasts, api]);
 }
 
 // ============================================

@@ -21,15 +21,15 @@ export const handleLoadDiagram: ActionHandler = async (_, { loadDiagram }) => {
   return { success: true };
 };
 
-export const handleSetUserLevel: ActionHandler<{ level: 'beginner' | 'intermediate' | 'expert' }> = async (payload) => {
+export const handleSetUserLevel: ActionHandler<{ level: 'beginner' | 'intermediate' | 'pro' }> = async (payload) => {
   if (!payload.level) return { success: false, error: 'Level required' };
-  userProfileService.updateExperience(payload.level);
+  await userProfileService.updateExperience(payload.level);
   return { success: true };
 };
 
 export const handleLearnFact: ActionHandler<{ content: string }> = async (payload) => {
   if (!payload.content) return { success: false, error: 'Content required' };
-  userProfileService.addFact(payload.content);
+  await userProfileService.addFact(payload.content);
   return { success: true };
 };
 

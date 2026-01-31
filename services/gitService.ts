@@ -13,17 +13,29 @@ class GitService {
     
     try {
       await fs.promises.mkdir(dir);
-    } catch (e) {
+    } catch (_e) {
       // Directory already exists, that's fine
     }
 
     try {
-      await git.init({ fs, dir });
+      await git.init({ fs, dir, defaultBranch: 'master' });
       
-      // Ensure master branch exists
-      const branches = await git.listBranches({ fs, dir });
-      if (!branches.includes('master')) {
-        // Create an initial commit to establish the branch
+      // Ensure master branch exists by making a commit if repo is empty
+      try {
+        const branches = await git.listBranches({ fs, dir });
+        if (branches.length === 0 || !branches.includes('master')) {
+          // Create an initial commit to establish the branch
+          await fs.promises.writeFile(`${dir}/README.md`, '# CircuitMind AI Project Repository\n');
+          await git.add({ fs, dir, filepath: 'README.md' });
+          await git.commit({
+            fs,
+            dir,
+            message: 'Initial commit',
+            author: { name: 'System', email: 'system@circuitmind.ai' }
+          });
+        }
+      } catch (_err) {
+        // If listBranches fails, it might be truly empty, try initial commit
         await fs.promises.writeFile(`${dir}/README.md`, '# CircuitMind AI Project Repository\n');
         await git.add({ fs, dir, filepath: 'README.md' });
         await git.commit({
@@ -104,8 +116,13 @@ class GitService {
   }
 
   async log() {
-    await this.init();
-    return await git.log({ fs, dir, depth: 50 });
+    try {
+      await this.init();
+      return await git.log({ fs, dir, depth: 50 });
+    } catch (e) {
+      console.warn('Git log failed, repository might be inconsistent:', e);
+      return [];
+    }
   }
 
   async branch(name: string) {

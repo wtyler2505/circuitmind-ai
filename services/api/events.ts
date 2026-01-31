@@ -1,16 +1,16 @@
 type AppEvent = 'save' | 'simulation_pass' | 'low_stock' | 'action_execute';
 
 class AppEventEmitter {
-  private listeners: Map<AppEvent, ((data: any) => void)[]> = new Map();
+  private listeners: Map<AppEvent, ((data: unknown) => void)[]> = new Map();
 
-  on(event: AppEvent, callback: (data: any) => void) {
+  on(event: AppEvent, callback: (data: unknown) => void) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
     this.listeners.get(event)!.push(callback);
   }
 
-  emit(event: AppEvent, data: any) {
+  emit(event: AppEvent, data: unknown) {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       callbacks.forEach(cb => cb(data));
@@ -20,7 +20,7 @@ class AppEventEmitter {
     this.triggerWebhooks(event, data);
   }
 
-  private async triggerWebhooks(event: AppEvent, data: any) {
+  private async triggerWebhooks(event: AppEvent, data: unknown) {
     const saved = localStorage.getItem('cm_webhooks');
     const webhooks: { url: string, events: AppEvent[] }[] = saved ? JSON.parse(saved) : [];
     

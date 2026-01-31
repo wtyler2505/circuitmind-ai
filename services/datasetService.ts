@@ -1,11 +1,5 @@
 import { EnhancedChatMessage } from '../types';
-import { aiMetricsService, AIMetric } from './aiMetricsService';
-
-interface TrainingExample {
-  messages: { role: string; content: string }[];
-  feedback?: number;
-  metric?: AIMetric;
-}
+import { aiMetricsService } from './aiMetricsService';
 
 export const datasetService = {
   exportTrainingData: (): string => {

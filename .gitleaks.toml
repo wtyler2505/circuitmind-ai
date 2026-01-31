@@ -1,0 +1,7 @@
+[allowlist]
+description = "Ignore false positive generic-api-key findings in documentation"
+fingerprints = [
+    "356416e8d6da36873b7b7151797a96dc19c22976:docs/misc/inventory/examples_library/circuit_002_ultrasonic_distance/README.md:generic-api-key:21",
+    "356416e8d6da36873b7b7151797a96dc19c22976:docs/misc/inventory/examples_library/circuit_007_esp32_ultrasonic/README.md:generic-api-key:26",
+    "356416e8d6da36873b7b7151797a96dc19c22976:docs/misc/inventory/examples_library/circuit_008_ws2812b_strip/README.md:generic-api-key:28"
+]

@@ -1,4 +1,3 @@
-import { ElectronicComponent } from '../types';
 
 export interface ScrapedPin {
   number: number;

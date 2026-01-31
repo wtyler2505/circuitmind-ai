@@ -1,5 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { render } from '../../tests/test-utils';
+import { render, fireEvent, screen, waitFor } from '../../tests/test-utils';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import Inventory from '../Inventory';

@@ -66,7 +66,7 @@ export default defineConfig(({ mode }) => {
       ],
       test: {
         environment: 'jsdom',
-        setupFiles: './tests/setup.ts',
+        setupFiles: './tests/setup.tsx',
         globals: true,
         clearMocks: true,
       },
@@ -85,6 +85,8 @@ export default defineConfig(({ mode }) => {
             manualChunks: {
               'vendor-react': ['react', 'react-dom'],
               'vendor-three': ['three'],
+              'vendor-ai': ['@google/genai'],
+              'vendor-ui': ['framer-motion'],
               'vendor-markdown': ['react-markdown', 'remark-gfm', 'remark-breaks'],
             }
           }

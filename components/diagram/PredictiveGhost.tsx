@@ -1,7 +1,6 @@
-import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
 import { PredictiveAction } from '../../services/predictionEngine';
-import { WiringDiagram, ElectronicComponent } from '../../types';
+import { WiringDiagram } from '../../types';
 import { getComponentShape, calculatePinPositions } from './componentShapes';
 
 interface PredictiveGhostProps {
@@ -41,11 +40,12 @@ const GhostAction: React.FC<{
   zoom: number;
   onAccept: (id: string) => void;
   onReject: (id: string) => void;
-}> = ({ prediction, diagram, positions, zoom, onAccept, onReject }) => {
+}> = ({ prediction, diagram, positions, zoom: _zoom, onAccept, onReject }) => {
   const { action } = prediction;
 
   if (action.type === 'createConnection') {
-    const { fromComponentId, fromPin, toComponentId, toPin } = action.payload as any;
+    const payload = action.payload as { fromComponentId: string; fromPin: string; toComponentId: string; toPin: string };
+    const { fromComponentId, fromPin, toComponentId, toPin } = payload;
     
     const startPos = positions.get(fromComponentId);
     const endPos = positions.get(toComponentId);

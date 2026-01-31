@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { ActionIntent, ElectronicComponent } from '../types';
 import { DiagramCanvasRef, HighlightOptions } from '../components/DiagramCanvas';
 import { getHandler, ActionContext } from './actions';
@@ -102,7 +102,7 @@ export function useAIActions(options: UseAIActionsOptions) {
       }
       pushActionDelta({
         type: action.type,
-        targetId: (action.payload as any).componentId || (action.payload as any).nodeId || (action.payload as any).id,
+        targetId: (action.payload['componentId'] || action.payload['nodeId'] || action.payload['id']) as string | undefined,
         description: action.label
       });
     }
@@ -192,7 +192,7 @@ export function useAIActions(options: UseAIActionsOptions) {
     setGenerationMode(mode);
   }, [setGenerationMode]);
 
-  return {
+  return useMemo(() => ({
     execute,
     pendingActions,
     confirmAction,
@@ -218,7 +218,33 @@ export function useAIActions(options: UseAIActionsOptions) {
     switchGenerationMode,
     autonomySettings,
     updateAutonomySettings,
-  };
+  }), [
+    execute,
+    pendingActions,
+    confirmAction,
+    rejectAction,
+    clearPendingActions,
+    stagedActions,
+    acceptStagedAction,
+    rejectStagedAction,
+    clearStagedActions,
+    stageActions,
+    canUndo,
+    undo,
+    actionHistory,
+    highlightComponent,
+    centerOnComponent,
+    zoomTo,
+    resetView,
+    openInventory,
+    closeInventory,
+    openSettings,
+    closeSettings,
+    openComponentEditor,
+    switchGenerationMode,
+    autonomySettings,
+    updateAutonomySettings,
+  ]);
 }
 
 // Re-export for backwards compatibility

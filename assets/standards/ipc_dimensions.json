@@ -1,66 +1,54 @@
 {
   "packages": {
-    "SOIC-8": {
-      "body_width": 3.9,
-      "body_length": 4.9,
-      "height": 1.75,
-      "pitch": 1.27,
-      "pin_count": 8,
-      "pin_type": "gullwing"
-    },
-    "SOIC-14": {
-      "body_width": 3.9,
-      "body_length": 8.65,
-      "height": 1.75,
-      "pitch": 1.27,
-      "pin_count": 14,
-      "pin_type": "gullwing"
-    },
-    "DIP-8": {
-      "body_width": 6.35,
-      "body_length": 9.27,
-      "height": 3.3,
-      "pitch": 2.54,
-      "pin_count": 8,
-      "pin_type": "through-hole"
-    },
-    "DIP-28": {
-      "body_width": 7.62,
-      "body_length": 34.67,
-      "height": 4.57,
-      "pitch": 2.54,
-      "pin_count": 28,
-      "pin_type": "through-hole"
-    },
-    "QFP-32": {
-      "body_width": 7.0,
-      "body_length": 7.0,
-      "height": 1.4,
-      "pitch": 0.8,
-      "pin_count": 32,
-      "pin_type": "gullwing"
-    },
-    "0805": {
-      "body_width": 1.25,
-      "body_length": 2.0,
-      "height": 0.9,
-      "pin_count": 2,
-      "pin_type": "chip"
-    },
-    "0603": {
-      "body_width": 0.8,
-      "body_length": 1.6,
-      "height": 0.7,
-      "pin_count": 2,
-      "pin_type": "chip"
-    },
-    "SOT-23": {
-      "body_width": 1.3,
-      "body_length": 2.9,
-      "height": 1.0,
-      "pitch": 0.95,
-      "pin_count": 3,
-      "pin_type": "gullwing"
-    }
+    "SOIC-8": { "body_width": 3.9, "body_length": 4.9, "height": 1.75, "pitch": 1.27, "pin_count": 8, "pin_type": "gullwing" },
+    "SOIC-14": { "body_width": 3.9, "body_length": 8.65, "height": 1.75, "pitch": 1.27, "pin_count": 14, "pin_type": "gullwing" },
+    "SOIC-16": { "body_width": 3.9, "body_length": 9.9, "height": 1.75, "pitch": 1.27, "pin_count": 16, "pin_type": "gullwing" },
+    "SOIC-20": { "body_width": 7.5, "body_length": 12.8, "height": 2.65, "pitch": 1.27, "pin_count": 20, "pin_type": "gullwing" },
+    "SOIC-24": { "body_width": 7.5, "body_length": 15.4, "height": 2.65, "pitch": 1.27, "pin_count": 24, "pin_type": "gullwing" },
+    "SOIC-28": { "body_width": 7.5, "body_length": 17.9, "height": 2.65, "pitch": 1.27, "pin_count": 28, "pin_type": "gullwing" },
+    "DIP-8": { "body_width": 6.35, "body_length": 9.27, "height": 3.3, "pitch": 2.54, "pin_count": 8, "pin_type": "through-hole" },
+    "DIP-14": { "body_width": 6.35, "body_length": 19.05, "height": 3.3, "pitch": 2.54, "pin_count": 14, "pin_type": "through-hole" },
+    "DIP-16": { "body_width": 6.35, "body_length": 19.05, "height": 3.3, "pitch": 2.54, "pin_count": 16, "pin_type": "through-hole" },
+    "DIP-20": { "body_width": 6.35, "body_length": 26.16, "height": 3.3, "pitch": 2.54, "pin_count": 20, "pin_type": "through-hole" },
+    "DIP-24": { "body_width": 15.24, "body_length": 31.75, "height": 4.57, "pitch": 2.54, "pin_count": 24, "pin_type": "through-hole" },
+    "DIP-28": { "body_width": 7.62, "body_length": 34.67, "height": 4.57, "pitch": 2.54, "pin_count": 28, "pin_type": "through-hole" },
+    "DIP-40": { "body_width": 15.24, "body_length": 52.32, "height": 4.57, "pitch": 2.54, "pin_count": 40, "pin_type": "through-hole" },
+    "TQFP-32": { "body_width": 7.0, "body_length": 7.0, "height": 1.2, "pitch": 0.8, "pin_count": 32, "pin_type": "gullwing" },
+    "TQFP-44": { "body_width": 10.0, "body_length": 10.0, "height": 1.2, "pitch": 0.8, "pin_count": 44, "pin_type": "gullwing" },
+    "TQFP-48": { "body_width": 7.0, "body_length": 7.0, "height": 1.2, "pitch": 0.5, "pin_count": 48, "pin_type": "gullwing" },
+    "TQFP-64": { "body_width": 10.0, "body_length": 10.0, "height": 1.2, "pitch": 0.5, "pin_count": 64, "pin_type": "gullwing" },
+    "TQFP-100": { "body_width": 14.0, "body_length": 14.0, "height": 1.2, "pitch": 0.5, "pin_count": 100, "pin_type": "gullwing" },
+    "SOT-23": { "body_width": 1.3, "body_length": 2.9, "height": 1.0, "pitch": 0.95, "pin_count": 3, "pin_type": "gullwing" },
+    "SOT-23-5": { "body_width": 1.6, "body_length": 2.9, "height": 1.1, "pitch": 0.95, "pin_count": 5, "pin_type": "gullwing" },
+    "SOT-23-6": { "body_width": 1.6, "body_length": 2.9, "height": 1.1, "pitch": 0.95, "pin_count": 6, "pin_type": "gullwing" },
+    "SOT-223": { "body_width": 3.5, "body_length": 6.5, "height": 1.7, "pitch": 2.3, "pin_count": 4, "pin_type": "gullwing" },
+    "SOT-89": { "body_width": 2.5, "body_length": 4.5, "height": 1.5, "pitch": 1.5, "pin_count": 3, "pin_type": "gullwing" },
+    "QFN-16": { "body_width": 3.0, "body_length": 3.0, "height": 0.75, "pitch": 0.5, "pin_count": 16, "pin_type": "pad" },
+    "QFN-24": { "body_width": 4.0, "body_length": 4.0, "height": 0.75, "pitch": 0.5, "pin_count": 24, "pin_type": "pad" },
+    "QFN-32": { "body_width": 5.0, "body_length": 5.0, "height": 0.75, "pitch": 0.5, "pin_count": 32, "pin_type": "pad" },
+    "QFN-48": { "body_width": 7.0, "body_length": 7.0, "height": 0.75, "pitch": 0.5, "pin_count": 48, "pin_type": "pad" },
+    "0201": { "body_width": 0.3, "body_length": 0.6, "height": 0.3, "pin_count": 2, "pin_type": "chip" },
+    "0402": { "body_width": 0.5, "body_length": 1.0, "height": 0.35, "pin_count": 2, "pin_type": "chip" },
+    "0603": { "body_width": 0.8, "body_length": 1.6, "height": 0.45, "pin_count": 2, "pin_type": "chip" },
+    "0805": { "body_width": 1.25, "body_length": 2.0, "height": 0.5, "pin_count": 2, "pin_type": "chip" },
+    "1206": { "body_width": 1.6, "body_length": 3.2, "height": 0.55, "pin_count": 2, "pin_type": "chip" },
+    "1210": { "body_width": 2.5, "body_length": 3.2, "height": 0.55, "pin_count": 2, "pin_type": "chip" },
+    "1812": { "body_width": 3.2, "body_length": 4.5, "height": 0.6, "pin_count": 2, "pin_type": "chip" },
+    "2512": { "body_width": 3.2, "body_length": 6.3, "height": 0.6, "pin_count": 2, "pin_type": "chip" },
+    "SMA": { "body_width": 2.6, "body_length": 4.3, "height": 2.1, "pin_count": 2, "pin_type": "chip" },
+    "SMB": { "body_width": 3.6, "body_length": 4.3, "height": 2.3, "pin_count": 2, "pin_type": "chip" },
+    "SMC": { "body_width": 6.0, "body_length": 7.0, "height": 2.5, "pin_count": 2, "pin_type": "chip" },
+    "SOD-123": { "body_width": 1.6, "body_length": 2.7, "height": 1.1, "pin_count": 2, "pin_type": "chip" },
+    "SOD-323": { "body_width": 1.25, "body_length": 1.7, "height": 0.95, "pin_count": 2, "pin_type": "chip" },
+    "SOD-523": { "body_width": 0.8, "body_length": 1.2, "height": 0.6, "pin_count": 2, "pin_type": "chip" },
+    "TO-92": { "body_width": 4.5, "body_length": 4.5, "height": 4.5, "pitch": 1.27, "pin_count": 3, "pin_type": "through-hole" },
+    "TO-220": { "body_width": 10.0, "body_length": 15.0, "height": 4.5, "pitch": 2.54, "pin_count": 3, "pin_type": "through-hole" },
+    "TO-263": { "body_width": 10.0, "body_length": 9.0, "height": 4.5, "pitch": 2.54, "pin_count": 3, "pin_type": "gullwing" },
+    "BGA-64": { "body_width": 8.0, "body_length": 8.0, "height": 1.2, "pitch": 0.8, "pin_count": 64, "pin_type": "ball" },
+    "BGA-100": { "body_width": 10.0, "body_length": 10.0, "height": 1.2, "pitch": 0.8, "pin_count": 100, "pin_type": "ball" },
+    "USB-C": { "body_width": 8.94, "body_length": 7.3, "height": 3.2, "pin_count": 24, "pin_type": "hybrid" },
+    "USB-MICRO-B": { "body_width": 7.5, "body_length": 5.6, "height": 2.5, "pin_count": 5, "pin_type": "hybrid" },
+    "HEADER-2MM-1X10": { "body_width": 2.0, "body_length": 20.0, "height": 2.0, "pitch": 2.0, "pin_count": 10, "pin_type": "through-hole" },
+    "HEADER-2MM-2X10": { "body_width": 4.0, "body_length": 20.0, "height": 2.0, "pitch": 2.0, "pin_count": 20, "pin_type": "through-hole" }
   }
 }

@@ -31,10 +31,6 @@ class VisionAnalysisService {
    */
   async compareRealityToPlan(base64Image: string, diagram: WiringDiagram): Promise<VisionErrorReport[]> {
     const ai = getAIClient();
-    const model = ai.getGenerativeModel({ 
-      model: MODELS.CONTEXT_CHAT_COMPLEX, // Gemini 2.5 Pro Vision
-      generationConfig: { responseMimeType: "application/json" }
-    });
 
     const prompt = `
       You are an expert electronics quality assurance engineer.
@@ -61,12 +57,20 @@ class VisionAnalysisService {
     `;
 
     try {
-      const result = await model.generateContent([
-        { inlineData: { data: base64Image, mimeType: "image/jpeg" } },
-        prompt
-      ]);
-      const text = result.response.text();
-      return JSON.parse(text);
+      const response = await ai.models.generateContent({
+        model: MODELS.CONTEXT_CHAT_COMPLEX,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { inlineData: { data: base64Image, mimeType: "image/jpeg" } },
+              { text: prompt }
+            ]
+          }
+        ],
+        config: { responseMimeType: "application/json" }
+      });
+      return JSON.parse(response.text || '[]');
     } catch (e) {
       console.error('Vision analysis failed', e);
       return [];

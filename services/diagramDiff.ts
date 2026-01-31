@@ -1,4 +1,4 @@
-import { WiringDiagram, ElectronicComponent, WireConnection } from '../types';
+import { WiringDiagram, WireConnection } from '../types';
 
 export interface DiffSet {
   added: { components: string[]; connections: number[] };

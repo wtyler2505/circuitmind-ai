@@ -3,7 +3,7 @@ import { useUser } from '../../contexts/UserContext';
 import { UserProfile, userProfileService } from '../../services/userProfileService';
 
 export const ProfileSettings: React.FC = () => {
-  const { user, updatePreferences, updateExpertise, switchProfile, refreshUser } = useUser();
+  const { user, updatePreferences, updateExpertise, switchProfile } = useUser();
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
@@ -25,8 +25,8 @@ export const ProfileSettings: React.FC = () => {
       await switchProfile(newProfile.id);
       setIsCreating(false);
       setNewProfileName('');
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
+      console.error('Failed to create profile');
     }
   };
 
@@ -57,8 +57,8 @@ export const ProfileSettings: React.FC = () => {
         } else {
             alert('Invalid profile file format');
         }
-    } catch (err) {
-        console.error('Import failed', err);
+    } catch (_err) {
+        console.error('Import failed');
         alert('Failed to import profile');
     }
   };
@@ -166,7 +166,7 @@ export const ProfileSettings: React.FC = () => {
           <label className="block text-xs font-medium text-slate-400">AI Personality Tone</label>
           <select
             value={user.preferences.aiTone}
-            onChange={(e) => updatePreferences({ aiTone: e.target.value as any })}
+            onChange={(e) => updatePreferences({ aiTone: e.target.value as UserProfile['preferences']['aiTone'] })}
             className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded px-3 py-2"
           >
             <option value="sass">Sass (Eve Original)</option>
@@ -185,7 +185,7 @@ export const ProfileSettings: React.FC = () => {
                 try {
                     const parsed = JSON.parse(e.target.value);
                     updatePreferences({ wiringColors: parsed });
-                } catch (err) {
+                } catch (_err) {
                     // Ignore parse errors while typing
                 }
              }}

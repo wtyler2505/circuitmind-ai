@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '../../tests/test-utils';
 import { createRef } from 'react';
 import DiagramCanvas, { DiagramCanvasRef } from '../DiagramCanvas';
 import { WiringDiagram, ElectronicComponent } from '../../types';

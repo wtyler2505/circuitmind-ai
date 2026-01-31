@@ -2,10 +2,17 @@ import { apiDispatcher, APIRequest, APIResponse } from './apiDispatcher';
 import { tokenService } from './tokenService';
 import { gitService } from '../gitService';
 
+import { ActionIntent } from '../../types';
+
+interface GatewayContext {
+  inventory: unknown[];
+  executeAction: (action: ActionIntent, auto: boolean) => Promise<{ success: boolean; error?: string }>;
+}
+
 /**
  * Initializes the virtual API layer.
  */
-export const initAPIGateway = (getContext: () => any) => {
+export const initAPIGateway = (getContext: () => GatewayContext) => {
   // GET /v1/projects
   apiDispatcher.register('GET', '/v1/projects', async (req) => {
     if (!validateAuth(req)) return unauthorized();

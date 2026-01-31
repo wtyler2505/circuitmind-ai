@@ -3,8 +3,7 @@ import {
   ActionType,
   ComponentReference,
   ActionIntent,
-  GroundingSource,
-  ElectronicComponent
+  GroundingSource
 } from "../../types";
 
 // =====================================

@@ -6,7 +6,7 @@ export interface AuditLog {
   level: LogLevel;
   source: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 const STORAGE_KEY = 'cm_audit_logs';
@@ -21,7 +21,7 @@ class AuditService {
   private loadLogs() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) this.logs = JSON.parse(saved);
+      if (saved) this.logs = JSON.parse(saved) as AuditLog[];
     } catch {
       this.logs = [];
     }
@@ -33,7 +33,7 @@ class AuditService {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(rotated));
   }
 
-  log(level: LogLevel, source: string, message: string, data?: any) {
+  log(level: LogLevel, source: string, message: string, data?: unknown) {
     const logEntry: AuditLog = {
       id: crypto.randomUUID(),
       timestamp: Date.now(),

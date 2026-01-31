@@ -19,7 +19,7 @@ export interface AppNotification {
 interface NotificationContextType {
   notifications: AppNotification[];
   history: AppNotification[];
-  pushNotification: (n: Omit<AppNotification, 'id' | 'timestamp'>) => void;
+  pushNotification: (n: Omit<AppNotification, 'id' | 'timestamp'> & { id?: string }) => void;
   dismissNotification: (id: string) => void;
   clearAll: () => void;
 }
@@ -34,16 +34,27 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
-  const pushNotification = useCallback((n: Omit<AppNotification, 'id' | 'timestamp'>) => {
-    const id = crypto.randomUUID();
-    const newNotification: AppNotification = {
-      ...n,
-      id,
-      timestamp: Date.now(),
-    };
+  const pushNotification = useCallback((n: Omit<AppNotification, 'id' | 'timestamp'> & { id?: string }) => {
+    const id = n.id || crypto.randomUUID();
+    
+    setNotifications((prev) => {
+      // Prevent duplicate active notifications with the same ID
+      if (prev.some(notif => notif.id === id)) {
+        return prev;
+      }
 
-    setNotifications((prev) => [...prev, newNotification]);
-    setHistory((prev) => [newNotification, ...prev].slice(0, 100)); // Keep last 100
+      const newNotification: AppNotification = {
+        ...n,
+        id,
+        timestamp: Date.now(),
+      };
+
+      return [...prev, newNotification];
+    });
+
+    // For history, we can still add it if needed, or check duplicates there too
+    const newEntry: AppNotification = { ...n, id, timestamp: Date.now() };
+    setHistory((prev) => [newEntry, ...prev].slice(0, 100));
 
     if (n.duration !== 0) {
       setTimeout(() => {
@@ -57,14 +68,16 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setHistory([]);
   }, []);
 
+  const contextValue = React.useMemo(() => ({
+    notifications,
+    history,
+    pushNotification,
+    dismissNotification,
+    clearAll
+  }), [notifications, history, pushNotification, dismissNotification, clearAll]);
+
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      history,
-      pushNotification,
-      dismissNotification,
-      clearAll
-    }}>
+    <NotificationContext.Provider value={contextValue}>
       {children}
     </NotificationContext.Provider>
   );

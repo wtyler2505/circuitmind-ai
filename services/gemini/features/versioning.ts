@@ -6,7 +6,6 @@ import { DiffSet } from '../../diagramDiff';
  */
 export const summarizeDiagramDiff = async (diff: DiffSet): Promise<string> => {
   const genAI = getAIClient();
-  const model = genAI.getGenerativeModel({ model: MODELS.CONTEXT_CHAT_DEFAULT });
 
   const prompt = `
     Summarize these electronics project changes for a Git commit message.
@@ -22,8 +21,11 @@ export const summarizeDiagramDiff = async (diff: DiffSet): Promise<string> => {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
+    const response = await genAI.models.generateContent({
+      model: MODELS.CONTEXT_CHAT_DEFAULT,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
+    });
+    return (response.text || '').trim();
   } catch (error) {
     console.error('Failed to summarize diff:', error);
     return 'AI Summary: Structural modifications to diagram.';

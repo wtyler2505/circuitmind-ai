@@ -16,8 +16,16 @@ class DiagnosticsHub {
     if (this.initialized) return;
 
     window.onerror = (message, source, lineno, colno, error) => {
+      const msg = String(message);
+      
+      // Ignore ResizeObserver loop limit warnings
+      if (msg.includes('ResizeObserver loop completed with undelivered notifications') || 
+          msg.includes('ResizeObserver loop limit exceeded')) {
+        return;
+      }
+
       this.reportError({
-        message: String(message),
+        message: msg,
         source: `${source}:${lineno}:${colno}`,
         stack: error?.stack,
         recovered: false

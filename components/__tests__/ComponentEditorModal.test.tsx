@@ -1,5 +1,4 @@
-import { render, screen } from '@testing-library/react';
-import { fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '../../tests/test-utils';
 import { vi } from 'vitest';
 import ComponentEditorModal from '../ComponentEditorModal';
 import { ElectronicComponent } from '../../types';
@@ -9,7 +8,7 @@ vi.mock('../ThreeViewer', () => ({
   default: () => <div data-testid="three-viewer" />,
 }));
 
-const renderWithToast = (ui: JSX.Element) => render(<ToastProvider>{ui}</ToastProvider>);
+const renderWithToast = (ui: React.ReactElement) => render(<ToastProvider>{ui}</ToastProvider>);
 
 describe('ComponentEditorModal', () => {
   it('gates 3D code execution until confirmed', async () => {

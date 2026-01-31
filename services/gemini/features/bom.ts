@@ -1,19 +1,11 @@
 import { getAIClient, MODELS } from '../client';
-import { BOMItem } from '../../services/bomService';
+import { BOMItem } from '../../bomService';
 
 /**
  * Uses Gemini to find Manufacturer Part Numbers and estimated prices for a list of components.
  */
 export const fetchPartDetails = async (items: BOMItem[]): Promise<Partial<BOMItem>[]> => {
   const genAI = getAIClient();
-  const model = genAI.getGenerativeModel({ 
-    model: MODELS.PART_FINDER,
-    generationConfig: {
-      temperature: 0.2,
-      responseMimeType: "application/json",
-    }
-  });
-
   const queryItems = items.map(i => ({ name: i.name, type: i.type }));
   const prompt = `
     Find technical purchase details for these electronics components:
@@ -30,9 +22,16 @@ export const fetchPartDetails = async (items: BOMItem[]): Promise<Partial<BOMIte
   `;
 
   try {
-    const response = await model.generateContent(prompt);
-    const text = response.response.text();
-    return JSON.parse(text);
+    const response = await genAI.models.generateContent({
+      model: MODELS.PART_FINDER,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0.2,
+        responseMimeType: "application/json",
+      }
+    });
+    
+    return JSON.parse(response.text || '[]');
   } catch (error) {
     console.error('Part details fetch failed:', error);
     return [];

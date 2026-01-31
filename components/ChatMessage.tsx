@@ -42,7 +42,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
 
-  const renderMarkdown = () => {
+  const renderedMarkdown = React.useMemo(() => {
     if (!message.content) return null;
 
     return (
@@ -84,7 +84,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               </pre>
             ),
             code: ({ children, ...props }) => {
-              // Check if this is an inline code (no className means inline)
               const isInline = !props.className;
               if (isInline) {
                 return (
@@ -102,7 +101,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         </ReactMarkdown>
       </div>
     );
-  };
+  }, [message.content]);
 
   // Render component mention chips
   const renderComponentChips = () => {
@@ -325,7 +324,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         }`}
       >
         {/* Message content */}
-        {renderMarkdown()}
+        {renderedMarkdown}
 
         {/* Media attachments */}
         {renderMedia()}
@@ -470,4 +469,11 @@ function getActionIcon(type: string): React.ReactNode {
   }
 }
 
-export default React.memo(ChatMessage);
+export default React.memo(ChatMessage, (prevProps, nextProps) => {
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.message.content === nextProps.message.content &&
+    prevProps.isStreaming === nextProps.isStreaming &&
+    prevProps.message.executedActions?.length === nextProps.message.executedActions?.length
+  );
+});

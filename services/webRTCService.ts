@@ -51,9 +51,9 @@ class WebRTCService {
     };
   }
 
-  send(data: string | ArrayBuffer) {
+  send(data: string | ArrayBuffer | Blob | ArrayBufferView) {
     if (this.dataChannel && this.dataChannel.readyState === 'open') {
-      this.dataChannel.send(data as any);
+      this.dataChannel.send(data as any); // RTCDataChannel.send accepts these types, but TS definitions vary.
     }
   }
 }

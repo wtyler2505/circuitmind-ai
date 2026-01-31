@@ -17,7 +17,6 @@ import { healthMonitor } from "../../healthMonitor";
 import { connectivityService } from "../../connectivityService";
 import { auditService } from "../../logging/auditService";
 import { UserProfile } from "../../userProfileService";
-import { UserProfile } from "../../userProfileService";
 
 export const chatWithAI = async (
   message: string,
@@ -162,7 +161,7 @@ export const chatWithContext = async (
 
   try {
     // Adaptive Teacher & Persona Logic
-    const userProfile = (context as any).userProfile as UserProfile | undefined;
+    const userProfile = context.userProfile as UserProfile | undefined;
     let toneInstruction = "Be concise and technical.";
     
     if (userProfile) {

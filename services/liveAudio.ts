@@ -100,7 +100,7 @@ export class LiveSession {
   private audioSources = new Set<AudioBufferSourceNode>();
   private onStatusChange: (status: string) => void;
   private visualContextInterval: NodeJS.Timeout | null = null;
-  private getCanvasSnapshot: (() => Promise<Blob | null>) | null = null;
+  private visualContextProviders: (() => Promise<Blob | null>)[] = [];
 
   constructor(onStatusChange: (status: string) => void) {
     this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -108,8 +108,8 @@ export class LiveSession {
   }
 
   // Method to set the function that captures the canvas snapshot
-  setVisualContextProvider(provider: () => Promise<Blob | null>) {
-    this.getCanvasSnapshot = provider;
+  setVisualContextProviders(providers: (() => Promise<Blob | null>)[]) {
+    this.visualContextProviders = providers;
   }
 
   async connect() {
@@ -139,7 +139,7 @@ export class LiveSession {
           },
           // System instruction to guide the AI's persona and task
           systemInstruction:
-            'You are CircuitMind, an advanced electronics AI assistant. Be concise, helpful, and technical. You are talking to a user building circuits. ALWAYS refer to the visual context provided. If the user asks about the diagram, use the visual context to answer.',
+            'You are CircuitMind, an advanced electronics AI assistant. Be concise, helpful, and technical. You are talking to a user building circuits. ALWAYS refer to the visual context provided. We may provide multiple images (e.g. digital diagram and physical camera feed). Use them to answer user questions about alignment, missing parts, or physical layout.',
         },
         callbacks: {
           onopen: () => {
@@ -178,13 +178,17 @@ export class LiveSession {
     // Use ScriptProcessor for raw audio access
     this.processor = this.inputContext.createScriptProcessor(4096, 1, 1);
 
+    // Cache the resolved session to avoid .then() overhead in every chunk
+    let activeSession: ExtendedSession | null = null;
+    sessionPromise.then(s => activeSession = s);
+
     this.processor.onaudioprocess = (e) => {
       const inputData = e.inputBuffer.getChannelData(0);
       const pcmBlob = pcm16BlobFromFloat32(inputData);
 
-      sessionPromise.then((session) => {
-        session.sendRealtimeInput({ media: pcmBlob });
-      });
+      if (activeSession) {
+        activeSession.sendRealtimeInput({ media: pcmBlob });
+      }
     };
 
     this.source.connect(this.processor);
@@ -192,42 +196,50 @@ export class LiveSession {
   }
 
   private startVisualContextStream(sessionPromise: Promise<ExtendedSession>) {
-    if (!this.getCanvasSnapshot) {
-      console.warn('Visual context provider not set. Cannot stream canvas.');
+    if (this.visualContextProviders.length === 0) {
+      console.warn('No visual context providers set. Cannot stream visuals.');
       return;
     }
 
-    // Send visual context every 3 seconds
+    // Send visual context every 5 seconds
     this.visualContextInterval = setInterval(async () => {
       try {
-        const blob = await this.getCanvasSnapshot?.();
-        if (blob) {
-          const base64Image = await blobToBase64(blob);
-          sessionPromise.then((session) => {
-            // Check if sendMedia exists on the session object
-            if (typeof session.sendMedia === 'function') {
-                // Construct the part manually as a simple object if Part.fromBytes fails or isn't available
-                const imagePart = {
-                    inlineData: {
-                        mimeType: 'image/png',
-                        data: base64Image
-                    }
-                };
-                // @ts-ignore - SDK might expect Part class but often accepts object
-                session.sendMedia([imagePart]);
-            } else {
-                // Fallback: Try to use sendRealtimeInput if that supports images?
-                // Usually sendRealtimeInput is for audio/video chunks.
-                // We'll rely on the SDK updates or type casting.
-                // Or try sending as text part with inline data? No, sendMedia is separate.
-                console.warn("Session does not support sendMedia");
+        const scheduleSnapshot = (callback: () => void) => {
+          if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(callback);
+          } else {
+            setTimeout(callback, 100);
+          }
+        };
+
+        scheduleSnapshot(async () => {
+          const mediaParts: any[] = [];
+          
+          for (const provider of this.visualContextProviders) {
+            const blob = await provider();
+            if (blob) {
+              const base64Image = await blobToBase64(blob);
+              mediaParts.push({
+                inlineData: {
+                  mimeType: 'image/jpeg',
+                  data: base64Image
+                }
+              });
             }
-          });
-        }
+          }
+
+          if (mediaParts.length > 0) {
+            sessionPromise.then((session) => {
+              if (typeof session.sendMedia === 'function') {
+                  session.sendMedia(mediaParts);
+              }
+            });
+          }
+        });
       } catch (error) {
-        console.error('Failed to capture or send canvas snapshot:', error);
+        console.error('Failed to capture or send visual snapshots:', error);
       }
-    }, 3000); 
+    }, 5000); 
   }
 
   private async handleServerMessage(message: LiveServerMessage) {

@@ -4,7 +4,7 @@ import { useDashboard, DashboardWidget } from '../../contexts/DashboardContext';
 import { WidgetWrapper } from './WidgetWrapper';
 
 // Multi-fallback resolver for react-grid-layout
-const lib = (RGL as any).default || RGL;
+const lib = ((RGL as unknown as Record<string, unknown>).default || RGL) as any;
 const Responsive = lib.Responsive || lib;
 const WidthProvider = lib.WidthProvider;
 const ResponsiveGridLayout = WidthProvider ? WidthProvider(Responsive) : Responsive;
@@ -47,7 +47,7 @@ export const DashboardView: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full bg-[#050608] overflow-y-auto custom-scrollbar p-4">
+    <div className="w-full h-full bg-cyber-black overflow-y-auto custom-scrollbar p-4">
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}

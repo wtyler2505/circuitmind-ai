@@ -3,18 +3,17 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Stats from 'three/addons/libs/stats.module.js';
 import { WiringDiagram, ElectronicComponent } from '../../types';
 import { getComponentShape } from './componentShapes';
-import { Primitives, Materials } from '../../services/threePrimitives';
 import { executeInWorker } from '../../services/threeCodeRunner';
 import { useTelemetry } from '../../contexts/TelemetryContext';
+import { useLayout } from '../../contexts/LayoutContext';
+import IconButton from '../IconButton';
 
 interface Diagram3DViewProps {
   diagram: WiringDiagram | null;
@@ -84,7 +83,6 @@ const getCachedMaterial = <T extends THREE.Material>(key: string, createFn: () =
 // Calculate local 3D offset for a specific pin on a component
 const getPinCoordinates = (type: string, name: string, pin: string, width: number, depth: number): THREE.Vector3 => {
   const lowerName = (name || '').toLowerCase();
-  const lowerType = (type || '').toLowerCase();
   const pinName = (pin || '').toUpperCase();
   
   // Default center top
@@ -1150,34 +1148,7 @@ const createBreadboardGeometry = (width: number, depth: number): THREE.Group => 
   holesMesh.instanceMatrix.needsUpdate = true;
   group.add(holesMesh);
 
-  return group;
-};
-
-// Create generic component geometry based on type
-const createComponentGeometry = (
-  type: string,
-  name: string,
-  width: number,
-  depth: number
-): THREE.Group => {
-  const lowerName = name.toLowerCase();
-  const lowerType = type.toLowerCase();
-
-  if (lowerName.includes('arduino') || lowerName.includes('uno') || lowerName.includes('mega')) {
-    return createArduinoGeometry(width, depth);
-  }
-  if (lowerName.includes('lcd') || lowerName.includes('display') || lowerName.includes('1602')) {
-    return createLCDGeometry(width, depth);
-  }
-  if (lowerName.includes('dht') || lowerName.includes('temperature') || lowerName.includes('humidity')) {
-    return createDHT11Geometry(width * 0.5, depth * 0.5);
-  }
-  if (lowerName.includes('breadboard') || lowerName.includes('830')) {
-    return createBreadboardGeometry(width, depth);
-  }
-
-  // Default: generic IC/module
-  return createGenericICGeometry(width, depth, lowerType);
+  return holesMesh;
 };
 
 // Generic IC package
@@ -1262,21 +1233,46 @@ const disposeObject = (obj: THREE.Object3D) => {
 // MAIN COMPONENT
 // ============================================================================
 
-const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onComponentClick, onGenerate3D }) => {
+const Diagram3DView = React.forwardRef<{ getSnapshotBlob: () => Promise<Blob | null> }, Diagram3DViewProps>(
+  ({ diagram, positions, onComponentClick: _onComponentClick, onGenerate3D }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const composerRef = useRef<EffectComposer | null>(null);
-  const animationIdRef = useRef<number>(0);
+  const _animationIdRef = useRef<number>(0);
   const componentsGroupRef = useRef<THREE.Group | null>(null);
   const wiresGroupRef = useRef<THREE.Group | null>(null);
   const telemetryGroupRef = useRef<THREE.Group | null>(null);
   const envMapRef = useRef<THREE.Texture | null>(null);
   
   const { liveData } = useTelemetry();
+  const { neuralLinkEnabled, setNeuralLinkEnabled } = useLayout();
   const [missingModels, setMissingModels] = useState<ElectronicComponent[]>([]);
+
+  // Expose snapshot capability to parent (DiagramCanvas)
+  React.useImperativeHandle(ref, () => ({
+    getSnapshotBlob: async () => {
+      if (!rendererRef.current || !sceneRef.current || !cameraRef.current) return null;
+      
+      const renderer = rendererRef.current;
+      const scene = sceneRef.current;
+      const camera = cameraRef.current;
+      const composer = composerRef.current;
+
+      // Force a high-quality render for the snapshot
+      if (composer) {
+        composer.render();
+      } else {
+        renderer.render(scene, camera);
+      }
+
+      return new Promise((resolve) => {
+        renderer.domElement.toBlob((blob) => resolve(blob), 'image/png', 0.8);
+      });
+    }
+  }));
 
   // Create procedural environment map (studio HDRI simulation)
   const createEnvironmentMap = useCallback((renderer: THREE.WebGLRenderer): THREE.Texture => {
@@ -1395,7 +1391,7 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     scene.add(ambientLight);
 
     // Adaptive settings
-    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    const _isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
     
     // Key light (main)
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -1434,36 +1430,29 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     rimLight.position.set(0, 50, -200);
     scene.add(rimLight);
 
-    // ENERGIZED GLASS TABLE (Replaces "Blue Plane" and "Green PCB")
-    // Use an infinite-looking plane at the height where components sit
+    // ENERGIZED GLASS TABLE (Simplified to prevent feedback loops)
     const groundGeo = new THREE.PlaneGeometry(2000, 2000);
-    const groundMat = new THREE.MeshPhysicalMaterial({
-      color: 0x00aaff,        // Cyber blue/cyan
-      roughness: 0.1,         // Smooth glass
-      metalness: 0.1,         // Slight metallic reflection
-      transmission: 0.9,      // Highly transparent
-      thickness: 1.0,         // Refraction thickness
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: 0x001122,        // Dark cyber base
+      roughness: 0.3,
+      metalness: 0.8,
       transparent: true,
-      opacity: 0.4,           // Base opacity
-      emissive: 0x0044aa,     // Inner glow
-      emissiveIntensity: 0.2,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.0,
+      opacity: 0.6,
+      emissive: 0x002244,
+      emissiveIntensity: 0.1,
       side: THREE.DoubleSide
     });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
-    // Components are at y=3 (center), with ~2 height, so bottom is around y=2.
-    // Place glass just below them.
     ground.position.y = 2.0; 
     ground.receiveShadow = true;
     scene.add(ground);
 
     // Grid Helper - Adds technical "blueprint" look to the glass
-    const gridHelper = new THREE.GridHelper(2000, 100, 0x0088ff, 0x004488);
-    gridHelper.position.y = 2.01; // Just slightly above glass to prevent z-fighting
+    const gridHelper = new THREE.GridHelper(2000, 100, 0x0088ff, 0x002244);
+    gridHelper.position.y = 2.01; 
     gridHelper.material.transparent = true;
-    gridHelper.material.opacity = 0.3;
+    gridHelper.material.opacity = 0.2;
     scene.add(gridHelper);
 
     // Component and wire groups
@@ -1477,7 +1466,7 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     wiresGroupRef.current = wiresGroup;
     telemetryGroupRef.current = telemetryGroup;
 
-    // Post-processing setup with SSAO and Bloom
+    // Post-processing setup with optimized settings
     const composer = new EffectComposer(renderer);
     composerRef.current = composer;
 
@@ -1485,28 +1474,28 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
-    // FXAA (Fast Approximate Anti-Aliasing)
-    const fxaaPass = new ShaderPass(FXAAShader);
-    const pixelRatio = renderer.getPixelRatio();
-    fxaaPass.material.uniforms['resolution'].value.x = 1 / (width * pixelRatio);
-    fxaaPass.material.uniforms['resolution'].value.y = 1 / (height * pixelRatio);
-    composer.addPass(fxaaPass);
-
-    // Subtle bloom for LED glow effects - RE-ENABLED with optimized settings
+    // Subtle bloom - Reduced complexity
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(width, height),
-      0.3,   // strength
-      0.2,   // radius
-      0.85   // threshold
+      0.2,   // Reduced strength
+      0.1,   // Reduced radius
+      0.9    // Increased threshold (only bright things bloom)
     );
     composer.addPass(bloomPass);
 
-    // Output pass (required for correct color space)
+    // FXAA as the final pass
+    const fxaaPass = new ShaderPass(FXAAShader);
+    fxaaPass.material.uniforms['resolution'].value.x = 1 / width;
+    fxaaPass.material.uniforms['resolution'].value.y = 1 / height;
+    composer.addPass(fxaaPass);
+
     const outputPass = new OutputPass();
     composer.addPass(outputPass);
 
-    // PERFORMANCE: ON-DEMAND RENDERING
+    // PERFORMANCE: ON-DEMAND RENDERING WITH THROTTLING
     let renderRequested = false;
+    let lastRenderTime = 0;
+    const FRAME_MIN_TIME = 1000 / 30; // Cap at 30fps during interaction to save battery/CPU
 
     const requestRender = () => {
       if (!renderRequested) {
@@ -1515,12 +1504,23 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
       }
     };
 
-    const render = () => {
+    const render = (now: number) => {
       renderRequested = false;
-      stats.update();
-      controls.update();
       
-      // Update LOD levels based on camera distance
+      // Throttle if needed
+      if (now - lastRenderTime < FRAME_MIN_TIME) {
+        requestRender();
+        return;
+      }
+      lastRenderTime = now;
+
+      stats.update();
+      if (controls.update()) {
+        // Continue rendering if controls are still damping
+        requestRender();
+      }
+      
+      // Update LOD levels
       if (componentsGroupRef.current) {
         componentsGroupRef.current.traverse((child) => {
           if (child instanceof THREE.LOD) {
@@ -1531,6 +1531,7 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
 
       composer.render();
     };
+
 
     // Render on interaction
     controls.addEventListener('change', requestRender);
@@ -1559,7 +1560,7 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     window.addEventListener('resize', handleResize);
 
     // Expose requestRender to effect below
-    (scene as any).userData.requestRender = requestRender;
+    (scene as THREE.Scene & { userData: { requestRender: () => void } }).userData.requestRender = requestRender;
 
     // Cleanup
     return () => {
@@ -1586,7 +1587,7 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     const componentsGroup = componentsGroupRef.current;
     const wiresGroup = wiresGroupRef.current;
     const scene = sceneRef.current;
-    const requestRender = (scene as any).userData.requestRender;
+    const requestRender = (scene as THREE.Scene & { userData: { requestRender: () => void } }).userData.requestRender;
 
     // Clear existing objects
     while (componentsGroup.children.length > 0) {
@@ -1800,7 +1801,7 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
     if (!telemetryGroupRef.current || !diagram || !sceneRef.current) return;
     const group = telemetryGroupRef.current;
     const scene = sceneRef.current;
-    const requestRender = (scene as any).userData.requestRender;
+    const requestRender = (scene as THREE.Scene & { userData: { requestRender: () => void } }).userData.requestRender;
 
     // Clear existing sprites
     while (group.children.length > 0) {
@@ -1818,7 +1819,7 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
       const [componentId, pin] = key.split(':');
       
       // Attempt to find the component in the diagram
-      let component = diagram.components.find(c => c.id === componentId);
+      const component = diagram.components.find(c => c.id === componentId);
       
       // If auto-mapped, we might not know which component yet, 
       // but if there's only one of that type, we could guess.
@@ -1892,6 +1893,27 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
       className="relative w-full h-full bg-slate-900 rounded-lg overflow-hidden"
       style={{ minHeight: '400px' }}
     >
+      {/* Neural Link Toggle */}
+      <div className="absolute top-4 left-4 z-20 flex gap-2">
+        <IconButton
+          label={neuralLinkEnabled ? "DISABLE NEURAL-LINK" : "ENABLE NEURAL-LINK"}
+          icon={
+            <div className="relative">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+              {neuralLinkEnabled && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-neon-cyan rounded-full animate-ping" />
+              )}
+            </div>
+          }
+          variant={neuralLinkEnabled ? "primary" : "secondary"}
+          onClick={() => setNeuralLinkEnabled(!neuralLinkEnabled)}
+          className={neuralLinkEnabled ? "shadow-[0_0_15px_rgba(0,243,255,0.4)]" : ""}
+        />
+      </div>
+
       {/* Missing Models Overlay */}
       {missingModels.length > 0 && onGenerate3D && (
         <div className="absolute top-4 right-4 z-10 bg-slate-950/90 border border-neon-purple/50 rounded-lg p-3 max-w-sm shadow-xl backdrop-blur-sm animate-fade-in">
@@ -1919,6 +1941,6 @@ const Diagram3DView: React.FC<Diagram3DViewProps> = ({ diagram, positions, onCom
       )}
     </div>
   );
-};
+});
 
 export default Diagram3DView;

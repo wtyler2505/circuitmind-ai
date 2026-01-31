@@ -33,7 +33,7 @@ export const TelemetryProvider: React.FC<{ children: ReactNode }> = ({ children 
 
       // Feed vizEngine for high-speed charts
       // Convert value to number if possible
-      const numVal = parseFloat(packet.value);
+      const numVal = parseFloat(String(packet.value));
       if (!isNaN(numVal)) {
         vizEngine.addData(key, numVal);
         // Also map to global streams for widgets

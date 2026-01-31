@@ -41,8 +41,8 @@ class BOMService {
           name: comp.name,
           quantity: 1,
           type: comp.type,
-          mpn: (invItem as any)?.mpn,
-          estimatedPrice: (invItem as any)?.price,
+          mpn: (invItem as (ElectronicComponent & { mpn?: string }))?.mpn,
+          estimatedPrice: (invItem as (ElectronicComponent & { price?: number }))?.price,
           datasheetUrl: comp.datasheetUrl,
           inInventory: !!invItem,
           currentStock: invItem?.quantity || 0

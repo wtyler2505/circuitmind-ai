@@ -145,6 +145,23 @@ class UserProfileService {
     await this.saveProfile(profile);
     return profile;
   }
+
+  async updateExperience(level: ExpertiseLevel): Promise<void> {
+    const profile = await this.getActiveProfile();
+    profile.expertise = level;
+    await this.saveProfile(profile);
+  }
+
+  async addFact(content: string): Promise<void> {
+    const profile = await this.getActiveProfile();
+    // For now, add to Mastering list if it's a component-like name, 
+    // or we could add a dedicated 'facts' field to the interface.
+    // Let's just log it for now or add to mastered if it looks like a component.
+    if (!profile.stats.componentsMastered.includes(content)) {
+      profile.stats.componentsMastered.push(content);
+      await this.saveProfile(profile);
+    }
+  }
 }
 
 export const userProfileService = new UserProfileService();

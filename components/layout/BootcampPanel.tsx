@@ -1,70 +1,100 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TUTORIALS } from '../../data/tutorials';
-import { useTutorial, TutorialQuest } from '../../contexts/TutorialContext';
+import { useTutorial } from '../../contexts/TutorialContext';
 
 export const BootcampPanel: React.FC = () => {
+  const [activeLevel, setActiveLevel] = useState<'all' | 'level-1' | 'level-2' | 'level-3'>('all');
   const { startQuest, activeQuest } = useTutorial();
 
+  // Map TUTORIALS to the structure expected by the template
+  const modules = TUTORIALS.map(t => ({
+    id: t.id,
+    title: t.title,
+    description: t.steps[0]?.instructions || 'No description available.',
+    level: t.difficulty === 'beginner' ? 'level-1' : t.difficulty === 'intermediate' ? 'level-2' : 'level-3',
+    duration: `${t.steps.length} Steps`,
+    tags: ['Interactive', t.difficulty.toUpperCase()],
+    quest: t
+  }));
+
   return (
-    <div className="flex flex-col h-full bg-[#020203] panel-frame border-l border-slate-800/80">
-      <div className="px-3 py-4 border-b border-white/5 bg-[#050608]">
-        <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-[0.3em] panel-title">
-          <span className="text-neon-purple">ENGINEERING</span>_BOOTCAMP
+    <div className="flex flex-col h-full bg-cyber-dark panel-frame border-l border-white/5">
+      {/* Header */}
+      <div className="px-3 py-4 border-b border-white/5 bg-cyber-black panel-header shrink-0">
+        <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-[0.2em] panel-title">
+          <div className="w-1.5 h-1.5 bg-neon-purple shadow-[0_0_8px_#bd00ff]" />
+          Skill Forge
         </h2>
         <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-mono">
-          Interactive Quests & Tutorials
+          Knowledge Acquisition Modules
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
-        {TUTORIALS.map((quest) => (
-          <div 
-            key={quest.id}
-            className={`group p-4 cut-corner-md border transition-all cursor-pointer ${
-              activeQuest?.id === quest.id 
-                ? 'bg-neon-purple/10 border-neon-purple/50' 
-                : 'bg-white/5 border-white/10 hover:border-white/30'
+      {/* Filter Tabs */}
+      <div className="flex bg-cyber-black panel-rail border-b border-white/5 shrink-0 px-2">
+        {(['all', 'level-1', 'level-2', 'level-3'] as const).map((lvl) => (
+          <button
+            key={lvl}
+            onClick={() => setActiveLevel(lvl)}
+            className={`px-3 py-2 text-[8px] font-bold uppercase tracking-widest transition-all border-b-2 ${
+              activeLevel === lvl 
+                ? 'border-neon-purple text-white bg-neon-purple/5' 
+                : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
             }`}
-            onClick={() => startQuest(quest)}
           >
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-sm font-bold text-white group-hover:text-neon-purple transition-colors">
-                {quest.title}
-              </h3>
-              <span className={`text-[8px] px-1.5 py-0.5 cut-corner-sm uppercase font-bold tracking-widest border ${
-                quest.difficulty === 'beginner' ? 'text-neon-green border-neon-green/30 bg-neon-green/5' :
-                quest.difficulty === 'intermediate' ? 'text-neon-amber border-neon-amber/30 bg-neon-amber/5' :
-                'text-red-500 border-red-500/30 bg-red-500/5'
-              }`}>
-                {quest.difficulty}
-              </span>
-            </div>
-            
-            <p className="text-[11px] text-slate-400 mb-4 line-clamp-2">
-              {quest.steps[0].instructions}
-            </p>
+            {lvl.replace('-', ' ')}
+          </button>
+        ))}
+      </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-[9px] text-slate-600 font-mono uppercase">
-                {quest.steps.length} STEPS
-              </span>
-              <button 
-                className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest cut-corner-sm transition-all ${
-                  activeQuest?.id === quest.id
-                    ? 'bg-neon-purple text-black'
-                    : 'bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-white'
-                }`}
-              >
-                {activeQuest?.id === quest.id ? 'ACTIVE' : 'START QUEST'}
-              </button>
+      {/* Modules List */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+        {modules.filter(m => activeLevel === 'all' || m.level === activeLevel).map((module, i) => (
+          <div key={i} className="group relative">
+            <div className={`bg-cyber-black/40 panel-surface border p-4 cut-corner-md transition-all panel-frame ${activeQuest?.id === module.id ? 'border-neon-purple/50 bg-neon-purple/5' : 'border-white/5 group-hover:border-neon-purple/30'}`}>
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-[8px] font-mono text-neon-purple uppercase tracking-[0.2em] bg-neon-purple/10 px-1.5 py-0.5 cut-corner-sm border border-neon-purple/20">
+                  {module.id}
+                </span>
+                <span className="text-[8px] font-mono text-slate-500 uppercase">
+                  {module.duration}
+                </span>
+              </div>
+              
+              <h3 className="text-xs font-bold text-slate-100 mb-1.5 uppercase tracking-wide group-hover:text-neon-purple transition-colors">
+                {module.title}
+              </h3>
+              
+              <p className="text-[10px] text-slate-400 mb-4 line-clamp-2 leading-relaxed italic">
+                {module.description}
+              </p>
+              
+              <div className="flex items-center justify-between mt-auto">
+                <div className="flex gap-1.5">
+                  {module.tags.map((tag, j) => (
+                    <span key={j} className="text-[7px] text-slate-500 font-mono uppercase tracking-tighter border border-white/5 px-1 py-0.5">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                
+                <button 
+                  onClick={() => startQuest(module.quest)}
+                  className={`flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest transition-all px-3 py-1.5 cut-corner-sm border ${
+                    activeQuest?.id === module.id
+                      ? 'bg-neon-purple/20 text-white border-neon-purple/50'
+                      : 'bg-white/5 text-slate-400 border-white/10 group-hover:bg-neon-purple/10 group-hover:text-white group-hover:border-neon-purple/40'
+                  }`}
+                >
+                  {activeQuest?.id === module.id ? 'Active' : 'Initialize'}
+                  <svg className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         ))}
-
-        <div className="p-8 text-center opacity-30">
-          <div className="loading-tech scale-75 mb-4"></div>
-          <p className="text-[10px] uppercase tracking-[0.2em]">More Quests Incoming...</p>
-        </div>
       </div>
     </div>
   );

@@ -11,13 +11,14 @@ import { ConfigPortal } from './settings/ConfigPortal';
 import { DiagnosticsView } from './settings/DiagnosticsView';
 import { LocalizationSettings } from './settings/LocalizationSettings';
 import { ProfileSettings } from './settings/ProfileSettings';
+import { PartsManager } from './settings/PartsManager';
 
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   autonomySettings?: AIAutonomySettings;
   onAutonomySettingsChange?: (settings: AIAutonomySettings) => void;
-  initialTab?: 'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale';
+  initialTab?: 'api' | 'profile' | 'parts' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale';
 }
 
 // Human-readable labels for action types
@@ -103,7 +104,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [activeTab, setActiveTab] = useState<'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'api' | 'profile' | 'parts' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale'>(initialTab);
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
   const toast = useToast();
   
@@ -341,6 +342,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             }`}
           >
             PROFILE
+          </button>
+          <button
+            onClick={() => setActiveTab('parts')}
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+              activeTab === 'parts' 
+                ? 'border-neon-cyan text-white bg-white/5' 
+                : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            PARTS
           </button>
           <button
             onClick={() => setActiveTab('ai')}
@@ -595,6 +606,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           {/* Profile Tab */}
           {activeTab === 'profile' && (
             <ProfileSettings />
+          )}
+
+          {/* Parts Tab */}
+          {activeTab === 'parts' && (
+            <PartsManager />
           )}
 
           {/* AI Autonomy Tab */}

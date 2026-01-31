@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-01-25T07:39:07.308Z",
+  "system": {
+    "platform": "linux",
+    "arch": "x64",
+    "nodeVersion": "v20.19.5"
+  },
+  "integrity": {
+    "status": "healthy",
+    "details": "100% tests passed"
+  },
+  "security": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 6,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 6
+    },
+    "status": "warning"
+  },
+  "performance": {
+    "disk": "/dev/sda2       687G  348G  304G  54% /",
+    "memory": "Mem:           15180        6195         763         133        8682        8985"
+  },
+  "network": {
+    "geminiApi": "reachable",
+    "signalingServer": "offline"
+  },
+  "readiness": "UNSTABLE",
+  "score": 60
+}

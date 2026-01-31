@@ -1,4 +1,5 @@
 import React, { memo, useMemo } from 'react';
+import { VList } from 'virtua';
 import { ElectronicComponent } from '../../types';
 import InventoryItem from './InventoryItem';
 
@@ -22,6 +23,10 @@ interface InventoryListProps {
   onBulkDelete: () => void;
 }
 
+type FlatItem = 
+  | { type: 'header'; label: string; id: string }
+  | { type: 'item'; data: ElectronicComponent; id: string };
+
 const InventoryList: React.FC<InventoryListProps> = ({
   items,
   searchQuery,
@@ -38,7 +43,10 @@ const InventoryList: React.FC<InventoryListProps> = ({
   onClearSelection,
   onBulkDelete,
 }) => {
-  const categorizedItems = useMemo(() => {
+  const flatItems = useMemo(() => {
+    const flat: FlatItem[] = [];
+    
+    // Group items
     const groups: Record<string, ElectronicComponent[]> = {};
     CATEGORIES.forEach((c) => (groups[c] = []));
 
@@ -47,20 +55,29 @@ const InventoryList: React.FC<InventoryListProps> = ({
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
         (activeCategory === 'all' || item.type === activeCategory)
       ) {
-        if (groups[item.type]) {
-          groups[item.type].push(item);
-        } else {
-          groups['other'].push(item);
-        }
+        const cat = CATEGORIES.includes(item.type as typeof CATEGORIES[number]) ? item.type : 'other';
+        groups[cat].push(item);
       }
     });
-    return groups;
+
+    // Flatten with headers
+    CATEGORIES.forEach(cat => {
+      const catItems = groups[cat];
+      if (catItems.length > 0) {
+        flat.push({ type: 'header', label: cat, id: `header-${cat}` });
+        catItems.forEach(item => {
+          flat.push({ type: 'item', data: item, id: item.id });
+        });
+      }
+    });
+
+    return flat;
   }, [items, searchQuery, activeCategory]);
 
   return (
-    <div className="p-2 space-y-2 pb-20 md:pb-16">
+    <div className="flex-1 flex flex-col min-h-0">
       {selectedIds.size > 0 && (
-        <div className="bg-neon-cyan/5 border border-neon-cyan/20 cut-corner-sm p-2 mb-3 flex items-center justify-between">
+        <div className="bg-neon-cyan/5 border border-neon-cyan/20 cut-corner-sm p-2 mb-3 flex items-center justify-between shrink-0 mx-2">
           <span className="text-[9px] font-mono text-neon-cyan uppercase tracking-widest">
             {selectedIds.size} SELECTED
           </span>
@@ -81,22 +98,26 @@ const InventoryList: React.FC<InventoryListProps> = ({
         </div>
       )}
 
-      {CATEGORIES.map((cat) => {
-        const catItems = categorizedItems[cat] || [];
-        if (catItems.length === 0) return null;
+      <div className="flex-1 overflow-hidden">
+        <VList className="h-full custom-scrollbar" style={{ height: '100%' }}>
+          {flatItems.map((item) => {
+            if (item.type === 'header') {
+              return (
+                <div key={item.id} className="mb-1 mt-2 px-2">
+                  <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1 pl-1 border-l-2 border-slate-700">
+                    {item.label}
+                  </h3>
+                </div>
+              );
+            }
 
-        return (
-          <div key={cat} className="mb-4">
-            <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1 pl-1 border-l-2 border-slate-700">
-              {cat}
-            </h3>
-            <div className="space-y-1">
-              {catItems.map((item) => (
+            const comp = item.data;
+            return (
+              <div key={item.id} className="px-2 mb-1">
                 <InventoryItem
-                  key={item.id}
-                  item={item}
-                  isSelected={selectedIds.has(item.id)}
-                  brokenImage={!!item.imageUrl && brokenImages[item.id] === item.imageUrl}
+                  item={comp}
+                  isSelected={selectedIds.has(comp.id)}
+                  brokenImage={!!comp.imageUrl && brokenImages[comp.id] === comp.imageUrl}
                   onToggleSelection={onToggleSelection}
                   onDragStart={onDragStart}
                   onDoubleClick={onDoubleClick}
@@ -105,11 +126,11 @@ const InventoryList: React.FC<InventoryListProps> = ({
                   onRemove={onRemove}
                   onImageError={onImageError}
                 />
-              ))}
-            </div>
-          </div>
-        );
-      })}
+              </div>
+            );
+          })}
+        </VList>
+      </div>
     </div>
   );
 };

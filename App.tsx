@@ -15,6 +15,7 @@ import { MacroProvider } from './contexts/MacroContext';
 import { DashboardProvider } from './contexts/DashboardContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
+import { SelectionProvider } from './contexts/SelectionContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ToastProvider } from './hooks/useToast';
 import { INITIAL_INVENTORY } from './data/initialInventory';
@@ -39,17 +40,19 @@ export default function App() {
                       <InventoryProvider initialData={INITIAL_INVENTORY}>
                         <ConversationProvider>
                           <DiagramProvider>
-                            <TelemetryProvider>
-                              <HUDProvider>
-                                <SimulationProvider>
-                                  <VoiceAssistantProvider>
-                                    <TutorialProvider>
-                                      <MainLayout />
-                                    </TutorialProvider>
-                                  </VoiceAssistantProvider>
-                                </SimulationProvider>
-                              </HUDProvider>
-                            </TelemetryProvider>
+                            <SelectionProvider>
+                              <TelemetryProvider>
+                                <HUDProvider>
+                                  <SimulationProvider>
+                                    <VoiceAssistantProvider>
+                                      <TutorialProvider>
+                                        <MainLayout />
+                                      </TutorialProvider>
+                                    </VoiceAssistantProvider>
+                                  </SimulationProvider>
+                                </HUDProvider>
+                              </TelemetryProvider>
+                            </SelectionProvider>
                           </DiagramProvider>
                         </ConversationProvider>
                       </InventoryProvider>

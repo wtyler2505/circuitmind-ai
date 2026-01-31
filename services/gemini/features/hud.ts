@@ -20,19 +20,19 @@ export const generateHUDFragment = async (
   }
 
   const genAI = getAIClient();
-  const model = genAI.getGenerativeModel({ 
-    model: MODELS.PART_FINDER, // Using flash for speed
-    generationConfig: {
-      maxOutputTokens: 50,
-      temperature: 0.2,
-    }
-  });
-
   const prompt = PROMPTS.GENERATE_HUD_FRAGMENT(targetName, targetType, context);
 
   try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
+    const response = await genAI.models.generateContent({
+      model: MODELS.PART_FINDER,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      config: {
+        maxOutputTokens: 50,
+        temperature: 0.2,
+      }
+    });
+    
+    const text = (response.text || '').trim();
     
     // Clean up potential markdown formatting if any
     const cleanText = text.replace(/[`*#]/g, '');

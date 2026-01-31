@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { securityAuditor, SecurityViolation } from '../../services/securityAuditor';
+import { securityAuditor } from '../../services/securityAuditor';
 import { useDiagram } from '../../contexts/DiagramContext';
 
 interface SecurityReportProps {
