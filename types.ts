@@ -12,6 +12,31 @@ export interface ElectronicComponent {
   threeCode?: string; // Generated javascript code for Three.js mesh
   threeDModelUrl?: string; // URL to a GLB/GLTF model
   precisionLevel?: 'draft' | 'masterpiece'; // 3D generation fidelity
+
+  // 2D Engine Upgrade (Fritzing Parity)
+  fzpzSource?: ArrayBuffer; // Original source if imported
+  footprint?: ComponentFootprint;
+  internalBuses?: Array<string[]>; // e.g. [['pin1', 'pin2', 'pin3']] for breadboard rails
+}
+
+// Support for complex paths
+export interface WirePoint {
+  x: number;
+  y: number;
+  handleIn?: { dx: number; dy: number };  // For curvature control
+  handleOut?: { dx: number; dy: number };
+}
+
+// Support for detailed component footprints
+export interface ComponentFootprint {
+  width: number; // in 0.1" units
+  height: number;
+  pins: {
+    id: string;
+    x: number; // Relative to component origin
+    y: number;
+    svgElementId?: string; // Link to the FZPZ visual
+  }[];
 }
 
 export interface WireConnection {
@@ -21,6 +46,7 @@ export interface WireConnection {
   toPin: string;
   description: string;
   color?: string;
+  path?: WirePoint[]; // For Bézier wire routing
 }
 
 export interface WiringDiagram {
