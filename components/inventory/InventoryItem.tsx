@@ -1,6 +1,7 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { ElectronicComponent } from '../../types';
 import { getTypeIcon } from './inventoryUtils';
+import { partStorageService } from '../../services/partStorageService';
 
 interface InventoryItemProps {
   item: ElectronicComponent;
@@ -27,6 +28,20 @@ const InventoryItem: React.FC<InventoryItemProps> = ({
   brokenImage,
   onImageError
 }) => {
+  const [cachedThumbnail, setCachedThumbnail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkCache = async () => {
+      const cached = await partStorageService.getPart(item.id);
+      if (cached?.thumbnail) {
+        setCachedThumbnail(cached.thumbnail);
+      }
+    };
+    checkCache();
+  }, [item.id]);
+
+  const displayImage = cachedThumbnail || item.imageUrl;
+
   return (
     <div
       draggable
@@ -48,13 +63,13 @@ const InventoryItem: React.FC<InventoryItemProps> = ({
       />
 
       <div className="w-8 h-8 bg-black/40 border border-white/5 flex items-center justify-center overflow-hidden cut-corner-sm shrink-0">
-        {item.imageUrl && !brokenImage ? (
+        {displayImage && !brokenImage ? (
           <img
-            src={item.imageUrl}
+            src={displayImage}
             alt={item.name}
             className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
             loading="lazy"
-            onError={() => onImageError?.(item.id, item.imageUrl!)}
+            onError={() => onImageError?.(item.id, displayImage!)}
           />
         ) : (
           getTypeIcon(item.type)

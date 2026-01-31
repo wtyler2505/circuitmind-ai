@@ -617,8 +617,19 @@ export function getComponentShape(type: string, name?: string): ComponentShape {
  */
 export function calculatePinPositions(
   shape: ComponentShape,
-  pins: string[]
+  pins: string[],
+  component?: import('../../types').ElectronicComponent
 ): PinDefinition[] {
+  // Priority 1: FZPZ Footprint data
+  if (component?.footprint?.pins) {
+    return component.footprint.pins.map(p => ({
+      name: p.id,
+      x: p.x,
+      y: p.y,
+      side: p.x < component.footprint!.width / 2 ? 'left' : 'right' // Heuristic for side
+    }));
+  }
+
   const positions: PinDefinition[] = [];
 
   // Special handling for 2-terminal components (resistors, capacitors)

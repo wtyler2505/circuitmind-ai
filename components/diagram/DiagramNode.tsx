@@ -5,6 +5,7 @@ import { getComponentShape, calculatePinPositions, COLORS, type ComponentShape }
 import { useTelemetry } from '../../contexts/TelemetryContext';
 import { useSimulation } from '../../contexts/SimulationContext';
 import { BreadboardVisual } from './parts/Breadboard';
+import { FzpzVisual } from './parts/FzpzVisual';
 
 // Default dimensions (used for layout calculations)
 const COMPONENT_WIDTH = 180;
@@ -732,11 +733,22 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
 }) {
   const isHighlighted = !!highlight;
 
-  const shape = useMemo(() => getComponentShape(component.type, component.name), [component.type, component.name]);
+  const shape = useMemo(() => {
+    const base = getComponentShape(component.type, component.name);
+    // If we have a FZPZ footprint, override width/height
+    if (component.footprint) {
+      return {
+        ...base,
+        width: component.footprint.width,
+        height: component.footprint.height
+      };
+    }
+    return base;
+  }, [component.type, component.name, component.footprint]);
 
   const pinPositions = useMemo(
-    () => calculatePinPositions(shape, component.pins || []),
-    [shape, component.pins]
+    () => calculatePinPositions(shape, component.pins || [], component),
+    [shape, component.pins, component]
   );
 
   const handlePointerDown = useCallback(
@@ -806,6 +818,11 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
 
   // Render component-specific details based on shape type
   const renderDetails = () => {
+    // Priority 1: FZPZ Visuals
+    if (component.fzpzSource) {
+        return <FzpzVisual component={component} />;
+    }
+
     // Special part visuals
     if (component.name.toLowerCase().includes('breadboard')) {
         return <BreadboardVisual component={component} />;
@@ -837,6 +854,10 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
     }
   };
 
+  const bodyPath = component.footprint 
+    ? `M 0 0 L ${shape.width} 0 L ${shape.width} ${shape.height} L 0 ${shape.height} Z`
+    : shape.path;
+
   return (
     <g
       transform={`translate(${position.x}, ${position.y})`}
@@ -856,7 +877,7 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
       {/* Glow effect for highlighted/selected components */}
       {(isHighlighted || isSelected) && (
         <path
-          d={shape.path}
+          d={bodyPath}
           fill="none"
           stroke={isHighlighted ? highlight.color : '#00F3FF'}
           strokeWidth="6"
@@ -869,7 +890,7 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
       {/* Hover glow effect */}
       {isHovered && !isHighlighted && !isSelected && (
         <path
-          d={shape.path}
+          d={bodyPath}
           fill="none"
           stroke="#00F3FF"
           strokeWidth="4"
@@ -880,7 +901,7 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
 
       {/* Drop shadow for 3D depth (rendered behind component) */}
       <path
-        d={shape.path}
+        d={bodyPath}
         fill="rgba(0,0,0,0.3)"
         stroke="none"
         transform="translate(3, 4)"
@@ -889,22 +910,24 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
       />
 
       {/* Component body - sharp corners with gradient fills */}
-      <path
-        d={shape.path}
-        fill={shape.fill}
-        stroke={strokeColor}
-        strokeWidth={strokeWidth}
-        className="transition-colors duration-150"
-        style={{
-          filter: isHovered ? 'brightness(1.1)' : undefined,
-        }}
-      />
+      {!component.fzpzSource && (
+        <path
+          d={bodyPath}
+          fill={shape.fill}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          className="transition-colors duration-150"
+          style={{
+            filter: isHovered ? 'brightness(1.1)' : undefined,
+          }}
+        />
+      )}
 
       {/* Component details */}
       {renderDetails()}
 
       {/* Header bar (for components with headers) */}
-      {shape.headerHeight > 0 && (
+      {!component.fzpzSource && shape.headerHeight > 0 && (
         <rect
           width={shape.width}
           height={shape.headerHeight}

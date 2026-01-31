@@ -120,9 +120,7 @@ export async function buildAIContext(options: BuildContextOptions): Promise<AICo
     inventorySummary: summarizeInventory(inventory),
     
     // Loose typing for new fields until types.ts is fully propagated/compiled
-    // @ts-ignore 
     userProfile,
-    // @ts-ignore
     relevantLessons,
     viewport: viewport ? `Zoom: ${viewport.zoom.toFixed(1)}x, Pan: (${viewport.x}, ${viewport.y})` : 'Unknown',
   };
@@ -136,14 +134,12 @@ export async function buildAIContext(options: BuildContextOptions): Promise<AICo
 export function buildContextPrompt(context: AIContext): string {
   const sections: string[] = [];
   
-  const ctx = context as any;
-
   // Current state header
   sections.push('=== CURRENT APP STATE ===');
 
   // User Profile
-  if (ctx.userProfile) {
-      const p = ctx.userProfile as UserProfile;
+  if (context.userProfile) {
+      const p = context.userProfile as UserProfile;
       sections.push(`\nUser: ${p.name} (${p.expertise})`);
       sections.push(`Tone Preference: ${p.preferences.aiTone}`);
       if (p.preferences.theme) {
@@ -168,8 +164,8 @@ export function buildContextPrompt(context: AIContext): string {
   }
   
   // Viewport
-  if (ctx.viewport) {
-      sections.push(`Viewport: ${ctx.viewport}`);
+  if (context.viewport) {
+      sections.push(`Viewport: ${context.viewport}`);
   }
 
   // Selected component
@@ -202,9 +198,10 @@ export function buildContextPrompt(context: AIContext): string {
   }
 
   // Relevant Lessons
-  if (ctx.relevantLessons && ctx.relevantLessons.length > 0) {
+  if (context.relevantLessons && context.relevantLessons.length > 0) {
     sections.push('\nPRIOR USER CORRECTIONS (APPLY THESE):');
-    ctx.relevantLessons.forEach((l: InteractionLesson) => {
+    context.relevantLessons.forEach((lesson) => {
+      const l = lesson as InteractionLesson;
       sections.push(`- When asked "${l.userPrompt}", do NOT say "${l.originalResponse}". Instead: ${l.correction}`);
     });
   }
@@ -230,9 +227,15 @@ export function buildDetailedDiagramContext(diagram: WiringDiagram): string {
   sections.push('## Components');
   diagram.components.forEach((comp, idx) => {
     sections.push(`${idx + 1}. **${comp.name}** (${comp.type})`);
-    if (comp.pins && comp.pins.length > 0) {
+    
+    // FZPZ Metadata
+    if (comp.footprint?.pins) {
+      const pinList = comp.footprint.pins.map(p => p.id).join(', ');
+      sections.push(`   Pinout (FZPZ): ${pinList}`);
+    } else if (comp.pins && comp.pins.length > 0) {
       sections.push(`   Pins: ${comp.pins.join(', ')}`);
     }
+
     if (comp.description) {
       sections.push(`   ${comp.description.substring(0, 150)}`);
     }
