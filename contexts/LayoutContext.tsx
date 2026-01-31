@@ -43,9 +43,17 @@ interface LayoutContextType {
   isFocusMode: boolean;
   setFocusMode: (focus: boolean) => void;
 
+  // Sidebar Management
+  activeSidebar: 'inventory' | 'assistant' | 'none';
+  setActiveSidebar: (sidebar: 'inventory' | 'assistant' | 'none') => void;
+
   // Performance
   lowPerformanceMode: boolean;
   setLowPerformanceMode: (enabled: boolean) => void;
+
+  // Neural Link (Gestures)
+  neuralLinkEnabled: boolean;
+  setNeuralLinkEnabled: (enabled: boolean) => void;
 
   // Constants
   inventoryDefaultWidth: number;
@@ -131,10 +139,22 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Focus Mode State
   const [isFocusMode, setIsFocusMode] = useState(false);
 
+  // Sidebar State
+  const [activeSidebar, setActiveSidebar] = useState<'inventory' | 'assistant' | 'none'>('none');
+
   // Performance State
   const [lowPerformanceMode, setLowPerformanceMode] = useState(() => {
     try {
       return localStorage.getItem('cm_low_performance_mode') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  // Neural Link State
+  const [neuralLinkEnabled, setNeuralLinkEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('cm_neural_link_enabled') === 'true';
     } catch {
       return false;
     }
@@ -229,22 +249,34 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [lowPerformanceMode]);
 
+  useEffect(() => {
+    storageService.setItem('cm_neural_link_enabled', String(neuralLinkEnabled));
+  }, [neuralLinkEnabled]);
+
+  const contextValue = React.useMemo(() => ({
+    activeMode, setActiveMode,
+    isInventoryOpen, setInventoryOpen: setIsInventoryOpen,
+    inventoryPinned, setInventoryPinned,
+    inventoryWidth, setInventoryWidth,
+    isAssistantOpen, setAssistantOpen: setIsAssistantOpen,
+    assistantPinned, setAssistantPinned,
+    assistantWidth, setAssistantWidth,
+    isSettingsOpen, setSettingsOpen: setIsSettingsOpen,
+    settingsInitialTab, setSettingsInitialTab,
+    isFocusMode, setFocusMode: setIsFocusMode,
+    activeSidebar, setActiveSidebar,
+    lowPerformanceMode, setLowPerformanceMode,
+    neuralLinkEnabled, setNeuralLinkEnabled,
+    inventoryDefaultWidth,
+    assistantDefaultWidth
+  }), [
+    activeMode, setActiveMode, isInventoryOpen, inventoryPinned, inventoryWidth,
+    isAssistantOpen, assistantPinned, assistantWidth, isSettingsOpen, settingsInitialTab,
+    isFocusMode, activeSidebar, lowPerformanceMode, neuralLinkEnabled
+  ]);
+
   return (
-    <LayoutContext.Provider value={{
-      activeMode, setActiveMode,
-      isInventoryOpen, setInventoryOpen: setIsInventoryOpen,
-      inventoryPinned, setInventoryPinned,
-      inventoryWidth, setInventoryWidth,
-      isAssistantOpen, setAssistantOpen: setIsAssistantOpen,
-      assistantPinned, setAssistantPinned,
-      assistantWidth, setAssistantWidth,
-      isSettingsOpen, setSettingsOpen: setIsSettingsOpen,
-      settingsInitialTab, setSettingsInitialTab,
-      isFocusMode, setFocusMode: setIsFocusMode,
-      lowPerformanceMode, setLowPerformanceMode,
-      inventoryDefaultWidth,
-      assistantDefaultWidth
-    }}>
+    <LayoutContext.Provider value={contextValue}>
       {children}
     </LayoutContext.Provider>
   );

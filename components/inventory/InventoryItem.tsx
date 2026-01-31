@@ -30,6 +30,7 @@ const InventoryItem: React.FC<InventoryItemProps> = ({
   return (
     <div
       draggable
+      onClick={() => onToggleSelection(item.id)}
       onDragStart={(e) => onDragStart(e, item)}
       onDoubleClick={() => onDoubleClick(item)}
       className={`group relative flex items-center gap-3 p-1 border cut-corner-sm cursor-pointer transition-all ${
@@ -123,4 +124,11 @@ const InventoryItem: React.FC<InventoryItemProps> = ({
   );
 };
 
-export default memo(InventoryItem);
+export default memo(InventoryItem, (prev, next) => {
+  return (
+    prev.isSelected === next.isSelected &&
+    prev.item.id === next.item.id &&
+    prev.item.quantity === next.item.quantity &&
+    prev.brokenImage === next.brokenImage
+  );
+});

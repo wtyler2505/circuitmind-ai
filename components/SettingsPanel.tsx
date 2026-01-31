@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useToast } from '../hooks/useToast';
 import { ActionType, ACTION_SAFETY, AIAutonomySettings } from '../types';
 import { getStoredApiKey, setStoredApiKey } from '../services/apiKeyStorage';
@@ -19,7 +20,77 @@ interface SettingsPanelProps {
   initialTab?: 'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale';
 }
 
-// ... (existing code)
+// Human-readable labels for action types
+const ACTION_LABELS: Record<ActionType, { label: string; description: string; category: string }> =
+  {
+    // Canvas actions
+    highlight: { label: 'Highlight Component', description: 'Add visual glow to a component', category: 'Canvas' },
+    centerOn: { label: 'Center View', description: 'Pan canvas to focus on component', category: 'Canvas' },
+    zoomTo: { label: 'Zoom', description: 'Change zoom level', category: 'Canvas' },
+    panTo: { label: 'Pan', description: 'Move view to coordinates', category: 'Canvas' },
+    resetView: { label: 'Reset View', description: 'Reset pan and zoom to default', category: 'Canvas' },
+    highlightWire: { label: 'Highlight Wire', description: 'Add visual glow to a connection', category: 'Canvas' },
+
+    // Navigation actions
+    openInventory: { label: 'Open Inventory', description: 'Show component library sidebar', category: 'Navigation' },
+    closeInventory: { label: 'Close Inventory', description: 'Hide component library sidebar', category: 'Navigation' },
+    openSettings: { label: 'Open Settings', description: 'Show settings panel', category: 'Navigation' },
+    closeSettings: { label: 'Close Settings', description: 'Hide settings panel', category: 'Navigation' },
+    openComponentEditor: { label: 'Open Editor', description: 'Open component detail editor', category: 'Navigation' },
+    switchGenerationMode: { label: 'Switch Mode', description: 'Change AI generation mode', category: 'Navigation' },
+    toggleSidebar: { label: 'Toggle Sidebar', description: 'Expand/Collapse sidebars', category: 'Navigation' },
+    setTheme: { label: 'Set Theme', description: 'Change UI visual theme', category: 'Navigation' },
+
+    // Project actions
+    undo: { label: 'Undo', description: 'Revert last change', category: 'Project' },
+    redo: { label: 'Redo', description: 'Reapply reverted change', category: 'Project' },
+    saveDiagram: { label: 'Save Diagram', description: 'Save current state to local storage', category: 'Project' },
+    loadDiagram: { label: 'Load Diagram', description: 'Load state from local storage', category: 'Project' },
+
+    // Diagram modification actions
+    addComponent: { label: 'Add Component', description: 'Insert new component into diagram', category: 'Diagram' },
+    updateComponent: { label: 'Update Component', description: 'Modify component properties', category: 'Diagram' },
+    removeComponent: { label: 'Remove Component', description: 'Delete component from diagram', category: 'Diagram' },
+    clearCanvas: { label: 'Clear Canvas', description: 'Remove all components', category: 'Diagram' },
+    createConnection: { label: 'Create Connection', description: 'Wire two components together', category: 'Diagram' },
+    removeConnection: { label: 'Remove Connection', description: 'Delete wire from diagram', category: 'Diagram' },
+
+    // Form actions
+    fillField: { label: 'Fill Form Field', description: 'Auto-populate form input', category: 'Forms' },
+    saveComponent: { label: 'Save Component', description: 'Save component changes', category: 'Forms' },
+    
+    // Profile actions (Background)
+    setUserLevel: { label: 'Set Experience', description: 'Adjust AI teaching level', category: 'System' },
+    learnFact: { label: 'Learn Fact', description: 'Save user preference/fact', category: 'System' },
+    analyzeVisuals: { label: 'Analyze Visuals', description: 'Take canvas snapshot for AI', category: 'System' },
+  };
+
+const CATEGORIES = ['Canvas', 'Navigation', 'Project', 'Diagram', 'Forms', 'System'] as const;
+const INVENTORY_WIDTH_RANGE = { min: 280, max: 520, default: 360 };
+const ASSISTANT_WIDTH_RANGE = { min: 300, max: 560, default: 380 };
+
+type LayoutSnapshot = {
+  inventoryOpen: boolean;
+  inventoryPinned: boolean;
+  assistantOpen: boolean;
+  assistantPinned: boolean;
+  inventoryWidth: number;
+  assistantWidth: number;
+};
+
+// Default autonomy settings
+const getDefaultAutonomySettings = (): AIAutonomySettings => ({
+  autoExecuteSafeActions: true,
+  customSafeActions: [],
+  customUnsafeActions: [],
+});
+
+// Determine if action is safe based on settings
+const isActionSafe = (actionType: ActionType, settings: AIAutonomySettings): boolean => {
+  if (settings.customSafeActions.includes(actionType)) return true;
+  if (settings.customUnsafeActions.includes(actionType)) return false;
+  return ACTION_SAFETY[actionType] ?? false;
+};
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
   isOpen,
@@ -28,22 +99,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onAutonomySettingsChange,
   initialTab = 'api',
 }) => {
-  // ... (existing code)
-  
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [activeTab, setActiveTab] = useState<'api' | 'profile' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale'>(initialTab);
-
-  // Sync activeTab when isOpen changes or initialTab changes
-  useEffect(() => {
-    if (isOpen) {
-        setActiveTab(initialTab);
-        // ... existing open logic
-    }
-  }, [isOpen, initialTab]);
-
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
   const toast = useToast();
   
@@ -55,7 +115,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     assistantPinned, setAssistantPinned,
     assistantWidth, setAssistantWidth,
     inventoryDefaultWidth,
-    assistantDefaultWidth
+    assistantDefaultWidth,
+    neuralLinkEnabled, setNeuralLinkEnabled
   } = useLayout();
 
   // Local autonomy settings state (if not controlled externally)
@@ -86,7 +147,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         }
       }
     }
-  }, [isOpen, autonomySettings]);
+  }, [isOpen, autonomySettings, initialTab]);
 
 
   // Update autonomy settings
@@ -229,7 +290,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="bg-slate-950 rounded-xl shadow-2xl w-full max-w-lg mx-4 border border-slate-800/80">
         {/* Header */}
@@ -260,10 +321,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-800/80 bg-slate-950/60">
+        <div className="flex border-b border-slate-800/80 bg-slate-950/60 overflow-x-auto custom-scrollbar">
           <button
             onClick={() => setActiveTab('api')}
-            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
               activeTab === 'api' 
                 ? 'border-neon-cyan text-white bg-white/5' 
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -273,7 +334,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
               activeTab === 'profile' 
                 ? 'border-neon-pink text-white bg-white/5' 
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -283,7 +344,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('ai')}
-            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
               activeTab === 'ai' 
                 ? 'border-neon-purple text-white bg-white/5' 
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -293,7 +354,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('layout')}
-            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
               activeTab === 'layout' 
                 ? 'border-neon-amber text-white bg-white/5' 
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -303,7 +364,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('dev')}
-            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
               activeTab === 'dev' 
                 ? 'border-neon-green text-white bg-white/5' 
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -313,7 +374,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('config')}
-            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
               activeTab === 'config' 
                 ? 'border-neon-amber text-white bg-white/5' 
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -323,7 +384,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('diagnostics')}
-            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
               activeTab === 'diagnostics' 
                 ? 'border-red-500 text-white bg-white/5' 
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -333,7 +394,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('locale')}
-            className={`flex-1 py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
               activeTab === 'locale' 
                 ? 'border-neon-cyan text-white bg-white/5' 
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
@@ -821,6 +882,30 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </div>
                   </div>
 
+                  <div className="rounded-xl border border-neon-purple/30 bg-neon-purple/5 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-white flex items-center gap-2">
+                          <div className="w-2 h-2 bg-neon-purple rounded-full animate-pulse" />
+                          Neural Link
+                        </div>
+                        <p className="text-xs text-slate-400">Hand gesture controls (requires webcam).</p>
+                      </div>
+                      <button
+                        onClick={() => setNeuralLinkEnabled(!neuralLinkEnabled)}
+                        className={`relative w-12 h-6 rounded-full transition-colors ${
+                          neuralLinkEnabled ? 'bg-neon-purple' : 'bg-gray-600'
+                        }`}
+                      >
+                        <div
+                          className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                            neuralLinkEnabled ? 'translate-x-7' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="rounded-xl border border-slate-800/80 bg-slate-900/70 p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-sm font-semibold text-slate-200">Reset layout defaults</p>
@@ -894,7 +979,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

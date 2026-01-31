@@ -21,9 +21,11 @@ import { CyberToast } from './layout/CyberToast';
 import { OmniSearch } from './layout/OmniSearch';
 import ErrorBoundary from './ErrorBoundary';
 
+import SettingsPanel from './SettingsPanel';
+
 // Lazy Components
 const ComponentEditorModal = lazy(() => import('./ComponentEditorModal'));
-const SettingsPanel = lazy(() => import('./SettingsPanel'));
+// const SettingsPanel = lazy(() => import('./SettingsPanel'));
 
 // Contexts
 import { useInventory } from '../contexts/InventoryContext';
@@ -894,7 +896,7 @@ export const MainLayout: React.FC = () => {
               />
             </Suspense>
           )}
-          <Suspense fallback={null}>
+          {/* <Suspense fallback={null}> */}
             <SettingsPanel
               isOpen={isSettingsOpen}
               onClose={() => setSettingsOpen(false)}
@@ -902,7 +904,7 @@ export const MainLayout: React.FC = () => {
               onAutonomySettingsChange={aiActions.updateAutonomySettings}
               initialTab={settingsInitialTab}
             />
-          </Suspense>
+          {/* </Suspense> */}
         </>
       }
     >
