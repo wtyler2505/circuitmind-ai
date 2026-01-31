@@ -6,6 +6,7 @@ export interface AIMetric {
   latencyMs: number;
   success: boolean;
   userSatisfaction?: number;
+  error?: string;  // Captures error message when success=false
 }
 
 export interface EngineeringEvent {
