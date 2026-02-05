@@ -1,0 +1,22 @@
+{
+  "title": "Arduino Blink LED",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "led-generic",
+    "resistor-220ohm"
+  ],
+  "connections": [
+    {
+      "from": "led-generic:anode",
+      "to": "resistor-220ohm:1"
+    },
+    {
+      "from": "resistor-220ohm:2",
+      "to": "mcu-arduino-uno-r3:D8"
+    },
+    {
+      "from": "led-generic:cathode",
+      "to": "mcu-arduino-uno-r3:GND"
+    }
+  ]
+}

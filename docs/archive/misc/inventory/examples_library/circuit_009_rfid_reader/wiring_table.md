@@ -1,0 +1,9 @@
+| From | Pin | To | Pin | Wire |
+|---|---|---|---|---|
+| `arduino-uno` | `3.3V` | `rc522` | `3.3V` | `orange` |
+| `arduino-uno` | `GND` | `rc522` | `GND` | `black` |
+| `arduino-uno` | `D10` | `rc522` | `SDA/SS` | `purple` |
+| `arduino-uno` | `D13` | `rc522` | `SCK` | `blue` |
+| `arduino-uno` | `D11` | `rc522` | `MOSI` | `green` |
+| `arduino-uno` | `D12` | `rc522` | `MISO` | `yellow` |
+| `arduino-uno` | `D9` | `rc522` | `RST` | `white` |

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "echo-server": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-everything"],
+      "enabled": false
+    }
+  }
+}

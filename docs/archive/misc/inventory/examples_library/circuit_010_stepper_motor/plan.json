@@ -1,0 +1,102 @@
+{
+  "name": "Stepper Motor Control",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "actuator-28byj48-uln2003"
+  ],
+  "total_current_ma": 290,
+  "power_source": "external_5v_required",
+  "connections": [
+    {
+      "from": {
+        "component": "power-supply-5v",
+        "pin": "+"
+      },
+      "to": {
+        "component": "uln2003",
+        "pin": "VCC"
+      },
+      "wire": "red"
+    },
+    {
+      "from": {
+        "component": "power-supply-5v",
+        "pin": "-"
+      },
+      "to": {
+        "component": "uln2003",
+        "pin": "GND"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "uln2003",
+        "pin": "GND"
+      },
+      "wire": "black",
+      "note": "COMMON GROUND"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D8"
+      },
+      "to": {
+        "component": "uln2003",
+        "pin": "IN1"
+      },
+      "wire": "yellow"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D9"
+      },
+      "to": {
+        "component": "uln2003",
+        "pin": "IN2"
+      },
+      "wire": "orange"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D10"
+      },
+      "to": {
+        "component": "uln2003",
+        "pin": "IN3"
+      },
+      "wire": "green"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D11"
+      },
+      "to": {
+        "component": "uln2003",
+        "pin": "IN4"
+      },
+      "wire": "blue"
+    },
+    {
+      "from": {
+        "component": "uln2003",
+        "pin": "MOTOR"
+      },
+      "to": {
+        "component": "28byj48",
+        "pin": "connector"
+      },
+      "wire": "ribbon",
+      "note": "JST connector"
+    }
+  ],
+  "notes": "TESTED - pin order in Stepper library is IN1,IN3,IN2,IN4 (not sequential!)"
+}

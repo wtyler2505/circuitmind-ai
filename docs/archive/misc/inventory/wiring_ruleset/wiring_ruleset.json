@@ -1,0 +1,1352 @@
+{
+  "inventory_metadata": {
+    "generated_on": "2025-12-31T19:00:00",
+    "source": "electronics_inventory_tier5.json",
+    "version": "wiring-ruleset-1.0"
+  },
+  "pin_allocation_rules": {
+    "arduino_uno": {
+      "total_digital_pins": 14,
+      "total_analog_pins": 6,
+      "pwm_pins": [
+        3,
+        5,
+        6,
+        9,
+        10,
+        11
+      ],
+      "analog_input_pins": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5"
+      ],
+      "interrupt_pins": [
+        2,
+        3
+      ],
+      "i2c_pins": {
+        "SDA": "A4",
+        "SCL": "A5"
+      },
+      "spi_pins": {
+        "MOSI": 11,
+        "MISO": 12,
+        "SCK": 13,
+        "SS": 10
+      },
+      "uart_pins": {
+        "TX": 0,
+        "RX": 1
+      },
+      "led_builtin": 13,
+      "reserved_pins": {
+        "0": "Serial RX - avoid if using Serial Monitor",
+        "1": "Serial TX - avoid if using Serial Monitor",
+        "10": "SPI SS - avoid if using SPI",
+        "11": "SPI MOSI - avoid if using SPI",
+        "12": "SPI MISO - avoid if using SPI",
+        "13": "SPI SCK + LED - avoid for input sensors",
+        "A4": "I2C SDA - avoid if using I2C",
+        "A5": "I2C SCL - avoid if using I2C"
+      },
+      "safe_digital_pins": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "max_current_per_pin_ma": 20,
+      "max_total_gpio_ma": 200,
+      "voltage_levels": {
+        "high": 5.0,
+        "low": 0,
+        "logic": "5V TTL"
+      },
+      "best_practices": [
+        "Use pins 2-9 for general purpose I/O",
+        "Reserve 0,1 for Serial communication",
+        "Use PWM pins (3,5,6,9,10,11) for motor/LED control",
+        "A4,A5 are shared with I2C - can't use analog if I2C active"
+      ]
+    },
+    "arduino_mega": {
+      "total_digital_pins": 54,
+      "total_analog_pins": 16,
+      "pwm_pins": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        44,
+        45,
+        46
+      ],
+      "analog_input_pins": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "A7",
+        "A8",
+        "A9",
+        "A10",
+        "A11",
+        "A12",
+        "A13",
+        "A14",
+        "A15"
+      ],
+      "interrupt_pins": [
+        2,
+        3,
+        18,
+        19,
+        20,
+        21
+      ],
+      "i2c_pins": {
+        "SDA": 20,
+        "SCL": 21
+      },
+      "spi_pins": {
+        "MOSI": 51,
+        "MISO": 50,
+        "SCK": 52,
+        "SS": 53
+      },
+      "uart_pins": {
+        "Serial": {
+          "TX": 0,
+          "RX": 1
+        },
+        "Serial1": {
+          "TX": 18,
+          "RX": 19
+        },
+        "Serial2": {
+          "TX": 16,
+          "RX": 17
+        },
+        "Serial3": {
+          "TX": 14,
+          "RX": 15
+        }
+      },
+      "led_builtin": 13,
+      "reserved_pins": {
+        "0": "Serial RX",
+        "1": "Serial TX",
+        "20": "I2C SDA",
+        "21": "I2C SCL",
+        "50": "SPI MISO",
+        "51": "SPI MOSI",
+        "52": "SPI SCK",
+        "53": "SPI SS"
+      },
+      "safe_digital_pins": [
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "max_current_per_pin_ma": 20,
+      "max_total_gpio_ma": 400,
+      "voltage_levels": {
+        "high": 5.0,
+        "low": 0,
+        "logic": "5V TTL"
+      },
+      "best_practices": [
+        "Plenty of pins - use 22-49 for general I/O",
+        "4 hardware serial ports available",
+        "6 external interrupt pins",
+        "Analog pins A0-A15 don't conflict with I2C"
+      ]
+    },
+    "esp32_devkit_38pin": {
+      "total_gpio_pins": 34,
+      "usable_gpio_pins": 25,
+      "adc1_pins": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        39
+      ],
+      "adc2_pins": [
+        0,
+        2,
+        4,
+        12,
+        13,
+        14,
+        15,
+        25,
+        26,
+        27
+      ],
+      "dac_pins": [
+        25,
+        26
+      ],
+      "touch_pins": [
+        0,
+        2,
+        4,
+        12,
+        13,
+        14,
+        15,
+        27,
+        32,
+        33
+      ],
+      "pwm_pins": "all GPIO can do PWM via LEDC",
+      "i2c_pins": {
+        "SDA": 21,
+        "SCL": 22,
+        "note": "software configurable"
+      },
+      "spi_pins": {
+        "VSPI": {
+          "MOSI": 23,
+          "MISO": 19,
+          "SCK": 18,
+          "SS": 5
+        },
+        "HSPI": {
+          "MOSI": 13,
+          "MISO": 12,
+          "SCK": 14,
+          "SS": 15
+        }
+      },
+      "uart_pins": {
+        "Serial": {
+          "TX": 1,
+          "RX": 3
+        },
+        "Serial1": {
+          "TX": 10,
+          "RX": 9
+        },
+        "Serial2": {
+          "TX": 17,
+          "RX": 16
+        }
+      },
+      "led_builtin": 2,
+      "input_only_pins": [
+        34,
+        35,
+        36,
+        39
+      ],
+      "strapping_pins": {
+        "0": "Boot mode - must be HIGH for normal boot, LOW for download",
+        "2": "Boot mode - must be LOW for download mode",
+        "5": "VSPI SS - affects boot timing",
+        "12": "Flash voltage - leave floating or LOW",
+        "15": "Silences boot messages if LOW"
+      },
+      "do_not_use_pins": {
+        "6": "Flash SCK - NEVER USE",
+        "7": "Flash D0 - NEVER USE",
+        "8": "Flash D1 - NEVER USE",
+        "9": "Flash D2 - NEVER USE (some boards)",
+        "10": "Flash D3 - NEVER USE (some boards)",
+        "11": "Flash CMD - NEVER USE"
+      },
+      "safe_pins": [
+        4,
+        13,
+        14,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        23,
+        25,
+        26,
+        27,
+        32,
+        33
+      ],
+      "safe_input_only": [
+        34,
+        35,
+        36,
+        39
+      ],
+      "max_current_per_pin_ma": 12,
+      "max_total_gpio_ma": 1200,
+      "voltage_levels": {
+        "high": 3.3,
+        "low": 0,
+        "logic": "3.3V CMOS"
+      },
+      "critical_warnings": [
+        "ALL GPIO ARE 3.3V ONLY - 5V DESTROYS THE CHIP",
+        "ADC2 cannot be used while WiFi is active",
+        "Input-only pins (34,35,36,39) cannot output",
+        "GPIO 6-11 are connected to flash - NEVER USE"
+      ],
+      "best_practices": [
+        "Use safe pins: 4, 13-19, 21-27, 32, 33",
+        "Use 34, 35, 36, 39 for inputs only (ADC1)",
+        "Avoid strapping pins for critical boot-time signals",
+        "Add level shifter for ANY 5V component"
+      ]
+    },
+    "esp8266_nodemcu": {
+      "total_gpio_pins": 17,
+      "usable_gpio_pins": 11,
+      "adc_pin": "A0 (single ADC, 0-1V range)",
+      "pwm_pins": "all GPIO except GPIO16",
+      "i2c_pins": {
+        "SDA": 4,
+        "SCL": 5,
+        "note": "D2=GPIO4, D1=GPIO5"
+      },
+      "spi_pins": {
+        "MOSI": 13,
+        "MISO": 12,
+        "SCK": 14,
+        "SS": 15
+      },
+      "uart_pins": {
+        "TX": 1,
+        "RX": 3
+      },
+      "led_builtin": 2,
+      "gpio_to_d_mapping": {
+        "D0": 16,
+        "D1": 5,
+        "D2": 4,
+        "D3": 0,
+        "D4": 2,
+        "D5": 14,
+        "D6": 12,
+        "D7": 13,
+        "D8": 15,
+        "RX": 3,
+        "TX": 1
+      },
+      "boot_sensitive_pins": {
+        "GPIO0": "D3 - Must be HIGH for normal boot",
+        "GPIO2": "D4 - Must be HIGH for normal boot",
+        "GPIO15": "D8 - Must be LOW for normal boot"
+      },
+      "do_not_use_pins": {
+        "GPIO6": "Flash CLK - NEVER USE",
+        "GPIO7": "Flash D0 - NEVER USE",
+        "GPIO8": "Flash D1 - NEVER USE",
+        "GPIO9": "Flash D2 - NEVER USE",
+        "GPIO10": "Flash D3 - NEVER USE",
+        "GPIO11": "Flash CMD - NEVER USE"
+      },
+      "safe_pins": [
+        "D1/GPIO5",
+        "D2/GPIO4",
+        "D5/GPIO14",
+        "D6/GPIO12",
+        "D7/GPIO13"
+      ],
+      "use_with_caution": [
+        "D0/GPIO16",
+        "D3/GPIO0",
+        "D4/GPIO2",
+        "D8/GPIO15"
+      ],
+      "max_current_per_pin_ma": 12,
+      "max_total_gpio_ma": 200,
+      "voltage_levels": {
+        "high": 3.3,
+        "low": 0,
+        "logic": "3.3V CMOS"
+      },
+      "critical_warnings": [
+        "ALL GPIO ARE 3.3V ONLY - 5V DESTROYS THE CHIP",
+        "Very limited pins - plan carefully",
+        "D3, D4, D8 affect boot - avoid sensors that pull at startup",
+        "ADC limited to 0-1V (use voltage divider for higher)"
+      ],
+      "best_practices": [
+        "Use D1, D2, D5, D6, D7 for most projects",
+        "D0 can't do PWM and has special wake function",
+        "Don't connect anything to D3, D4, D8 that pulls during boot",
+        "Use D-pin labels in code (D1, D2...) not GPIO numbers"
+      ]
+    }
+  },
+  "power_budget_calculator": {
+    "description": "Rules for calculating total power consumption",
+    "formula": "total_ma = mcu_ma + sum(component_active_ma for each component)",
+    "safety_margin": 0.8,
+    "rules": [
+      {
+        "name": "usb_power_check",
+        "condition": "total_ma > 500",
+        "severity": "error",
+        "message": "Total current ({total_ma}mA) exceeds USB limit (500mA)",
+        "solution": "Use external power supply or reduce load"
+      },
+      {
+        "name": "gpio_pin_overload",
+        "condition": "component_ma > mcu_per_pin_ma",
+        "severity": "error",
+        "message": "Component draws {component_ma}mA but GPIO max is {mcu_per_pin_ma}mA",
+        "solution": "Use transistor/MOSFET to switch load, or external power"
+      },
+      {
+        "name": "total_gpio_overload",
+        "condition": "sum(gpio_loads) > mcu_total_gpio_ma",
+        "severity": "error",
+        "message": "Total GPIO load ({sum}mA) exceeds MCU limit ({limit}mA)",
+        "solution": "Use external power for high-current devices"
+      },
+      {
+        "name": "servo_power_warning",
+        "condition": "servo_count >= 1",
+        "severity": "warning",
+        "message": "Servos should use external 5V power",
+        "solution": "Connect servo VCC to external 5V, share GND with MCU"
+      },
+      {
+        "name": "ws2812b_power_calculation",
+        "condition": "ws2812b_present",
+        "severity": "info",
+        "formula": "power_ma = led_count * 60",
+        "message": "{led_count} WS2812B LEDs need {power_ma}mA at full white",
+        "solution": "Use adequate external power supply (5V {amps}A minimum)"
+      }
+    ],
+    "typical_project_budgets": {
+      "simple_sensor": {
+        "components": "MCU + 1-2 sensors",
+        "typical_ma": 50,
+        "power": "USB OK"
+      },
+      "multi_sensor": {
+        "components": "MCU + 3-5 sensors + display",
+        "typical_ma": 150,
+        "power": "USB OK"
+      },
+      "motor_project": {
+        "components": "MCU + motors + sensors",
+        "typical_ma": 500,
+        "power": "External required"
+      },
+      "led_strip": {
+        "components": "MCU + 30+ LEDs",
+        "typical_ma": "1800+",
+        "power": "External 5V 2A+ required"
+      },
+      "robot": {
+        "components": "MCU + motors + sensors + wireless",
+        "typical_ma": "1000+",
+        "power": "Battery pack required"
+      }
+    }
+  },
+  "wiring_validation_rules": {
+    "version": "1.0",
+    "description": "Machine-readable rules for validating wiring diagrams",
+    "rules": [
+      {
+        "rule_id": "VR001",
+        "name": "voltage_level_mismatch",
+        "category": "voltage",
+        "condition": {
+          "check": "mcu.voltage_levels.logic != component.voltage_v",
+          "applies_to": [
+            "sensor",
+            "display",
+            "logic"
+          ]
+        },
+        "severity": "error",
+        "message": "Voltage mismatch: {mcu} is {mcu_voltage}V logic but {component} requires {comp_voltage}V",
+        "solution": "Add level shifter between MCU and component",
+        "examples": [
+          "ESP32 (3.3V) → HC-SR04 Echo (5V output) = DAMAGE RISK",
+          "Arduino (5V) → RC522 (3.3V only) = DAMAGE RISK"
+        ]
+      },
+      {
+        "rule_id": "VR002",
+        "name": "5v_to_3v3_gpio",
+        "category": "voltage",
+        "condition": {
+          "check": "mcu.voltage_levels.high == 3.3 AND component.output_voltage == 5.0"
+        },
+        "severity": "critical",
+        "message": "5V signal {component}.{pin} will DESTROY 3.3V GPIO on {mcu}",
+        "solution": "Use voltage divider (1KΩ + 2KΩ) or level shifter",
+        "affected_components": [
+          "sensor-hcsr04.echo",
+          "any 5V logic output"
+        ]
+      },
+      {
+        "rule_id": "VR003",
+        "name": "gpio_current_exceeded",
+        "category": "current",
+        "condition": {
+          "check": "component.active_ma > mcu.max_current_per_pin_ma"
+        },
+        "severity": "error",
+        "message": "{component} draws {current}mA but {mcu} GPIO max is {limit}mA",
+        "solution": "Use transistor (TIP120/2N2222) or MOSFET (IRF520) to switch load",
+        "typical_violations": [
+          "Relay coil (70mA) > GPIO (20mA)",
+          "LED strip direct > GPIO (20mA)"
+        ]
+      },
+      {
+        "rule_id": "VR004",
+        "name": "total_current_exceeded",
+        "category": "current",
+        "condition": {
+          "check": "sum(all_component_ma) > mcu.usb_total_ma"
+        },
+        "severity": "error",
+        "message": "Total current {total}mA exceeds USB power limit 500mA",
+        "solution": "Use external power supply, connect GND to MCU"
+      },
+      {
+        "rule_id": "VR005",
+        "name": "servo_direct_power",
+        "category": "power",
+        "condition": {
+          "check": "servo.power_source == 'mcu_5v_rail' AND servo.count >= 1"
+        },
+        "severity": "warning",
+        "message": "Servo powered from MCU can cause brownout/reset",
+        "solution": "Use external 5V supply for servo VCC, share GND with MCU"
+      },
+      {
+        "rule_id": "VR006",
+        "name": "stepper_direct_power",
+        "category": "power",
+        "condition": {
+          "check": "stepper.power_source == 'mcu'"
+        },
+        "severity": "error",
+        "message": "Stepper motors MUST use external power (240mA+ each)",
+        "solution": "Connect ULN2003 VCC to external 5V, share GND"
+      },
+      {
+        "rule_id": "VR007",
+        "name": "i2c_address_conflict",
+        "category": "bus",
+        "condition": {
+          "check": "count(components with same i2c_address) > 1"
+        },
+        "severity": "error",
+        "message": "I2C address conflict: {components} both use address {address}",
+        "solution": "Change address via hardware pin (if available) or use I2C multiplexer",
+        "known_conflicts": [
+          {
+            "devices": [
+              "MPU6050",
+              "DS3231"
+            ],
+            "address": "0x68",
+            "fix": "Set MPU6050 AD0 HIGH for 0x69"
+          }
+        ]
+      },
+      {
+        "rule_id": "VR008",
+        "name": "spi_ss_conflict",
+        "category": "bus",
+        "condition": {
+          "check": "count(spi_devices) > 1 AND not(unique_ss_pins)"
+        },
+        "severity": "error",
+        "message": "Multiple SPI devices need unique SS/CS pins",
+        "solution": "Assign different GPIO to each device SS pin"
+      },
+      {
+        "rule_id": "VR009",
+        "name": "esp32_flash_pins",
+        "category": "pin_conflict",
+        "condition": {
+          "check": "mcu == 'ESP32' AND pin in [6,7,8,9,10,11]"
+        },
+        "severity": "critical",
+        "message": "GPIO {pin} is connected to flash memory - NEVER USE",
+        "solution": "Use safe pins: 4, 13-19, 21-27, 32, 33"
+      },
+      {
+        "rule_id": "VR010",
+        "name": "esp8266_boot_pins",
+        "category": "pin_conflict",
+        "condition": {
+          "check": "mcu == 'ESP8266' AND pin in ['GPIO0','GPIO2','GPIO15'] AND component.pulls_at_boot"
+        },
+        "severity": "error",
+        "message": "{pin} affects boot - {component} may prevent boot",
+        "solution": "Move sensor to safe pin (D1, D2, D5, D6, D7)"
+      },
+      {
+        "rule_id": "VR011",
+        "name": "pwm_required",
+        "category": "functionality",
+        "condition": {
+          "check": "component.requires_pwm AND pin not in mcu.pwm_pins"
+        },
+        "severity": "error",
+        "message": "{component} needs PWM but pin {pin} is not PWM capable",
+        "solution": "Move to PWM pin: {pwm_pins}"
+      },
+      {
+        "rule_id": "VR012",
+        "name": "interrupt_required",
+        "category": "functionality",
+        "condition": {
+          "check": "component.requires_interrupt AND pin not in mcu.interrupt_pins"
+        },
+        "severity": "warning",
+        "message": "{component} works best with interrupt but pin {pin} is not interrupt capable",
+        "solution": "For better performance, use interrupt pin: {interrupt_pins}"
+      },
+      {
+        "rule_id": "VR013",
+        "name": "analog_required",
+        "category": "functionality",
+        "condition": {
+          "check": "component.output_type == 'analog' AND pin not in mcu.analog_pins"
+        },
+        "severity": "error",
+        "message": "{component} outputs analog signal but pin {pin} cannot read analog",
+        "solution": "Connect to analog pin: {analog_pins}"
+      },
+      {
+        "rule_id": "VR014",
+        "name": "pullup_required",
+        "category": "signal",
+        "condition": {
+          "check": "component.requires_pullup AND not(pullup_present)"
+        },
+        "severity": "warning",
+        "message": "{component} data line needs pull-up resistor",
+        "solution": "Add 4.7KΩ-10KΩ resistor from data pin to VCC"
+      },
+      {
+        "rule_id": "VR015",
+        "name": "flyback_diode_required",
+        "category": "protection",
+        "condition": {
+          "check": "component.type == 'inductive' AND not(flyback_diode)"
+        },
+        "severity": "warning",
+        "message": "Inductive load {component} needs flyback diode for protection",
+        "solution": "Add 1N4007 diode across coil (cathode to positive)"
+      },
+      {
+        "rule_id": "VR016",
+        "name": "led_resistor_required",
+        "category": "protection",
+        "condition": {
+          "check": "component.type == 'led' AND not(current_limiting_resistor)"
+        },
+        "severity": "error",
+        "message": "LED needs current limiting resistor or will burn out",
+        "solution": "Add 220Ω-330Ω resistor in series with LED"
+      },
+      {
+        "rule_id": "VR017",
+        "name": "ws2812b_data_resistor",
+        "category": "protection",
+        "condition": {
+          "check": "component == 'WS2812B' AND not(data_resistor)"
+        },
+        "severity": "warning",
+        "message": "WS2812B data line should have series resistor",
+        "solution": "Add 300-500Ω resistor on data line near MCU"
+      },
+      {
+        "rule_id": "VR018",
+        "name": "ws2812b_capacitor",
+        "category": "protection",
+        "condition": {
+          "check": "component == 'WS2812B' AND not(power_capacitor)"
+        },
+        "severity": "warning",
+        "message": "WS2812B power should have bulk capacitor",
+        "solution": "Add 1000µF capacitor across power rails near LEDs"
+      },
+      {
+        "rule_id": "VR019",
+        "name": "esp_adc2_wifi_conflict",
+        "category": "functionality",
+        "condition": {
+          "check": "mcu == 'ESP32' AND wifi_enabled AND analog_pin in adc2_pins"
+        },
+        "severity": "error",
+        "message": "ADC2 pins cannot be used while WiFi is active",
+        "solution": "Use ADC1 pins (32, 33, 34, 35, 36, 39) for analog when using WiFi"
+      },
+      {
+        "rule_id": "VR020",
+        "name": "input_only_pin_output",
+        "category": "pin_conflict",
+        "condition": {
+          "check": "mcu == 'ESP32' AND pin in [34,35,36,39] AND direction == 'output'"
+        },
+        "severity": "error",
+        "message": "GPIO {pin} is INPUT ONLY - cannot be used for output",
+        "solution": "Use different pin for output signals"
+      }
+    ]
+  },
+  "wire_color_standards": {
+    "version": "1.0",
+    "description": "Standard wire color coding for consistent diagrams",
+    "power": {
+      "vcc_5v": {
+        "color": "red",
+        "hex": "#FF0000",
+        "note": "5V power"
+      },
+      "vcc_3v3": {
+        "color": "orange",
+        "hex": "#FFA500",
+        "note": "3.3V power"
+      },
+      "vcc_vin": {
+        "color": "dark_red",
+        "hex": "#8B0000",
+        "note": "Unregulated input voltage"
+      },
+      "gnd": {
+        "color": "black",
+        "hex": "#000000",
+        "note": "Ground/common"
+      },
+      "gnd_alt": {
+        "color": "brown",
+        "hex": "#8B4513",
+        "note": "Alternate ground"
+      }
+    },
+    "signals": {
+      "data_generic": {
+        "color": "yellow",
+        "hex": "#FFFF00",
+        "note": "Generic data signal"
+      },
+      "clock": {
+        "color": "blue",
+        "hex": "#0000FF",
+        "note": "Clock signals"
+      },
+      "enable": {
+        "color": "green",
+        "hex": "#00FF00",
+        "note": "Enable/chip select"
+      },
+      "reset": {
+        "color": "white",
+        "hex": "#FFFFFF",
+        "note": "Reset signals"
+      },
+      "interrupt": {
+        "color": "purple",
+        "hex": "#800080",
+        "note": "Interrupt lines"
+      }
+    },
+    "interfaces": {
+      "i2c": {
+        "SDA": {
+          "color": "blue",
+          "hex": "#0000FF"
+        },
+        "SCL": {
+          "color": "yellow",
+          "hex": "#FFFF00"
+        }
+      },
+      "spi": {
+        "MOSI": {
+          "color": "green",
+          "hex": "#00FF00"
+        },
+        "MISO": {
+          "color": "yellow",
+          "hex": "#FFFF00"
+        },
+        "SCK": {
+          "color": "blue",
+          "hex": "#0000FF"
+        },
+        "SS": {
+          "color": "orange",
+          "hex": "#FFA500"
+        }
+      },
+      "uart": {
+        "TX": {
+          "color": "green",
+          "hex": "#00FF00"
+        },
+        "RX": {
+          "color": "yellow",
+          "hex": "#FFFF00"
+        }
+      },
+      "pwm": {
+        "signal": {
+          "color": "cyan",
+          "hex": "#00FFFF"
+        }
+      }
+    },
+    "component_specific": {
+      "servo": {
+        "signal": {
+          "color": "orange",
+          "hex": "#FFA500",
+          "wire": "orange/yellow"
+        },
+        "vcc": {
+          "color": "red",
+          "hex": "#FF0000",
+          "wire": "red"
+        },
+        "gnd": {
+          "color": "brown",
+          "hex": "#8B4513",
+          "wire": "brown"
+        }
+      },
+      "hcsr04": {
+        "vcc": {
+          "color": "red",
+          "hex": "#FF0000"
+        },
+        "trig": {
+          "color": "green",
+          "hex": "#00FF00"
+        },
+        "echo": {
+          "color": "yellow",
+          "hex": "#FFFF00"
+        },
+        "gnd": {
+          "color": "black",
+          "hex": "#000000"
+        }
+      },
+      "ws2812b": {
+        "5v": {
+          "color": "red",
+          "hex": "#FF0000"
+        },
+        "data": {
+          "color": "green",
+          "hex": "#00FF00"
+        },
+        "gnd": {
+          "color": "white",
+          "hex": "#FFFFFF",
+          "note": "Often white on strips"
+        }
+      }
+    },
+    "recommendations": [
+      "Always use RED for positive power",
+      "Always use BLACK for ground",
+      "Use consistent colors within a project",
+      "Label wires when colors run out",
+      "Match component wire colors when possible (e.g., servo brown/red/orange)"
+    ]
+  },
+  "protection_requirements": {
+    "description": "Required protection components for safe circuits",
+    "by_component_type": {
+      "inductive_loads": {
+        "components": [
+          "relay coils",
+          "motors",
+          "solenoids",
+          "inductors"
+        ],
+        "protection": {
+          "flyback_diode": {
+            "required": true,
+            "part": "1N4007 or 1N4148",
+            "placement": "Across coil, cathode to positive",
+            "reason": "Suppresses voltage spike when coil turns off",
+            "without_protection": "Can destroy transistor/MOSFET/MCU GPIO"
+          }
+        }
+      },
+      "leds": {
+        "components": [
+          "5mm LED",
+          "3mm LED",
+          "10mm LED"
+        ],
+        "protection": {
+          "current_limiting_resistor": {
+            "required": true,
+            "calculation": "R = (Vsupply - Vled) / Iled",
+            "typical_values": {
+              "5V_red_led": "150Ω-220Ω (Vf=2V, If=20mA)",
+              "5V_green_led": "100Ω-150Ω (Vf=2.2V, If=20mA)",
+              "5V_blue_white_led": "68Ω-100Ω (Vf=3.2V, If=20mA)",
+              "3.3V_red_led": "47Ω-68Ω",
+              "3.3V_blue_white": "10Ω or skip (Vf≈3.3V)"
+            },
+            "without_protection": "LED burns out immediately"
+          }
+        }
+      },
+      "ws2812b_neopixel": {
+        "components": [
+          "WS2812B",
+          "NeoPixel",
+          "SK6812"
+        ],
+        "protection": {
+          "bulk_capacitor": {
+            "required": true,
+            "part": "1000µF 6.3V electrolytic",
+            "placement": "Across 5V and GND near first LED",
+            "reason": "Absorbs power-on surge, stabilizes voltage"
+          },
+          "data_resistor": {
+            "required": true,
+            "part": "300Ω-500Ω",
+            "placement": "In series with data line, near MCU",
+            "reason": "Prevents reflections, protects data line"
+          },
+          "level_shifter": {
+            "required_when": "MCU is 3.3V logic",
+            "part": "74HCT125 or dedicated level shifter",
+            "reason": "WS2812B expects 5V data signal",
+            "workaround": "Sometimes works with 3.3V, but unreliable"
+          }
+        }
+      },
+      "motors_dc": {
+        "components": [
+          "DC motors",
+          "vibration motors",
+          "fans"
+        ],
+        "protection": {
+          "flyback_diode": {
+            "required": true,
+            "part": "1N4007",
+            "placement": "Across motor terminals, cathode to positive"
+          },
+          "decoupling_capacitor": {
+            "recommended": true,
+            "part": "0.1µF ceramic",
+            "placement": "Across motor terminals",
+            "reason": "Reduces electrical noise/EMI"
+          },
+          "snubber_circuit": {
+            "optional": true,
+            "when": "Motor creates excessive noise",
+            "parts": "0.1µF + 47Ω in series across motor"
+          }
+        }
+      },
+      "i2c_bus": {
+        "components": [
+          "Any I2C device"
+        ],
+        "protection": {
+          "pullup_resistors": {
+            "required": "If not built into module",
+            "part": "4.7KΩ typical (2.2KΩ-10KΩ range)",
+            "placement": "SDA to VCC, SCL to VCC",
+            "reason": "I2C is open-drain, needs pullups to work",
+            "note": "Most modules include pullups - don't double up"
+          }
+        }
+      },
+      "gpio_inputs": {
+        "components": [
+          "Buttons",
+          "switches",
+          "open-collector outputs"
+        ],
+        "protection": {
+          "pullup_or_pulldown": {
+            "required": true,
+            "part": "10KΩ typical",
+            "placement": "Input to VCC (pullup) or GND (pulldown)",
+            "reason": "Prevents floating input when switch open",
+            "alternative": "Use MCU internal pullup (INPUT_PULLUP)"
+          },
+          "debounce_capacitor": {
+            "optional": true,
+            "part": "0.1µF",
+            "placement": "Across switch",
+            "reason": "Hardware debouncing (can also do in software)"
+          }
+        }
+      },
+      "power_supply": {
+        "components": [
+          "Any project with external power"
+        ],
+        "protection": {
+          "reverse_polarity": {
+            "recommended": true,
+            "options": [
+              {
+                "part": "1N4007 diode",
+                "method": "In series with VCC",
+                "loss": "0.7V drop"
+              },
+              {
+                "part": "P-channel MOSFET",
+                "method": "High-side switch",
+                "loss": "Minimal"
+              }
+            ]
+          },
+          "bulk_capacitor": {
+            "recommended": true,
+            "part": "100µF-1000µF electrolytic",
+            "placement": "Across power input",
+            "reason": "Smooths power, handles transients"
+          },
+          "decoupling": {
+            "required": true,
+            "part": "0.1µF ceramic per IC",
+            "placement": "As close to IC VCC/GND as possible",
+            "reason": "Filters high-frequency noise"
+          }
+        }
+      },
+      "3v3_mcu_with_5v_signals": {
+        "components": [
+          "ESP32",
+          "ESP8266",
+          "any 3.3V MCU"
+        ],
+        "protection": {
+          "voltage_divider": {
+            "required": true,
+            "parts": "1KΩ + 2KΩ resistors",
+            "circuit": "5V → 1KΩ → GPIO → 2KΩ → GND",
+            "output": "3.3V (safe for 3.3V GPIO)",
+            "when": "Receiving 5V logic signal"
+          },
+          "level_shifter": {
+            "alternative": true,
+            "part": "HW-221 or 74LVC245",
+            "when": "Bidirectional or multiple signals",
+            "advantage": "Cleaner signals, bidirectional capable"
+          }
+        }
+      }
+    },
+    "quick_reference": {
+      "relay": "Add flyback diode (1N4007)",
+      "motor": "Add flyback diode + optional 0.1µF across terminals",
+      "LED": "Add resistor (220Ω for 5V red LED)",
+      "WS2812B": "Add 1000µF cap + 330Ω data resistor",
+      "button": "Add 10K pullup/pulldown or use INPUT_PULLUP",
+      "5V_to_3V3": "Add voltage divider (1K + 2K) or level shifter"
+    }
+  },
+  "breadboard_zone_rules": {
+    "description": "Best practices for physical breadboard layout",
+    "standard_breadboard_830": {
+      "dimensions": {
+        "total_holes": 830,
+        "rows": 63,
+        "columns": 10,
+        "power_rails": 4,
+        "center_gap_rows": "a-e and f-j separated"
+      },
+      "internal_connections": {
+        "terminal_strips": "5 holes connected horizontally (a-b-c-d-e and f-g-h-i-j)",
+        "power_rails": "entire length connected vertically (some have break in middle)",
+        "center_gap": "NO connection across center gap"
+      }
+    },
+    "zone_layout": {
+      "power_rails_top": {
+        "purpose": "5V power distribution",
+        "red_rail": "VCC (+5V or +3.3V)",
+        "blue_rail": "GND",
+        "best_practice": [
+          "Connect MCU 5V to red rail, GND to blue rail first",
+          "Add 100µF electrolytic capacitor across rails for stability",
+          "Check if rail has center break - add jumper if needed"
+        ]
+      },
+      "power_rails_bottom": {
+        "purpose": "Additional power or second voltage",
+        "use_cases": [
+          "Second voltage level (3.3V if top is 5V)",
+          "Motor/servo power (isolated from logic)",
+          "Sensor power with filtering"
+        ],
+        "best_practice": [
+          "Always connect grounds together between rails",
+          "Label voltages to prevent accidents"
+        ]
+      },
+      "mcu_zone": {
+        "location": "Left side of breadboard, rows 1-20",
+        "purpose": "Microcontroller placement",
+        "best_practice": [
+          "Place MCU with USB port accessible at edge",
+          "Leave space for USB cable",
+          "DIP MCUs (Nano) straddle center gap",
+          "Wide modules (ESP32) may need two breadboards"
+        ]
+      },
+      "sensor_zone": {
+        "location": "Center-right of breadboard",
+        "purpose": "Input sensors and modules",
+        "best_practice": [
+          "Group I2C sensors together (share SDA/SCL)",
+          "Keep analog sensors away from switching signals",
+          "Place noise-sensitive sensors away from motors/relays"
+        ]
+      },
+      "actuator_zone": {
+        "location": "Right side or separate breadboard",
+        "purpose": "Motors, relays, high-current devices",
+        "best_practice": [
+          "Use separate power supply for motors",
+          "Add flyback diodes near inductive loads",
+          "Keep motor wires short and away from signal wires"
+        ]
+      },
+      "output_zone": {
+        "location": "Bottom area, easily visible",
+        "purpose": "LEDs, displays, indicators",
+        "best_practice": [
+          "Orient displays for easy viewing",
+          "Group LEDs with their current-limiting resistors",
+          "Keep LED wires short for clean appearance"
+        ]
+      }
+    },
+    "wiring_best_practices": {
+      "wire_length": {
+        "rule": "Keep wires as short as practical",
+        "reason": "Reduces noise pickup and voltage drop",
+        "exception": "Power wires can be longer than signal wires"
+      },
+      "wire_routing": {
+        "rules": [
+          "Run power wires along edges",
+          "Keep signal wires in center",
+          "Cross wires at 90° angles when necessary",
+          "Use different colors for different signal types"
+        ]
+      },
+      "color_coding": {
+        "standard": {
+          "red": "VCC / positive power",
+          "black": "GND / negative",
+          "orange": "3.3V power",
+          "yellow": "signal / data",
+          "green": "signal / clock",
+          "blue": "I2C or signal",
+          "white": "reset or special"
+        }
+      },
+      "component_orientation": {
+        "ics": "Notch/dot indicating pin 1 faces same direction for all ICs",
+        "leds": "All cathodes (flat side) facing same direction",
+        "electrolytics": "All positive leads facing same direction",
+        "modules": "Labels readable, connectors accessible"
+      }
+    },
+    "noise_reduction": {
+      "analog_vs_digital": {
+        "rule": "Separate analog and digital signals",
+        "implementation": [
+          "Place analog sensors on opposite side from PWM outputs",
+          "Use dedicated analog ground if very sensitive",
+          "Add 0.1µF cap near analog input pins"
+        ]
+      },
+      "decoupling": {
+        "rule": "Add decoupling capacitors near every IC",
+        "implementation": [
+          "0.1µF ceramic as close as possible to VCC/GND pins",
+          "100µF electrolytic on main power rails",
+          "1000µF near high-current loads (motors, LED strips)"
+        ]
+      },
+      "ground_routing": {
+        "rule": "Use star ground topology for sensitive circuits",
+        "implementation": [
+          "Single point where all grounds meet",
+          "Separate paths for noisy loads (motors) and sensitive inputs",
+          "Keep ground wires short"
+        ]
+      }
+    },
+    "common_mistakes": [
+      {
+        "mistake": "Forgetting center gap doesn't connect",
+        "symptom": "Half of IC pins don't work",
+        "solution": "Place DIP ICs straddling the center gap"
+      },
+      {
+        "mistake": "Not connecting power rail sections",
+        "symptom": "Components on one half don't power up",
+        "solution": "Add jumper across power rail break point (if present)"
+      },
+      {
+        "mistake": "Reversed electrolytic capacitor",
+        "symptom": "Cap gets hot, may bulge or pop",
+        "solution": "Check polarity - stripe indicates negative"
+      },
+      {
+        "mistake": "LED without current-limiting resistor",
+        "symptom": "LED burns out immediately or is very dim after",
+        "solution": "Always use resistor - even 100Ω is better than none"
+      },
+      {
+        "mistake": "Powering 3.3V device with 5V",
+        "symptom": "Device runs hot, erratic behavior, or immediate failure",
+        "solution": "Check device voltage before connecting"
+      },
+      {
+        "mistake": "No common ground between power supplies",
+        "symptom": "Erratic behavior, signals don't register",
+        "solution": "Always connect GND between all supplies and MCU"
+      },
+      {
+        "mistake": "Using cheap/old breadboard with worn contacts",
+        "symptom": "Intermittent connections, frustrating debugging",
+        "solution": "Try different rows, replace breadboard if old"
+      }
+    ],
+    "layout_templates": {
+      "basic_sensor_project": {
+        "description": "MCU + 1-3 sensors + display",
+        "layout": [
+          "Rows 1-15: MCU (Nano straddles gap)",
+          "Rows 20-25: I2C display",
+          "Rows 30-40: Sensors",
+          "Top rail: 5V",
+          "Bottom rail: GND"
+        ]
+      },
+      "motor_control_project": {
+        "description": "MCU + motor driver + sensors",
+        "layout": [
+          "Rows 1-15: MCU",
+          "Rows 20-30: Sensors (away from motor)",
+          "Rows 40-50: Motor driver",
+          "Top rail: Logic 5V",
+          "Bottom rail: Motor 5-12V (separate supply)",
+          "Connect: All GNDs together"
+        ]
+      },
+      "led_project": {
+        "description": "MCU + LED strip/matrix",
+        "layout": [
+          "Rows 1-15: MCU",
+          "Rows 20-25: Level shifter (if needed)",
+          "Rows 30-40: Power capacitors",
+          "Top rail: Logic power",
+          "Bottom rail: LED power (may need external)",
+          "Note: LED strip connects via wires, not on breadboard"
+        ]
+      }
+    }
+  },
+  "quick_reference": {
+    "i2c_addresses": {
+      "0x27": "LCD1602 I2C (common)",
+      "0x3F": "LCD1602 I2C (alternate)",
+      "0x57": "AT24C32 EEPROM (DS3231 module)",
+      "0x68": "DS3231 RTC, MPU6050 (default)",
+      "0x69": "MPU6050 (AD0=HIGH)"
+    },
+    "spi_devices": [
+      "RC522 RFID",
+      "MAX7219",
+      "74HC595",
+      "ILI9341 TFT"
+    ],
+    "voltage_warnings": {
+      "3.3v_only": [
+        "ESP32",
+        "ESP8266",
+        "RC522 RFID"
+      ],
+      "5v_output_to_3v3_mcu": [
+        "HC-SR04 Echo pin"
+      ],
+      "use_level_shifter": "HW-221 for 3.3V MCU to 5V sensors"
+    },
+    "common_libraries": {
+      "servo": "Servo.h (Arduino) / ESP32Servo (ESP32)",
+      "stepper": "AccelStepper",
+      "lcd_parallel": "LiquidCrystal",
+      "lcd_i2c": "LiquidCrystal_I2C",
+      "dht": "DHT sensor library (Adafruit)",
+      "ultrasonic": "NewPing",
+      "mpu6050": "MPU6050 by Electronic Cats",
+      "rtc": "RTClib (Adafruit)",
+      "rfid": "MFRC522"
+    }
+  }
+}

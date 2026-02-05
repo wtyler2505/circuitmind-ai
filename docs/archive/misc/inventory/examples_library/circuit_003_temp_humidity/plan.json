@@ -1,0 +1,69 @@
+{
+  "name": "Temperature & Humidity Monitor",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "sensor-dht11"
+  ],
+  "total_current_ma": 48,
+  "power_source": "usb",
+  "connections": [
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "5V"
+      },
+      "to": {
+        "component": "dht11",
+        "pin": "VCC"
+      },
+      "wire": "red"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "dht11",
+        "pin": "GND"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D2"
+      },
+      "to": {
+        "component": "dht11",
+        "pin": "DATA"
+      },
+      "wire": "yellow"
+    },
+    {
+      "from": {
+        "component": "dht11",
+        "pin": "DATA"
+      },
+      "to": {
+        "component": "resistor-10k",
+        "pin": "1"
+      },
+      "wire": "yellow",
+      "note": "pullup"
+    },
+    {
+      "from": {
+        "component": "resistor-10k",
+        "pin": "2"
+      },
+      "to": {
+        "component": "arduino-uno",
+        "pin": "5V"
+      },
+      "wire": "red",
+      "note": "pullup to VCC"
+    }
+  ],
+  "notes": "10K pullup may be built into module. Test without first."
+}

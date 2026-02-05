@@ -1,0 +1,6 @@
+Create a clean wiring diagram for the circuit "Servo Motor Control".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- arduino-uno 5V -> sg90 VCC-red (wire: red)
+- arduino-uno GND -> sg90 GND-brown (wire: black)
+- arduino-uno D9 -> sg90 SIGNAL-orange (wire: orange)

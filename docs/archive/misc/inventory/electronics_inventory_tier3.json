@@ -1,0 +1,4767 @@
+{
+  "inventory_metadata": {
+    "version": "3.2-tier3-enhanced-claude-code",
+    "last_updated": "2024-12-31",
+    "owner": "Tyler",
+    "purpose": "Claude Code CLI Wiring Diagram Application",
+    "total_unique_components": 63,
+    "total_items": 89,
+    "tier1_enhancements": [
+      "datasheet_urls",
+      "product_images",
+      "standardized_field_names",
+      "common_issues",
+      "arduino_libraries",
+      "wiring_rules",
+      "tags_and_use_cases"
+    ],
+    "tier2_enhancements": [
+      "expanded_connection_templates",
+      "component_relationships",
+      "ascii_pinout_diagrams",
+      "code_snippets",
+      "json_schema_reference",
+      "project_bundles",
+      "accessories_consumables"
+    ],
+    "tier3_enhancements": [
+      "calibration_procedures",
+      "testing_procedures",
+      "hierarchical_taxonomy",
+      "failure_modes",
+      "esd_ratings",
+      "confidence_levels",
+      "storage_template"
+    ]
+  },
+  "components": {
+    "microcontrollers": [
+      {
+        "id": "mcu-arduino-uno-r3",
+        "name": "Arduino Uno R3",
+        "quantity": 2,
+        "manufacturer": "Arduino",
+        "part_number": "A000066",
+        "datasheet_url": "https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf",
+        "product_image": "https://store.arduino.cc/cdn/shop/products/A000066_03.front_934x700.jpg",
+        "pinout_image": "https://content.arduino.cc/assets/Pinout-UNOrev3_latest.png",
+        "dimensions_mm": {
+          "length": 68.6,
+          "width": 53.4,
+          "height": 15
+        },
+        "weight_g": 25,
+        "microcontroller": "ATmega328P",
+        "clock_mhz": 16,
+        "flash_kb": 32,
+        "sram_kb": 2,
+        "eeprom_kb": 1,
+        "operating_voltage_v": 5,
+        "input_voltage_v": {
+          "min": 7,
+          "max": 12,
+          "absolute_max": 20
+        },
+        "io_current_ma": 20,
+        "digital_pins": 14,
+        "pwm_pins": [3, 5, 6, 9, 10, 11],
+        "analog_pins": 6,
+        "interfaces": {
+          "i2c": {
+            "sda": "A4",
+            "scl": "A5"
+          },
+          "spi": {
+            "mosi": 11,
+            "miso": 12,
+            "sck": 13,
+            "ss": 10
+          },
+          "uart": {
+            "tx": 0,
+            "rx": 1
+          }
+        },
+        "wiring_rules": {
+          "power_input": [
+            {
+              "method": "usb",
+              "connector": "USB-B",
+              "voltage_v": 5
+            },
+            {
+              "method": "barrel_jack",
+              "voltage_v": "7-12",
+              "center": "positive",
+              "size_mm": 2.1
+            },
+            {
+              "method": "vin_pin",
+              "voltage_v": "7-12"
+            }
+          ],
+          "power_output": [
+            {
+              "pin": "5V",
+              "voltage_v": 5,
+              "max_current_ma": 500
+            },
+            {
+              "pin": "3.3V",
+              "voltage_v": 3.3,
+              "max_current_ma": 50
+            }
+          ],
+          "warnings": [
+            "Do not exceed 20mA per I/O pin",
+            "Total current from all I/O pins should not exceed 200mA",
+            "Vin must be 7-12V; lower causes instability, higher causes overheating"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Board not detected by computer",
+            "causes": ["Bad USB cable (data-only)", "Wrong COM port", "Driver issue"],
+            "solutions": [
+              "Try different USB cable with data lines",
+              "Check Device Manager",
+              "Reinstall Arduino IDE"
+            ]
+          },
+          {
+            "problem": "Sketch uploads but doesn't run",
+            "causes": ["Code stuck in loop", "Wrong board selected", "Damaged bootloader"],
+            "solutions": [
+              "Add Serial.print debugging",
+              "Verify board selection in IDE",
+              "Burn bootloader via ICSP"
+            ]
+          },
+          {
+            "problem": "Random resets during operation",
+            "causes": ["Insufficient power", "Electrical noise", "Brown-out"],
+            "solutions": [
+              "Use external power supply",
+              "Add decoupling capacitors",
+              "Reduce current draw"
+            ]
+          }
+        ],
+        "libraries": {
+          "core": "Arduino AVR Boards (built-in)",
+          "recommended": ["Wire.h (I2C)", "SPI.h", "EEPROM.h", "Servo.h"]
+        },
+        "tags": ["microcontroller", "arduino", "atmega328p", "5v", "beginner-friendly", "usb"],
+        "use_cases": ["prototyping", "learning", "sensor projects", "motor control", "IoT gateway"],
+        "ai_summary": "5V Arduino microcontroller with ATmega328P, 14 digital I/O (6 PWM), 6 analog inputs. Most widely supported, beginner-friendly. Use USB-B or 7-12V barrel jack for power.",
+        "failure_modes": [
+          {
+            "mode": "USB port damage",
+            "symptoms": ["Not recognized by computer", "Intermittent connection"],
+            "cause": "Physical stress on USB-B connector, repeated plugging",
+            "prevention": "Use USB hub, don't bend cable, gentle insertion",
+            "recovery": "Often unrepairable, use ICSP for programming"
+          },
+          {
+            "mode": "ATmega328P burnout",
+            "symptoms": ["Board doesn't respond", "Gets very hot", "Won't upload"],
+            "cause": "Reverse polarity, overvoltage, shorted pins",
+            "prevention": "Double-check wiring, use current limiting resistors",
+            "recovery": "Replace ATmega328P chip (DIP socket version)"
+          },
+          {
+            "mode": "Voltage regulator failure",
+            "symptoms": ["Board resets randomly", "3.3V rail missing", "Overheating"],
+            "cause": "Drawing too much current from 3.3V or 5V rail",
+            "prevention": "Use external power for high-current loads",
+            "recovery": "Replace regulator IC or use external regulated supply"
+          }
+        ],
+        "lifespan": {
+          "typical_hours": 100000,
+          "limiting_factor": "USB connector wear, capacitor aging"
+        },
+        "esd_sensitivity": "Class 1B (500-1000V)",
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Ground yourself, avoid carpet"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "mcu-arduino-mega-2560",
+        "name": "Arduino Mega 2560 R3",
+        "quantity": 1,
+        "manufacturer": "Arduino",
+        "part_number": "A000067",
+        "datasheet_url": "https://docs.arduino.cc/resources/datasheets/A000067-datasheet.pdf",
+        "product_image": "https://store.arduino.cc/cdn/shop/products/A000067_03.front_934x700.jpg",
+        "pinout_image": "https://content.arduino.cc/assets/Pinout-Mega2560rev3_latest.png",
+        "dimensions_mm": {
+          "length": 101.52,
+          "width": 53.3,
+          "height": 15
+        },
+        "weight_g": 37,
+        "microcontroller": "ATmega2560",
+        "clock_mhz": 16,
+        "flash_kb": 256,
+        "sram_kb": 8,
+        "eeprom_kb": 4,
+        "operating_voltage_v": 5,
+        "input_voltage_v": {
+          "min": 7,
+          "max": 12,
+          "absolute_max": 20
+        },
+        "io_current_ma": 20,
+        "digital_pins": 54,
+        "pwm_pins": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 44, 45, 46],
+        "analog_pins": 16,
+        "hardware_serials": 4,
+        "interfaces": {
+          "i2c": {
+            "sda": 20,
+            "scl": 21
+          },
+          "spi": {
+            "mosi": 51,
+            "miso": 50,
+            "sck": 52,
+            "ss": 53
+          },
+          "uart0": {
+            "tx": 1,
+            "rx": 0
+          },
+          "uart1": {
+            "tx": 18,
+            "rx": 19
+          },
+          "uart2": {
+            "tx": 16,
+            "rx": 17
+          },
+          "uart3": {
+            "tx": 14,
+            "rx": 15
+          }
+        },
+        "wiring_rules": {
+          "power_input": [
+            {
+              "method": "usb",
+              "connector": "USB-B",
+              "voltage_v": 5
+            },
+            {
+              "method": "barrel_jack",
+              "voltage_v": "7-12",
+              "center": "positive"
+            }
+          ],
+          "power_output": [
+            {
+              "pin": "5V",
+              "voltage_v": 5,
+              "max_current_ma": 500
+            },
+            {
+              "pin": "3.3V",
+              "voltage_v": 3.3,
+              "max_current_ma": 50
+            }
+          ],
+          "special_pins": {
+            "external_interrupts": [2, 3, 18, 19, 20, 21],
+            "hardware_pwm": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 44, 45, 46]
+          }
+        },
+        "common_issues": [
+          {
+            "problem": "SPI conflicts with pins 50-53",
+            "causes": ["Using SPI pins for other purposes"],
+            "solutions": ["Reserve pins 50-53 for SPI devices only"]
+          },
+          {
+            "problem": "Serial conflicts",
+            "causes": ["Using Serial1/2/3 pins for digital I/O"],
+            "solutions": ["Use Serial.begin() for USB, Serial1/2/3.begin() for hardware UARTs"]
+          }
+        ],
+        "libraries": {
+          "core": "Arduino AVR Boards (built-in)",
+          "recommended": ["Wire.h", "SPI.h", "EEPROM.h"]
+        },
+        "tags": ["microcontroller", "arduino", "atmega2560", "5v", "many-pins", "4-serial"],
+        "use_cases": [
+          "complex projects",
+          "multiple sensors",
+          "3D printer control",
+          "CNC",
+          "robotics"
+        ],
+        "ai_summary": "5V Arduino with ATmega2560, 54 digital I/O (15 PWM), 16 analog inputs, 4 hardware serial ports. Use for projects needing many pins or multiple serial devices.",
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Ground yourself, avoid carpet"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "mcu-esp32-devkit-38pin",
+        "name": "ESP32 DevKit 38-Pin",
+        "quantity": 1,
+        "module": "ESP-WROOM-32",
+        "datasheet_url": "https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32_datasheet_en.pdf",
+        "product_image": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/_images/esp32-devkitc-functional-overview.jpg",
+        "pinout_image": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/_images/esp32-devkitC-v4-pinout.png",
+        "dimensions_mm": {
+          "length": 55,
+          "width": 28,
+          "height": 12
+        },
+        "processor": "Dual-core Xtensa LX6",
+        "clock_mhz": 240,
+        "flash_mb": 4,
+        "sram_kb": 520,
+        "operating_voltage_v": 3.3,
+        "input_voltage_v": 5,
+        "wireless": {
+          "wifi": "802.11 b/g/n",
+          "bluetooth": "4.2 BLE + Classic"
+        },
+        "gpio_total": 34,
+        "gpio_usable": 25,
+        "adc_channels": 18,
+        "adc_resolution_bits": 12,
+        "dac_channels": 2,
+        "touch_pins": 10,
+        "interfaces": {
+          "i2c": {
+            "sda": 21,
+            "scl": 22,
+            "configurable": true
+          },
+          "spi": {
+            "mosi": 23,
+            "miso": 19,
+            "sck": 18,
+            "ss": 5
+          },
+          "uart_count": 3
+        },
+        "wiring_rules": {
+          "power_input": [
+            {
+              "method": "usb",
+              "connector": "Micro-USB",
+              "voltage_v": 5
+            },
+            {
+              "method": "vin_pin",
+              "voltage_v": 5
+            }
+          ],
+          "logic_level": 3.3,
+          "five_volt_tolerant": false,
+          "do_not_use_pins": {
+            "pins": [6, 7, 8, 9, 10, 11],
+            "reason": "Connected to internal SPI flash - WILL CRASH"
+          },
+          "input_only_pins": {
+            "pins": [34, 35, 36, 39],
+            "reason": "No internal pull-up/pull-down, cannot output"
+          },
+          "strapping_pins": {
+            "pins": [0, 2, 5, 12, 15],
+            "reason": "Affect boot mode - use with caution"
+          },
+          "warnings": [
+            "NOT 5V TOLERANT - use level shifter for 5V sensors",
+            "GPIO6-11 are reserved for internal flash - DO NOT USE",
+            "GPIO34/35/36/39 are input-only",
+            "ADC2 unavailable when WiFi is active"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Won't enter upload mode",
+            "causes": ["GPIO0 not pulled LOW during reset", "USB driver issue"],
+            "solutions": ["Hold BOOT button while pressing EN/RST", "Install CP2102/CH340 driver"]
+          },
+          {
+            "problem": "Brownout detector triggered",
+            "causes": ["Insufficient USB power during WiFi TX"],
+            "solutions": ["Use powered USB hub", "Add 470uF capacitor on 3.3V rail"]
+          },
+          {
+            "problem": "ADC readings unstable",
+            "causes": ["WiFi interference on ADC2", "Noise on ADC input"],
+            "solutions": ["Use ADC1 pins only (GPIO32-39)", "Add filtering capacitor"]
+          },
+          {
+            "problem": "Random crashes when using certain pins",
+            "causes": ["Using GPIO6-11 (flash pins)", "Strapping pin conflicts"],
+            "solutions": ["Avoid GPIO6-11 completely", "Check strapping pin states at boot"]
+          }
+        ],
+        "libraries": {
+          "core": "ESP32 Arduino Core",
+          "install": "Add https://dl.espressif.com/dl/package_esp32_index.json to Board Manager",
+          "recommended": ["WiFi.h", "BluetoothSerial.h", "ESPAsyncWebServer", "ArduinoJSON"]
+        },
+        "tags": ["microcontroller", "esp32", "wifi", "bluetooth", "3.3v", "dual-core", "iot"],
+        "use_cases": [
+          "IoT",
+          "WiFi projects",
+          "Bluetooth",
+          "home automation",
+          "web server",
+          "battery projects"
+        ],
+        "ai_summary": "3.3V dual-core WiFi+Bluetooth MCU. NOT 5V tolerant - requires level shifter for 5V sensors. Avoid GPIO6-11 (flash). Input-only: GPIO34/35/36/39. Powerful but requires attention to pin selection.",
+        "failure_modes": [
+          {
+            "mode": "5V applied to GPIO",
+            "symptoms": ["Pin stops working", "Board resets", "Total failure"],
+            "cause": "Connecting 5V signal to 3.3V-only GPIO",
+            "prevention": "ALWAYS use level shifter or voltage divider for 5V signals",
+            "recovery": "Usually permanent damage - specific GPIO may be dead"
+          },
+          {
+            "mode": "WiFi/Bluetooth failure",
+            "symptoms": ["Cannot connect", "Weak signal", "Constant resets"],
+            "cause": "Antenna damage, RF interference, power supply noise",
+            "prevention": "Don't touch antenna area, use clean power supply",
+            "recovery": "Board replacement usually required"
+          },
+          {
+            "mode": "Flash corruption",
+            "symptoms": ["Boot loops", "Program lost", "Brownout messages"],
+            "cause": "Power loss during write, brownout without proper handling",
+            "prevention": "Add 100uF cap on power, enable brownout detection",
+            "recovery": "Erase flash completely, reflash"
+          }
+        ],
+        "lifespan": {
+          "typical_hours": 50000,
+          "limiting_factor": "Flash write cycles (10K-100K), power regulation"
+        },
+        "esd_sensitivity": "Class 1A (250-500V) - VERY SENSITIVE",
+        "esd_rating": {
+          "class": "1A",
+          "voltage": "250-500V",
+          "handling": "ESD strap required, anti-static bag storage"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "mcu-nodemcu-esp8266",
+        "name": "NodeMCU ESP8266 Amica V2",
+        "quantity": 2,
+        "module": "ESP-12E",
+        "datasheet_url": "https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf",
+        "product_image": "https://cdn.shopify.com/s/files/1/0672/9409/products/NodeMCU_ESP8266_Board_1024x1024.jpg",
+        "pinout_image": "https://randomnerdtutorials.com/wp-content/uploads/2019/05/ESP8266-NodeMCU-kit-12-E-pinout-gpio-pin.png",
+        "dimensions_mm": {
+          "length": 48,
+          "width": 26,
+          "height": 13
+        },
+        "row_spacing_mm": 23,
+        "breadboard_compatible": true,
+        "processor": "Tensilica Xtensa LX106",
+        "clock_mhz": 80,
+        "flash_mb": 4,
+        "sram_kb": 80,
+        "operating_voltage_v": 3.3,
+        "input_voltage_v": 5,
+        "wireless": "WiFi 802.11 b/g/n",
+        "gpio_total": 17,
+        "gpio_safe": [4, 5, 12, 13, 14],
+        "adc_channels": 1,
+        "adc_range_v": "0-1",
+        "interfaces": {
+          "i2c": {
+            "sda": 4,
+            "scl": 5
+          },
+          "spi": {
+            "mosi": 13,
+            "miso": 12,
+            "sck": 14,
+            "cs": 15
+          }
+        },
+        "d_pin_mapping": {
+          "D0": 16,
+          "D1": 5,
+          "D2": 4,
+          "D3": 0,
+          "D4": 2,
+          "D5": 14,
+          "D6": 12,
+          "D7": 13,
+          "D8": 15
+        },
+        "wiring_rules": {
+          "power_input": [
+            {
+              "method": "usb",
+              "connector": "Micro-USB",
+              "voltage_v": 5
+            }
+          ],
+          "logic_level": 3.3,
+          "five_volt_tolerant": false,
+          "safe_gpio": {
+            "pins": ["D1/GPIO5", "D2/GPIO4", "D5/GPIO14", "D6/GPIO12", "D7/GPIO13"],
+            "reason": "No boot conflicts, safe for any use"
+          },
+          "boot_sensitive": {
+            "D3/GPIO0": "Must be HIGH at boot (pulled up internally)",
+            "D4/GPIO2": "Must be HIGH at boot (built-in LED)",
+            "D8/GPIO15": "Must be LOW at boot"
+          },
+          "warnings": [
+            "NOT 5V TOLERANT - 3.3V logic only",
+            "D3/D4/D8 affect boot mode - don't pull LOW at startup",
+            "GPIO6-11 reserved for flash - DO NOT USE",
+            "Only 1 ADC pin (A0) with 0-1V range (scaled to 0-3.3V on module)"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Won't boot with sensor on D3/D4/D8",
+            "causes": ["Boot pin pulled to wrong state by sensor"],
+            "solutions": ["Move sensor to D1/D2/D5/D6/D7", "Add pull-up/pull-down resistor"]
+          },
+          {
+            "problem": "CH340 driver not found",
+            "causes": ["Missing USB driver"],
+            "solutions": ["Download CH340 driver from manufacturer", "Use Zadig on Windows"]
+          },
+          {
+            "problem": "WiFi connects then disconnects",
+            "causes": ["Power supply noise", "Distance from router"],
+            "solutions": ["Use quality USB power supply", "Add 100uF capacitor to 3.3V"]
+          }
+        ],
+        "libraries": {
+          "core": "ESP8266 Arduino Core",
+          "install": "Add http://arduino.esp8266.com/stable/package_esp8266com_index.json to Board Manager",
+          "recommended": ["ESP8266WiFi.h", "ESP8266WebServer.h", "ArduinoJSON"]
+        },
+        "tags": [
+          "microcontroller",
+          "esp8266",
+          "wifi",
+          "3.3v",
+          "iot",
+          "nodemcu",
+          "breadboard-friendly"
+        ],
+        "use_cases": [
+          "WiFi IoT",
+          "home automation",
+          "weather station",
+          "MQTT client",
+          "simple web server"
+        ],
+        "ai_summary": "3.3V WiFi MCU, breadboard-friendly (23mm row spacing). NOT 5V tolerant. Safe pins: D1/D2/D5/D6/D7. Avoid D3/D4/D8 for sensors (boot-sensitive). Only 1 ADC.",
+        "failure_modes": [
+          {
+            "mode": "5V applied to GPIO",
+            "symptoms": ["Pin dead", "Erratic behavior", "Won't boot"],
+            "cause": "ESP8266 is 3.3V only, any 5V kills pins",
+            "prevention": "Level shift ALL 5V signals",
+            "recovery": "Usually permanent - replace board"
+          },
+          {
+            "mode": "Boot pin conflict",
+            "symptoms": ["Won't boot", "Enters wrong mode", "Program doesn't start"],
+            "cause": "GPIO0, GPIO2, GPIO15 pulled wrong during boot",
+            "prevention": "Don't use D3, D4, D8 for sensors that pull low at startup",
+            "recovery": "Remove conflicting connection, reset"
+          }
+        ],
+        "lifespan": {
+          "typical_hours": 50000,
+          "limiting_factor": "Flash write cycles, WiFi IC"
+        },
+        "esd_sensitivity": "Class 1A (250-500V) - VERY SENSITIVE",
+        "esd_rating": {
+          "class": "1A",
+          "voltage": "250-500V",
+          "handling": "ESD strap required, anti-static bag storage"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "mcu-sparkfun-blynk",
+        "name": "SparkFun Blynk Board",
+        "quantity": 2,
+        "manufacturer": "SparkFun",
+        "sku": "WRL-13794",
+        "datasheet_url": "https://cdn.sparkfun.com/assets/learn_tutorials/4/9/4/Blynk_Board_Graphical_Datasheet_v01.png",
+        "product_image": "https://cdn.sparkfun.com/assets/parts/1/1/2/4/5/13794-01.jpg",
+        "dimensions_mm": {
+          "length": 51,
+          "width": 23
+        },
+        "module": "ESP8266",
+        "flash_mb": 4,
+        "operating_voltage_v": 3.3,
+        "onboard_features": {
+          "rgb_led": {
+            "type": "WS2812",
+            "pin": 4
+          },
+          "thermistor": {
+            "type": "10K NTC",
+            "pin": "ADC"
+          }
+        },
+        "gpio_breakout": [0, 2, 4, 5, 12, 13, 14, 15, 16],
+        "wiring_rules": {
+          "power_input": [
+            {
+              "method": "usb",
+              "connector": "Micro-USB",
+              "voltage_v": 5
+            }
+          ],
+          "five_volt_tolerant": false
+        },
+        "libraries": {
+          "core": "ESP8266 Arduino Core",
+          "recommended": ["Blynk", "Adafruit_NeoPixel"]
+        },
+        "tags": ["esp8266", "blynk", "rgb-led", "iot", "preloaded"],
+        "use_cases": ["Blynk IoT", "quick prototyping", "demo projects"],
+        "ai_summary": "ESP8266 board with pre-loaded Blynk firmware, onboard WS2812 RGB LED on GPIO4, and 10K thermistor on ADC. Quick IoT prototyping.",
+        "esd_rating": {
+          "class": "1A",
+          "voltage": "250-500V",
+          "handling": "ESD strap required, anti-static bag storage"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "mcu-dccduino-nano",
+        "name": "DCCduino Nano",
+        "quantity": 1,
+        "type": "Arduino Nano Clone",
+        "datasheet_url": "https://docs.arduino.cc/resources/datasheets/A000005-datasheet.pdf",
+        "product_image": "https://www.electronicshub.org/wp-content/uploads/2021/01/Arduino-Nano-Pinout-1.jpg",
+        "dimensions_mm": {
+          "length": 45,
+          "width": 18,
+          "height": 8
+        },
+        "microcontroller": "ATmega328P",
+        "usb_uart": "CH340G",
+        "clock_mhz": 16,
+        "flash_kb": 32,
+        "sram_kb": 2,
+        "eeprom_kb": 1,
+        "operating_voltage_v": 5,
+        "input_voltage_v": {
+          "min": 7,
+          "max": 12
+        },
+        "digital_pins": 14,
+        "pwm_pins": [3, 5, 6, 9, 10, 11],
+        "analog_pins": 8,
+        "wiring_rules": {
+          "power_input": [
+            {
+              "method": "usb",
+              "connector": "Mini-USB",
+              "voltage_v": 5
+            },
+            {
+              "method": "vin",
+              "voltage_v": "7-12"
+            }
+          ],
+          "warnings": ["Requires CH340G driver installation"]
+        },
+        "common_issues": [
+          {
+            "problem": "Not recognized by computer",
+            "causes": ["CH340G driver missing"],
+            "solutions": ["Install CH340G driver from WCH website"]
+          }
+        ],
+        "libraries": {
+          "core": "Arduino AVR Boards"
+        },
+        "tags": ["arduino", "nano", "clone", "ch340", "breadboard"],
+        "use_cases": ["breadboard projects", "compact builds", "permanent installations"],
+        "ai_summary": "Arduino Nano clone with CH340G USB chip. Requires CH340 driver. 5V logic, breadboard-friendly form factor.",
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Ground yourself, avoid carpet"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "sensors": [
+      {
+        "id": "sensor-hcsr04",
+        "name": "HC-SR04 Ultrasonic Sensor",
+        "quantity": 2,
+        "datasheet_url": "https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf",
+        "product_image": "https://cdn.sparkfun.com/assets/parts/6/4/6/4/11308-01.jpg",
+        "pinout_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/HC-SR04-Ultrasonic-Sensor-Pinout.png",
+        "dimensions_mm": {
+          "length": 45,
+          "width": 20,
+          "height": 15
+        },
+        "transducer_spacing_mm": 25,
+        "operating_voltage_v": 5,
+        "operating_current_ma": 15,
+        "frequency_khz": 40,
+        "range_cm": {
+          "min": 2,
+          "max": 400
+        },
+        "accuracy_mm": 3,
+        "effective_angle_degrees": 15,
+        "wiring_rules": {
+          "power": {
+            "vcc": "5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "trig": {
+              "type": "digital_output",
+              "description": "Send 10\u03bcs HIGH pulse to trigger"
+            },
+            "echo": {
+              "type": "digital_input",
+              "description": "Pulse width = distance"
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "trig": "D9",
+              "echo": "D10"
+            },
+            "arduino_mega": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "trig": "D22",
+              "echo": "D23"
+            },
+            "esp32": {
+              "vcc": "VIN (5V)",
+              "gnd": "GND",
+              "trig": "GPIO23",
+              "echo": "GPIO22 (via voltage divider: 1K+2K)",
+              "note": "ESP32 is 3.3V - Echo outputs 5V, needs divider!"
+            },
+            "esp8266": {
+              "vcc": "VIN (5V)",
+              "gnd": "GND",
+              "trig": "D1 (GPIO5)",
+              "echo": "D2 (GPIO4) via voltage divider",
+              "note": "NodeMCU is 3.3V - use 1K+2K voltage divider on Echo"
+            }
+          },
+          "warnings": [
+            "Echo pin outputs 5V - use voltage divider for 3.3V MCUs",
+            "Minimum 60ms between measurements to avoid echo interference",
+            "10\u03bcs minimum trigger pulse required"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Always reads 0 or max distance",
+            "causes": ["Trigger pulse too short", "Wiring reversed", "Object too close (<2cm)"],
+            "solutions": [
+              "Ensure 10\u03bcs HIGH trigger pulse",
+              "Check Trig/Echo wiring",
+              "Maintain >2cm distance"
+            ]
+          },
+          {
+            "problem": "Inconsistent/jumping readings",
+            "causes": ["Electrical noise", "Soft surfaces absorbing sound", "Multiple echoes"],
+            "solutions": [
+              "Add 100nF decoupling cap",
+              "Use hard flat surfaces for testing",
+              "Implement median filtering"
+            ]
+          },
+          {
+            "problem": "Doesn't work with ESP32/ESP8266",
+            "causes": ["5V Echo signal damaging 3.3V GPIO"],
+            "solutions": ["Add voltage divider: 1K + 2K resistors on Echo line"]
+          }
+        ],
+        "libraries": {
+          "arduino": "NewPing",
+          "install": "Library Manager: NewPing",
+          "basic_code": "NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);"
+        },
+        "distance_formula": {
+          "cm": "duration_us / 58",
+          "inches": "duration_us / 148"
+        },
+        "tags": ["ultrasonic", "distance", "proximity", "ranging", "5v"],
+        "use_cases": ["obstacle avoidance", "parking sensor", "liquid level", "robot navigation"],
+        "ai_summary": "5V ultrasonic distance sensor, 2-400cm range. Requires 2 digital pins (Trig output, Echo input). Use voltage divider on Echo for 3.3V MCUs. Min 60ms between readings.",
+        "calibration": {
+          "required": true,
+          "frequency": "on_first_use",
+          "procedure": [
+            "Place sensor facing flat wall at exactly 10cm",
+            "Run test sketch, record raw reading",
+            "Move to 50cm, record reading",
+            "Move to 100cm, record reading",
+            "Calculate correction factor if readings deviate >5%"
+          ],
+          "tools_needed": ["tape measure", "flat wall surface"],
+          "expected_values": {
+            "10cm": "580-600 microseconds",
+            "50cm": "2900-3000 microseconds",
+            "100cm": "5800-6000 microseconds"
+          },
+          "adjustment_method": "software_offset",
+          "formula": "distance_cm = (duration_us / 58) + offset"
+        },
+        "testing": {
+          "quick_test": "Wave hand in front, check serial output changes",
+          "full_test": "Verify at 5 known distances from 10-200cm",
+          "pass_criteria": {
+            "accuracy": "\u00b13cm at distances <100cm"
+          }
+        },
+        "failure_modes": [
+          {
+            "mode": "Transducer failure",
+            "symptoms": ["Always reads 0 or max", "Erratic readings"],
+            "cause": "Physical damage to ultrasonic elements, water damage",
+            "prevention": "Keep dry, don't drop, no pressure on transducers",
+            "recovery": "Replace sensor"
+          },
+          {
+            "mode": "Echo pin damage on 3.3V MCU",
+            "symptoms": ["MCU GPIO dead after connecting"],
+            "cause": "Echo outputs 5V, damaging 3.3V input",
+            "prevention": "ALWAYS use voltage divider (1K + 2K) for 3.3V MCUs",
+            "recovery": "MCU pin likely dead, use different pin with divider"
+          }
+        ],
+        "lifespan": {
+          "typical_hours": 20000,
+          "limiting_factor": "Transducer membrane wear"
+        },
+        "esd_sensitivity": "Class 1C (1000-2000V)",
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-hcsr501",
+        "name": "HC-SR501 PIR Motion Sensor",
+        "quantity": 1,
+        "datasheet_url": "https://www.mpja.com/download/31227sc.pdf",
+        "product_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/HC-SR501-PIR-Motion-Sensor-Module.jpg",
+        "pinout_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/HC-SR501-PIR-Sensor-Pinout.png",
+        "dimensions_mm": {
+          "pcb": {
+            "length": 32,
+            "width": 24
+          },
+          "with_lens": {
+            "length": 50,
+            "width": 40,
+            "height": 18
+          }
+        },
+        "operating_voltage_v": {
+          "min": 4.5,
+          "max": 20,
+          "typical": 5
+        },
+        "output_voltage_v": 3.3,
+        "quiescent_current_ua": 50,
+        "detection_range_m": {
+          "min": 3,
+          "max": 7,
+          "adjustable": true
+        },
+        "detection_angle_degrees": 110,
+        "delay_time_range": {
+          "min_sec": 5,
+          "max_min": 5
+        },
+        "warmup_time_sec": 60,
+        "wiring_rules": {
+          "power": {
+            "vcc": "5V (or 5-20V)",
+            "gnd": "GND"
+          },
+          "signals": {
+            "out": {
+              "type": "digital_input",
+              "voltage": "3.3V HIGH when motion",
+              "note": "3.3V output safe for all MCUs"
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "out": "D2 (interrupt capable)"
+            },
+            "esp32": {
+              "vcc": "VIN (5V)",
+              "gnd": "GND",
+              "out": "GPIO13 (any input pin)"
+            },
+            "esp8266": {
+              "vcc": "VIN (5V)",
+              "gnd": "GND",
+              "out": "D1 (GPIO5)"
+            }
+          },
+          "adjustments": {
+            "sensitivity_pot": "Adjusts detection range (3-7m)",
+            "time_delay_pot": "Adjusts output hold time (5s-5min)",
+            "jumper": "H=Repeatable trigger, L=Single trigger"
+          },
+          "warnings": [
+            "Allow 60 seconds warmup after power-on",
+            "2.5 second lockout after output goes LOW",
+            "Avoid mounting near heat sources or AC vents"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "False triggers",
+            "causes": ["Air movement from AC/vents", "RF interference", "Pets"],
+            "solutions": [
+              "Shield from air currents",
+              "Add ferrite bead",
+              "Adjust sensitivity pot down"
+            ]
+          },
+          {
+            "problem": "Doesn't detect movement",
+            "causes": ["Still in warmup period", "Sensitivity too low", "Wrong trigger mode"],
+            "solutions": [
+              "Wait 60 seconds after power-on",
+              "Turn sensitivity pot clockwise",
+              "Check jumper setting"
+            ]
+          },
+          {
+            "problem": "Stays triggered constantly",
+            "causes": ["Pointing at heat source", "Electrical noise"],
+            "solutions": ["Reposition away from heat sources", "Add 100nF capacitor on VCC"]
+          }
+        ],
+        "libraries": {
+          "arduino": "None required - simple digital read",
+          "basic_code": "digitalRead(PIR_PIN)"
+        },
+        "tags": ["pir", "motion", "infrared", "presence", "security"],
+        "use_cases": [
+          "motion detection",
+          "security alarm",
+          "automatic lighting",
+          "presence sensing"
+        ],
+        "ai_summary": "PIR motion sensor, 3-7m adjustable range, 110\u00b0 cone. Output is 3.3V (safe for all MCUs). Requires 60s warmup. Use interrupt pin for responsive detection.",
+        "calibration": {
+          "required": true,
+          "frequency": "installation",
+          "procedure": [
+            "Allow 60-second warmup after power on",
+            "Adjust TIME pot: CW = longer trigger duration (5s-5min)",
+            "Adjust SENS pot: CW = longer detection range (3-7m)",
+            "Set jumper: H = repeatable trigger, L = single trigger",
+            "Walk through detection zone to verify coverage"
+          ],
+          "tools_needed": ["small screwdriver for pots"],
+          "expected_values": {
+            "detection_range_m": "3-7 (adjustable)",
+            "trigger_duration_s": "5-300 (adjustable)"
+          },
+          "adjustment_method": "potentiometer"
+        },
+        "testing": {
+          "quick_test": "Walk past sensor, verify output goes HIGH",
+          "full_test": "Map detection zone at different heights",
+          "pass_criteria": {
+            "false_trigger_rate": "<1/hour in stable environment"
+          }
+        },
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-dht11",
+        "name": "DHT11 Temperature & Humidity Module",
+        "quantity": 1,
+        "datasheet_url": "https://www.mouser.com/datasheet/2/758/DHT11-Technical-Data-Sheet-1143054.pdf",
+        "product_image": "https://components101.com/sites/default/files/components/DHT11-Module.jpg",
+        "pinout_image": "https://components101.com/sites/default/files/component_pin/DHT11-Pinout.jpg",
+        "dimensions_mm": {
+          "module": {
+            "length": 30,
+            "width": 15
+          }
+        },
+        "operating_voltage_v": {
+          "min": 3.3,
+          "max": 5.5
+        },
+        "operating_current_ma": 2.5,
+        "temperature": {
+          "range_c": {
+            "min": 0,
+            "max": 50
+          },
+          "accuracy_c": 2,
+          "resolution_c": 1
+        },
+        "humidity": {
+          "range_percent": {
+            "min": 20,
+            "max": 90
+          },
+          "accuracy_percent": 5,
+          "resolution_percent": 1
+        },
+        "sampling_rate_hz": 1,
+        "interface": "single-wire (NOT I2C)",
+        "wiring_rules": {
+          "power": {
+            "vcc": "3.3V or 5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "data": {
+              "type": "bidirectional",
+              "pullup": "4.7K-10K (often built into module)"
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "data": "D2"
+            },
+            "arduino_mega": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "data": "D2"
+            },
+            "esp32": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "data": "GPIO4"
+            },
+            "esp8266": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "data": "D2 (GPIO4)"
+            }
+          },
+          "warnings": [
+            "Minimum 1 second between readings (1Hz max)",
+            "Use 3.3V power for 3.3V MCUs",
+            "Pull-up resistor required if not on module"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Always returns NaN or checksum errors",
+            "causes": ["Missing pull-up resistor", "Reading too frequently", "Wrong library"],
+            "solutions": [
+              "Add 10K pull-up to data line",
+              "Wait >1 second between reads",
+              "Use DHT library"
+            ]
+          },
+          {
+            "problem": "Readings are wildly inaccurate",
+            "causes": ["Self-heating from frequent reads", "Placed near heat source"],
+            "solutions": ["Read no more than once per 2 seconds", "Mount away from electronics"]
+          }
+        ],
+        "libraries": {
+          "arduino": "DHT sensor library by Adafruit",
+          "dependencies": ["Adafruit Unified Sensor"],
+          "basic_code": "DHT dht(DHTPIN, DHT11); dht.begin(); float t = dht.readTemperature();"
+        },
+        "tags": ["temperature", "humidity", "environmental", "dht11", "1-wire"],
+        "use_cases": ["weather station", "climate monitoring", "HVAC control", "greenhouse"],
+        "ai_summary": "Temperature (0-50\u00b0C \u00b12\u00b0C) and humidity (20-90% \u00b15%) sensor. Single-wire protocol (NOT I2C). Max 1 reading per second. Use DHT library.",
+        "calibration": {
+          "required": false,
+          "frequency": "verification_only",
+          "procedure": [
+            "Compare reading against known accurate thermometer",
+            "Note offset for software correction if needed",
+            "Humidity harder to verify - use salt test or reference meter"
+          ],
+          "tools_needed": ["reference thermometer", "reference hygrometer (optional)"],
+          "expected_values": {
+            "temperature_accuracy": "\u00b12\u00b0C",
+            "humidity_accuracy": "\u00b15% RH"
+          },
+          "adjustment_method": "software_offset"
+        },
+        "testing": {
+          "quick_test": "Breathe on sensor, humidity should spike to 80%+",
+          "full_test": "Compare against reference for 10 readings over 1 hour",
+          "pass_criteria": {
+            "temp_deviation": "\u22642\u00b0C",
+            "humidity_deviation": "\u22645%RH"
+          }
+        },
+        "failure_modes": [
+          {
+            "mode": "Humidity sensor drift",
+            "symptoms": ["Readings always high", "No response to humidity changes"],
+            "cause": "Exposure to contaminants, very high humidity for extended time",
+            "prevention": "Don't expose to condensation, use in controlled environment",
+            "recovery": "Replace sensor"
+          },
+          {
+            "mode": "Communication failure",
+            "symptoms": ["Returns NaN", "Checksum errors", "No response"],
+            "cause": "Missing pull-up, too long wires, reading too fast",
+            "prevention": "Add 10K pull-up, keep wires <1m, wait 2s between reads",
+            "recovery": "Check wiring, add pull-up if missing"
+          }
+        ],
+        "lifespan": {
+          "typical_hours": 10000,
+          "limiting_factor": "Humidity sensor degradation"
+        },
+        "esd_sensitivity": "Class 1B (500-1000V)",
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Handle by edges"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-mpu6050",
+        "name": "GY-521 MPU6050 6-DOF IMU",
+        "quantity": 1,
+        "datasheet_url": "https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf",
+        "product_image": "https://components101.com/sites/default/files/components/GY-521-MPU6050-Module.jpg",
+        "pinout_image": "https://components101.com/sites/default/files/component_pin/MPU6050-Module-Pinout.jpg",
+        "dimensions_mm": {
+          "length": 21,
+          "width": 16,
+          "height": 3
+        },
+        "sensor_ic": "MPU-6050",
+        "operating_voltage_v": {
+          "min": 3,
+          "max": 5
+        },
+        "logic_voltage_v": 3.3,
+        "interface": "I2C",
+        "i2c_speed_khz": 400,
+        "i2c_address": {
+          "default": "0x68",
+          "alternate": "0x69"
+        },
+        "gyroscope_ranges_dps": [250, 500, 1000, 2000],
+        "accelerometer_ranges_g": [2, 4, 8, 16],
+        "wiring_rules": {
+          "power": {
+            "vcc": "3.3V or 5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "scl": {
+              "type": "i2c_clock"
+            },
+            "sda": {
+              "type": "i2c_data"
+            },
+            "ad0": {
+              "type": "address_select",
+              "low": "0x68",
+              "high": "0x69"
+            },
+            "int": {
+              "type": "interrupt_output",
+              "optional": true
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "scl": "A5",
+              "sda": "A4"
+            },
+            "arduino_mega": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "scl": "D21",
+              "sda": "D20"
+            },
+            "esp32": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "scl": "GPIO22",
+              "sda": "GPIO21"
+            },
+            "esp8266": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "scl": "D1 (GPIO5)",
+              "sda": "D2 (GPIO4)"
+            }
+          },
+          "warnings": [
+            "Module has onboard 3.3V regulator - safe for 5V VCC",
+            "I2C lines are 3.3V - use level shifter if MCU needs 5V I2C",
+            "AD0 pin selects address: GND=0x68, VCC=0x69"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "I2C device not found",
+            "causes": ["Wrong address", "AD0 floating", "Wiring error"],
+            "solutions": [
+              "Run I2C scanner",
+              "Connect AD0 to GND for 0x68",
+              "Check SDA/SCL connections"
+            ]
+          },
+          {
+            "problem": "Gyro drift",
+            "causes": ["Normal sensor behavior", "Temperature change"],
+            "solutions": ["Implement calibration routine", "Use DMP for sensor fusion"]
+          }
+        ],
+        "libraries": {
+          "arduino": "MPU6050 by Electronic Cats or I2Cdevlib",
+          "basic_code": "MPU6050 mpu; mpu.initialize();"
+        },
+        "tags": ["imu", "accelerometer", "gyroscope", "6-dof", "motion", "i2c"],
+        "use_cases": [
+          "motion tracking",
+          "gesture recognition",
+          "balance control",
+          "drone stabilization"
+        ],
+        "ai_summary": "6-axis IMU (3-axis accel + 3-axis gyro) on I2C bus. Address 0x68 (AD0=GND) or 0x69 (AD0=HIGH). Has onboard DMP for sensor fusion. Use I2C scanner to verify connection.",
+        "calibration": {
+          "required": true,
+          "frequency": "on_first_use_and_temperature_change",
+          "procedure": [
+            "Place sensor on perfectly flat, level surface",
+            "Run calibration sketch (averages 1000+ readings)",
+            "Record X, Y, Z offsets for accelerometer",
+            "Record X, Y, Z offsets for gyroscope",
+            "Store offsets in EEPROM or code constants",
+            "Verify: accel should read (0, 0, 16384) when flat",
+            "Verify: gyro should read (0, 0, 0) when stationary"
+          ],
+          "tools_needed": ["spirit level", "stable flat surface"],
+          "expected_values": {
+            "accel_flat": {
+              "x": 0,
+              "y": 0,
+              "z": 16384
+            },
+            "gyro_stationary": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            }
+          },
+          "adjustment_method": "software_offset_register",
+          "notes": "Offsets can be written to MPU6050 offset registers for hardware correction"
+        },
+        "testing": {
+          "quick_test": "Tilt sensor, watch accel values change smoothly",
+          "full_test": "Rotate 90\u00b0 on each axis, verify readings",
+          "pass_criteria": {
+            "gyro_drift": "<1\u00b0/minute when stationary"
+          }
+        },
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Handle by edges"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-ds3231",
+        "name": "DS3231 RTC Module",
+        "quantity": 1,
+        "datasheet_url": "https://datasheets.maximintegrated.com/en/ds/DS3231.pdf",
+        "product_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/DS3231-RTC-Module.jpg",
+        "pinout_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/DS3231-RTC-Module-Pinout.png",
+        "dimensions_mm": {
+          "length": 38,
+          "width": 22,
+          "height": 14
+        },
+        "rtc_ic": "DS3231",
+        "eeprom_ic": "AT24C32",
+        "accuracy_ppm": 2,
+        "operating_voltage_v": {
+          "min": 2.3,
+          "max": 5.5
+        },
+        "interface": "I2C",
+        "i2c_addresses": {
+          "rtc": "0x68",
+          "eeprom": "0x57"
+        },
+        "battery": "CR2032",
+        "wiring_rules": {
+          "power": {
+            "vcc": "3.3V or 5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "scl": {
+              "type": "i2c_clock"
+            },
+            "sda": {
+              "type": "i2c_data"
+            },
+            "sqw": {
+              "type": "square_wave_output",
+              "optional": true
+            },
+            "32k": {
+              "type": "32khz_output",
+              "optional": true
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "scl": "A5",
+              "sda": "A4"
+            },
+            "arduino_mega": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "scl": "D21",
+              "sda": "D20"
+            },
+            "esp32": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "scl": "GPIO22",
+              "sda": "GPIO21"
+            },
+            "esp8266": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "scl": "D1 (GPIO5)",
+              "sda": "D2 (GPIO4)"
+            }
+          },
+          "warnings": [
+            "RTC address 0x68 conflicts with MPU6050 default - change MPU AD0 if using both",
+            "Install CR2032 battery for backup",
+            "Some modules charge the battery - use non-rechargeable CR2032 or remove charging diode"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Time resets after power loss",
+            "causes": ["Dead/missing backup battery", "Battery installed backwards"],
+            "solutions": ["Install fresh CR2032 with + facing up"]
+          },
+          {
+            "problem": "I2C address conflict with MPU6050",
+            "causes": ["Both devices use 0x68"],
+            "solutions": ["Change MPU6050 to 0x69 by connecting AD0 to VCC"]
+          }
+        ],
+        "libraries": {
+          "arduino": "RTClib by Adafruit",
+          "basic_code": "RTC_DS3231 rtc; rtc.begin(); DateTime now = rtc.now();"
+        },
+        "tags": ["rtc", "real-time-clock", "time", "i2c", "eeprom", "battery-backup"],
+        "use_cases": ["data logging", "scheduled events", "alarm clock", "timestamp"],
+        "ai_summary": "Precision RTC (\u00b12ppm) with I2C at 0x68. Includes 4KB EEPROM at 0x57 and CR2032 backup. NOTE: Same I2C address as MPU6050 - change MPU AD0 if using both.",
+        "calibration": {
+          "required": true,
+          "frequency": "on_first_use",
+          "procedure": [
+            "Set time from accurate source (NTP or atomic clock reference)",
+            "Use rtc.adjust(DateTime(F(__DATE__), F(__TIME__))) for compile-time sync",
+            "Or set manually with exact time",
+            "Verify after 24 hours - should be within \u00b12 seconds"
+          ],
+          "tools_needed": ["accurate time reference (phone, NTP)"],
+          "expected_values": {
+            "accuracy": "\u00b12 ppm (\u00b11 minute/year)",
+            "24hr_drift": "<0.2 seconds"
+          },
+          "adjustment_method": "time_sync_command"
+        },
+        "testing": {
+          "quick_test": "Read time, compare to phone",
+          "full_test": "Monitor drift over 1 week",
+          "pass_criteria": {
+            "weekly_drift": "<1 second"
+          }
+        },
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Handle by edges"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-rc522",
+        "name": "RC522 RFID Module",
+        "quantity": 1,
+        "datasheet_url": "https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf",
+        "product_image": "https://components101.com/sites/default/files/components/RFID-Reader-Module.jpg",
+        "pinout_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/RFID-RC522-Reader-Writer-Module-Pinout.png",
+        "dimensions_mm": {
+          "length": 40,
+          "width": 60
+        },
+        "controller_ic": "MFRC522",
+        "frequency_mhz": 13.56,
+        "operating_voltage_v": 3.3,
+        "interface": "SPI",
+        "read_range_mm": 50,
+        "wiring_rules": {
+          "power": {
+            "vcc": "3.3V ONLY",
+            "gnd": "GND"
+          },
+          "signals": {
+            "sck": {
+              "type": "spi_clock"
+            },
+            "mosi": {
+              "type": "spi_data_in"
+            },
+            "miso": {
+              "type": "spi_data_out"
+            },
+            "sda": {
+              "type": "chip_select",
+              "note": "Also called SS or CS"
+            },
+            "rst": {
+              "type": "reset"
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "sck": "D13",
+              "mosi": "D11",
+              "miso": "D12",
+              "sda": "D10",
+              "rst": "D9",
+              "note": "Module is 3.3V but most clones work with 5V Arduino SPI"
+            },
+            "esp32": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "sck": "GPIO18",
+              "mosi": "GPIO23",
+              "miso": "GPIO19",
+              "sda": "GPIO5",
+              "rst": "GPIO4"
+            }
+          },
+          "warnings": [
+            "VCC is 3.3V ONLY - 5V will damage the module",
+            "SPI pins are 3.3V tolerant",
+            "Antenna coil is fragile - don't bend PCB"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Card not detected",
+            "causes": ["Wrong SPI wiring", "Card too far away", "Wrong card type"],
+            "solutions": [
+              "Verify SPI connections",
+              "Hold card within 2cm",
+              "Use MIFARE Classic cards"
+            ]
+          },
+          {
+            "problem": "Module damaged/not responding",
+            "causes": ["Connected to 5V"],
+            "solutions": ["Replace module - 5V damage is permanent"]
+          }
+        ],
+        "libraries": {
+          "arduino": "MFRC522 by GithubCommunity",
+          "basic_code": "MFRC522 mfrc522(SS_PIN, RST_PIN); mfrc522.PCD_Init();"
+        },
+        "tags": ["rfid", "nfc", "13.56mhz", "mifare", "spi", "3.3v"],
+        "use_cases": ["access control", "identification", "inventory tracking", "door lock"],
+        "ai_summary": "13.56MHz RFID reader on SPI bus. 3.3V ONLY - will be damaged by 5V! Includes card and keychain fob. Use MFRC522 library.",
+        "calibration": {
+          "required": false,
+          "frequency": "verification_only",
+          "procedure": [
+            "Test read distance with known MIFARE card",
+            "Typical range is 2-5cm depending on card/antenna"
+          ],
+          "tools_needed": ["MIFARE Classic card or fob"],
+          "expected_values": {
+            "read_distance_cm": "2-5"
+          },
+          "adjustment_method": "n/a"
+        },
+        "testing": {
+          "quick_test": "Scan card, verify UID prints",
+          "full_test": "Read 10 cards, verify consistent UIDs",
+          "pass_criteria": {
+            "read_success_rate": ">99%"
+          }
+        },
+        "esd_rating": {
+          "class": "1A",
+          "voltage": "250-500V",
+          "handling": "ESD strap recommended"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-joystick-ky023",
+        "name": "KY-023 Joystick Module",
+        "quantity": 2,
+        "product_image": "https://components101.com/sites/default/files/components/KY023-Joystick-Module.jpg",
+        "pinout_image": "https://components101.com/sites/default/files/component_pin/KY-023-Joystick-Module-Pinout.png",
+        "dimensions_mm": {
+          "length": 34,
+          "width": 26,
+          "height": 32
+        },
+        "operating_voltage_v": 5,
+        "potentiometers": {
+          "count": 2,
+          "value_ohm": 10000
+        },
+        "wiring_rules": {
+          "power": {
+            "vcc": "+5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "vrx": {
+              "type": "analog_output",
+              "range": "0-1023 (10-bit ADC)"
+            },
+            "vry": {
+              "type": "analog_output",
+              "range": "0-1023"
+            },
+            "sw": {
+              "type": "digital_output",
+              "active": "LOW when pressed"
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "vrx": "A0",
+              "vry": "A1",
+              "sw": "D2"
+            },
+            "esp32": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "vrx": "GPIO34",
+              "vry": "GPIO35",
+              "sw": "GPIO13",
+              "note": "Use 3.3V for ESP32 - output will be 0-4095 (12-bit)"
+            }
+          }
+        },
+        "common_issues": [
+          {
+            "problem": "Center position not at 512",
+            "causes": ["Potentiometer tolerance"],
+            "solutions": ["Calibrate in software - read center position at startup"]
+          }
+        ],
+        "libraries": {
+          "arduino": "None required - use analogRead()"
+        },
+        "tags": ["joystick", "analog", "input", "game-controller"],
+        "use_cases": ["robot control", "game input", "menu navigation", "camera gimbal"],
+        "ai_summary": "Dual-axis analog joystick with center button. Uses 2 analog pins + 1 digital. Center position ~512 on Arduino. Button is active LOW.",
+        "calibration": {
+          "required": true,
+          "frequency": "on_first_use",
+          "procedure": [
+            "Read X and Y with stick centered \u2192 record CENTER_X, CENTER_Y",
+            "Typical center is ~512, but varies 480-540",
+            "Define dead zone (\u00b120-50 from center)",
+            "Map to -100 to +100 range with dead zone"
+          ],
+          "tools_needed": ["none"],
+          "expected_values": {
+            "center_x": "480-540",
+            "center_y": "480-540",
+            "min": "0-50",
+            "max": "970-1023"
+          },
+          "adjustment_method": "software_mapping"
+        },
+        "testing": {
+          "quick_test": "Move stick to corners, verify full range",
+          "full_test": "Test button press, verify all axes",
+          "pass_criteria": {
+            "full_range": "reaches 0 and 1023 on both axes"
+          }
+        },
+        "esd_rating": {
+          "class": "2",
+          "voltage": "2000-4000V",
+          "handling": "Minimal precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-rotary-ky040",
+        "name": "KY-040 Rotary Encoder",
+        "quantity": 1,
+        "product_image": "https://components101.com/sites/default/files/components/KY040-Rotary-Encoder.jpg",
+        "pinout_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/KY-040-Rotary-Encoder-Pinout.png",
+        "dimensions_mm": {
+          "length": 18,
+          "width": 26,
+          "height": 32
+        },
+        "operating_voltage_v": 5,
+        "detents_per_revolution": 20,
+        "wiring_rules": {
+          "power": {
+            "vcc": "+5V or 3.3V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "clk": {
+              "type": "quadrature_a",
+              "alias": "A"
+            },
+            "dt": {
+              "type": "quadrature_b",
+              "alias": "B"
+            },
+            "sw": {
+              "type": "button",
+              "active": "LOW"
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "clk": "D2",
+              "dt": "D3",
+              "sw": "D4"
+            },
+            "esp32": {
+              "vcc": "3.3V",
+              "gnd": "GND",
+              "clk": "GPIO25",
+              "dt": "GPIO26",
+              "sw": "GPIO27"
+            }
+          }
+        },
+        "libraries": {
+          "arduino": "Encoder by PJRC or RotaryEncoder",
+          "basic_code": "Encoder myEnc(CLK_PIN, DT_PIN);"
+        },
+        "tags": ["rotary", "encoder", "quadrature", "input", "menu"],
+        "use_cases": ["volume control", "menu selection", "position sensing", "scroll input"],
+        "ai_summary": "20-detent rotary encoder with quadrature output and push button. Use interrupt pins for CLK/DT for reliable counting.",
+        "esd_rating": {
+          "class": "2",
+          "voltage": "2000-4000V",
+          "handling": "Minimal precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-photoresistor",
+        "name": "Photoresistor (LDR)",
+        "quantity": 5,
+        "product_image": "https://components101.com/sites/default/files/components/LDR.jpg",
+        "type": "Light Dependent Resistor",
+        "resistance_dark_ohm": 1000000,
+        "resistance_light_ohm": 100,
+        "wiring_rules": {
+          "voltage_divider": {
+            "ldr": "VCC to Analog pin",
+            "resistor": "Analog pin to GND (10K)"
+          },
+          "templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "signal": "A0",
+              "gnd": "GND via 10K resistor"
+            }
+          }
+        },
+        "libraries": {
+          "arduino": "None - use analogRead()"
+        },
+        "tags": ["light", "ldr", "photoresistor", "analog"],
+        "use_cases": ["light detection", "auto-brightness", "day/night sensing"],
+        "ai_summary": "Light sensor using voltage divider. Higher light = lower resistance = higher analog reading. Use 10K resistor to GND.",
+        "calibration": {
+          "required": true,
+          "frequency": "on_first_use",
+          "procedure": [
+            "Cover sensor completely \u2192 record as DARK_VALUE",
+            "Expose to bright light (flashlight) \u2192 record as BRIGHT_VALUE",
+            "Map readings to lux or percentage as needed"
+          ],
+          "tools_needed": ["flashlight", "opaque cover"],
+          "expected_values": {
+            "dark_reading": "900-1023",
+            "bright_reading": "50-200"
+          },
+          "adjustment_method": "software_mapping"
+        },
+        "testing": {
+          "quick_test": "Cover with hand, verify reading increases",
+          "full_test": "Compare against phone lux meter at 3 light levels",
+          "pass_criteria": {
+            "relative_accuracy": "correct trend, not absolute lux"
+          }
+        },
+        "esd_rating": {
+          "class": "3",
+          "voltage": ">4000V",
+          "handling": "No special handling"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-soil-moisture",
+        "name": "Soil Moisture Sensor",
+        "quantity": 1,
+        "product_image": "https://components101.com/sites/default/files/component_pin/Soil-Moisture-Sensor-Pinout.png",
+        "operating_voltage_v": {
+          "min": 3.3,
+          "max": 5
+        },
+        "output": {
+          "analog": "A0",
+          "digital": "D0 (threshold)"
+        },
+        "wiring_rules": {
+          "power": {
+            "vcc": "3.3V or 5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "a0": "Analog moisture level",
+            "d0": "Digital threshold (adjustable via pot)"
+          },
+          "warnings": ["Probes corrode quickly in wet soil - don't leave powered constantly"]
+        },
+        "tags": ["soil", "moisture", "plant", "garden"],
+        "use_cases": ["plant watering system", "garden automation"],
+        "ai_summary": "Capacitive soil sensor. A0 gives analog reading (lower = wetter). Power only when reading to extend probe life.",
+        "calibration": {
+          "required": true,
+          "frequency": "on_first_use",
+          "procedure": [
+            "Read value in completely dry air \u2192 record as DRY_VALUE",
+            "Submerge probe in water \u2192 record as WET_VALUE",
+            "Map readings: moisture% = map(reading, DRY, WET, 0, 100)"
+          ],
+          "tools_needed": ["cup of water", "dry towel"],
+          "expected_values": {
+            "dry_reading": "700-1023 (varies by sensor)",
+            "wet_reading": "200-400 (varies by sensor)"
+          },
+          "adjustment_method": "software_mapping"
+        },
+        "testing": {
+          "quick_test": "Touch probe to wet finger, reading should drop",
+          "full_test": "Test in actual soil at known moisture levels",
+          "pass_criteria": {
+            "consistency": "\u00b110% across readings in same conditions"
+          }
+        },
+        "esd_rating": {
+          "class": "2",
+          "voltage": "2000-4000V",
+          "handling": "Minimal precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-flame",
+        "name": "Flame Sensor Module",
+        "quantity": 1,
+        "product_image": "https://components101.com/sites/default/files/component_pin/Flame-Sensor-Module-Pinout.png",
+        "detection_wavelength_nm": "760-1100",
+        "detection_angle_degrees": 60,
+        "operating_voltage_v": {
+          "min": 3.3,
+          "max": 5
+        },
+        "wiring_rules": {
+          "power": {
+            "vcc": "5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "a0": "Analog intensity",
+            "d0": "Digital detection"
+          }
+        },
+        "tags": ["flame", "fire", "ir", "safety"],
+        "use_cases": ["fire detection", "candle detection", "safety systems"],
+        "ai_summary": "IR flame sensor. Detects 760-1100nm wavelength (fire). D0 for threshold detection, A0 for intensity.",
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-water-level",
+        "name": "Water Level Sensor",
+        "quantity": 1,
+        "dimensions_mm": {
+          "length": 62,
+          "width": 20
+        },
+        "operating_voltage_v": {
+          "min": 3,
+          "max": 5
+        },
+        "wiring_rules": {
+          "power": {
+            "vcc": "3.3V or 5V (power only when reading)",
+            "gnd": "GND"
+          },
+          "signal": {
+            "s": "Analog output to ADC pin"
+          }
+        },
+        "tags": ["water", "level", "liquid", "analog"],
+        "use_cases": ["water tank level", "leak detection", "aquarium"],
+        "ai_summary": "Conductive water level sensor. Analog output proportional to water height. Power intermittently to reduce electrolysis.",
+        "esd_rating": {
+          "class": "2",
+          "voltage": "2000-4000V",
+          "handling": "Minimal precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-sound-ky038",
+        "name": "KY-038 Sound Sensor",
+        "quantity": 1,
+        "product_image": "https://components101.com/sites/default/files/component_pin/KY-038-Sound-Sensor-Module.jpg",
+        "microphone": "electret condenser",
+        "operating_voltage_v": 5,
+        "wiring_rules": {
+          "power": {
+            "vcc": "5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "a0": "Analog sound level",
+            "d0": "Digital threshold (clap detection)"
+          },
+          "adjustment": "Potentiometer sets D0 threshold"
+        },
+        "tags": ["sound", "microphone", "audio", "clap"],
+        "use_cases": ["clap switch", "sound level meter", "voice activation"],
+        "ai_summary": "Sound detection module. A0 for analog level, D0 for threshold detection (clap sensor). Adjust sensitivity with pot.",
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-ir-obstacle",
+        "name": "IR Obstacle Avoidance Sensor",
+        "quantity": 2,
+        "product_image": "https://components101.com/sites/default/files/component_pin/IR-Sensor-Module-Pinout.jpg",
+        "detection_range_cm": {
+          "min": 2,
+          "max": 30
+        },
+        "operating_voltage_v": {
+          "min": 3.3,
+          "max": 5
+        },
+        "wiring_rules": {
+          "power": {
+            "vcc": "5V",
+            "gnd": "GND"
+          },
+          "signal": {
+            "out": "Digital LOW when obstacle detected"
+          },
+          "adjustment": "Potentiometer adjusts detection distance"
+        },
+        "tags": ["ir", "obstacle", "proximity", "digital"],
+        "use_cases": ["robot obstacle detection", "line following", "object detection"],
+        "ai_summary": "IR proximity sensor. Output LOW when obstacle in range. Adjust range with pot. Works 2-30cm typical.",
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "sensor-tilt-sw520d",
+        "name": "SW-520D Tilt Switch",
+        "quantity": 3,
+        "type": "ball tilt switch",
+        "operating_voltage_v": 12,
+        "max_current_ma": 20,
+        "wiring_rules": {
+          "connection": "Acts as SPST switch - use with pull-up resistor",
+          "templates": {
+            "arduino": {
+              "one_side": "Digital pin (INPUT_PULLUP)",
+              "other_side": "GND"
+            }
+          }
+        },
+        "tags": ["tilt", "switch", "orientation", "angle"],
+        "use_cases": ["tilt detection", "orientation sensing", "anti-tamper"],
+        "ai_summary": "Ball-type tilt switch. Closes circuit when tilted past threshold. Use INPUT_PULLUP, reads LOW when tilted.",
+        "esd_rating": {
+          "class": "3",
+          "voltage": ">4000V",
+          "handling": "No special handling"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "actuators": [
+      {
+        "id": "actuator-sg90",
+        "name": "SG90 Micro Servo",
+        "quantity": 1,
+        "datasheet_url": "http://www.ee.ic.ac.uk/pcheung/teaching/DE1_EE/stores/sg90_datasheet.pdf",
+        "product_image": "https://components101.com/sites/default/files/components/Servo-Motor-SG90.jpg",
+        "pinout_image": "https://components101.com/sites/default/files/component_pin/Servo-Motor-Dimensions.png",
+        "dimensions_mm": {
+          "length": 22.2,
+          "width": 11.8,
+          "height": 28.5
+        },
+        "weight_g": 9,
+        "operating_voltage_v": {
+          "min": 4.8,
+          "max": 6
+        },
+        "torque_kg_cm": 1.8,
+        "rotation_degrees": 180,
+        "pwm_frequency_hz": 50,
+        "pulse_width_us": {
+          "min": 1000,
+          "neutral": 1500,
+          "max": 2000
+        },
+        "wiring_rules": {
+          "power": {
+            "vcc": "5V (separate supply recommended for multiple servos)",
+            "gnd": "GND (common with MCU)"
+          },
+          "signals": {
+            "signal": {
+              "type": "pwm",
+              "frequency_hz": 50,
+              "pulse_ms": "1-2ms"
+            }
+          },
+          "wire_colors": {
+            "brown_or_black": "GND",
+            "red": "VCC (4.8-6V)",
+            "orange_or_yellow": "Signal (PWM)"
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V (or external)",
+              "gnd": "GND",
+              "signal": "D9 (PWM)"
+            },
+            "arduino_mega": {
+              "vcc": "5V (or external)",
+              "gnd": "GND",
+              "signal": "D9 (PWM)"
+            },
+            "esp32": {
+              "vcc": "5V external",
+              "gnd": "common GND",
+              "signal": "GPIO13"
+            },
+            "esp8266": {
+              "vcc": "5V external",
+              "gnd": "common GND",
+              "signal": "D4 (GPIO2)"
+            }
+          },
+          "warnings": [
+            "Stall current can exceed 500mA - use external power for multiple servos",
+            "Never power from MCU 5V pin if using more than 1 servo",
+            "Common GND between servo power supply and MCU required"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Servo jitters or doesn't hold position",
+            "causes": ["Insufficient power", "Electrical noise", "PWM timing issues"],
+            "solutions": [
+              "Use separate 5V 1A+ supply",
+              "Add 100uF capacitor on servo power",
+              "Use hardware PWM pins"
+            ]
+          },
+          {
+            "problem": "Arduino resets when servo moves",
+            "causes": ["Servo drawing too much current from Arduino 5V"],
+            "solutions": ["Power servo from external 5V supply, share GND with Arduino"]
+          }
+        ],
+        "libraries": {
+          "arduino": "Servo.h (built-in)",
+          "esp32": "ESP32Servo",
+          "basic_code": "Servo myservo; myservo.attach(9); myservo.write(90);"
+        },
+        "tags": ["servo", "motor", "pwm", "position-control", "actuator"],
+        "use_cases": ["robotic arm", "pan-tilt", "door lock", "RC vehicles"],
+        "ai_summary": "180\u00b0 micro servo, 9g. PWM control: 1ms=0\u00b0, 1.5ms=90\u00b0, 2ms=180\u00b0. Use external 5V supply for multiple servos. Brown=GND, Red=VCC, Orange=Signal.",
+        "calibration": {
+          "required": false,
+          "frequency": "verification_only",
+          "procedure": [
+            "Send 90\u00b0 command, physically verify middle position",
+            "Send 0\u00b0 command, verify left limit",
+            "Send 180\u00b0 command, verify right limit",
+            "Adjust min/max pulse widths if range is off"
+          ],
+          "tools_needed": ["protractor (optional)"],
+          "expected_values": {
+            "0_degrees_pulse_us": 1000,
+            "90_degrees_pulse_us": 1500,
+            "180_degrees_pulse_us": 2000
+          },
+          "adjustment_method": "software_pulse_width"
+        },
+        "testing": {
+          "quick_test": "Sweep 0-180\u00b0, verify smooth motion",
+          "full_test": "Test at 0, 45, 90, 135, 180\u00b0",
+          "pass_criteria": {
+            "positioning_accuracy": "\u00b15\u00b0"
+          }
+        },
+        "failure_modes": [
+          {
+            "mode": "Gear stripping",
+            "symptoms": ["Grinding noise", "Won't hold position", "Skips degrees"],
+            "cause": "Forcing past mechanical stop, dropping, overload",
+            "prevention": "Don't command beyond 0-180\u00b0, don't force shaft",
+            "recovery": "Replace servo (gears are usually not replaceable)"
+          },
+          {
+            "mode": "Motor burnout",
+            "symptoms": ["No movement", "Gets hot", "Draws excessive current"],
+            "cause": "Stalling against load, continuous operation at high load",
+            "prevention": "Don't stall, use intermittent operation",
+            "recovery": "Replace servo"
+          },
+          {
+            "mode": "Potentiometer wear",
+            "symptoms": ["Jittery position", "Hunts back and forth", "Dead spots"],
+            "cause": "Age, continuous movement in same range",
+            "prevention": "Vary positions, don't run continuously",
+            "recovery": "Replace servo"
+          }
+        ],
+        "lifespan": {
+          "typical_cycles": 10000,
+          "limiting_factor": "Plastic gears, potentiometer wiper"
+        },
+        "esd_sensitivity": "Class 2 (2000-4000V)",
+        "esd_rating": {
+          "class": "2",
+          "voltage": "2000-4000V",
+          "handling": "Minimal precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "actuator-28byj48-uln2003",
+        "name": "28BYJ-48 Stepper Motor with ULN2003 Driver",
+        "quantity": 1,
+        "datasheet_url": "https://components101.com/sites/default/files/component_datasheet/28byj48-stepper-motor-datasheet.pdf",
+        "product_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/28BYJ-48-Stepper-Motor-With-ULN2003-Driver.jpg",
+        "pinout_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/28BYJ-48-Stepper-Motor-Pinout.png",
+        "motor_dimensions_mm": {
+          "diameter": 28,
+          "length": 20
+        },
+        "driver_dimensions_mm": {
+          "length": 28,
+          "width": 28,
+          "height": 20
+        },
+        "operating_voltage_v": 5,
+        "step_angle_degrees": 5.625,
+        "gear_ratio": "1:64",
+        "steps_per_revolution": 4096,
+        "current_per_phase_ma": 200,
+        "max_speed_rpm": 15,
+        "wiring_rules": {
+          "motor_to_driver": "5-pin JST connector (included)",
+          "driver_power": {
+            "vcc": "5-12V",
+            "gnd": "GND"
+          },
+          "driver_signals": {
+            "in1": {
+              "type": "digital_output",
+              "phase": "Blue wire"
+            },
+            "in2": {
+              "type": "digital_output",
+              "phase": "Pink wire"
+            },
+            "in3": {
+              "type": "digital_output",
+              "phase": "Yellow wire"
+            },
+            "in4": {
+              "type": "digital_output",
+              "phase": "Orange wire"
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "driver_vcc": "External 5V (not Arduino 5V!)",
+              "driver_gnd": "GND (common)",
+              "in1": "D8",
+              "in2": "D9",
+              "in3": "D10",
+              "in4": "D11"
+            },
+            "esp32": {
+              "driver_vcc": "5V external",
+              "driver_gnd": "common GND",
+              "in1": "GPIO13",
+              "in2": "GPIO12",
+              "in3": "GPIO14",
+              "in4": "GPIO27"
+            }
+          },
+          "warnings": [
+            "Motor draws ~240mA - use external power supply",
+            "Driver LEDs show which coil is active",
+            "Gear train makes motor slow but high torque"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Motor vibrates but doesn't turn",
+            "causes": ["Wrong step sequence", "Loose connection", "IN pins in wrong order"],
+            "solutions": ["Use Stepper library with correct pin order", "Check all connections"]
+          },
+          {
+            "problem": "Motor gets hot",
+            "causes": ["Holding current too long", "Coils energized when stationary"],
+            "solutions": [
+              "Disable motor when not moving (call stepper.release())",
+              "Reduce holding time"
+            ]
+          }
+        ],
+        "libraries": {
+          "arduino": "Stepper (built-in) or AccelStepper",
+          "basic_code": "Stepper myStepper(2048, IN1, IN3, IN2, IN4); myStepper.setSpeed(10); myStepper.step(2048);"
+        },
+        "tags": ["stepper", "motor", "uln2003", "gear-motor", "position-control"],
+        "use_cases": ["camera slider", "3D printer", "CNC", "robot joint", "precise positioning"],
+        "ai_summary": "5V geared stepper, 4096 steps/rev, ~15 RPM max. Requires 4 digital pins + ULN2003 driver. Use external 5V power. AccelStepper library for smooth motion.",
+        "calibration": {
+          "required": false,
+          "frequency": "verification_only",
+          "procedure": [
+            "Mark starting position",
+            "Command 2048 steps (1 revolution)",
+            "Verify shaft returned to mark",
+            "If not exact, adjust steps_per_revolution constant"
+          ],
+          "tools_needed": ["tape or marker for reference"],
+          "expected_values": {
+            "steps_per_revolution": 2048,
+            "gear_ratio": "1:64"
+          },
+          "adjustment_method": "software_steps_constant"
+        },
+        "testing": {
+          "quick_test": "Command 100 steps, verify rotation",
+          "full_test": "10 full revolutions, verify no missed steps",
+          "pass_criteria": {
+            "step_accuracy": "2048 steps = 1 revolution \u00b11\u00b0"
+          }
+        },
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "actuator-l293d-ic",
+        "name": "L293D Motor Driver IC",
+        "quantity": 4,
+        "datasheet_url": "https://www.ti.com/lit/ds/symlink/l293d.pdf",
+        "product_image": "https://components101.com/sites/default/files/component_pin/L293D-Pinout.gif",
+        "pinout_image": "https://components101.com/sites/default/files/component_pin/L293D-Pinout.gif",
+        "package": "16-pin DIP",
+        "channels": 4,
+        "output_current_ma": {
+          "continuous": 600,
+          "peak": 1200
+        },
+        "motor_supply_voltage_v": {
+          "min": 4.5,
+          "max": 36
+        },
+        "logic_supply_voltage_v": 5,
+        "internal_clamp_diodes": true,
+        "wiring_rules": {
+          "power": {
+            "vcc1_pin16": {
+              "description": "Logic supply",
+              "voltage_v": 5
+            },
+            "vcc2_pin8": {
+              "description": "Motor supply",
+              "voltage_v": "4.5-36V"
+            }
+          },
+          "ground_pins": [4, 5, 12, 13],
+          "channel_1_2": {
+            "enable": {
+              "pin": 1,
+              "name": "1,2EN"
+            },
+            "input1": {
+              "pin": 2,
+              "name": "1A"
+            },
+            "output1": {
+              "pin": 3,
+              "name": "1Y"
+            },
+            "input2": {
+              "pin": 7,
+              "name": "2A"
+            },
+            "output2": {
+              "pin": 6,
+              "name": "2Y"
+            }
+          },
+          "channel_3_4": {
+            "enable": {
+              "pin": 9,
+              "name": "3,4EN"
+            },
+            "input3": {
+              "pin": 10,
+              "name": "3A"
+            },
+            "output3": {
+              "pin": 11,
+              "name": "3Y"
+            },
+            "input4": {
+              "pin": 15,
+              "name": "4A"
+            },
+            "output4": {
+              "pin": 14,
+              "name": "4Y"
+            }
+          },
+          "warnings": [
+            "Chip gets HOT - heatsink recommended above 400mA",
+            "Ground pins (4,5,12,13) also act as heatsink - solder to large copper area",
+            "Internal diodes protect against back-EMF but add voltage drop"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "IC overheating",
+            "causes": ["High current draw", "No heatsinking"],
+            "solutions": ["Add heatsink or copper pour under chip", "Limit motor current"]
+          },
+          {
+            "problem": "Motor doesn't run in both directions",
+            "causes": ["Enable pin not HIGH", "Wrong input logic"],
+            "solutions": ["Connect enable pins to 5V or PWM pin", "Check truth table"]
+          }
+        ],
+        "truth_table": {
+          "enable_high": {
+            "in1_high_in2_low": "Motor forward",
+            "in1_low_in2_high": "Motor reverse",
+            "in1_high_in2_high": "Motor brake",
+            "in1_low_in2_low": "Motor coast"
+          },
+          "enable_low": "Motor off (coast)"
+        },
+        "tags": ["motor-driver", "h-bridge", "dc-motor", "ic", "l293d"],
+        "use_cases": ["DC motor control", "bidirectional motor", "robot drive", "stepper driver"],
+        "ai_summary": "Dual H-bridge motor driver IC. 600mA/channel. Pin 16=5V logic, Pin 8=motor voltage (4.5-36V). Enable pins control on/off or PWM speed. Gets hot - add heatsink.",
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Handle by edges, anti-static"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "actuator-relay-5v",
+        "name": "5V Relay Module",
+        "quantity": 1,
+        "product_image": "https://components101.com/sites/default/files/components/5V-Relay-Module.jpg",
+        "pinout_image": "https://lastminuteengineers.com/wp-content/uploads/arduino/1-Channel-Relay-Module-Pinout.png",
+        "dimensions_mm": {
+          "length": 50,
+          "width": 26,
+          "height": 18.5
+        },
+        "relay_model": "SRD-05VDC-SL-C",
+        "coil_voltage_v": 5,
+        "contact_rating": {
+          "ac": "10A @ 250VAC",
+          "dc": "10A @ 30VDC"
+        },
+        "isolation": "optocoupler",
+        "trigger": "active LOW",
+        "wiring_rules": {
+          "control_side": {
+            "vcc": "5V",
+            "gnd": "GND",
+            "in": {
+              "type": "digital_output",
+              "active": "LOW triggers relay"
+            }
+          },
+          "load_side": {
+            "com": "Common terminal",
+            "no": "Normally Open - connects to COM when relay energized",
+            "nc": "Normally Closed - connects to COM when relay off"
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "in": "D7"
+            }
+          },
+          "warnings": [
+            "DANGER: Load side can carry mains voltage - use extreme caution",
+            "Keep high voltage wiring away from low voltage Arduino circuits",
+            "Active LOW: digitalWrite(pin, LOW) turns relay ON",
+            "Relay coil draws ~70mA - within Arduino pin limit but use transistor for multiple relays"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Relay clicks but doesn't switch load",
+            "causes": ["Load wired to wrong terminal", "Load exceeds relay rating"],
+            "solutions": [
+              "Wire load between COM and NO or NC as needed",
+              "Check load current rating"
+            ]
+          },
+          {
+            "problem": "Arduino resets when relay switches",
+            "causes": ["Back-EMF spike", "Insufficient power"],
+            "solutions": [
+              "Module has built-in protection but add 100uF cap on Arduino 5V",
+              "Use separate power"
+            ]
+          }
+        ],
+        "tags": ["relay", "switch", "high-voltage", "ac-control", "isolation"],
+        "use_cases": ["light control", "appliance control", "motor on/off", "AC switching"],
+        "ai_summary": "5V relay module with optocoupler isolation. Active LOW trigger. Load terminals: COM (common), NO (normally open), NC (normally closed). CAUTION: Can switch mains voltage.",
+        "esd_rating": {
+          "class": "2",
+          "voltage": "2000-4000V",
+          "handling": "Minimal precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "displays": [
+      {
+        "id": "display-lcd1602",
+        "name": "LCD 1602 Module",
+        "quantity": 2,
+        "datasheet_url": "https://www.sparkfun.com/datasheets/LCD/HD44780.pdf",
+        "product_image": "https://components101.com/sites/default/files/components/16x2-LCD-Module.jpg",
+        "pinout_image": "https://components101.com/sites/default/files/component_pin/16x2-LCD-Module-Pinout.png",
+        "dimensions_mm": {
+          "length": 80,
+          "width": 36,
+          "height": 12.5
+        },
+        "display_area_mm": {
+          "width": 56,
+          "height": 12
+        },
+        "characters": {
+          "columns": 16,
+          "rows": 2
+        },
+        "controller": "HD44780",
+        "operating_voltage_v": 5,
+        "wiring_rules": {
+          "power": {
+            "vss": "GND",
+            "vdd": "5V",
+            "led_plus": "5V",
+            "led_minus": "GND"
+          },
+          "contrast": {
+            "v0": "10K pot wiper (or PWM pin)"
+          },
+          "4bit_mode": {
+            "rs": "Register Select",
+            "rw": "Tie to GND for write-only",
+            "e": "Enable",
+            "d4": "Data bit 4",
+            "d5": "Data bit 5",
+            "d6": "Data bit 6",
+            "d7": "Data bit 7"
+          },
+          "connection_templates": {
+            "arduino_uno_i2c": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "sda": "A4",
+              "scl": "A5",
+              "addr": "0x27"
+            },
+            "arduino_mega_i2c": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "sda": "D20",
+              "scl": "D21",
+              "addr": "0x27"
+            },
+            "esp32_i2c": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "sda": "GPIO21",
+              "scl": "GPIO22",
+              "addr": "0x27"
+            },
+            "esp8266_i2c": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "sda": "D2 (GPIO4)",
+              "scl": "D1 (GPIO5)",
+              "addr": "0x27"
+            }
+          },
+          "warnings": [
+            "Contrast (V0) must be adjusted - display may appear blank without it",
+            "Use 10K potentiometer between VDD and VSS, wiper to V0",
+            "I2C backpack reduces wiring from 12+ pins to 4 pins"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "Display shows boxes or is blank",
+            "causes": ["Contrast not adjusted", "Wrong wiring", "No initialization"],
+            "solutions": [
+              "Adjust V0 potentiometer until text visible",
+              "Verify all connections",
+              "Call lcd.begin(16,2)"
+            ]
+          },
+          {
+            "problem": "Random characters or garbled display",
+            "causes": ["Loose connections", "Wrong pin mapping in code"],
+            "solutions": ["Check wiring matches code", "Verify LiquidCrystal constructor pin order"]
+          }
+        ],
+        "libraries": {
+          "parallel": "LiquidCrystal (built-in)",
+          "i2c": "LiquidCrystal_I2C",
+          "basic_code": "LiquidCrystal lcd(12, 11, 5, 4, 3, 2); lcd.begin(16, 2); lcd.print(\"Hello\");"
+        },
+        "tags": ["lcd", "display", "16x2", "hd44780", "text-display"],
+        "use_cases": ["status display", "menu system", "sensor readout", "debug output"],
+        "ai_summary": "16x2 character LCD. Parallel mode needs 6+ pins; I2C backpack needs only 2 (SDA/SCL). MUST adjust contrast pot (V0) or display appears blank.",
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "display-max7219-matrix",
+        "name": "MAX7219 8x8 LED Matrix Module",
+        "quantity": 1,
+        "datasheet_url": "https://datasheets.maximintegrated.com/en/ds/MAX7219-MAX7221.pdf",
+        "product_image": "https://components101.com/sites/default/files/component_pin/MAX7219-LED-Dot-Matrix.jpg",
+        "dimensions_mm": {
+          "length": 32,
+          "width": 32,
+          "height": 13
+        },
+        "controller": "MAX7219",
+        "led_count": 64,
+        "operating_voltage_v": 5,
+        "interface": "SPI",
+        "cascadable": true,
+        "brightness_levels": 16,
+        "wiring_rules": {
+          "power": {
+            "vcc": "5V",
+            "gnd": "GND"
+          },
+          "signals": {
+            "din": {
+              "type": "spi_mosi",
+              "description": "Data in"
+            },
+            "cs": {
+              "type": "chip_select",
+              "alias": "LOAD"
+            },
+            "clk": {
+              "type": "spi_clock"
+            }
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "din": "D11",
+              "cs": "D10",
+              "clk": "D13"
+            },
+            "esp32": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "din": "GPIO23",
+              "cs": "GPIO5",
+              "clk": "GPIO18"
+            }
+          },
+          "cascading": "Connect DOUT of first module to DIN of second"
+        },
+        "libraries": {
+          "arduino": "MD_MAX72XX or LedControl",
+          "basic_code": "LedControl lc(DIN, CLK, CS, 1); lc.setLed(0, row, col, true);"
+        },
+        "tags": ["led-matrix", "max7219", "8x8", "spi", "cascadable"],
+        "use_cases": ["scrolling text", "animations", "clock display", "game display"],
+        "ai_summary": "8x8 LED matrix with MAX7219 driver. SPI interface, cascadable for larger displays. 5V operation, 16 brightness levels.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "logic_interface": [
+      {
+        "id": "logic-level-shifter-hw221",
+        "name": "HW-221 Logic Level Converter",
+        "quantity": 2,
+        "product_image": "https://components101.com/sites/default/files/component_pin/Logic-Level-Converter-Pinout.png",
+        "dimensions_mm": {
+          "length": 15,
+          "width": 13
+        },
+        "channels": 4,
+        "direction": "bidirectional",
+        "mosfet": "BSS138",
+        "lv_voltage_v": {
+          "min": 1.8,
+          "max": 3.3
+        },
+        "hv_voltage_v": {
+          "min": 3.3,
+          "max": 5
+        },
+        "wiring_rules": {
+          "lv_side": {
+            "lv": "3.3V reference",
+            "gnd": "GND",
+            "lv1-lv4": "3.3V logic signals"
+          },
+          "hv_side": {
+            "hv": "5V reference",
+            "gnd": "GND (same as LV side)",
+            "hv1-hv4": "5V logic signals"
+          },
+          "example_esp32_to_5v_sensor": {
+            "lv": "ESP32 3.3V",
+            "hv": "5V supply",
+            "lv1": "ESP32 GPIO",
+            "hv1": "5V sensor signal",
+            "gnd": "Common ground"
+          }
+        },
+        "tags": ["level-shifter", "3.3v-to-5v", "bidirectional", "i2c", "spi"],
+        "use_cases": ["ESP32/ESP8266 to 5V sensors", "Raspberry Pi GPIO", "mixed voltage systems"],
+        "ai_summary": "4-channel bidirectional level shifter. Connect LV to 3.3V reference, HV to 5V reference, share GND. Works for I2C, SPI, UART up to ~400kHz.",
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Handle by edges"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "logic-shift-register-74hc595",
+        "name": "74HC595 Shift Register",
+        "quantity": 1,
+        "datasheet_url": "https://www.ti.com/lit/ds/symlink/sn74hc595.pdf",
+        "product_image": "https://components101.com/sites/default/files/component_pin/74HC595-Pinout.png",
+        "package": "16-pin DIP",
+        "operating_voltage_v": {
+          "min": 2,
+          "max": 6
+        },
+        "output_current_ma": 35,
+        "wiring_rules": {
+          "power": {
+            "vcc_pin16": "5V",
+            "gnd_pin8": "GND"
+          },
+          "control_pins": {
+            "ds_pin14": {
+              "name": "Serial Data In",
+              "arduino": "Any digital pin"
+            },
+            "shcp_pin11": {
+              "name": "Shift Clock",
+              "arduino": "Any digital pin"
+            },
+            "stcp_pin12": {
+              "name": "Storage/Latch Clock",
+              "arduino": "Any digital pin"
+            },
+            "oe_pin13": {
+              "name": "Output Enable",
+              "active": "LOW",
+              "typical": "Tie to GND"
+            },
+            "mr_pin10": {
+              "name": "Master Reset",
+              "active": "LOW",
+              "typical": "Tie to VCC"
+            }
+          },
+          "outputs": {
+            "q0-q7": "Parallel outputs (pins 15, 1-7)",
+            "q7s_pin9": "Serial out for cascading"
+          },
+          "connection_templates": {
+            "arduino_uno": {
+              "vcc": "5V",
+              "gnd": "GND",
+              "ds": "D11 (data)",
+              "shcp": "D12 (clock)",
+              "stcp": "D8 (latch)",
+              "oe": "GND",
+              "mr": "5V"
+            }
+          }
+        },
+        "libraries": {
+          "arduino": "ShiftRegister74HC595 or built-in shiftOut()",
+          "basic_code": "shiftOut(dataPin, clockPin, MSBFIRST, data); digitalWrite(latchPin, HIGH);"
+        },
+        "tags": ["shift-register", "74hc595", "serial-to-parallel", "io-expander"],
+        "use_cases": ["LED arrays", "7-segment displays", "expanding GPIO", "dot matrix"],
+        "ai_summary": "8-bit serial-to-parallel shift register. Expands 3 pins to 8 outputs. Cascadable for more outputs. Use shiftOut() function.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "power_prototyping": [
+      {
+        "id": "power-mb102",
+        "name": "MB102 Breadboard Power Supply",
+        "quantity": 2,
+        "product_image": "https://components101.com/sites/default/files/components/Breadboard-Power-Supply-Module.jpg",
+        "dimensions_mm": {
+          "length": 52,
+          "width": 33,
+          "height": 25
+        },
+        "input_voltage_v": {
+          "barrel_jack": "6.5-12",
+          "usb": 5
+        },
+        "output_voltage_v": {
+          "rail_1": "3.3 or 5 (jumper)",
+          "rail_2": "3.3 or 5 (jumper)"
+        },
+        "max_current_ma": 700,
+        "wiring_rules": {
+          "input": "DC barrel jack 6.5-12V OR USB (not both)",
+          "output": "Plugs directly into breadboard power rails",
+          "jumpers": "Set each rail independently to 3.3V or 5V",
+          "warnings": [
+            "Do not use barrel jack and USB simultaneously",
+            "Max 700mA total - don't overload"
+          ]
+        },
+        "common_issues": [
+          {
+            "problem": "No output",
+            "causes": ["On/Off switch off", "Jumpers not set"],
+            "solutions": ["Check power switch", "Set voltage jumpers"]
+          }
+        ],
+        "tags": ["power-supply", "breadboard", "3.3v", "5v", "prototyping"],
+        "use_cases": ["breadboard power", "mixed voltage projects", "prototyping"],
+        "ai_summary": "Breadboard power module with independent 3.3V/5V rails. Input: 6.5-12V barrel jack or USB. Max 700mA total. Use jumpers to select voltage per rail.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "power-breadboard-830",
+        "name": "830-Point Solderless Breadboard",
+        "quantity": 2,
+        "product_image": "https://components101.com/sites/default/files/components/Breadboard.jpg",
+        "dimensions_mm": {
+          "length": 165,
+          "width": 55,
+          "height": 10
+        },
+        "tie_points": 830,
+        "power_rails": 4,
+        "ic_rows": 63,
+        "tags": ["breadboard", "prototyping", "solderless"],
+        "use_cases": ["circuit prototyping", "temporary circuits", "testing"],
+        "ai_summary": "Standard 830-point breadboard. Center channel for DIP ICs. 4 power rails (2 per side). Check rail continuity - some boards have breaks in the middle.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "power-breadboard-400",
+        "name": "400-Point Mini Breadboard",
+        "quantity": 2,
+        "product_image": "https://components101.com/sites/default/files/components/mini-breadboard.jpg",
+        "dimensions_mm": {
+          "length": 82,
+          "width": 55,
+          "height": 10
+        },
+        "tie_points": 400,
+        "power_rails": 2,
+        "tags": ["breadboard", "mini", "prototyping"],
+        "use_cases": ["small circuits", "portable projects"],
+        "ai_summary": "Half-size 400-point breadboard. Good for small circuits or mounting on project bases.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "power-jumper-wires",
+        "name": "Jumper Wire Assortment",
+        "quantity": 1,
+        "contents": {
+          "male_male": 65,
+          "male_female": 40,
+          "female_female": 40
+        },
+        "lengths_available": ["short", "medium", "long"],
+        "tags": ["jumper-wires", "prototyping", "connections"],
+        "use_cases": ["breadboard connections", "Arduino wiring", "sensor hookup"],
+        "ai_summary": "Jumper wire kit with M-M, M-F, and F-F connectors. M-M for breadboard, M-F for Arduino headers to breadboard, F-F for sensor modules.",
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "power-9v-barrel-adapter",
+        "name": "9V Battery Barrel Jack Adapter",
+        "quantity": 1,
+        "battery_type": "9V",
+        "output_connector": "2.1mm barrel jack",
+        "center_positive": true,
+        "tags": ["battery", "power", "portable"],
+        "use_cases": ["portable Arduino projects", "battery backup"],
+        "ai_summary": "9V battery clip with 2.1mm barrel plug. Center positive - compatible with Arduino barrel jack. ~500mAh capacity typical.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "shields": [
+      {
+        "id": "shield-motor-l293d",
+        "name": "L293D Motor Shield",
+        "quantity": 1,
+        "product_image": "https://components101.com/sites/default/files/component_pin/L293D-Motor-Driver-Shield.png",
+        "compatible_boards": ["Arduino Uno", "Arduino Mega"],
+        "motor_driver_ic": "L293D x2",
+        "dc_motor_channels": 4,
+        "stepper_channels": 2,
+        "servo_headers": 2,
+        "motor_voltage_v": {
+          "min": 4.5,
+          "max": 25
+        },
+        "current_per_channel_ma": 600,
+        "wiring_rules": {
+          "stacking": "Plugs directly onto Arduino Uno headers",
+          "power_jumper": "Remove to use separate motor power supply",
+          "motor_terminals": "Screw terminals M1-M4",
+          "servo_pins": "Servo1=D9, Servo2=D10"
+        },
+        "common_issues": [
+          {
+            "problem": "Motors don't run",
+            "causes": ["Power jumper config wrong", "Insufficient current"],
+            "solutions": ["Check EXT_PWR jumper", "Use external power supply"]
+          },
+          {
+            "problem": "Shield gets hot",
+            "causes": ["High current draw"],
+            "solutions": ["Add heatsink", "Reduce motor load"]
+          }
+        ],
+        "libraries": {
+          "arduino": "Adafruit Motor Shield library (AFMotor)"
+        },
+        "pins_used": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        "tags": ["shield", "motor-driver", "l293d", "dc-motor", "stepper"],
+        "use_cases": ["robot drive", "motorized projects", "CNC"],
+        "ai_summary": "Arduino motor shield with 2x L293D. Drives 4 DC motors OR 2 steppers + 2 servos. Uses pins 3-12. Use external power for motors >6V.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "shield-cnc-grbl",
+        "name": "CNC Shield V3 (GRBL)",
+        "quantity": 1,
+        "product_image": "https://blog.protoneer.co.nz/wp-content/uploads/2013/07/Arduino-CNC-Shield-V3.0-Parts.jpg",
+        "compatible_boards": ["Arduino Uno"],
+        "stepper_drivers": "A4988 or DRV8825 (not included)",
+        "axes": 4,
+        "firmware": "GRBL",
+        "features": ["limit switches", "spindle control", "coolant control"],
+        "wiring_rules": {
+          "stacking": "Plugs onto Arduino Uno",
+          "stepper_drivers": "Insert A4988/DRV8825 with correct orientation",
+          "power_input": "12-36V to terminal block"
+        },
+        "tags": ["shield", "cnc", "grbl", "stepper", "3d-printer"],
+        "use_cases": ["CNC router", "laser cutter", "3D printer conversion"],
+        "ai_summary": "GRBL CNC shield for 3-4 axis control. Accepts A4988/DRV8825 drivers. Use with GRBL firmware for G-code control.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "shield-prototyping",
+        "name": "Arduino Prototyping Shield",
+        "quantity": 1,
+        "compatible_boards": ["Arduino Uno"],
+        "features": ["reset button", "LED", "mini breadboard area"],
+        "tags": ["shield", "prototyping", "breadboard"],
+        "use_cases": ["custom circuits on Arduino", "permanent project builds"],
+        "ai_summary": "Proto shield with small breadboard area for custom circuits. Good for making permanent Arduino add-ons.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "shield-screw-terminal",
+        "name": "Screw Terminal Shield",
+        "quantity": 1,
+        "compatible_boards": ["Arduino Uno"],
+        "terminal_type": "screw terminal",
+        "tags": ["shield", "screw-terminal", "wiring"],
+        "use_cases": ["secure wire connections", "industrial projects"],
+        "ai_summary": "Breaks out all Arduino Uno pins to screw terminals for secure, solderless connections.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "shield-ili9341-tft",
+        "name": "2.8\" TFT LCD Shield (ILI9341)",
+        "quantity": 1,
+        "datasheet_url": "https://cdn-shop.adafruit.com/datasheets/ILI9341.pdf",
+        "product_image": "https://cdn-shop.adafruit.com/970x728/1770-00.jpg",
+        "controller": "ILI9341",
+        "resolution": {
+          "width": 240,
+          "height": 320
+        },
+        "color_depth_bits": 18,
+        "interface": "SPI or 8-bit parallel",
+        "touch": "resistive (optional)",
+        "sd_card_slot": true,
+        "wiring_rules": {
+          "stacking": "Plugs onto Arduino Uno/Mega",
+          "spi_pins": {
+            "mosi": 11,
+            "miso": 12,
+            "sck": 13,
+            "cs": 10,
+            "dc": 9,
+            "rst": 8
+          },
+          "touch_pins": "Analog pins for resistive touch"
+        },
+        "libraries": {
+          "arduino": ["Adafruit_ILI9341", "Adafruit_GFX", "MCUFRIEND_kbv"]
+        },
+        "tags": ["shield", "tft", "display", "ili9341", "touchscreen"],
+        "use_cases": ["graphical UI", "image display", "touch input"],
+        "ai_summary": "2.8\" 240x320 color TFT with ILI9341 controller. SPI interface. Use Adafruit_GFX + Adafruit_ILI9341 libraries. Optional touch + SD card.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "audio": [
+      {
+        "id": "audio-piezo",
+        "name": "Piezo Buzzer",
+        "quantity": 3,
+        "product_image": "https://components101.com/sites/default/files/components/Piezo-Buzzer.jpg",
+        "type": "passive",
+        "diameter_mm": 12,
+        "operating_voltage_v": {
+          "min": 3,
+          "max": 24
+        },
+        "resonant_frequency_hz": 2400,
+        "wiring_rules": {
+          "connection": "One pin to digital output (PWM), other to GND",
+          "templates": {
+            "arduino_uno": {
+              "positive": "D8 (or any PWM)",
+              "negative": "GND"
+            }
+          }
+        },
+        "libraries": {
+          "arduino": "tone() function built-in"
+        },
+        "tags": ["buzzer", "piezo", "audio", "alarm"],
+        "use_cases": ["alerts", "music", "feedback tones"],
+        "ai_summary": "Passive piezo buzzer. Use tone(pin, frequency) to play sounds. Loudest at resonant frequency (~2.4kHz).",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "audio-speaker-8ohm",
+        "name": "8\u03a9 Mini Speaker",
+        "quantity": 1,
+        "impedance_ohm": 8,
+        "power_w": 0.5,
+        "diameter_mm": 36,
+        "wiring_rules": {
+          "direct": "Through transistor amplifier (TIP120) or audio amp module",
+          "warning": "Do NOT connect directly to Arduino pins - will damage pin"
+        },
+        "tags": ["speaker", "audio", "8ohm"],
+        "use_cases": ["audio playback", "voice output", "music projects"],
+        "ai_summary": "8\u03a9 0.5W speaker. Requires amplifier - do NOT connect directly to MCU pins. Use PAM8403 module or transistor driver.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "discrete_semiconductors": [
+      {
+        "id": "semi-tip120",
+        "name": "TIP120 Darlington Transistor",
+        "quantity": 4,
+        "datasheet_url": "https://www.onsemi.com/pdf/datasheet/tip120-d.pdf",
+        "product_image": "https://components101.com/sites/default/files/component_pin/TIP120-Pinout.png",
+        "package": "TO-220",
+        "type": "NPN Darlington",
+        "collector_current_a": 5,
+        "collector_emitter_voltage_v": 60,
+        "dc_gain_hfe": 1000,
+        "wiring_rules": {
+          "pinout": {
+            "1": "Base",
+            "2": "Collector",
+            "3": "Emitter"
+          },
+          "base_resistor": "1K-10K from MCU pin",
+          "flyback_diode": "Required for inductive loads (motors, relays)",
+          "templates": {
+            "motor_control": {
+              "base": "MCU pin via 1K resistor",
+              "collector": "Motor negative",
+              "emitter": "GND"
+            }
+          }
+        },
+        "common_issues": [
+          {
+            "problem": "Gets very hot",
+            "causes": ["High current", "No heatsink"],
+            "solutions": ["Add heatsink", "Reduce duty cycle"]
+          },
+          {
+            "problem": "Motor doesn't stop",
+            "causes": ["Back-EMF damage"],
+            "solutions": ["Add flyback diode across motor"]
+          }
+        ],
+        "tags": ["transistor", "darlington", "tip120", "switching", "motor-control"],
+        "use_cases": ["high-current switching", "motor control", "solenoid driver", "LED strips"],
+        "ai_summary": "NPN Darlington, 5A/60V. High gain (1000) - can drive from MCU pin via 1K resistor. ALWAYS use flyback diode with motors/solenoids.",
+        "esd_rating": {
+          "class": "2",
+          "voltage": "2000-4000V",
+          "handling": "Minimal precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "semi-2n2222",
+        "name": "2N2222 NPN Transistor",
+        "quantity": 10,
+        "datasheet_url": "https://www.onsemi.com/pdf/datasheet/p2n2222a-d.pdf",
+        "package": "TO-92",
+        "type": "NPN",
+        "collector_current_ma": 800,
+        "collector_emitter_voltage_v": 40,
+        "dc_gain_hfe": {
+          "min": 100,
+          "max": 300
+        },
+        "wiring_rules": {
+          "pinout_to92": {
+            "left": "Emitter",
+            "center": "Base",
+            "right": "Collector"
+          },
+          "base_resistor": "1K-10K typical"
+        },
+        "tags": ["transistor", "npn", "2n2222", "switching", "amplifier"],
+        "use_cases": ["LED switching", "small motor control", "signal amplification"],
+        "ai_summary": "General purpose NPN transistor. TO-92 pinout: E-B-C (flat side facing you). Good for switching up to 800mA loads.",
+        "esd_rating": {
+          "class": "2",
+          "voltage": "2000-4000V",
+          "handling": "Minimal precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "semi-irf520",
+        "name": "IRF520 MOSFET Module",
+        "quantity": 2,
+        "datasheet_url": "https://www.vishay.com/docs/91017/91017.pdf",
+        "product_image": "https://components101.com/sites/default/files/component_pin/IRF520-MOSFET-Driver-Module.jpg",
+        "type": "N-Channel MOSFET",
+        "drain_current_a": 9.2,
+        "drain_source_voltage_v": 100,
+        "gate_threshold_v": {
+          "min": 2,
+          "max": 4
+        },
+        "wiring_rules": {
+          "module_pins": {
+            "sig": "PWM input from MCU",
+            "vcc": "5V",
+            "gnd": "GND"
+          },
+          "load_terminals": {
+            "vin": "Load positive voltage",
+            "vout": "To load",
+            "gnd": "Load ground"
+          },
+          "templates": {
+            "led_strip": {
+              "sig": "D9 (PWM)",
+              "vcc": "5V",
+              "gnd": "GND",
+              "vin": "12V",
+              "vout": "LED strip +"
+            }
+          },
+          "warnings": [
+            "Not fully ON at 3.3V gate - use 5V MCU or logic level MOSFET",
+            "Module handles gate drive, not bare MOSFET"
+          ]
+        },
+        "tags": ["mosfet", "irf520", "pwm", "high-current", "led-strip"],
+        "use_cases": ["LED strip dimming", "DC motor speed control", "high-current PWM loads"],
+        "ai_summary": "MOSFET module for PWM control of high-current loads. Works with 5V logic. Use for LED strips, motors up to 9A. Not ideal for 3.3V MCUs.",
+        "esd_rating": {
+          "class": "1A",
+          "voltage": "250-500V",
+          "handling": "ESD strap required, anti-static bag"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "capacitors": [
+      {
+        "id": "cap-electrolytic-assortment",
+        "name": "Electrolytic Capacitor Assortment",
+        "quantity": 1,
+        "values_uf": [1, 2.2, 4.7, 10, 22, 47, 100, 220, 470],
+        "voltage_rating_v": 25,
+        "count": 100,
+        "tags": ["capacitor", "electrolytic", "assortment"],
+        "use_cases": ["power filtering", "decoupling", "timing circuits"],
+        "ai_summary": "Electrolytic caps 1-470uF. POLARIZED - long leg is positive. Common uses: 100uF on power rails, 10uF on sensor modules.",
+        "esd_rating": {
+          "class": "3",
+          "voltage": ">4000V",
+          "handling": "No special handling"
+        },
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "cap-ceramic-assortment",
+        "name": "Ceramic Capacitor Assortment",
+        "quantity": 1,
+        "values_pf_nf": ["10pF", "22pF", "47pF", "100pF", "220pF", "100nF", "220nF"],
+        "count": 200,
+        "tags": ["capacitor", "ceramic", "assortment", "decoupling"],
+        "use_cases": ["IC decoupling", "crystal loading", "noise filtering"],
+        "ai_summary": "Ceramic caps. Non-polarized. 100nF (104) most useful - place near every IC VCC pin for decoupling.",
+        "esd_rating": {
+          "class": "3",
+          "voltage": ">4000V",
+          "handling": "No special handling"
+        },
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "leds": [
+      {
+        "id": "led-5mm-assortment",
+        "name": "5mm LED Assortment",
+        "quantity": 1,
+        "colors": ["red", "green", "yellow", "blue", "white"],
+        "count_per_color": 20,
+        "forward_voltage_v": {
+          "red": 2.0,
+          "green": 2.2,
+          "yellow": 2.1,
+          "blue": 3.2,
+          "white": 3.2
+        },
+        "forward_current_ma": 20,
+        "wiring_rules": {
+          "resistor_calculation": "R = (Vsupply - Vf) / If",
+          "common_resistors": {
+            "5v_red": "150\u03a9",
+            "5v_blue": "68\u03a9",
+            "3.3v_red": "68\u03a9"
+          },
+          "polarity": "Long leg = Anode (+), Short leg / Flat side = Cathode (-)"
+        },
+        "tags": ["led", "5mm", "indicator"],
+        "use_cases": ["status indicators", "debugging", "displays"],
+        "ai_summary": "5mm LEDs. Long leg = positive. Use resistor: 150\u03a9 for red/yellow/green at 5V, 68\u03a9 for blue/white at 5V.",
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "led-ws2812b-strip",
+        "name": "WS2812B Addressable LED Strip",
+        "quantity": 1,
+        "leds_per_meter": 60,
+        "length_m": 1,
+        "datasheet_url": "https://cdn-shop.adafruit.com/datasheets/WS2812B.pdf",
+        "operating_voltage_v": 5,
+        "current_per_led_ma": 60,
+        "wiring_rules": {
+          "power": {
+            "5v": "External 5V supply (not Arduino!)",
+            "gnd": "Common GND"
+          },
+          "data": {
+            "din": "Any digital pin",
+            "level": "5V (use level shifter from 3.3V MCU)"
+          },
+          "capacitor": "1000uF across power at strip input",
+          "resistor": "300-500\u03a9 on data line",
+          "templates": {
+            "arduino_uno": {
+              "5v": "External 5V 3A+ supply",
+              "gnd": "Common",
+              "din": "D6 via 470\u03a9 resistor"
+            }
+          }
+        },
+        "common_issues": [
+          {
+            "problem": "First LED wrong color or flickering",
+            "causes": ["No resistor on data", "Voltage drop"],
+            "solutions": ["Add 470\u03a9 resistor", "Inject power every 50 LEDs"]
+          },
+          {
+            "problem": "Random colors/glitching",
+            "causes": ["3.3V data to 5V strip", "Long wires"],
+            "solutions": ["Use level shifter", "Keep data wire short"]
+          }
+        ],
+        "libraries": {
+          "arduino": ["FastLED", "Adafruit_NeoPixel"]
+        },
+        "tags": ["led", "ws2812b", "neopixel", "addressable", "rgb"],
+        "use_cases": ["ambient lighting", "displays", "wearables", "art installations"],
+        "ai_summary": "60 LEDs/m addressable RGB strip. 5V power (60mA per LED = 3.6A for 60 LEDs!). Use FastLED library. Add 1000uF cap + 470\u03a9 data resistor.",
+        "failure_modes": [
+          {
+            "mode": "First LED dies (data corruption)",
+            "symptoms": ["First LED stays off or random color", "Rest work fine"],
+            "cause": "Voltage spike at power-on, no resistor on data line",
+            "prevention": "Add 1000uF cap on power, 300-500\u03a9 resistor on data",
+            "recovery": "Cut off first LED, reattach to second LED"
+          },
+          {
+            "mode": "Color channel failure",
+            "symptoms": ["Stuck on one color", "Missing color component"],
+            "cause": "Individual LED IC failure, overheating",
+            "prevention": "Don't exceed 50% brightness continuously, adequate cooling",
+            "recovery": "Replace failed LED segment"
+          },
+          {
+            "mode": "Voltage drop - end LEDs dim/wrong color",
+            "symptoms": ["End of strip is dim", "Colors shift to red at end"],
+            "cause": "Voltage drop over length - 5V at start, 3.5V at end",
+            "prevention": "Inject power every 50-100 LEDs",
+            "recovery": "Add power injection points"
+          }
+        ],
+        "lifespan": {
+          "typical_hours": 25000,
+          "limiting_factor": "LED phosphor degradation, IC failure"
+        },
+        "esd_sensitivity": "Class 1B (500-1000V)",
+        "esd_rating": {
+          "class": "1B",
+          "voltage": "500-1000V",
+          "handling": "Handle edges only"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "led-rgb-common-cathode",
+        "name": "RGB LED (Common Cathode)",
+        "quantity": 5,
+        "type": "common cathode",
+        "package": "5mm 4-pin",
+        "wiring_rules": {
+          "pinout": "R-GND-G-B (longest leg is cathode/GND)",
+          "resistors": "Use separate resistor for each color (150\u03a9 typical at 5V)",
+          "connection": "Cathode to GND, anodes to PWM pins via resistors"
+        },
+        "tags": ["led", "rgb", "common-cathode"],
+        "use_cases": ["status indication", "color mixing demos", "mood lighting"],
+        "ai_summary": "4-pin RGB LED. Longest leg = common cathode (GND). Use PWM on each color pin for mixing. analogWrite(pin, 0-255) for each color.",
+        "esd_rating": {
+          "class": "1C",
+          "voltage": "1000-2000V",
+          "handling": "Basic ESD precautions"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "bulk_passives": [
+      {
+        "id": "resistor-assortment",
+        "name": "Resistor Assortment Kit",
+        "quantity": 1,
+        "values": "1\u03a9 to 1M\u03a9 (E24 series)",
+        "count": 600,
+        "power_rating_w": 0.25,
+        "tolerance_percent": 1,
+        "wiring_rules": {
+          "color_code": "Use 4-band or 5-band color code",
+          "common_values": {
+            "led_current_limit_5v": "220\u03a9-330\u03a9",
+            "pull_up_i2c": "4.7K\u03a9",
+            "pull_up_general": "10K\u03a9",
+            "voltage_divider_3v3": "1K\u03a9 + 2K\u03a9"
+          }
+        },
+        "tags": ["resistor", "assortment", "passive"],
+        "ai_summary": "1/4W resistor kit. Most used: 220\u03a9 (LEDs), 1K-10K (pull-ups, base resistors), 4.7K (I2C). Use color code calculator if unsure.",
+        "esd_rating": {
+          "class": "3",
+          "voltage": ">4000V",
+          "handling": "No special handling"
+        },
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "potentiometer-10k",
+        "name": "10K Potentiometer",
+        "quantity": 5,
+        "resistance_ohm": 10000,
+        "taper": "linear",
+        "wiring_rules": {
+          "voltage_divider": {
+            "pin1": "GND",
+            "pin2_wiper": "Analog input",
+            "pin3": "VCC"
+          },
+          "variable_resistor": "Use pins 1+2 or 2+3 only"
+        },
+        "tags": ["potentiometer", "variable-resistor", "analog-input"],
+        "use_cases": ["volume control", "brightness adjustment", "user input", "LCD contrast"],
+        "ai_summary": "10K linear pot. As voltage divider: outer pins to GND/VCC, wiper to analog pin. Reads 0-1023 on Arduino.",
+        "esd_rating": {
+          "class": "3",
+          "voltage": ">4000V",
+          "handling": "No special handling"
+        },
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "pushbutton-assortment",
+        "name": "Tactile Pushbutton Assortment",
+        "quantity": 1,
+        "types": ["6mm through-hole", "12mm panel mount"],
+        "count": 50,
+        "wiring_rules": {
+          "with_pullup": {
+            "one_side": "GND",
+            "other_side": "Digital pin with INPUT_PULLUP"
+          },
+          "reading": "digitalRead returns LOW when pressed"
+        },
+        "common_issues": [
+          {
+            "problem": "Multiple triggers per press",
+            "causes": ["Switch bounce"],
+            "solutions": ["Add 10ms debounce delay", "Use Bounce2 library"]
+          }
+        ],
+        "libraries": {
+          "arduino": "Bounce2"
+        },
+        "tags": ["button", "switch", "tactile", "input"],
+        "ai_summary": "Tactile buttons. Use INPUT_PULLUP mode, connect other side to GND. Button pressed = LOW. Add debounce (10-50ms delay).",
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "header-pins",
+        "name": "Header Pin Assortment",
+        "quantity": 1,
+        "types": ["male straight", "male right-angle", "female"],
+        "pitch_mm": 2.54,
+        "tags": ["headers", "connectors", "prototyping"],
+        "use_cases": ["breadboard adapters", "shield connections", "module mounting"],
+        "ai_summary": "2.54mm pitch headers. Break to length needed. Male for breadboard insertion, female for module sockets.",
+        "esd_rating": {
+          "class": "3",
+          "voltage": ">4000V",
+          "handling": "No special handling"
+        },
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ],
+    "accessories": [
+      {
+        "id": "acc-dupont-wires",
+        "name": "Dupont Jumper Wires",
+        "quantity": 1,
+        "kit_contents": {
+          "male_male": 65,
+          "male_female": 40,
+          "female_female": 40
+        },
+        "lengths_cm": [10, 15, 20, 30],
+        "tags": ["wires", "jumper", "dupont", "prototyping"],
+        "use_cases": ["breadboard connections", "Arduino to sensors", "module hookup"],
+        "ai_summary": "Dupont jumper kit. M-M for breadboard, M-F for Arduino headers to breadboard, F-F for connecting modules with male headers.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-usb-cables",
+        "name": "USB Cable Set",
+        "quantity": 1,
+        "types": [
+          {
+            "connector": "USB-B",
+            "use": "Arduino Uno/Mega",
+            "qty": 2
+          },
+          {
+            "connector": "Mini-USB",
+            "use": "Arduino Nano clones",
+            "qty": 1
+          },
+          {
+            "connector": "Micro-USB",
+            "use": "ESP8266/ESP32/NodeMCU",
+            "qty": 3
+          }
+        ],
+        "tags": ["usb", "cable", "programming"],
+        "ai_summary": "USB cables for programming. USB-B for Uno/Mega, Mini-USB for Nano, Micro-USB for ESP boards.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-barrel-connectors",
+        "name": "DC Barrel Jack Connectors",
+        "quantity": 10,
+        "size_mm": 2.1,
+        "types": ["male plug", "female panel mount", "female breadboard"],
+        "tags": ["power", "barrel-jack", "connector"],
+        "ai_summary": "2.1mm barrel jacks for Arduino-compatible power. Center positive standard.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-heatshrink",
+        "name": "Heat Shrink Tubing Assortment",
+        "quantity": 1,
+        "diameters_mm": [1.5, 2, 3, 4, 5, 6, 8, 10],
+        "colors": ["black", "red"],
+        "shrink_ratio": "2:1",
+        "tags": ["heatshrink", "insulation", "protection"],
+        "ai_summary": "Heat shrink tubing kit. Use heat gun or lighter to shrink. Insulates solder joints and wire splices.",
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-standoffs",
+        "name": "M3 Standoff/Spacer Kit",
+        "quantity": 1,
+        "thread": "M3",
+        "lengths_mm": [5, 8, 10, 15, 20, 25],
+        "includes": ["male-female standoffs", "nuts", "screws"],
+        "tags": ["standoffs", "mounting", "hardware"],
+        "ai_summary": "M3 standoff kit for mounting Arduino/PCBs. Standard Arduino hole spacing uses M3.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-header-pins",
+        "name": "Header Pin Assortment",
+        "quantity": 1,
+        "pitch_mm": 2.54,
+        "types": [
+          {
+            "type": "male straight",
+            "qty": 10,
+            "pins": 40
+          },
+          {
+            "type": "male right-angle",
+            "qty": 5,
+            "pins": 40
+          },
+          {
+            "type": "female",
+            "qty": 10,
+            "pins": 40
+          }
+        ],
+        "tags": ["headers", "pins", "connectors"],
+        "ai_summary": "2.54mm header pins. Break to length. Male for breadboard insertion, female for socket connections.",
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-prototype-pcb",
+        "name": "Prototype PCB Assortment",
+        "quantity": 1,
+        "types": [
+          {
+            "size": "5x7cm",
+            "qty": 5
+          },
+          {
+            "size": "7x9cm",
+            "qty": 3
+          },
+          {
+            "size": "Arduino Uno shape",
+            "qty": 2
+          }
+        ],
+        "hole_pitch_mm": 2.54,
+        "tags": ["pcb", "prototype", "perfboard"],
+        "ai_summary": "Perfboard PCBs for permanent projects. 2.54mm pitch matches headers and DIP ICs.",
+        "spec_confidence": {
+          "electrical_specs": "typical",
+          "pinout": "datasheet",
+          "dimensions": "estimated",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-screw-terminals",
+        "name": "PCB Screw Terminal Blocks",
+        "quantity": 20,
+        "pitch_mm": 5.08,
+        "positions": [2, 3],
+        "wire_gauge": "12-24 AWG",
+        "tags": ["terminals", "screw", "connector"],
+        "ai_summary": "Screw terminals for power and motor connections. Solder to PCB, accept bare wire.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-alligator-clips",
+        "name": "Alligator Clip Test Leads",
+        "quantity": 10,
+        "length_cm": 50,
+        "colors": ["red", "black", "yellow", "green", "white"],
+        "tags": ["clips", "test", "temporary"],
+        "ai_summary": "Alligator clip leads for temporary connections and testing. Don't use for permanent wiring.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      },
+      {
+        "id": "acc-multimeter-probes",
+        "name": "Multimeter Test Probes",
+        "quantity": 1,
+        "type": "banana plug",
+        "includes": ["standard probes", "alligator adapters", "hook probes"],
+        "tags": ["probes", "multimeter", "testing"],
+        "ai_summary": "Replacement/upgrade multimeter probes with interchangeable tips.",
+        "spec_confidence": {
+          "electrical_specs": "datasheet",
+          "pinout": "datasheet",
+          "dimensions": "typical",
+          "operating_range": "datasheet",
+          "accuracy": "datasheet"
+        }
+      }
+    ]
+  },
+  "quick_reference": {
+    "i2c_addresses": {
+      "0x27": "LCD1602 I2C (common)",
+      "0x3F": "LCD1602 I2C (alternate)",
+      "0x57": "AT24C32 EEPROM (DS3231 module)",
+      "0x68": "DS3231 RTC, MPU6050 (default)",
+      "0x69": "MPU6050 (AD0=HIGH)"
+    },
+    "spi_devices": ["RC522 RFID", "MAX7219", "74HC595", "ILI9341 TFT"],
+    "voltage_warnings": {
+      "3.3v_only": ["ESP32", "ESP8266", "RC522 RFID"],
+      "5v_output_to_3v3_mcu": ["HC-SR04 Echo pin"],
+      "use_level_shifter": "HW-221 for 3.3V MCU to 5V sensors"
+    },
+    "common_libraries": {
+      "servo": "Servo.h (Arduino) / ESP32Servo (ESP32)",
+      "stepper": "AccelStepper",
+      "lcd_parallel": "LiquidCrystal",
+      "lcd_i2c": "LiquidCrystal_I2C",
+      "dht": "DHT sensor library (Adafruit)",
+      "ultrasonic": "NewPing",
+      "mpu6050": "MPU6050 by Electronic Cats",
+      "rtc": "RTClib (Adafruit)",
+      "rfid": "MFRC522"
+    }
+  },
+  "project_bundles": {
+    "robot_obstacle_avoider": {
+      "name": "Robot Obstacle Avoider",
+      "difficulty": "beginner",
+      "description": "Simple robot that detects and avoids obstacles",
+      "components": [
+        {
+          "id": "mcu-arduino-uno-r3",
+          "qty": 1,
+          "role": "main controller"
+        },
+        {
+          "id": "sensor-hcsr04",
+          "qty": 2,
+          "role": "front obstacle detection"
+        },
+        {
+          "id": "shield-motor-l293d",
+          "qty": 1,
+          "role": "motor driver"
+        },
+        {
+          "id": "actuator-sg90",
+          "qty": 1,
+          "role": "sensor pan (optional)"
+        }
+      ],
+      "additional_needed": ["2x DC motors", "chassis", "wheels", "battery pack"],
+      "estimated_cost_usd": 25,
+      "learning_topics": ["PWM motor control", "ultrasonic sensing", "decision logic"]
+    },
+    "weather_station": {
+      "name": "WiFi Weather Station",
+      "difficulty": "intermediate",
+      "description": "IoT weather monitor with web dashboard",
+      "components": [
+        {
+          "id": "mcu-nodemcu-esp8266",
+          "qty": 1,
+          "role": "WiFi controller"
+        },
+        {
+          "id": "sensor-dht11",
+          "qty": 1,
+          "role": "temperature/humidity"
+        },
+        {
+          "id": "display-lcd1602",
+          "qty": 1,
+          "role": "local display"
+        }
+      ],
+      "additional_needed": ["I2C backpack for LCD", "enclosure"],
+      "estimated_cost_usd": 15,
+      "learning_topics": ["I2C communication", "WiFi connectivity", "web servers"]
+    },
+    "home_security_basic": {
+      "name": "Basic Home Security System",
+      "difficulty": "intermediate",
+      "description": "Motion-triggered alarm with RFID access",
+      "components": [
+        {
+          "id": "mcu-arduino-uno-r3",
+          "qty": 1,
+          "role": "main controller"
+        },
+        {
+          "id": "sensor-hcsr501",
+          "qty": 2,
+          "role": "motion detection"
+        },
+        {
+          "id": "sensor-rc522",
+          "qty": 1,
+          "role": "RFID access control"
+        },
+        {
+          "id": "audio-piezo",
+          "qty": 1,
+          "role": "alarm buzzer"
+        },
+        {
+          "id": "actuator-relay-5v",
+          "qty": 1,
+          "role": "door lock control"
+        }
+      ],
+      "additional_needed": ["RFID cards/fobs", "door sensor", "power supply"],
+      "estimated_cost_usd": 30,
+      "learning_topics": ["SPI communication", "interrupt handling", "state machines"]
+    },
+    "smart_plant_monitor": {
+      "name": "Smart Plant Watering System",
+      "difficulty": "beginner",
+      "description": "Automated plant watering based on soil moisture",
+      "components": [
+        {
+          "id": "mcu-arduino-uno-r3",
+          "qty": 1,
+          "role": "controller"
+        },
+        {
+          "id": "sensor-soil-moisture",
+          "qty": 1,
+          "role": "moisture sensing"
+        },
+        {
+          "id": "actuator-relay-5v",
+          "qty": 1,
+          "role": "pump control"
+        },
+        {
+          "id": "display-lcd1602",
+          "qty": 1,
+          "role": "status display"
+        }
+      ],
+      "additional_needed": ["5V water pump", "tubing", "water reservoir"],
+      "estimated_cost_usd": 20,
+      "learning_topics": ["analog reading", "threshold logic", "relay control"]
+    },
+    "game_controller": {
+      "name": "USB Game Controller",
+      "difficulty": "intermediate",
+      "description": "Custom game controller with joystick and buttons",
+      "components": [
+        {
+          "id": "mcu-arduino-uno-r3",
+          "qty": 1,
+          "role": "USB HID device"
+        },
+        {
+          "id": "sensor-joystick-ky023",
+          "qty": 2,
+          "role": "analog sticks"
+        },
+        {
+          "id": "bulk_passives-pushbutton",
+          "qty": 1,
+          "role": "action buttons"
+        }
+      ],
+      "additional_needed": ["enclosure", "USB cable"],
+      "estimated_cost_usd": 15,
+      "learning_topics": ["USB HID", "analog input", "debouncing"]
+    },
+    "led_art_display": {
+      "name": "Addressable LED Art Display",
+      "difficulty": "beginner",
+      "description": "Animated LED strip/matrix display",
+      "components": [
+        {
+          "id": "mcu-esp32-devkit-38pin",
+          "qty": 1,
+          "role": "controller with WiFi"
+        },
+        {
+          "id": "led-ws2812b-strip",
+          "qty": 1,
+          "role": "addressable LEDs"
+        },
+        {
+          "id": "logic-level-shifter-hw221",
+          "qty": 1,
+          "role": "3.3V to 5V data"
+        }
+      ],
+      "additional_needed": ["5V 3A+ power supply", "diffuser material"],
+      "estimated_cost_usd": 25,
+      "learning_topics": ["FastLED library", "animation patterns", "level shifting"]
+    },
+    "data_logger": {
+      "name": "Environmental Data Logger",
+      "difficulty": "intermediate",
+      "description": "SD card data logger with timestamp",
+      "components": [
+        {
+          "id": "mcu-arduino-uno-r3",
+          "qty": 1,
+          "role": "controller"
+        },
+        {
+          "id": "sensor-dht11",
+          "qty": 1,
+          "role": "temp/humidity"
+        },
+        {
+          "id": "sensor-mpu6050",
+          "qty": 1,
+          "role": "motion/vibration"
+        },
+        {
+          "id": "sensor-ds3231",
+          "qty": 1,
+          "role": "timestamp"
+        }
+      ],
+      "additional_needed": ["SD card module", "SD card", "enclosure"],
+      "estimated_cost_usd": 20,
+      "learning_topics": ["I2C bus", "SD card writing", "CSV formatting"]
+    },
+    "cnc_pen_plotter": {
+      "name": "Mini CNC Pen Plotter",
+      "difficulty": "advanced",
+      "description": "2-axis drawing machine using GRBL",
+      "components": [
+        {
+          "id": "mcu-arduino-uno-r3",
+          "qty": 1,
+          "role": "GRBL controller"
+        },
+        {
+          "id": "shield-cnc-grbl",
+          "qty": 1,
+          "role": "stepper driver interface"
+        },
+        {
+          "id": "actuator-28byj48-uln2003",
+          "qty": 2,
+          "role": "X/Y axis motors"
+        },
+        {
+          "id": "actuator-sg90",
+          "qty": 1,
+          "role": "pen lift"
+        }
+      ],
+      "additional_needed": ["A4988 drivers x2", "linear rails", "belts", "12V PSU"],
+      "estimated_cost_usd": 50,
+      "learning_topics": ["GRBL firmware", "G-code", "stepper control"]
+    }
+  },
+  "component_relationships": {
+    "voltage_compatibility": {
+      "five_volt_safe": [
+        "mcu-arduino-uno-r3",
+        "mcu-arduino-mega-2560",
+        "mcu-dccduino-nano",
+        "sensor-hcsr04",
+        "sensor-dht11",
+        "display-lcd1602",
+        "actuator-sg90"
+      ],
+      "three_volt_only": ["mcu-esp32-devkit-38pin", "mcu-nodemcu-esp8266", "sensor-rc522"],
+      "level_shifter_required": [
+        {
+          "from": "mcu-esp32-devkit-38pin",
+          "to": "sensor-hcsr04",
+          "reason": "Echo outputs 5V"
+        },
+        {
+          "from": "mcu-esp32-devkit-38pin",
+          "to": "led-ws2812b-strip",
+          "reason": "Data needs 5V"
+        },
+        {
+          "from": "mcu-nodemcu-esp8266",
+          "to": "sensor-hcsr04",
+          "reason": "Echo outputs 5V"
+        },
+        {
+          "from": "mcu-nodemcu-esp8266",
+          "to": "led-ws2812b-strip",
+          "reason": "Data needs 5V"
+        }
+      ]
+    },
+    "commonly_paired": [
+      {
+        "component": "sensor-hcsr04",
+        "pairs_with": ["mcu-arduino-uno-r3"],
+        "project": "robot"
+      },
+      {
+        "component": "sensor-dht11",
+        "pairs_with": ["mcu-nodemcu-esp8266", "display-lcd1602"],
+        "project": "weather station"
+      },
+      {
+        "component": "actuator-28byj48-uln2003",
+        "pairs_with": ["mcu-arduino-uno-r3"],
+        "project": "stepper projects"
+      },
+      {
+        "component": "sensor-mpu6050",
+        "pairs_with": ["mcu-arduino-uno-r3", "sensor-ds3231"],
+        "project": "motion logger"
+      },
+      {
+        "component": "led-ws2812b-strip",
+        "pairs_with": ["mcu-esp32-devkit-38pin", "logic-level-shifter-hw221"],
+        "project": "LED art"
+      }
+    ],
+    "requires_external_power": [
+      {
+        "component": "actuator-sg90",
+        "when": "qty > 1",
+        "reason": "500mA+ per servo"
+      },
+      {
+        "component": "actuator-28byj48-uln2003",
+        "when": "always",
+        "reason": "240mA per motor"
+      },
+      {
+        "component": "led-ws2812b-strip",
+        "when": "always",
+        "reason": "60mA per LED"
+      },
+      {
+        "component": "shield-motor-l293d",
+        "when": "motor_voltage > 6V",
+        "reason": "separate motor supply"
+      }
+    ],
+    "i2c_address_conflicts": [
+      {
+        "devices": ["sensor-mpu6050", "sensor-ds3231"],
+        "address": "0x68",
+        "resolution": "Change MPU6050 AD0 to HIGH for 0x69"
+      }
+    ],
+    "mutually_exclusive_pins": [
+      {
+        "mcu": "mcu-arduino-uno-r3",
+        "conflict": "SPI uses pins 10-13, can't use for other digital I/O during SPI"
+      },
+      {
+        "mcu": "mcu-esp32-devkit-38pin",
+        "conflict": "GPIO6-11 reserved for flash, unusable"
+      },
+      {
+        "mcu": "mcu-nodemcu-esp8266",
+        "conflict": "GPIO1,3 used for Serial, GPIO6-11 for flash"
+      }
+    ]
+  },
+  "ascii_pinouts": {
+    "arduino_uno": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502                Arduino Uno R3            \u2502\n\u2502  \u250c\u2500\u2500\u2500\u2500\u2500\u2510                        \u250c\u2500\u2500\u2500\u2500\u2500\u2510  \u2502\n\u2502  \u2502 USB \u2502                        \u2502ICSP \u2502  \u2502\n\u2502  \u2502  B  \u2502                        \u2502     \u2502  \u2502\n\u2502  \u2514\u2500\u2500\u2500\u2500\u2500\u2518                        \u2514\u2500\u2500\u2500\u2500\u2500\u2518  \u2502\n\u2502                                          \u2502\n\u2502  DIGITAL (PWM~)                          \u2502\n\u2502  \u250c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u2510\n\u2502  \u250213\u250212\u2502~11\u2502~10\u2502~9\u2502 8\u2502 7\u2502~6\u2502~5\u2502 4\u2502~3\u2502 2\u2502 1\u2502 0\u2502\n\u2502  \u2502SCK\u2502MISO\u2502MOSI\u2502SS\u2502  \u2502  \u2502  \u2502  \u2502  \u2502  \u2502INT1\u2502INT0\u2502TX\u2502RX\u2502\n\u2502  \u2514\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2518\n\u2502                                          \u2502\n\u2502  POWER            ANALOG IN              \u2502\n\u2502  \u250c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u2510 \u250c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u252c\u2500\u2500\u2510    \u2502\n\u2502  \u25025V\u25023.3\u2502GND\u2502GND\u2502VIN\u2502 \u2502A0\u2502A1\u2502A2\u2502A3\u2502A4\u2502A5\u2502    \u2502\n\u2502  \u2502  \u2502 V \u2502   \u2502   \u2502  \u2502 \u2502  \u2502  \u2502  \u2502  \u2502SDA\u2502SCL\u2502   \u2502\n\u2502  \u2514\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2518 \u2514\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2534\u2500\u2500\u2518    \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n",
+    "esp32_devkit_38": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502              ESP32 DevKit 38-Pin          \u2502\n\u2502     \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510       \u2502\n\u2502     \u2502         ESP-WROOM-32        \u2502       \u2502\n\u2502     \u2502      \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510        \u2502       \u2502\n\u2502     \u2502      \u2502   Antenna   \u2502        \u2502       \u2502\n\u2502     \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518       \u2502\n\u2502                                           \u2502\n\u2502 LEFT SIDE              RIGHT SIDE         \u2502\n\u2502 \u250c\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2510          \u250c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2510        \u2502\n\u2502 \u25023V3 \u2502 3.3V\u2502          \u2502 GND \u2502 GND\u2502        \u2502\n\u2502 \u2502EN  \u2502Reset\u2502          \u2502IO23 \u2502MOSI\u2502        \u2502\n\u2502 \u2502VP  \u2502 IO36\u2502\u25c4IN ONLY  \u2502IO22 \u2502 SCL\u2502        \u2502\n\u2502 \u2502VN  \u2502 IO39\u2502\u25c4IN ONLY  \u2502TX0  \u2502 IO1\u2502        \u2502\n\u2502 \u2502IO34\u2502\u25c4\u2500\u2500\u2500\u2500\u2502IN ONLY   \u2502RX0  \u2502 IO3\u2502        \u2502\n\u2502 \u2502IO35\u2502\u25c4\u2500\u2500\u2500\u2500\u2502IN ONLY   \u2502IO21 \u2502 SDA\u2502        \u2502\n\u2502 \u2502IO32\u2502     \u2502          \u2502GND  \u2502 GND\u2502        \u2502\n\u2502 \u2502IO33\u2502     \u2502          \u2502IO19 \u2502MISO\u2502        \u2502\n\u2502 \u2502IO25\u2502 DAC1\u2502          \u2502IO18 \u2502 SCK\u2502        \u2502\n\u2502 \u2502IO26\u2502 DAC2\u2502          \u2502IO5  \u2502 SS \u2502 \u26a0BOOT  \u2502\n\u2502 \u2502IO27\u2502     \u2502          \u2502IO17 \u2502    \u2502        \u2502\n\u2502 \u2502IO14\u2502     \u2502          \u2502IO16 \u2502    \u2502        \u2502\n\u2502 \u2502IO12\u2502     \u2502 \u26a0BOOT    \u2502IO4  \u2502    \u2502        \u2502\n\u2502 \u2502GND \u2502 GND \u2502          \u2502IO0  \u2502    \u2502 \u26a0BOOT  \u2502\n\u2502 \u2502IO13\u2502     \u2502          \u2502IO2  \u2502    \u2502 \u26a0BOOT  \u2502\n\u2502 \u2502D2  \u2502FLASH\u2502\u25c4NO USE   \u2502IO15 \u2502    \u2502 \u26a0BOOT  \u2502\n\u2502 \u2502D3  \u2502FLASH\u2502\u25c4NO USE   \u2502D1   \u2502FLASH\u25c4NO USE\u2502\n\u2502 \u2502CMD \u2502FLASH\u2502\u25c4NO USE   \u2502D0   \u2502FLASH\u25c4NO USE\u2502\n\u2502 \u25025V  \u2502 VIN \u2502          \u2502CLK  \u2502FLASH\u25c4NO USE\u2502\n\u2502 \u2514\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2518          \u2514\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2518        \u2502\n\u2502                                           \u2502\n\u2502 \u26a0 = Strapping pin (affects boot mode)    \u2502\n\u2502 \u25c4IN ONLY = Input only, no pull-up        \u2502\n\u2502 \u25c4NO USE = Internal flash, DO NOT USE     \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n",
+    "nodemcu_esp8266": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502        NodeMCU ESP8266 V2           \u2502\n\u2502     \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510           \u2502\n\u2502     \u2502    ESP-12E        \u2502           \u2502\n\u2502     \u2502   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510       \u2502           \u2502\n\u2502     \u2502   \u2502Antenna\u2502       \u2502           \u2502\n\u2502     \u2514\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518           \u2502\n\u2502                                     \u2502\n\u2502  D PIN  GPIO   FUNCTION   NOTES     \u2502\n\u2502  \u250c\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u2502\n\u2502  \u2502 A0 \u2502 ADC \u2502 Analog   \u2502 0-1V!   \u2502  \u2502\n\u2502  \u2502RSV \u2502  -  \u2502 Reserved \u2502         \u2502  \u2502\n\u2502  \u2502RSV \u2502  -  \u2502 Reserved \u2502         \u2502  \u2502\n\u2502  \u2502SD3 \u2502 10  \u2502 FLASH    \u2502 NO USE  \u2502  \u2502\n\u2502  \u2502SD2 \u2502  9  \u2502 FLASH    \u2502 NO USE  \u2502  \u2502\n\u2502  \u2502SD1 \u2502  8  \u2502 FLASH    \u2502 NO USE  \u2502  \u2502\n\u2502  \u2502CMD \u2502 11  \u2502 FLASH    \u2502 NO USE  \u2502  \u2502\n\u2502  \u2502SD0 \u2502  7  \u2502 FLASH    \u2502 NO USE  \u2502  \u2502\n\u2502  \u2502CLK \u2502  6  \u2502 FLASH    \u2502 NO USE  \u2502  \u2502\n\u2502  \u2502GND \u2502  -  \u2502 Ground   \u2502         \u2502  \u2502\n\u2502  \u25023V3 \u2502  -  \u2502 3.3V Out \u2502 500mA   \u2502  \u2502\n\u2502  \u2502EN  \u2502  -  \u2502 Enable   \u2502         \u2502  \u2502\n\u2502  \u2502RST \u2502  -  \u2502 Reset    \u2502         \u2502  \u2502\n\u2502  \u2502GND \u2502  -  \u2502 Ground   \u2502         \u2502  \u2502\n\u2502  \u2502VIN \u2502  -  \u2502 5V Input \u2502         \u2502  \u2502\n\u2502  \u2514\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2502\n\u2502                                     \u2502\n\u2502  ACTIVE PINS (other side):          \u2502\n\u2502  \u250c\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u2502\n\u2502  \u2502 D0 \u2502 16  \u2502 Wake     \u2502 No PWM  \u2502  \u2502\n\u2502  \u2502 D1 \u2502  5  \u2502 SCL      \u2502 \u2713 SAFE  \u2502  \u2502\n\u2502  \u2502 D2 \u2502  4  \u2502 SDA      \u2502 \u2713 SAFE  \u2502  \u2502\n\u2502  \u2502 D3 \u2502  0  \u2502 FLASH    \u2502 \u26a0 BOOT  \u2502  \u2502\n\u2502  \u2502 D4 \u2502  2  \u2502 LED      \u2502 \u26a0 BOOT  \u2502  \u2502\n\u2502  \u25023V3 \u2502  -  \u2502 3.3V     \u2502         \u2502  \u2502\n\u2502  \u2502GND \u2502  -  \u2502 Ground   \u2502         \u2502  \u2502\n\u2502  \u2502 D5 \u2502 14  \u2502 SCK      \u2502 \u2713 SAFE  \u2502  \u2502\n\u2502  \u2502 D6 \u2502 12  \u2502 MISO     \u2502 \u2713 SAFE  \u2502  \u2502\n\u2502  \u2502 D7 \u2502 13  \u2502 MOSI     \u2502 \u2713 SAFE  \u2502  \u2502\n\u2502  \u2502 D8 \u2502 15  \u2502 SS       \u2502 \u26a0 BOOT  \u2502  \u2502\n\u2502  \u2502RX  \u2502  3  \u2502 UART RX  \u2502 Serial  \u2502  \u2502\n\u2502  \u2502TX  \u2502  1  \u2502 UART TX  \u2502 Serial  \u2502  \u2502\n\u2502  \u2502GND \u2502  -  \u2502 Ground   \u2502         \u2502  \u2502\n\u2502  \u25023V3 \u2502  -  \u2502 3.3V     \u2502         \u2502  \u2502\n\u2502  \u2514\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2502\n\u2502                                     \u2502\n\u2502 \u2713 SAFE = Best pins for general I/O \u2502\n\u2502 \u26a0 BOOT = Affects boot, use caution \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n",
+    "hcsr04": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502     HC-SR04 Ultrasonic Sensor   \u2502\n\u2502                                 \u2502\n\u2502    \u250c\u2500\u2500\u2500\u2500\u2500\u2510         \u250c\u2500\u2500\u2500\u2500\u2500\u2510      \u2502\n\u2502    \u2502  T  \u2502  40kHz  \u2502  R  \u2502      \u2502\n\u2502    \u2502 TX  \u2502         \u2502 RX  \u2502      \u2502\n\u2502    \u2514\u2500\u2500\u2500\u2500\u2500\u2518         \u2514\u2500\u2500\u2500\u2500\u2500\u2518      \u2502\n\u2502                                 \u2502\n\u2502   VCC   TRIG   ECHO   GND       \u2502\n\u2502    \u2502      \u2502      \u2502      \u2502       \u2502\n\u2502   \u2500\u2534\u2500    \u2500\u2534\u2500    \u2500\u2534\u2500    \u2500\u2534\u2500      \u2502\n\u2502    \u25bc      \u25bc      \u25bc      \u25bc       \u2502\n\u2502   5V    D9     D10    GND       \u2502\n\u2502         (out)  (in)             \u2502\n\u2502                 \u2502               \u2502\n\u2502    \u26a0 For 3.3V MCU:              \u2502\n\u2502    ECHO needs voltage divider:  \u2502\n\u2502         ECHO \u2500\u2500\u252c\u2500\u2500 1K \u2500\u2500 MCU    \u2502\n\u2502                \u2514\u2500\u2500 2K \u2500\u2500 GND    \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n",
+    "l293d_ic": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502        L293D Motor Driver IC        \u2502\n\u2502                                     \u2502\n\u2502         \u250c\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2510             \u2502\n\u2502  1,2EN \u2500\u25241    \u2514\u2500\u2518   16\u251c\u2500 VCC1 (5V)  \u2502\n\u2502    1A  \u2500\u25242          15\u251c\u2500 4A         \u2502\n\u2502    1Y  \u2500\u25243          14\u251c\u2500 4Y         \u2502\n\u2502   GND  \u2500\u25244    \u250c\u2500\u2510   13\u251c\u2500 GND        \u2502\n\u2502   GND  \u2500\u25245    \u2502 \u2502   12\u251c\u2500 GND        \u2502\n\u2502    2Y  \u2500\u25246    \u2514\u2500\u2518   11\u251c\u2500 3Y         \u2502\n\u2502    2A  \u2500\u25247          10\u251c\u2500 3A         \u2502\n\u2502VCC2(M)\u2500\u25248           9\u251c\u2500 3,4EN      \u2502\n\u2502         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518               \u2502\n\u2502                                     \u2502\n\u2502   MOTOR A: 1A/2A=direction, 1Y/2Y=motor\n\u2502   MOTOR B: 3A/4A=direction, 3Y/4Y=motor\n\u2502   Enable HIGH=on, PWM for speed     \u2502\n\u2502                                     \u2502\n\u2502   Pin 16: Logic power (5V)          \u2502\n\u2502   Pin 8:  Motor power (4.5-36V)     \u2502\n\u2502   Pins 4,5,12,13: GND (heatsink!)   \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n",
+    "dht11": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502    DHT11 Module    \u2502\n\u2502   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510     \u2502\n\u2502   \u2502  \u2593\u2593\u2593\u2593\u2593\u2593  \u2502     \u2502\n\u2502   \u2502  \u2593\u2593\u2593\u2593\u2593\u2593  \u2502     \u2502\n\u2502   \u2502  \u2593\u2593\u2593\u2593\u2593\u2593  \u2502     \u2502\n\u2502   \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518     \u2502\n\u2502                    \u2502\n\u2502   VCC  DATA  GND   \u2502\n\u2502    \u2502    \u2502    \u2502     \u2502\n\u2502   \u2500\u2534\u2500  \u2500\u2534\u2500  \u2500\u2534\u2500    \u2502\n\u2502    \u25bc    \u25bc    \u25bc     \u2502\n\u2502  3.3/5V D2  GND    \u2502\n\u2502         \u2502          \u2502\n\u2502    (10K pullup     \u2502\n\u2502     usually on     \u2502\n\u2502     module)        \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n",
+    "servo_sg90": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502     SG90 Micro Servo    \u2502\n\u2502                         \u2502\n\u2502    \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510      \u2502\n\u2502    \u2502   \u250c\u2500\u2500\u2500\u2500\u2500\u2510   \u2502      \u2502\n\u2502    \u2502   \u2502motor\u2502   \u2502      \u2502\n\u2502    \u2502   \u2514\u2500\u2500\u2500\u2500\u2500\u2518   \u2502      \u2502\n\u2502    \u2502     gear    \u2502      \u2502\n\u2502    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2518      \u2502\n\u2502           \u2502 wires       \u2502\n\u2502     \u250c\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2510       \u2502\n\u2502     \u2502  \u2502  \u2502  \u2502  \u2502       \u2502\n\u2502     \u2502  \u25bc  \u25bc  \u25bc  \u2502       \u2502\n\u2502     \u2502 BRN RED ORG\u2502      \u2502\n\u2502     \u2502 GND VCC SIG\u2502      \u2502\n\u2502     \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518       \u2502\n\u2502                         \u2502\n\u2502   BROWN = GND           \u2502\n\u2502   RED   = VCC (4.8-6V)  \u2502\n\u2502   ORANGE= Signal (PWM)  \u2502\n\u2502                         \u2502\n\u2502   PWM: 1ms=0\u00b0           \u2502\n\u2502        1.5ms=90\u00b0        \u2502\n\u2502        2ms=180\u00b0         \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n",
+    "74hc595": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502      74HC595 Shift Register   \u2502\n\u2502                               \u2502\n\u2502      \u250c\u2500\u2500\u2500\u2500\u2500\u252c\u2500U\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2510        \u2502\n\u2502  QB \u2500\u25241         16\u251c\u2500 VCC      \u2502\n\u2502  QC \u2500\u25242         15\u251c\u2500 QA       \u2502\n\u2502  QD \u2500\u25243         14\u251c\u2500 DS (SER) \u2502\n\u2502  QE \u2500\u25244   595   13\u251c\u2500 OE       \u2502\n\u2502  QF \u2500\u25245         12\u251c\u2500 STCP     \u2502\n\u2502  QG \u2500\u25246         11\u251c\u2500 SHCP     \u2502\n\u2502  QH \u2500\u25247         10\u251c\u2500 MR       \u2502\n\u2502 GND \u2500\u25248          9\u251c\u2500 QH'      \u2502\n\u2502      \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518            \u2502\n\u2502                               \u2502\n\u2502 Pin 14 (DS/SER)  = Data In    \u2502\n\u2502 Pin 11 (SHCP)    = Shift Clock\u2502\n\u2502 Pin 12 (STCP)    = Latch Clock\u2502\n\u2502 Pin 13 (OE)      = Output En  \u2502\n\u2502 Pin 10 (MR)      = Master Rst \u2502\n\u2502 Pin 9  (QH')     = Serial Out \u2502\n\u2502 Pins 1-7,15      = Outputs    \u2502\n\u2502                               \u2502\n\u2502 Typical: OE\u2192GND, MR\u2192VCC       \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n",
+    "pir_hcsr501": "\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   HC-SR501 PIR Motion Sensor\u2502\n\u2502                             \u2502\n\u2502      \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510          \u2502\n\u2502      \u2502  Fresnel  \u2502          \u2502\n\u2502      \u2502   Lens    \u2502          \u2502\n\u2502      \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518          \u2502\n\u2502   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510     \u2502\n\u2502   \u2502 [POT1]   [POT2]   \u2502     \u2502\n\u2502   \u2502  TIME    SENS     \u2502     \u2502\n\u2502   \u2502                   \u2502     \u2502\n\u2502   \u2502  [JUMPER H/L]     \u2502     \u2502\n\u2502   \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518     \u2502\n\u2502       \u2502    \u2502    \u2502           \u2502\n\u2502      VCC  OUT  GND          \u2502\n\u2502       \u2502    \u2502    \u2502           \u2502\n\u2502      \u2500\u2534\u2500  \u2500\u2534\u2500  \u2500\u2534\u2500          \u2502\n\u2502       \u25bc    \u25bc    \u25bc           \u2502\n\u2502    5-20V  D2  GND           \u2502\n\u2502           \u2502                 \u2502\n\u2502     (Output is 3.3V -       \u2502\n\u2502      safe for all MCUs)     \u2502\n\u2502                             \u2502\n\u2502 POT1: Delay time (5s-5min)  \u2502\n\u2502 POT2: Sensitivity (3-7m)    \u2502\n\u2502 Jumper: H=repeat, L=single  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+  },
+  "code_snippets": {
+    "arduino_uno_blink": {
+      "description": "Basic LED blink - verify board works",
+      "code": "void setup() {\n  pinMode(LED_BUILTIN, OUTPUT);\n}\nvoid loop() {\n  digitalWrite(LED_BUILTIN, HIGH);\n  delay(1000);\n  digitalWrite(LED_BUILTIN, LOW);\n  delay(1000);\n}"
+    },
+    "hcsr04_distance": {
+      "description": "HC-SR04 ultrasonic distance measurement",
+      "library": "NewPing",
+      "code": "#include <NewPing.h>\n#define TRIG 9\n#define ECHO 10\n#define MAX_DIST 400\n\nNewPing sonar(TRIG, ECHO, MAX_DIST);\n\nvoid setup() {\n  Serial.begin(9600);\n}\nvoid loop() {\n  delay(50);\n  int cm = sonar.ping_cm();\n  Serial.print(\"Distance: \");\n  Serial.print(cm);\n  Serial.println(\" cm\");\n}"
+    },
+    "dht11_temp_humidity": {
+      "description": "DHT11 temperature and humidity reading",
+      "library": "DHT sensor library",
+      "code": "#include <DHT.h>\n#define DHTPIN 2\n#define DHTTYPE DHT11\n\nDHT dht(DHTPIN, DHTTYPE);\n\nvoid setup() {\n  Serial.begin(9600);\n  dht.begin();\n}\nvoid loop() {\n  delay(2000);  // DHT11 needs 1s between reads\n  float h = dht.readHumidity();\n  float t = dht.readTemperature();\n  \n  if (isnan(h) || isnan(t)) {\n    Serial.println(\"Failed to read!\");\n    return;\n  }\n  Serial.print(\"Temp: \"); Serial.print(t);\n  Serial.print(\"C  Humidity: \"); Serial.print(h);\n  Serial.println(\"%\");\n}"
+    },
+    "servo_sweep": {
+      "description": "SG90 servo sweep 0-180 degrees",
+      "library": "Servo (built-in)",
+      "code": "#include <Servo.h>\n\nServo myservo;\n\nvoid setup() {\n  myservo.attach(9);  // PWM pin\n}\nvoid loop() {\n  for (int pos = 0; pos <= 180; pos++) {\n    myservo.write(pos);\n    delay(15);\n  }\n  for (int pos = 180; pos >= 0; pos--) {\n    myservo.write(pos);\n    delay(15);\n  }\n}"
+    },
+    "stepper_28byj48": {
+      "description": "28BYJ-48 stepper motor control",
+      "library": "Stepper (built-in)",
+      "code": "#include <Stepper.h>\n\n// 2048 steps = 1 revolution (with gear ratio)\nconst int stepsPerRev = 2048;\n\n// Pins: IN1, IN3, IN2, IN4 (note order!)\nStepper myStepper(stepsPerRev, 8, 10, 9, 11);\n\nvoid setup() {\n  myStepper.setSpeed(10);  // 10 RPM max for 28BYJ-48\n}\nvoid loop() {\n  myStepper.step(stepsPerRev);   // 1 revolution CW\n  delay(500);\n  myStepper.step(-stepsPerRev);  // 1 revolution CCW\n  delay(500);\n}"
+    },
+    "mpu6050_basic": {
+      "description": "MPU6050 IMU basic reading",
+      "library": "MPU6050 by Electronic Cats",
+      "code": "#include <Wire.h>\n#include <MPU6050.h>\n\nMPU6050 mpu;\n\nvoid setup() {\n  Serial.begin(9600);\n  Wire.begin();\n  mpu.initialize();\n  \n  if (!mpu.testConnection()) {\n    Serial.println(\"MPU6050 not found!\");\n    while(1);\n  }\n}\nvoid loop() {\n  int16_t ax, ay, az, gx, gy, gz;\n  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);\n  \n  Serial.print(\"Accel: \");\n  Serial.print(ax); Serial.print(\",\");\n  Serial.print(ay); Serial.print(\",\");\n  Serial.println(az);\n  delay(100);\n}"
+    },
+    "ds3231_rtc": {
+      "description": "DS3231 RTC time reading",
+      "library": "RTClib by Adafruit",
+      "code": "#include <Wire.h>\n#include <RTClib.h>\n\nRTC_DS3231 rtc;\n\nvoid setup() {\n  Serial.begin(9600);\n  Wire.begin();\n  \n  if (!rtc.begin()) {\n    Serial.println(\"RTC not found!\");\n    while(1);\n  }\n  // Uncomment to set time (only once):\n  // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));\n}\nvoid loop() {\n  DateTime now = rtc.now();\n  Serial.print(now.year()); Serial.print('/');\n  Serial.print(now.month()); Serial.print('/');\n  Serial.print(now.day()); Serial.print(' ');\n  Serial.print(now.hour()); Serial.print(':');\n  Serial.print(now.minute()); Serial.print(':');\n  Serial.println(now.second());\n  delay(1000);\n}"
+    },
+    "rc522_rfid": {
+      "description": "RC522 RFID card reading",
+      "library": "MFRC522",
+      "code": "#include <SPI.h>\n#include <MFRC522.h>\n\n#define SS_PIN 10\n#define RST_PIN 9\n\nMFRC522 mfrc522(SS_PIN, RST_PIN);\n\nvoid setup() {\n  Serial.begin(9600);\n  SPI.begin();\n  mfrc522.PCD_Init();\n  Serial.println(\"Scan RFID card...\");\n}\nvoid loop() {\n  if (!mfrc522.PICC_IsNewCardPresent()) return;\n  if (!mfrc522.PICC_ReadCardSerial()) return;\n  \n  Serial.print(\"UID: \");\n  for (byte i = 0; i < mfrc522.uid.size; i++) {\n    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? \" 0\" : \" \");\n    Serial.print(mfrc522.uid.uidByte[i], HEX);\n  }\n  Serial.println();\n  mfrc522.PICC_HaltA();\n}"
+    },
+    "lcd1602_i2c": {
+      "description": "LCD1602 with I2C backpack",
+      "library": "LiquidCrystal_I2C",
+      "code": "#include <Wire.h>\n#include <LiquidCrystal_I2C.h>\n\n// Address 0x27 or 0x3F depending on backpack\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n\nvoid setup() {\n  lcd.init();\n  lcd.backlight();\n  lcd.setCursor(0, 0);\n  lcd.print(\"Hello World!\");\n  lcd.setCursor(0, 1);\n  lcd.print(\"Line 2 here\");\n}\nvoid loop() {\n  // Update display as needed\n}"
+    },
+    "ws2812b_rainbow": {
+      "description": "WS2812B LED strip rainbow effect",
+      "library": "FastLED",
+      "code": "#include <FastLED.h>\n\n#define LED_PIN 6\n#define NUM_LEDS 60\n\nCRGB leds[NUM_LEDS];\n\nvoid setup() {\n  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);\n  FastLED.setBrightness(50);\n}\nvoid loop() {\n  static uint8_t hue = 0;\n  for (int i = 0; i < NUM_LEDS; i++) {\n    leds[i] = CHSV(hue + (i * 10), 255, 255);\n  }\n  FastLED.show();\n  hue++;\n  delay(20);\n}"
+    },
+    "esp8266_wifi_basic": {
+      "description": "ESP8266 WiFi connection",
+      "library": "ESP8266WiFi",
+      "code": "#include <ESP8266WiFi.h>\n\nconst char* ssid = \"YOUR_SSID\";\nconst char* password = \"YOUR_PASSWORD\";\n\nvoid setup() {\n  Serial.begin(115200);\n  WiFi.begin(ssid, password);\n  \n  Serial.print(\"Connecting\");\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n  Serial.println();\n  Serial.print(\"IP: \");\n  Serial.println(WiFi.localIP());\n}\nvoid loop() {\n  // Your code here\n}"
+    },
+    "esp32_wifi_basic": {
+      "description": "ESP32 WiFi connection",
+      "library": "WiFi (built-in)",
+      "code": "#include <WiFi.h>\n\nconst char* ssid = \"YOUR_SSID\";\nconst char* password = \"YOUR_PASSWORD\";\n\nvoid setup() {\n  Serial.begin(115200);\n  WiFi.begin(ssid, password);\n  \n  Serial.print(\"Connecting\");\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n  Serial.println();\n  Serial.print(\"IP: \");\n  Serial.println(WiFi.localIP());\n}\nvoid loop() {\n  // Your code here\n}"
+    },
+    "pir_motion": {
+      "description": "HC-SR501 PIR motion detection",
+      "library": "None (digitalRead)",
+      "code": "#define PIR_PIN 2\n#define LED_PIN 13\n\nvoid setup() {\n  pinMode(PIR_PIN, INPUT);\n  pinMode(LED_PIN, OUTPUT);\n  Serial.begin(9600);\n  Serial.println(\"Warming up PIR (60s)...\");\n  delay(60000);  // PIR needs 60s warmup\n  Serial.println(\"Ready!\");\n}\nvoid loop() {\n  if (digitalRead(PIR_PIN) == HIGH) {\n    digitalWrite(LED_PIN, HIGH);\n    Serial.println(\"Motion detected!\");\n    delay(2000);  // Debounce\n  } else {\n    digitalWrite(LED_PIN, LOW);\n  }\n}"
+    },
+    "l293d_motor": {
+      "description": "L293D DC motor control",
+      "library": "None (digitalWrite/analogWrite)",
+      "code": "// L293D pins\n#define EN1 5   // PWM speed control\n#define IN1 6   // Direction\n#define IN2 7   // Direction\n\nvoid setup() {\n  pinMode(EN1, OUTPUT);\n  pinMode(IN1, OUTPUT);\n  pinMode(IN2, OUTPUT);\n}\n\nvoid forward(int speed) {\n  digitalWrite(IN1, HIGH);\n  digitalWrite(IN2, LOW);\n  analogWrite(EN1, speed);  // 0-255\n}\n\nvoid backward(int speed) {\n  digitalWrite(IN1, LOW);\n  digitalWrite(IN2, HIGH);\n  analogWrite(EN1, speed);\n}\n\nvoid stop() {\n  digitalWrite(IN1, LOW);\n  digitalWrite(IN2, LOW);\n  analogWrite(EN1, 0);\n}\n\nvoid loop() {\n  forward(200);\n  delay(2000);\n  stop();\n  delay(500);\n  backward(200);\n  delay(2000);\n  stop();\n  delay(500);\n}"
+    },
+    "74hc595_shift": {
+      "description": "74HC595 shift register LED control",
+      "library": "None (shiftOut built-in)",
+      "code": "#define DATA  11  // DS\n#define CLOCK 12  // SHCP\n#define LATCH 8   // STCP\n\nvoid setup() {\n  pinMode(DATA, OUTPUT);\n  pinMode(CLOCK, OUTPUT);\n  pinMode(LATCH, OUTPUT);\n}\n\nvoid shiftWrite(byte data) {\n  digitalWrite(LATCH, LOW);\n  shiftOut(DATA, CLOCK, MSBFIRST, data);\n  digitalWrite(LATCH, HIGH);\n}\n\nvoid loop() {\n  // Light LEDs one by one\n  for (int i = 0; i < 8; i++) {\n    shiftWrite(1 << i);\n    delay(100);\n  }\n  // All on\n  shiftWrite(0xFF);\n  delay(500);\n  // All off\n  shiftWrite(0x00);\n  delay(500);\n}"
+    },
+    "joystick_read": {
+      "description": "KY-023 joystick reading",
+      "library": "None (analogRead/digitalRead)",
+      "code": "#define VRX A0\n#define VRY A1\n#define SW  2\n\nvoid setup() {\n  pinMode(SW, INPUT_PULLUP);\n  Serial.begin(9600);\n}\nvoid loop() {\n  int x = analogRead(VRX);  // 0-1023, center ~512\n  int y = analogRead(VRY);\n  int btn = digitalRead(SW);  // LOW when pressed\n  \n  Serial.print(\"X:\"); Serial.print(x);\n  Serial.print(\" Y:\"); Serial.print(y);\n  Serial.print(\" BTN:\"); Serial.println(btn ? \"UP\" : \"PRESSED\");\n  delay(100);\n}"
+    },
+    "i2c_scanner": {
+      "description": "I2C address scanner utility",
+      "library": "Wire (built-in)",
+      "code": "#include <Wire.h>\n\nvoid setup() {\n  Wire.begin();\n  Serial.begin(9600);\n  Serial.println(\"I2C Scanner\");\n}\nvoid loop() {\n  byte count = 0;\n  Serial.println(\"Scanning...\");\n  \n  for (byte addr = 1; addr < 127; addr++) {\n    Wire.beginTransmission(addr);\n    if (Wire.endTransmission() == 0) {\n      Serial.print(\"Found: 0x\");\n      if (addr < 16) Serial.print(\"0\");\n      Serial.println(addr, HEX);\n      count++;\n    }\n  }\n  Serial.print(\"Found \"); Serial.print(count);\n  Serial.println(\" device(s)\");\n  delay(5000);\n}"
+    }
+  },
+  "$schema": "electronics_inventory_schema_v3.1",
+  "schema_definition": {
+    "version": "3.1",
+    "description": "JSON Schema for Electronics Inventory optimized for AI wiring diagram generation",
+    "component_schema": {
+      "required_fields": {
+        "id": {
+          "type": "string",
+          "format": "category-name-variant",
+          "example": "mcu-arduino-uno-r3"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable component name"
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "recommended_fields": {
+        "datasheet_url": {
+          "type": "string",
+          "format": "url"
+        },
+        "product_image": {
+          "type": "string",
+          "format": "url"
+        },
+        "pinout_image": {
+          "type": "string",
+          "format": "url"
+        },
+        "operating_voltage_v": {
+          "type": "number|object",
+          "note": "number for single, object for range {min, max}"
+        },
+        "tags": {
+          "type": "array",
+          "items": "string"
+        },
+        "use_cases": {
+          "type": "array",
+          "items": "string"
+        },
+        "ai_summary": {
+          "type": "string",
+          "max_length": 300
+        }
+      },
+      "wiring_rules_schema": {
+        "power": {
+          "type": "object",
+          "properties": {
+            "vcc": "string",
+            "gnd": "string"
+          }
+        },
+        "signals": {
+          "type": "object",
+          "description": "Pin name to signal type mapping"
+        },
+        "connection_templates": {
+          "type": "object",
+          "description": "MCU-specific wiring examples",
+          "example_keys": ["arduino_uno", "esp32", "esp8266"]
+        },
+        "warnings": {
+          "type": "array",
+          "items": "string"
+        }
+      },
+      "common_issues_schema": {
+        "type": "array",
+        "items": {
+          "problem": "string",
+          "causes": ["string"],
+          "solutions": ["string"]
+        }
+      },
+      "libraries_schema": {
+        "arduino": "string (library name)",
+        "esp32": "string (optional)",
+        "install": "string (installation instructions)",
+        "basic_code": "string (minimal working example)"
+      }
+    },
+    "naming_conventions": {
+      "voltage": "operating_voltage_v (not voltage, not operating_voltage)",
+      "current": "operating_current_ma (not current, not operating_current)",
+      "dimensions": "dimensions_mm with {length, width, height}",
+      "temperature": "temperature_c with {min, max}",
+      "id_format": "category-name-variant (lowercase, hyphens)"
+    },
+    "category_definitions": {
+      "microcontrollers": "Programmable MCU boards (Arduino, ESP, etc.)",
+      "sensors": "Input devices that measure physical quantities",
+      "actuators": "Output devices that create motion or force",
+      "displays": "Visual output devices (LCD, LED matrix, TFT)",
+      "logic_interface": "Level shifters, shift registers, buffers",
+      "shields": "Stackable boards for Arduino/other MCUs",
+      "audio": "Speakers, buzzers, microphones",
+      "power_prototyping": "Power supplies, breadboards, connectors",
+      "discrete_semiconductors": "Transistors, MOSFETs, diodes",
+      "capacitors": "Electrolytic, ceramic, film capacitors",
+      "leds": "Individual LEDs and LED strips",
+      "bulk_passives": "Resistors, potentiometers, buttons",
+      "accessories": "Wires, cables, hardware, consumables"
+    }
+  },
+  "taxonomy": {
+    "version": "1.0",
+    "description": "Hierarchical categorization for AI navigation",
+    "hierarchy": {
+      "controllers": {
+        "description": "Programmable devices that run code",
+        "subcategories": {
+          "microcontrollers": {
+            "arduino_family": [
+              "mcu-arduino-uno-r3",
+              "mcu-arduino-mega-2560",
+              "mcu-dccduino-nano",
+              "mcu-osepp-uno"
+            ],
+            "esp_family": ["mcu-esp32-devkit-38pin", "mcu-nodemcu-esp8266", "mcu-sparkfun-blynk"]
+          },
+          "shields": {
+            "motor_shields": ["shield-motor-l293d"],
+            "cnc_shields": ["shield-cnc-grbl"],
+            "display_shields": ["shield-ili9341-tft"],
+            "interface_shields": ["shield-prototyping", "shield-screw-terminal"]
+          }
+        }
+      },
+      "input": {
+        "description": "Devices that sense or receive data",
+        "subcategories": {
+          "distance_sensors": ["sensor-hcsr04", "sensor-ir-obstacle"],
+          "environmental_sensors": [
+            "sensor-dht11",
+            "sensor-soil-moisture",
+            "sensor-flame",
+            "sensor-water-level"
+          ],
+          "motion_sensors": ["sensor-mpu6050", "sensor-hcsr501", "sensor-tilt-sw520d"],
+          "time_sensors": ["sensor-ds3231"],
+          "interface_sensors": [
+            "sensor-rc522",
+            "sensor-joystick-ky023",
+            "sensor-rotary-ky040",
+            "sensor-sound-ky038"
+          ],
+          "light_sensors": ["sensor-photoresistor"],
+          "user_input": ["bulk_passives-pushbutton", "potentiometer-10k"]
+        }
+      },
+      "output": {
+        "description": "Devices that produce action or display",
+        "subcategories": {
+          "actuators": {
+            "servo_motors": ["actuator-sg90"],
+            "stepper_motors": ["actuator-28byj48-uln2003"],
+            "motor_drivers": ["actuator-l293d-ic"],
+            "relays": ["actuator-relay-5v"]
+          },
+          "displays": {
+            "lcd": ["display-lcd1602"],
+            "led_matrix": ["display-max7219-8x8"]
+          },
+          "indicators": {
+            "leds": ["led-5mm-assortment", "led-ws2812b-strip", "led-rgb-common-cathode"],
+            "audio": ["audio-piezo", "audio-speaker-8ohm"]
+          }
+        }
+      },
+      "power": {
+        "description": "Power supply and regulation",
+        "subcategories": {
+          "supplies": ["power-mb102", "power-9v-barrel-adapter"],
+          "prototyping": ["power-breadboard-830", "power-breadboard-400", "power-jumper-wires"]
+        }
+      },
+      "interface": {
+        "description": "Signal conditioning and expansion",
+        "subcategories": {
+          "level_shifters": ["logic-level-shifter-hw221"],
+          "shift_registers": ["logic-74hc595"]
+        }
+      },
+      "passives": {
+        "description": "Passive electronic components",
+        "subcategories": {
+          "resistors": ["resistor-assortment", "potentiometer-10k"],
+          "capacitors": ["cap-electrolytic-assortment", "cap-ceramic-assortment"],
+          "semiconductors": ["semi-tip120", "semi-2n2222", "semi-irf520"]
+        }
+      },
+      "accessories": {
+        "description": "Cables, connectors, hardware",
+        "subcategories": {
+          "wiring": ["acc-dupont-wires", "acc-alligator-clips"],
+          "cables": ["acc-usb-cables"],
+          "connectors": ["acc-barrel-connectors", "acc-header-pins", "acc-screw-terminals"],
+          "hardware": ["acc-standoffs", "acc-heatshrink"],
+          "pcb": ["acc-prototype-pcb"],
+          "test": ["acc-multimeter-probes"]
+        }
+      }
+    },
+    "search_hints": {
+      "distance_measurement": ["sensor-hcsr04", "sensor-ir-obstacle"],
+      "temperature": ["sensor-dht11"],
+      "humidity": ["sensor-dht11"],
+      "motion_detection": ["sensor-hcsr501", "sensor-mpu6050"],
+      "orientation": ["sensor-mpu6050"],
+      "wifi": ["mcu-esp32-devkit-38pin", "mcu-nodemcu-esp8266", "mcu-sparkfun-blynk"],
+      "bluetooth": ["mcu-esp32-devkit-38pin"],
+      "motor_control": ["shield-motor-l293d", "actuator-l293d-ic", "semi-tip120", "semi-irf520"],
+      "led_strip": ["led-ws2812b-strip", "logic-level-shifter-hw221"],
+      "display": ["display-lcd1602", "display-max7219-8x8", "shield-ili9341-tft"],
+      "rfid": ["sensor-rc522"],
+      "real_time_clock": ["sensor-ds3231"],
+      "servo": ["actuator-sg90"],
+      "stepper": ["actuator-28byj48-uln2003", "shield-cnc-grbl"]
+    }
+  },
+  "spec_confidence_definitions": {
+    "verified": "Tested against datasheet, confirmed accurate",
+    "datasheet": "From manufacturer datasheet, not personally verified",
+    "typical": "Common values, may vary by specific unit/manufacturer",
+    "estimated": "Inferred from similar components or partial info",
+    "unknown": "Not determined, requires testing"
+  },
+  "storage_template": {
+    "description": "Template for tracking physical storage locations",
+    "schema": {
+      "location": {
+        "type": "string",
+        "description": "Physical location identifier (e.g., 'Bin A3', 'Drawer 2', 'Wall Shelf 1')"
+      },
+      "container": {
+        "type": "string",
+        "description": "Container type (e.g., 'anti-static bag', 'parts bin', 'tube', 'reel')"
+      },
+      "conditions": {
+        "type": "object",
+        "properties": {
+          "temperature_c": {
+            "min": -40,
+            "max": 85,
+            "ideal": 25
+          },
+          "humidity_percent": {
+            "max": 70,
+            "ideal": 45
+          },
+          "light_sensitive": false,
+          "moisture_sensitive": false
+        }
+      },
+      "esd_storage": {
+        "type": "string",
+        "enum": ["anti-static bag", "conductive foam", "IC tube", "standard bin"]
+      },
+      "shelf_life": {
+        "type": "string",
+        "description": "Expected storage life (e.g., 'indefinite', '5 years', '2 years if sealed')"
+      },
+      "reorder_threshold": {
+        "type": "integer",
+        "description": "Quantity at which to reorder"
+      }
+    },
+    "example": {
+      "location": "Electronics Cabinet, Drawer 3",
+      "container": "anti-static bag",
+      "conditions": {
+        "temperature_c": {
+          "current": 22
+        },
+        "humidity_percent": {
+          "current": 40
+        }
+      },
+      "esd_storage": "anti-static bag",
+      "shelf_life": "indefinite",
+      "reorder_threshold": 1
+    },
+    "recommended_by_esd_class": {
+      "Class_1A": "anti-static bag, desiccant, ESD mat for work",
+      "Class_1B": "anti-static bag or conductive foam",
+      "Class_1C": "standard parts bin or anti-static bag",
+      "Class_2": "standard parts bin",
+      "Class_3": "any container"
+    }
+  },
+  "quick_lookup": {
+    "by_interface": {
+      "I2C": ["sensor-mpu6050", "sensor-ds3231", "display-lcd1602"],
+      "SPI": ["sensor-rc522", "logic-74hc595", "display-max7219-8x8"],
+      "OneWire": [],
+      "UART": [],
+      "PWM": ["actuator-sg90", "led-ws2812b-strip"],
+      "Analog": [
+        "sensor-dht11",
+        "sensor-photoresistor",
+        "sensor-soil-moisture",
+        "sensor-joystick-ky023"
+      ],
+      "Digital": ["sensor-hcsr04", "sensor-hcsr501", "sensor-ir-obstacle"]
+    },
+    "by_voltage": {
+      "3.3V_only": ["mcu-esp32-devkit-38pin", "mcu-nodemcu-esp8266", "sensor-rc522"],
+      "5V_only": ["sensor-hcsr04"],
+      "3.3V_or_5V": ["sensor-dht11", "sensor-mpu6050", "display-lcd1602", "sensor-hcsr501"],
+      "5V_to_36V": ["actuator-l293d-ic"]
+    },
+    "by_communication_pins": {
+      "arduino_uno": {
+        "I2C": {
+          "SDA": "A4",
+          "SCL": "A5"
+        },
+        "SPI": {
+          "MOSI": "11",
+          "MISO": "12",
+          "SCK": "13",
+          "SS": "10"
+        },
+        "UART": {
+          "TX": "0",
+          "RX": "1"
+        }
+      },
+      "esp32": {
+        "I2C": {
+          "SDA": "21",
+          "SCL": "22"
+        },
+        "SPI": {
+          "MOSI": "23",
+          "MISO": "19",
+          "SCK": "18",
+          "SS": "5"
+        },
+        "UART": {
+          "TX": "1",
+          "RX": "3"
+        }
+      },
+      "esp8266": {
+        "I2C": {
+          "SDA": "D2/GPIO4",
+          "SCL": "D1/GPIO5"
+        },
+        "SPI": {
+          "MOSI": "D7/GPIO13",
+          "MISO": "D6/GPIO12",
+          "SCK": "D5/GPIO14",
+          "SS": "D8/GPIO15"
+        }
+      }
+    }
+  }
+}

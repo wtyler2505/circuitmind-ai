@@ -1,0 +1,45 @@
+{
+  "name": "Servo Motor Control",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "actuator-sg90"
+  ],
+  "total_current_ma": 200,
+  "power_source": "usb_marginal",
+  "connections": [
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "5V"
+      },
+      "to": {
+        "component": "sg90",
+        "pin": "VCC-red"
+      },
+      "wire": "red"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "sg90",
+        "pin": "GND-brown"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D9"
+      },
+      "to": {
+        "component": "sg90",
+        "pin": "SIGNAL-orange"
+      },
+      "wire": "orange"
+    }
+  ],
+  "notes": "Works on USB for single servo. Add 100uF cap for stability."
+}

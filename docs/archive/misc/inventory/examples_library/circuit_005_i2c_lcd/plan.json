@@ -1,0 +1,56 @@
+{
+  "name": "I2C LCD Display",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "display-lcd1602"
+  ],
+  "total_current_ma": 70,
+  "power_source": "usb",
+  "connections": [
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "5V"
+      },
+      "to": {
+        "component": "lcd1602-i2c",
+        "pin": "VCC"
+      },
+      "wire": "red"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "lcd1602-i2c",
+        "pin": "GND"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "A4"
+      },
+      "to": {
+        "component": "lcd1602-i2c",
+        "pin": "SDA"
+      },
+      "wire": "blue"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "A5"
+      },
+      "to": {
+        "component": "lcd1602-i2c",
+        "pin": "SCL"
+      },
+      "wire": "yellow"
+    }
+  ],
+  "notes": "Address usually 0x27 or 0x3F. Run I2C scanner if display blank."
+}

@@ -1,0 +1,3 @@
+- **Relay never clicks:** Ensure the module’s **IN** pin is driven LOW (active‑LOW). Double‑check wiring—VCC must be connected to 5 V and GND to GND.
+- **Arduino resets when relay switches:** The coil draws about 70 mA. If your Arduino resets, add a 100 µF capacitor across the 5 V and GND rails or power the relay from a separate 5 V supply.
+- **No LED or external load response:** Remember that the relay only provides an isolated switch. You must wire your load between **COM** and **NO** (or **NC**) using an appropriate external power source. Never connect mains voltage to the breadboard.

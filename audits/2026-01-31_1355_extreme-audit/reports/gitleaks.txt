@@ -1,0 +1,67 @@
+gitleaks detect results for CircuitMind AI
+==========================================
+Generated: 2026-01-31 14:02
+Scan Time: ~66 seconds
+Commits Scanned: 155
+Data Analyzed: ~141 MB
+
+FINDINGS: 3 (All False Positives)
+=================================
+
+Finding 1:
+----------
+Secret:      hcsr04_distance
+RuleID:      generic-api-key
+Entropy:     3.640224
+File:        docs/misc/inventory/examples_library/circuit_002_ultrasonic_distance/README.md
+Line:        21
+Commit:      356416e8d6da36873b7b7151797a96dc19c22976
+Author:      wtyler2505
+Date:        2026-01-06T01:46:57Z
+STATUS:      FALSE POSITIVE - This is a snake_case project name, not an API key
+
+Finding 2:
+----------
+Secret:      esp32_ultrasonic
+RuleID:      generic-api-key
+Entropy:     3.875000
+File:        docs/misc/inventory/examples_library/circuit_007_esp32_ultrasonic/README.md
+Line:        26
+Commit:      356416e8d6da36873b7b7151797a96dc19c22976
+Author:      wtyler2505
+Date:        2026-01-06T01:46:57Z
+STATUS:      FALSE POSITIVE - This is a snake_case project name, not an API key
+
+Finding 3:
+----------
+Secret:      ws2812b_rainbow
+RuleID:      generic-api-key
+Entropy:     3.506891
+File:        docs/misc/inventory/examples_library/circuit_008_ws2812b_strip/README.md
+Line:        28
+Commit:      356416e8d6da36873b7b7151797a96dc19c22976
+Author:      wtyler2505
+Date:        2026-01-06T01:46:57Z
+STATUS:      FALSE POSITIVE - This is a snake_case project name, not an API key
+
+SUMMARY
+=======
+All 3 findings are FALSE POSITIVES.
+
+These are project/function identifiers with underscores that triggered the generic-api-key
+pattern due to entropy matching. The files in question are documentation for Arduino
+example projects and have since been deleted from the working tree.
+
+RECOMMENDATION: Add .gitleaks.toml with allowlist:
+```toml
+[[allowlists]]
+description = "Ignore snake_case project names"
+regexes = [
+  "hcsr04_distance",
+  "esp32_ultrasonic", 
+  "ws2812b_rainbow"
+]
+paths = ["docs/misc/inventory/"]
+```
+
+NO REAL SECRETS DETECTED.

@@ -1,0 +1,9 @@
+| From | Pin | To | Pin | Wire |
+|---|---|---|---|---|
+| `power-supply-5v` | `+` | `capacitor-1000uf` | `+` | `red` |
+| `power-supply-5v` | `-` | `capacitor-1000uf` | `-` | `black` |
+| `power-supply-5v` | `+` | `ws2812b` | `5V` | `red` |
+| `power-supply-5v` | `-` | `ws2812b` | `GND` | `black` |
+| `arduino-uno` | `GND` | `power-supply-5v` | `-` | `black` |
+| `arduino-uno` | `D6` | `resistor-330ohm` | `1` | `green` |
+| `resistor-330ohm` | `2` | `ws2812b` | `DIN` | `green` |

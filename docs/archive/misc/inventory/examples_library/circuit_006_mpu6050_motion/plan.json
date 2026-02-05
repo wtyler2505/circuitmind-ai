@@ -1,0 +1,57 @@
+{
+  "name": "6-Axis Motion Sensor",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "sensor-mpu6050"
+  ],
+  "total_current_ma": 49,
+  "power_source": "usb",
+  "connections": [
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "3.3V"
+      },
+      "to": {
+        "component": "mpu6050",
+        "pin": "VCC"
+      },
+      "wire": "orange",
+      "note": "or 5V if module has regulator"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "mpu6050",
+        "pin": "GND"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "A4"
+      },
+      "to": {
+        "component": "mpu6050",
+        "pin": "SDA"
+      },
+      "wire": "blue"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "A5"
+      },
+      "to": {
+        "component": "mpu6050",
+        "pin": "SCL"
+      },
+      "wire": "yellow"
+    }
+  ],
+  "notes": "Default I2C address 0x68. Set AD0 HIGH for 0x69."
+}

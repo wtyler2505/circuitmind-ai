@@ -1,0 +1,4 @@
+from_component,from_pin,to_component,to_pin,wire
+mcu-arduino-uno-r3,5V,actuator-relay-5v,VCC,red
+mcu-arduino-uno-r3,GND,actuator-relay-5v,GND,black
+mcu-arduino-uno-r3,D7,actuator-relay-5v,IN,yellow

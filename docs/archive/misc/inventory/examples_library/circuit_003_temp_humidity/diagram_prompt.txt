@@ -1,0 +1,8 @@
+Create a clean wiring diagram for the circuit "Temperature & Humidity Monitor".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- arduino-uno 5V -> dht11 VCC (wire: red)
+- arduino-uno GND -> dht11 GND (wire: black)
+- arduino-uno D2 -> dht11 DATA (wire: yellow)
+- dht11 DATA -> resistor-10k 1 (wire: yellow)
+- resistor-10k 2 -> arduino-uno 5V (wire: red)

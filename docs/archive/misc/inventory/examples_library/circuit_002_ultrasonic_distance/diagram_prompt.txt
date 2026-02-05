@@ -1,0 +1,7 @@
+Create a clean wiring diagram for the circuit "Ultrasonic Distance Sensor".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- arduino-uno 5V -> hc-sr04 VCC (wire: red)
+- arduino-uno GND -> hc-sr04 GND (wire: black)
+- arduino-uno D9 -> hc-sr04 TRIG (wire: green)
+- arduino-uno D10 -> hc-sr04 ECHO (wire: yellow)

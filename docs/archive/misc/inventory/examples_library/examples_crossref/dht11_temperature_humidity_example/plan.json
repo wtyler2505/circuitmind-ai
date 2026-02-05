@@ -1,0 +1,31 @@
+{
+  "title": "DHT11 Temperature & Humidity Monitor",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "sensor-dht11",
+    "resistor-10k"
+  ],
+  "connections": [
+    {
+      "from": "sensor-dht11:VCC",
+      "to": "mcu-arduino-uno-r3:5V"
+    },
+    {
+      "from": "sensor-dht11:Data",
+      "to": "mcu-arduino-uno-r3:D2",
+      "note": "Use a 10 kΩ pull‑up resistor to 5 V"
+    },
+    {
+      "from": "sensor-dht11:GND",
+      "to": "mcu-arduino-uno-r3:GND"
+    },
+    {
+      "from": "resistor-10k:1",
+      "to": "sensor-dht11:Data"
+    },
+    {
+      "from": "resistor-10k:2",
+      "to": "mcu-arduino-uno-r3:5V"
+    }
+  ]
+}

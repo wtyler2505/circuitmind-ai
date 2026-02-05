@@ -1,0 +1,91 @@
+{
+  "name": "ESP32 Ultrasonic (3.3V MCU)",
+  "components": [
+    "mcu-esp32-devkit-38pin",
+    "sensor-hcsr04",
+    "resistor-assortment"
+  ],
+  "total_current_ma": 100,
+  "power_source": "usb",
+  "connections": [
+    {
+      "from": {
+        "component": "esp32",
+        "pin": "VIN/5V"
+      },
+      "to": {
+        "component": "hc-sr04",
+        "pin": "VCC"
+      },
+      "wire": "red"
+    },
+    {
+      "from": {
+        "component": "esp32",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "hc-sr04",
+        "pin": "GND"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "esp32",
+        "pin": "GPIO5"
+      },
+      "to": {
+        "component": "hc-sr04",
+        "pin": "TRIG"
+      },
+      "wire": "green",
+      "note": "3.3V OK for trigger"
+    },
+    {
+      "from": {
+        "component": "hc-sr04",
+        "pin": "ECHO"
+      },
+      "to": {
+        "component": "resistor-1k",
+        "pin": "1"
+      },
+      "wire": "yellow"
+    },
+    {
+      "from": {
+        "component": "resistor-1k",
+        "pin": "2"
+      },
+      "to": {
+        "component": "esp32",
+        "pin": "GPIO18"
+      },
+      "wire": "yellow"
+    },
+    {
+      "from": {
+        "component": "esp32",
+        "pin": "GPIO18"
+      },
+      "to": {
+        "component": "resistor-2k",
+        "pin": "1"
+      },
+      "wire": "yellow"
+    },
+    {
+      "from": {
+        "component": "resistor-2k",
+        "pin": "2"
+      },
+      "to": {
+        "component": "esp32",
+        "pin": "GND"
+      },
+      "wire": "black"
+    }
+  ],
+  "notes": "TESTED - voltage divider essential to prevent GPIO damage"
+}

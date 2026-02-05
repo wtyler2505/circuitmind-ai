@@ -1,0 +1,29 @@
+{
+  "name": "Relay Control Example",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "actuator-relay-5v",
+    "led-5mm-assortment",
+    "resistor-assortment"
+  ],
+  "total_current_ma": 80,
+  "power_source": "usb",
+  "connections": [
+    {
+      "from": { "component": "arduino-uno", "pin": "5V" },
+      "to": { "component": "relay", "pin": "VCC" },
+      "wire": "red"
+    },
+    {
+      "from": { "component": "arduino-uno", "pin": "GND" },
+      "to": { "component": "relay", "pin": "GND" },
+      "wire": "black"
+    },
+    {
+      "from": { "component": "arduino-uno", "pin": "D7" },
+      "to": { "component": "relay", "pin": "IN" },
+      "wire": "yellow"
+    }
+  ],
+  "notes": "Active‑LOW: drive IN low to energize the relay. Coil draws ~70 mA."
+}

@@ -1,0 +1,1 @@
+A breadboard diagram showing an Arduino Uno R3 and a 5 V relay module. Connect the Uno’s 5 V pin to the relay’s VCC with a red wire, GND to GND with a black wire and digital pin 7 to the relay’s IN pin with a yellow wire. Place the relay module to the right of the Uno with its screw terminals facing down. Leave the load terminals (COM, NO, NC) unconnected to emphasize isolation.

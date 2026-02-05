@@ -1,0 +1,7 @@
+Create a clean wiring diagram for the circuit "I2C LCD Display".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- arduino-uno 5V -> lcd1602-i2c VCC (wire: red)
+- arduino-uno GND -> lcd1602-i2c GND (wire: black)
+- arduino-uno A4 -> lcd1602-i2c SDA (wire: blue)
+- arduino-uno A5 -> lcd1602-i2c SCL (wire: yellow)

@@ -1,0 +1,89 @@
+{
+  "name": "RFID Card Reader",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "sensor-rc522"
+  ],
+  "total_current_ma": 75,
+  "power_source": "usb",
+  "connections": [
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "3.3V"
+      },
+      "to": {
+        "component": "rc522",
+        "pin": "3.3V"
+      },
+      "wire": "orange"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "rc522",
+        "pin": "GND"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D10"
+      },
+      "to": {
+        "component": "rc522",
+        "pin": "SDA/SS"
+      },
+      "wire": "purple"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D13"
+      },
+      "to": {
+        "component": "rc522",
+        "pin": "SCK"
+      },
+      "wire": "blue"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D11"
+      },
+      "to": {
+        "component": "rc522",
+        "pin": "MOSI"
+      },
+      "wire": "green"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D12"
+      },
+      "to": {
+        "component": "rc522",
+        "pin": "MISO"
+      },
+      "wire": "yellow"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D9"
+      },
+      "to": {
+        "component": "rc522",
+        "pin": "RST"
+      },
+      "wire": "white"
+    }
+  ],
+  "notes": "TESTED - 3.3V power essential, Arduino 5V GPIO works for signals"
+}

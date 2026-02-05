@@ -1,0 +1,10 @@
+Create a clean wiring diagram for the circuit "ESP32 Ultrasonic (3.3V MCU)".
+Style: high-contrast, readable, schematic-style. Show only the listed components and connections.
+Connections:
+- esp32 VIN/5V -> hc-sr04 VCC (wire: red)
+- esp32 GND -> hc-sr04 GND (wire: black)
+- esp32 GPIO5 -> hc-sr04 TRIG (wire: green)
+- hc-sr04 ECHO -> resistor-1k 1 (wire: yellow)
+- resistor-1k 2 -> esp32 GPIO18 (wire: yellow)
+- esp32 GPIO18 -> resistor-2k 1 (wire: yellow)
+- resistor-2k 2 -> esp32 GND (wire: black)

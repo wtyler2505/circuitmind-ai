@@ -1,0 +1,56 @@
+{
+  "name": "Ultrasonic Distance Sensor",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "sensor-hcsr04"
+  ],
+  "total_current_ma": 60,
+  "power_source": "usb",
+  "connections": [
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "5V"
+      },
+      "to": {
+        "component": "hc-sr04",
+        "pin": "VCC"
+      },
+      "wire": "red"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "hc-sr04",
+        "pin": "GND"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D9"
+      },
+      "to": {
+        "component": "hc-sr04",
+        "pin": "TRIG"
+      },
+      "wire": "green"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D10"
+      },
+      "to": {
+        "component": "hc-sr04",
+        "pin": "ECHO"
+      },
+      "wire": "yellow"
+    }
+  ],
+  "notes": "Verified. Echo returns 5V signal, safe for Arduino."
+}

@@ -1,0 +1,92 @@
+{
+  "name": "WS2812B LED Strip",
+  "components": [
+    "mcu-arduino-uno-r3",
+    "led-ws2812b-strip",
+    "resistor-assortment",
+    "cap-electrolytic-assortment"
+  ],
+  "total_current_ma": "60 per LED at full white",
+  "power_source": "external_5v_required",
+  "connections": [
+    {
+      "from": {
+        "component": "power-supply-5v",
+        "pin": "+"
+      },
+      "to": {
+        "component": "capacitor-1000uf",
+        "pin": "+"
+      },
+      "wire": "red"
+    },
+    {
+      "from": {
+        "component": "power-supply-5v",
+        "pin": "-"
+      },
+      "to": {
+        "component": "capacitor-1000uf",
+        "pin": "-"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "power-supply-5v",
+        "pin": "+"
+      },
+      "to": {
+        "component": "ws2812b",
+        "pin": "5V"
+      },
+      "wire": "red"
+    },
+    {
+      "from": {
+        "component": "power-supply-5v",
+        "pin": "-"
+      },
+      "to": {
+        "component": "ws2812b",
+        "pin": "GND"
+      },
+      "wire": "black"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "GND"
+      },
+      "to": {
+        "component": "power-supply-5v",
+        "pin": "-"
+      },
+      "wire": "black",
+      "note": "COMMON GROUND"
+    },
+    {
+      "from": {
+        "component": "arduino-uno",
+        "pin": "D6"
+      },
+      "to": {
+        "component": "resistor-330ohm",
+        "pin": "1"
+      },
+      "wire": "green"
+    },
+    {
+      "from": {
+        "component": "resistor-330ohm",
+        "pin": "2"
+      },
+      "to": {
+        "component": "ws2812b",
+        "pin": "DIN"
+      },
+      "wire": "green"
+    }
+  ],
+  "notes": "TESTED - protection components prevent first-LED failure"
+}
