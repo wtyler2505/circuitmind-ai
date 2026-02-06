@@ -1,7 +1,7 @@
 import { ElectronicComponent } from "../../../types";
 import { getAIClient, MODELS } from "../client";
 import { PROMPTS } from "../prompts";
-import { COMPONENT_SCHEMA, PART_FINDER_SCHEMA } from "../types";
+import { COMPONENT_SCHEMA, PART_FINDER_SCHEMA, GeminiInlineDataPart, DeepSpecResult } from "../types";
 import { aiMetricsService } from "../../aiMetricsService";
 import { standardsService } from "../../standardsService";
 
@@ -206,7 +206,7 @@ export const identifyComponentFromImage = async (imageBase64: string): Promise<P
   }
 };
 
-export const performDeepSpecSearch = async (name: string, type: string): Promise<any> => {
+export const performDeepSpecSearch = async (name: string, type: string): Promise<DeepSpecResult | null> => {
   const ai = getAIClient();
   const isLikelyBoard = type.toLowerCase().includes('board') || 
                         type.toLowerCase().includes('module') || 
@@ -263,7 +263,7 @@ export const performDeepSpecSearch = async (name: string, type: string): Promise
     
     if (response.text) {
         const cleaned = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const data = JSON.parse(cleaned);
+        const data = JSON.parse(cleaned) as DeepSpecResult;
         return data;
     }
   } catch (e) {
@@ -302,7 +302,7 @@ export const generateComponent3DCode = async (
   // 1. Spec Extraction Pass (Grounding)
   const standard = standardsService.getPackage(componentName) || standardsService.getPackage(componentType);
   const board = standardsService.getBoardMap(componentName) || standardsService.getBoardMap(componentType);
-  let deepSpec: any = null;
+  let deepSpec: DeepSpecResult | null = null;
 
   if (!standard && !board) {
     deepSpec = await performDeepSpecSearch(componentName, componentType);
@@ -364,7 +364,7 @@ export const generateComponent3DCode = async (
           // Assuming imageUrl is accessible or a data URI.
           // For now, we'll try-catch this block aggressively.
           
-          let imagePart: any = null;
+          let imagePart: GeminiInlineDataPart | null = null;
           if (imageUrl.startsWith('data:')) {
              const mimeType = imageUrl.split(';')[0].split(':')[1];
              const data = imageUrl.split(',')[1];
@@ -489,7 +489,7 @@ export const generateComponent3DCode = async (
         // If there's garbage after return group; like ')', '}', or prose
         if (afterReturn.length > 0) {
             // Check if it's just semicolons or single closing marks
-            if (/^[;})\s]+$/.test(afterReturn)) {
+            if (/^[;}\)\s]+$/.test(afterReturn)) {
                 code = code.substring(0, lastReturnIdx + 13);
             } else {
                 // If it's more complex prose, still cut at return group;

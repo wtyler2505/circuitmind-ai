@@ -93,6 +93,35 @@ export interface ContextAwareChatResponse {
 }
 
 // =====================================
+// Deep Spec Search Types
+// =====================================
+
+/** Spec data for a PCB/board from web datasheet search */
+export interface DeepSpecBoard {
+  category: 'board';
+  width: number;
+  length: number;
+  height: number;
+  mounting_holes?: { x: number; z: number; diameter: number }[];
+  interfaces?: { type: string; edge: string; offset_mm: number }[];
+}
+
+/** Spec data for a discrete component from web datasheet search */
+export interface DeepSpecComponent {
+  category: 'component';
+  package: string;
+  width: number;
+  length: number;
+  height: number;
+  pitch: number;
+  pins: number;
+  datasheet_ref?: string;
+}
+
+/** Union of all deep spec search result shapes */
+export type DeepSpecResult = DeepSpecBoard | DeepSpecComponent;
+
+// =====================================
 // Schemas
 // =====================================
 

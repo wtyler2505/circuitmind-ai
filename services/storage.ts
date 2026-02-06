@@ -96,10 +96,10 @@ export const storageService = {
       // 2. Prune inventory images if it's the inventory failing
       if (key === 'cm_inventory') {
         try {
-          const inv = JSON.parse(value);
-          const pruned = inv.map((item: any) => ({
+          const inv = JSON.parse(value) as ElectronicComponent[];
+          const pruned = inv.map((item) => ({
             ...item,
-            imageUrl: item.imageUrl?.length > 5000 ? null : item.imageUrl,
+            imageUrl: item.imageUrl && item.imageUrl.length > 5000 ? null : item.imageUrl,
             threeCode: null
           }));
           localStorage.setItem(key, JSON.stringify(pruned));
@@ -120,10 +120,10 @@ export const storageService = {
  * Removes non-cloneable objects like Events, Functions, etc.
  * Handles circular references gracefully.
  */
-const sanitizeForDB = (obj: unknown): unknown => {
+const sanitizeForDB = (obj: unknown): Record<string, unknown> | null => {
   try {
     // structuredClone is native and handles circular refs + many types better than JSON
-    return window.structuredClone(obj);
+    return window.structuredClone(obj) as Record<string, unknown>;
   } catch (_e) {
     // If it fails (e.g. contains functions or complex circular refs), 
     // use a robust custom stringifier that drops circularities.
