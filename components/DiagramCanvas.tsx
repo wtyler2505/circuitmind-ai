@@ -10,8 +10,16 @@ import React, {
   lazy,
   Suspense,
 } from 'react';
-import { WiringDiagram, ElectronicComponent, WireConnection } from '../types';
+import { WiringDiagram, ElectronicComponent } from '../types';
 import { Wire, DiagramNode, COMPONENT_WIDTH, COMPONENT_HEIGHT, SVG_GRADIENTS, SVG_FILTERS } from './diagram';
+import {
+  resolveWireColor,
+  calculateInitialLayout,
+  calculateDiagramBounds,
+  calculateViewportBounds,
+  filterVisibleComponents,
+  filterVisibleConnections,
+} from './diagram/canvasCalculations';
 
 const Diagram3DView = lazy(() => import('./diagram/Diagram3DView'));
 import { PredictiveGhost } from './diagram/PredictiveGhost';
@@ -19,6 +27,7 @@ import { diagramReducer, INITIAL_STATE } from './diagram/diagramState';
 import { useHUD } from '../contexts/HUDContext';
 import { useSelection } from '../contexts/SelectionContext';
 import { useUser } from '../contexts/UserContext';
+import { useCanvasInteraction } from '../hooks/useCanvasInteraction';
 
 type ViewMode = '2d' | '3d';
 
@@ -80,26 +89,6 @@ export interface DiagramCanvasRef {
   getSnapshotBlob: () => Promise<Blob | null>;
   getContainerRect: () => DOMRect | null;
 }
-
-// Helper to resolve wire color based on user preferences
-const resolveWireColor = (conn: WireConnection, map?: Record<string, string>): string | undefined => {
-  if (!map) return undefined;
-  
-  // Exact match
-  if (map[conn.fromPin]) return map[conn.fromPin];
-  if (map[conn.toPin]) return map[conn.toPin];
-  
-  // Fuzzy match
-  const upperFrom = conn.fromPin.toUpperCase();
-  const upperTo = conn.toPin.toUpperCase();
-  
-  if (map['VCC'] && (upperFrom.includes('VCC') || upperFrom.includes('5V') || upperFrom.includes('3.3V') || upperTo.includes('VCC'))) return map['VCC'];
-  if (map['GND'] && (upperFrom.includes('GND') || upperTo.includes('GND'))) return map['GND'];
-  if (map['SDA'] && (upperFrom.includes('SDA') || upperTo.includes('SDA'))) return map['SDA'];
-  if (map['SCL'] && (upperFrom.includes('SCL') || upperTo.includes('SCL'))) return map['SCL'];
-  
-  return undefined;
-};
 
 const DiagramCanvasRenderer = ({ 
   diagram, 
@@ -203,15 +192,32 @@ const DiagramCanvasRenderer = ({
 
     const containerRectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
 
-    // Helper to calculate cursor position in diagram coordinates
-    const getDiagramPos = useCallback((clientX: number, clientY: number) => {
-      const rect = containerRectRef.current;
-      if (!rect) return { x: 0, y: 0 };
-      return {
-        x: (clientX - rect.left - state.pan.x) / state.zoom,
-        y: (clientY - rect.top - state.pan.y) / state.zoom,
-      };
-    }, [state.pan, state.zoom]);
+    // Canvas interaction handlers (extracted to hook)
+    const {
+      handleWheel,
+      handlePointerDown,
+      handlePointerMove,
+      handlePointerUp,
+      handleDragOver,
+      handleDragLeave,
+      handleDrop,
+      handlePinPointerDown,
+      handlePinPointerUp,
+      handleWireEditClick,
+      handleWireDelete,
+      handleWireLabelSave,
+    } = useCanvasInteraction({
+      dispatch,
+      state,
+      diagram,
+      containerRectRef,
+      snapToGrid,
+      gridSize: GRID_SIZE,
+      selectedComponentId,
+      onDiagramUpdate,
+      onComponentDrop,
+      onBackgroundClick,
+    });
 
     useEffect(() => {
       if (!containerRef.current) return;
@@ -419,283 +425,12 @@ const DiagramCanvasRenderer = ({
 
       const needsLayout = diagram.components.some((c) => !state.nodePositions.has(c.id));
       if (needsLayout) {
-        const newPositions = new Map(state.nodePositions);
-        const unpositioned = diagram.components.filter((c) => !newPositions.has(c.id));
-        if (unpositioned.length === 0) return;
-
-        let yOffset = 50;
-        let xOffset = 400;
-
-        unpositioned.forEach((c) => {
-          if (c.type === 'power') xOffset = 100;
-          else if (c.type === 'microcontroller') xOffset = 400;
-          else xOffset = 700;
-
-          let conflict = true;
-          let attempts = 0;
-          while (conflict && attempts < 100) {
-            conflict = Array.from(newPositions.values()).some(
-              (p: { x: number; y: number }) =>
-                Math.abs(p.x - xOffset) < 50 && Math.abs(p.y - yOffset) < 50
-            );
-            if (conflict) yOffset += 200;
-            attempts++;
-          }
-          newPositions.set(c.id, { x: xOffset, y: yOffset });
-          yOffset += 200;
-        });
-        dispatch({ type: 'SET_NODE_POSITIONS', payload: newPositions });
-      }
-    }, [diagram, state.nodePositions]);
-
-    // Event Handlers
-    const handleWheel = useCallback((e: React.WheelEvent) => {
-      e.stopPropagation();
-      const scaleFactor = 0.1;
-      if (e.deltaY > 0) dispatch({ type: 'ZOOM_OUT', payload: scaleFactor });
-      else dispatch({ type: 'ZOOM_IN', payload: scaleFactor });
-    }, []);
-
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Only handle if not in an input
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-
-    // Canvas Movement
-    if (!selectedComponentId) {
-      const step = 20;
-      if (e.key === 'ArrowUp') dispatch({ type: 'SET_PAN', payload: { x: state.pan.x, y: state.pan.y - step } });
-      if (e.key === 'ArrowDown') dispatch({ type: 'SET_PAN', payload: { x: state.pan.x, y: state.pan.y + step } });
-      if (e.key === 'ArrowLeft') dispatch({ type: 'SET_PAN', payload: { x: state.pan.x - step, y: state.pan.y } });
-      if (e.key === 'ArrowRight') dispatch({ type: 'SET_PAN', payload: { x: state.pan.x + step, y: state.pan.y } });
-    } else if (diagram) {
-      // Component Movement
-      const step = e.shiftKey ? 10 : 1;
-      const comp = diagram.components.find((c) => c.id === selectedComponentId);
-      
-      if (comp && onDiagramUpdate) {
-        const newComponents = diagram.components.map(c => {
-          if (c.id === selectedComponentId) {
-            const pos = state.nodePositions.get(c.id) || { x: 0, y: 0 };
-            let nx = pos.x;
-            let ny = pos.y;
-            if (e.key === 'ArrowUp') ny -= step;
-            if (e.key === 'ArrowDown') ny += step;
-            if (e.key === 'ArrowLeft') nx -= step;
-            if (e.key === 'ArrowRight') nx += step;
-            return { ...c, position: { x: nx, y: ny } };
-          }
-          return c;
-        });
-        
-        onDiagramUpdate({ ...diagram, components: newComponents });
-      }
-    }
-  }, [selectedComponentId, diagram, onDiagramUpdate, state.pan, state.nodePositions]);
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
-
-    const handlePointerDown = useCallback((e: React.PointerEvent, nodeId?: string) => {
-      e.stopPropagation();
-      try {
-        (e.target as Element).setPointerCapture(e.pointerId);
-      } catch (_err) {
-        // Ignore errors from synthetic events (Neural Link)
-      }
-      const pointerPos = { x: e.clientX, y: e.clientY };
-
-      if (nodeId) {
-        dispatch({ type: 'START_DRAG_NODE', payload: { nodeId, pointerPos } });
-      } else {
-        dispatch({ type: 'START_PAN', payload: pointerPos });
-      }
-    }, []);
-
-    const rafId = useRef<number | null>(null);
-    const handlePointerMove = useCallback((e: React.PointerEvent) => {
-      // Capture coordinates before the event potentially gets recycled
-      const clientX = e.clientX;
-      const clientY = e.clientY;
-
-      if (rafId.current) return;
-
-      rafId.current = window.requestAnimationFrame(() => {
-        const pointerPos = { x: clientX, y: clientY };
-        const diagramPos = getDiagramPos(clientX, clientY);
-        dispatch({ 
-          type: 'POINTER_MOVE', 
-          payload: { pointerPos, diagramPos, snapToGrid, gridSize: GRID_SIZE } 
-        });
-        rafId.current = null;
-      });
-    }, [getDiagramPos, snapToGrid, GRID_SIZE]);
-
-    const handlePointerUp = useCallback((e: React.PointerEvent) => {
-      if (rafId.current) {
-        window.cancelAnimationFrame(rafId.current);
-        rafId.current = null;
-      }
-      try {
-        (e.target as Element).releasePointerCapture(e.pointerId);
-      } catch (_err) {
-        // Ignore errors from synthetic events
-      }
-      const wasDragging = state.interactionMode === 'dragging_node';
-      const wasPanning = state.interactionMode === 'panning';
-      if (!wasDragging && !wasPanning && onBackgroundClick) {
-         // Check if we clicked on background (svg or container)
-         // Actually DiagramNode stops propagation, so if we reach here it should be background
-         // BUT we need to ensure we didn't just finish a drag
-         onBackgroundClick();
-      }
-      dispatch({ type: 'POINTER_UP' });
-    }, [state.interactionMode, onBackgroundClick]);
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-      dispatch({ type: 'SET_DRAG_OVER', payload: true });
-    }, []);
-
-    const handleDragLeave = useCallback(() => {
-      dispatch({ type: 'SET_DRAG_OVER', payload: false });
-    }, []);
-
-    const handleDrop = useCallback((e: React.DragEvent) => {
-      e.preventDefault();
-      dispatch({ type: 'SET_DRAG_OVER', payload: false });
-      const componentData = e.dataTransfer.getData('application/json');
-      if (componentData && containerRectRef.current && onComponentDrop) {
-        try {
-          const component = JSON.parse(componentData) as ElectronicComponent;
-          const rect = containerRectRef.current;
-          let x = (e.clientX - rect.left - state.pan.x) / state.zoom;
-          let y = (e.clientY - rect.top - state.pan.y) / state.zoom;
-          x -= COMPONENT_WIDTH / 2;
-          y -= COMPONENT_HEIGHT / 2;
-          
-          if (snapToGrid) {
-            x = Math.round(x / GRID_SIZE) * GRID_SIZE;
-            y = Math.round(y / GRID_SIZE) * GRID_SIZE;
-          }
-          onComponentDrop(component, x, y);
-        } catch (_err) {
-          console.error('Drop failed', _err);
+        const newPositions = calculateInitialLayout(diagram.components, state.nodePositions);
+        if (newPositions !== state.nodePositions) {
+          dispatch({ type: 'SET_NODE_POSITIONS', payload: newPositions });
         }
       }
-    }, [state.pan, state.zoom, snapToGrid, GRID_SIZE, onComponentDrop]);
-
-    const handlePinPointerDown = useCallback((
-      e: React.PointerEvent,
-      nodeId: string,
-      pin: string,
-      isRightSide: boolean
-    ) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (!diagram) return;
-      const pos = state.nodePositions.get(nodeId);
-      if (!pos) return;
-      const startNode = diagram.components.find((n) => n.id === nodeId);
-      const pinIndex = (startNode?.pins || []).indexOf(pin);
-      const pinY = pos.y + 40 + pinIndex * 15;
-      const pinX = isRightSide ? pos.x + COMPONENT_WIDTH : pos.x;
-      dispatch({ type: 'START_WIRE', payload: { startNodeId: nodeId, startPin: pin, startX: pinX, startY: pinY } });
     }, [diagram, state.nodePositions]);
-
-    const handlePinPointerUp = useCallback((e: React.PointerEvent, nodeId: string, pin: string) => {
-      e.stopPropagation();
-      if (!diagram || !state.tempWire) return;
-      if (state.tempWire.startNodeId === nodeId && state.tempWire.startPin === pin) {
-        dispatch({ type: 'POINTER_UP' });
-        return;
-      }
-      
-      const exists = diagram.connections.some(
-        (c) =>
-          (c.fromComponentId === state.tempWire!.startNodeId &&
-            c.fromPin === state.tempWire!.startPin &&
-            c.toComponentId === nodeId &&
-            c.toPin === pin) ||
-          (c.toComponentId === state.tempWire!.startNodeId &&
-            c.toPin === state.tempWire!.startPin &&
-            c.fromComponentId === nodeId &&
-            c.fromPin === pin)
-      );
-
-      if (!exists) {
-        const newConnection: WireConnection = {
-          fromComponentId: state.tempWire.startNodeId,
-          fromPin: state.tempWire.startPin,
-          toComponentId: nodeId,
-          toPin: pin,
-          description: 'New Wire',
-          color: '#00f3ff',
-        };
-        onDiagramUpdate({
-          ...diagram,
-          connections: [...diagram.connections, newConnection],
-        });
-      }
-      dispatch({ type: 'POINTER_UP' });
-    }, [diagram, state.tempWire, onDiagramUpdate]);
-
-    const handleWireEditClick = useCallback((index: number) => {
-      if (!diagram) return;
-      const conn = diagram.connections[index];
-      if (!conn) return;
-
-      const startPos = state.nodePositions.get(conn.fromComponentId);
-      const endPos = state.nodePositions.get(conn.toComponentId);
-      if (startPos && endPos) {
-        const startComp = diagram.components.find(c => c.id === conn.fromComponentId);
-        const endComp = diagram.components.find(c => c.id === conn.toComponentId);
-        let x1 = startPos.x, y1 = startPos.y;
-        const startPinIdx = (startComp?.pins || []).indexOf(conn.fromPin);
-        if (startPinIdx !== -1) {
-          x1 += endPos.x < startPos.x ? 0 : COMPONENT_WIDTH;
-          y1 += 40 + startPinIdx * 15;
-        } else {
-          x1 += COMPONENT_WIDTH / 2;
-          y1 += COMPONENT_HEIGHT + 10;
-        }
-
-        let x2 = endPos.x, y2 = endPos.y;
-        const endPinIdx = (endComp?.pins || []).indexOf(conn.toPin);
-        if (endPinIdx !== -1) {
-          x2 += endPos.x < startPos.x ? COMPONENT_WIDTH : 0;
-          y2 += 40 + endPinIdx * 15;
-        } else {
-          x2 += COMPONENT_WIDTH / 2;
-          y2 += COMPONENT_HEIGHT + 10;
-        }
-        dispatch({
-          type: 'START_EDIT_WIRE',
-          payload: {
-            index,
-            description: conn.description || '',
-            position: { x: (x1 + x2) / 2, y: (y1 + y2) / 2 }
-          }
-        });
-      }
-    }, [diagram, state.nodePositions]);
-
-    const handleWireDelete = useCallback((index: number) => {
-      if (!diagram || !onDiagramUpdate) return;
-      const updatedConnections = diagram.connections.filter((_, i) => i !== index);
-      onDiagramUpdate({ ...diagram, connections: updatedConnections });
-    }, [diagram, onDiagramUpdate]);
-
-    const handleWireLabelSave = useCallback(() => {
-      if (state.editingWireIndex === null || !diagram || !onDiagramUpdate) return;
-      const updatedConnections = diagram.connections.map((conn, i) =>
-        i === state.editingWireIndex ? { ...conn, description: state.wireLabelInput } : conn
-      );
-      onDiagramUpdate({ ...diagram, connections: updatedConnections });
-      dispatch({ type: 'SAVE_EDIT_WIRE' });
-    }, [state.editingWireIndex, state.wireLabelInput, diagram, onDiagramUpdate]);
 
     // Unique Colors for Markers
     const uniqueColors = useMemo(() => {
@@ -739,56 +474,23 @@ const DiagramCanvasRenderer = ({
 
     // Render Helpers
     const diagramBounds = useMemo(() => {
-      if (!diagram || filteredComponents.length === 0) {
+      if (!diagram) {
         return { minX: 0, minY: 0, maxX: 500, maxY: 300, width: 500, height: 300 };
       }
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      filteredComponents.forEach((c) => {
-        const pos = state.nodePositions.get(c.id) || { x: 0, y: 0 };
-        minX = Math.min(minX, pos.x);
-        minY = Math.min(minY, pos.y);
-        maxX = Math.max(maxX, pos.x + COMPONENT_WIDTH);
-        maxY = Math.max(maxY, pos.y + COMPONENT_HEIGHT);
-      });
-      const padding = 50;
-      return {
-        minX: minX - padding,
-        minY: minY - padding,
-        maxX: maxX + padding,
-        maxY: maxY + padding,
-        width: maxX - minX + padding * 2,
-        height: maxY - minY + padding * 2,
-      };
+      return calculateDiagramBounds(filteredComponents, state.nodePositions);
     }, [diagram, filteredComponents, state.nodePositions]);
 
     const viewportBounds = useMemo(() => {
       const width = viewportSize.width || containerRef.current?.clientWidth || 0;
       const height = viewportSize.height || containerRef.current?.clientHeight || 0;
-      if (!width || !height) return null;
-      const minX = (-state.pan.x) / state.zoom - VIEWPORT_PADDING;
-      const minY = (-state.pan.y) / state.zoom - VIEWPORT_PADDING;
-      const maxX = (width - state.pan.x) / state.zoom + VIEWPORT_PADDING;
-      const maxY = (height - state.pan.y) / state.zoom + VIEWPORT_PADDING;
-      return { minX, minY, maxX, maxY };
+      return calculateViewportBounds(state.pan, state.zoom, { width, height }, VIEWPORT_PADDING);
     }, [state.pan, state.zoom, viewportSize]);
 
     const shouldVirtualize = Boolean(diagram && diagram.components.length > VIRTUALIZATION_THRESHOLD);
     
     const renderComponents = useMemo(() => {
       if (!diagram) return [];
-      if (!shouldVirtualize || !viewportBounds) return filteredComponents;
-      return filteredComponents.filter((comp) => {
-        const pos = state.nodePositions.get(comp.id);
-        if (!pos) return true;
-        const right = pos.x + COMPONENT_WIDTH;
-        const bottom = pos.y + COMPONENT_HEIGHT;
-        return (
-          right >= viewportBounds.minX &&
-          pos.x <= viewportBounds.maxX &&
-          bottom >= viewportBounds.minY &&
-          pos.y <= viewportBounds.maxY
-        );
-      });
+      return filterVisibleComponents(filteredComponents, state.nodePositions, viewportBounds, shouldVirtualize);
     }, [diagram, filteredComponents, state.nodePositions, shouldVirtualize, viewportBounds]);
 
     const visibleComponentIds = useMemo(
@@ -798,13 +500,7 @@ const DiagramCanvasRenderer = ({
 
     const renderConnections = useMemo(() => {
       if (!diagram) return [];
-      const connectionsWithIndex = diagram.connections.map((conn, index) => ({ conn, index }));
-      if (!shouldVirtualize) return connectionsWithIndex;
-      return connectionsWithIndex.filter(
-        ({ conn }) =>
-          visibleComponentIds.has(conn.fromComponentId) ||
-          visibleComponentIds.has(conn.toComponentId)
-      );
+      return filterVisibleConnections(diagram.connections, visibleComponentIds, shouldVirtualize);
     }, [diagram, shouldVirtualize, visibleComponentIds]);
 
     const handleMinimapClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {

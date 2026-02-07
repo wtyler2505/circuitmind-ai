@@ -1,21 +1,22 @@
-import React, { useState, useRef, useCallback, lazy, Suspense, useEffect, memo } from 'react';
+import React, { useRef, useCallback, lazy, Suspense, useEffect, memo } from 'react';
 import { AppLayout } from './layout/AppLayout';
 import { AppHeader } from './layout/AppHeader';
 import { StatusRail } from './layout/StatusRail';
-import Inventory from './Inventory';
+const Inventory = lazy(() => import('./Inventory'));
 import AssistantSidebar from './AssistantSidebar';
 import ChatPanel from './ChatPanel';
 import DiagramCanvas, { DiagramCanvasRef } from './DiagramCanvas';
 import { NeuralCursor } from './diagram/NeuralCursor';
 import { TacticalHUD } from './diagram/TacticalHUD';
+import { ComponentContextMenu } from './diagram/ComponentContextMenu';
 import { SimControls } from './layout/SimControls';
 import { MentorOverlay } from './layout/MentorOverlay';
 import { BootcampPanel } from './layout/BootcampPanel';
 import { ProjectTimeline } from './layout/ProjectTimeline';
 import { DebugWorkbench } from './layout/DebugWorkbench';
-import { AnalyticsDashboard } from './layout/AnalyticsDashboard';
-import { SystemLogViewer } from './layout/SystemLogViewer';
-import { DashboardView } from './dashboard/DashboardView';
+const AnalyticsDashboard = lazy(() => import('./layout/AnalyticsDashboard').then(m => ({ default: m.AnalyticsDashboard })));
+const SystemLogViewer = lazy(() => import('./layout/SystemLogViewer').then(m => ({ default: m.SystemLogViewer })));
+const DashboardView = lazy(() => import('./dashboard/DashboardView').then(m => ({ default: m.DashboardView })));
 import { Gatekeeper } from './auth/Gatekeeper';
 import { CyberToast } from './layout/CyberToast';
 import { OmniSearch } from './layout/OmniSearch';
@@ -37,6 +38,7 @@ import { useSelection } from '../contexts/SelectionContext';
 
 // Hooks & Services
 import { useAIActions } from '../hooks/useAIActions';
+import { useLayoutState } from '../hooks/useLayoutState';
 import { useToastApi } from '../hooks/useToast';
 import { useNeuralLink } from '../hooks/useNeuralLink';
 import { gestureMetricsService } from '../services/gesture/GestureMetricsService';
@@ -47,7 +49,6 @@ import { buildAIContext } from '../services/aiContextBuilder';
 import { chatWithAI, chatWithContext } from '../services/gemini/features/chat';
 import { generateEditedImage, generateConceptImage, generateCircuitVideo } from '../services/gemini/features/media';
 import { generateWiringDiagram } from '../services/gemini/features/wiring';
-import { explainComponent, generateComponent3DCode } from '../services/gemini/features/components';
 import useInventorySync from '../hooks/useInventorySync';
 import { useSync } from '../hooks/useSync';
 
@@ -55,17 +56,15 @@ import { useSync } from '../hooks/useSync';
 import { AssistantTabs, type AssistantTabType } from './layout/assistant/AssistantTabs';
 
 // Types
-import { 
-  type ElectronicComponent, 
-  type AIContext, 
+import {
   type EnhancedChatMessage,
-  ACTION_SAFETY 
+  ACTION_SAFETY
 } from '../types';
 // ... (imports)
 const MainLayoutComponent: React.FC = () => {
   // Contexts
-  const { 
-    isInventoryOpen: _isInventoryOpen, 
+  const {
+    isInventoryOpen: _isInventoryOpen,
     setInventoryOpen: _setInventoryOpen,
     isAssistantOpen,
     setAssistantOpen,
@@ -87,14 +86,11 @@ const MainLayoutComponent: React.FC = () => {
 
   const toast = useToastApi();
 
-  const [assistantTab, setAssistantTab] = useState<AssistantTabType>('chat');
-  const [proactiveSuggestions] = useState<string[]>([]);
-
   // Neural Link (Gestures)
-  const { 
-    isActive: isNeuralLinkActive, 
+  const {
+    isActive: isNeuralLinkActive,
     isInitializing: isNeuralLinkLoading,
-    startTracking: startNeuralLink, 
+    startTracking: startNeuralLink,
     stopTracking: stopNeuralLink,
     result: gestureResult,
     getSnapshotBlob: getCameraSnapshot,
@@ -110,37 +106,92 @@ const MainLayoutComponent: React.FC = () => {
     }
   }, [neuralLinkEnabled, startNeuralLink, stopNeuralLink]);
 
-  const { inventory, setInventory } = useInventory();
+  const { inventory, setInventory, updateItem } = useInventory();
   const { diagram, updateDiagram } = useDiagram();
-  const { 
-    isRecording, startRecording, stopRecording, 
+  const {
+    isRecording, startRecording, stopRecording,
     loadingText: audioLoadingText, isProcessingAudio,
-    registerVisualContextProvider, unregisterVisualContextProvider, 
+    registerVisualContextProvider, unregisterVisualContextProvider,
     lastTranscription, clearTranscription
   } = useVoiceAssistant();
 
-  const { 
-    generationMode, setGenerationMode, 
-    imageSize, setImageSize, 
-    aspectRatio, setAspectRatio, 
+  const {
+    generationMode, setGenerationMode,
+    imageSize, setImageSize,
+    aspectRatio, setAspectRatio,
     useDeepThinking, setUseDeepThinking,
     recentHistory
   } = useAssistantState();
 
-  const { 
-    selectedComponentId: canvasSelectionId, 
+  const {
+    selectedComponentId: canvasSelectionId,
     setSelectedComponentId: setCanvasSelectionId,
     activeSelectionPath
   } = useSelection();
 
   const conversationManager = useConversationContext();
-  
-  const { 
-    isVisible: hudIsVisible, 
-    setVisible: setHudVisible, 
-    addFragment, 
-    removeFragment 
+
+  const {
+    isVisible: hudIsVisible,
+    setVisible: setHudVisible,
+    addFragment,
+    removeFragment
   } = useHUD();
+
+  // Canvas Ref
+  const canvasRef = useRef<DiagramCanvasRef>(null);
+  const setCanvasRef = useCallback((node: DiagramCanvasRef | null) => {
+    // Update ref
+    (canvasRef as React.MutableRefObject<DiagramCanvasRef | null>).current = node;
+    // Register with Voice Assistant
+    if (node) {
+      registerVisualContextProvider('canvas', node.getSnapshotBlob);
+    } else {
+      unregisterVisualContextProvider('canvas');
+    }
+  }, [registerVisualContextProvider, unregisterVisualContextProvider]);
+
+  // Layout State (local UI state + component interaction handlers)
+  const {
+    assistantTab, setAssistantTab,
+    proactiveSuggestions,
+    isLoading, setIsLoading,
+    loadingText, setLoadingText,
+    selectedComponent, setSelectedComponent,
+    modalContent,
+    isGenerating3D,
+    aiContext, setAIContext,
+    contextMenu,
+    isDashboardVisible,
+    isSearchOpen,
+    handleOpenComponentInfo,
+    handleComponentSelect,
+    handleComponentContextMenu,
+    handleCanvasBackgroundClick,
+    handleSearchSelect,
+    handleChatComponentClick,
+    handleComponentDoubleClick,
+    handleComponentDrop,
+    handleGenerate3D,
+    handleComponentSave,
+    handleCloseComponentEditor,
+    handleCloseSearch,
+    handleContextMenuDuplicate,
+    handleContextMenuDelete,
+  } = useLayoutState({
+    canvasRef,
+    diagram,
+    updateDiagram,
+    inventory,
+    setInventory,
+    updateItem,
+    setCanvasSelectionId,
+    hudIsVisible,
+    setHudVisible,
+    isFocusMode,
+    setFocusMode,
+    toast,
+  });
 
   // Register Camera visual context
   useEffect(() => {
@@ -203,10 +254,10 @@ const MainLayoutComponent: React.FC = () => {
     const middleTip = landmarks[12];
     const ringTip = landmarks[16];
     const pinkyTip = landmarks[20];
-    
-    const isPalmOpen = indexTip.y < landmarks[6].y && 
-                       middleTip.y < landmarks[10].y && 
-                       ringTip.y < landmarks[14].y && 
+
+    const isPalmOpen = indexTip.y < landmarks[6].y &&
+                       middleTip.y < landmarks[10].y &&
+                       ringTip.y < landmarks[14].y &&
                        pinkyTip.y < landmarks[18].y;
 
     const rect = canvasRef.current?.getContainerRect();
@@ -217,7 +268,7 @@ const MainLayoutComponent: React.FC = () => {
 
     // Throttle elementFromPoint (Forced Reflow optimization)
     let currentElement = lastElementRef.current;
-    const distFromLastSearch = lastElementPosRef.current 
+    const distFromLastSearch = lastElementPosRef.current
       ? Math.sqrt(Math.pow(clientX - lastElementPosRef.current.x, 2) + Math.pow(clientY - lastElementPosRef.current.y, 2))
       : Infinity;
 
@@ -236,11 +287,11 @@ const MainLayoutComponent: React.FC = () => {
         const velocity = deltaX / deltaTime;
 
         // Velocity threshold for swipe
-        if (Math.abs(velocity) > 0.001) { 
+        if (Math.abs(velocity) > 0.001) {
           const direction = velocity > 0 ? 'left' : 'right';
           const tabs: AssistantTabType[] = ['chat', 'bootcamp', 'history', 'analytics', 'audit'];
           const currentIndex = tabs.indexOf(assistantTab);
-          
+
           if (direction === 'left' && currentIndex < tabs.length - 1) {
             setAssistantTab(tabs[currentIndex + 1]);
             toast.info(`Tab: ${tabs[currentIndex + 1]}`, 1000, undefined, 'swipe-tab');
@@ -265,16 +316,16 @@ const MainLayoutComponent: React.FC = () => {
 
     const dispatchSafeEvent = (element: Element | null, type: string) => {
       if (!element) return;
-      
-      // Temporarily monkey-patch setPointerCapture/releasePointerCapture 
+
+      // Temporarily monkey-patch setPointerCapture/releasePointerCapture
       // because synthetic events don't have a real pointerId that browsers accept for capture.
       const originalSet = element.setPointerCapture;
       const originalRelease = element.releasePointerCapture;
-      
+
       // Some libs check for these before calling
       element.setPointerCapture = () => {};
       element.releasePointerCapture = () => {};
-      
+
       try {
         const event = createSyntheticEvent(type);
         element.dispatchEvent(event);
@@ -305,7 +356,7 @@ const MainLayoutComponent: React.FC = () => {
       if (!isPinchingRef.current) {
         const startTime = performance.now();
         isPinchingRef.current = true;
-        
+
         if (currentElement) {
           dispatchSafeEvent(currentElement, 'pointerdown');
           gestureMetricsService.logMetric({
@@ -326,10 +377,10 @@ const MainLayoutComponent: React.FC = () => {
   const activeSecurityFragments = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!diagram) return;
-    
+
     const violations = securityAuditor.auditCircuitSafety(diagram);
     const criticals = violations.filter(v => v.severity === 'high' || v.severity === 'critical');
-    
+
     const currentBatch = new Set<string>();
     if (criticals.length > 0) {
       criticals.forEach(v => {
@@ -388,29 +439,6 @@ const MainLayoutComponent: React.FC = () => {
     searchIndexer.index(docs);
   }, [inventory, diagram]);
 
-  // Local State (Controllers)
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState('');
-  const [selectedComponent, setSelectedComponent] = useState<ElectronicComponent | null>(null); // For Modal
-  const [modalContent, setModalContent] = useState<string>('');
-  const [aiContext, setAIContext] = useState<AIContext | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; componentId: string } | null>(null);
-  const [isDashboardVisible, setIsDashboardVisible] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  // Canvas Ref
-  const canvasRef = useRef<DiagramCanvasRef>(null);
-  const setCanvasRef = useCallback((node: DiagramCanvasRef | null) => {
-    // Update ref
-    (canvasRef as React.MutableRefObject<DiagramCanvasRef | null>).current = node;
-    // Register with Voice Assistant
-    if (node) {
-      registerVisualContextProvider('canvas', node.getSnapshotBlob);
-    } else {
-      unregisterVisualContextProvider('canvas');
-    }
-  }, [registerVisualContextProvider, unregisterVisualContextProvider]);
-
   // AI Actions Hook
   const aiActions = useAIActions({
     canvasRef,
@@ -424,35 +452,6 @@ const MainLayoutComponent: React.FC = () => {
 
   // Git-based Auto-snapshot
   useSync();
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
-      
-      if (e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        setIsSearchOpen(!isSearchOpen);
-      }
-
-      if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        setHudVisible(!hudIsVisible);
-        toast.info(!hudIsVisible ? 'HUD ENABLED' : 'HUD DISABLED');
-      }
-
-      if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        setFocusMode(!isFocusMode);
-        toast.info(!isFocusMode ? 'FOCUS MODE ON' : 'FOCUS MODE OFF');
-      }
-
-      if (e.key.toLowerCase() === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        setIsDashboardVisible(!isDashboardVisible);
-        toast.info(!isDashboardVisible ? 'DASHBOARD VIEW' : 'CANVAS VIEW');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hudIsVisible, setHudVisible, isFocusMode, setFocusMode, isDashboardVisible, setIsDashboardVisible, isSearchOpen, setIsSearchOpen, toast]);
 
   // Main Chat Handler
   const handleSendEnhancedMessage = useCallback(async (
@@ -599,8 +598,9 @@ const MainLayoutComponent: React.FC = () => {
       setLoadingText('');
     }
   }, [
-    isLoading, generationMode, imageSize, aspectRatio, inventory, 
-    aiContext, aiActions, useDeepThinking, conversationManager, updateDiagram
+    isLoading, generationMode, imageSize, aspectRatio, inventory,
+    aiContext, aiActions, useDeepThinking, conversationManager, updateDiagram,
+    setIsLoading, setLoadingText
   ]);
 
   // Handle Voice Transcription
@@ -633,13 +633,13 @@ const MainLayoutComponent: React.FC = () => {
       setAIContext(context);
     };
     updateContext();
-  }, [diagram, inventory, canvasSelectionId, selectedComponent, isSettingsOpen, recentHistory, activeSelectionPath]);
+  }, [diagram, inventory, canvasSelectionId, selectedComponent, isSettingsOpen, recentHistory, activeSelectionPath, setAIContext]);
 
   // Proactive Prediction Loop
   useEffect(() => {
     const runPredictions = async () => {
       if (!aiContext || isLoading) return;
-      
+
       // Heuristic: Only predict if we have components but few wires
       if (aiContext.componentCount > 0) {
         const predictions = await predictionEngine.predict(aiContext);
@@ -653,133 +653,20 @@ const MainLayoutComponent: React.FC = () => {
 
   // ... (Proactive Suggestions logic remains)
 
-  // Component Actions
-  const handleOpenComponentInfo = useCallback(async (component: ElectronicComponent) => {
-    setSelectedComponent(component);
-    const explain = await explainComponent(component.name);
-    setModalContent(explain);
-    setContextMenu(null); // Close context menu if open
-  }, []);
-
-  const handleComponentSelect = useCallback((componentId: string) => {
-    setCanvasSelectionId(componentId);
-    setContextMenu(null); // Close context menu on select
-  }, [setCanvasSelectionId]);
-
-  const handleComponentContextMenu = useCallback((componentId: string, x: number, y: number) => {
-    setCanvasSelectionId(componentId); // Select on right click too
-    setContextMenu({ x, y, componentId });
-  }, [setCanvasSelectionId]);
-
-  const handleCanvasBackgroundClick = useCallback(() => {
-    setCanvasSelectionId(null);
-    setContextMenu(null);
-  }, [setCanvasSelectionId]);
-
-  const handleSearchSelect = useCallback((doc: IndexedDocument) => {
-    setIsSearchOpen(false);
-    if (doc.category === 'component' || doc.category === 'diagram') {
-      const id = doc.category === 'component' ? doc.reference.id : doc.reference;
-      canvasRef.current?.highlightComponent(id, { color: '#00f3ff', duration: 3000, pulse: true });
-      canvasRef.current?.centerOnComponent(id, 1.2);
-      setCanvasSelectionId(id);
-    }
-  }, [setCanvasSelectionId]);
-
-  // ... (Chat logic)
-
-  const handleChatComponentClick = useCallback((componentId: string) => {
-    canvasRef.current?.highlightComponent(componentId, {
-      color: '#00f3ff',
-      duration: 3000,
-      pulse: true,
-    });
-    canvasRef.current?.centerOnComponent(componentId, 1.2);
-    setCanvasSelectionId(componentId); // Update selection
-  }, [setCanvasSelectionId]);
-
-  // ... (Visual Analysis listener)
-
-  const [isGenerating3D, setIsGenerating3D] = useState(false);
-  const { updateItem } = useInventory(); // Destructure updateItem
-
-  const handleGenerate3D = useCallback(async (name?: string, type?: string, prompt?: string, imageUrl?: string, precision?: 'draft' | 'masterpiece') => {
-    if (!selectedComponent && !name) return;
-    
-    const targetName = name || selectedComponent?.name || '';
-    const targetType = type || selectedComponent?.type || 'other';
-    const targetImage = imageUrl || selectedComponent?.imageUrl;
-    const targetPrecision = precision || selectedComponent?.precisionLevel || 'draft';
-    const isRegenerate = Boolean(selectedComponent?.threeCode);
-
-    setIsGenerating3D(true);
-    toast.info(isRegenerate ? 'Regenerating 3D Geometry...' : 'Synthesizing 3D Geometry...');
-    
-    try {
-      const code = await generateComponent3DCode(
-        targetName,
-        targetType,
-        prompt,
-        true, // Always bypass cache when explicitly requested from button
-        targetImage,
-        targetPrecision
-      );
-      
-      const updated = { 
-        ...(selectedComponent || {}), 
-        name: targetName,
-        type: targetType as ElectronicComponent['type'],
-        threeCode: code,
-        precisionLevel: targetPrecision
-      } as ElectronicComponent;
-      
-      // Update local state for immediate modal feedback
-      setSelectedComponent(updated);
-      
-      // Sync to global inventory using context helper
-      updateItem(updated);
-      
-      // If part of diagram, update diagram too
-      if (diagram?.components.some(c => c.id === updated.id)) {
-        updateDiagram({
-          ...diagram,
-          components: diagram.components.map(c => c.id === updated.id ? updated : c)
-        });
-      }
-      
-      toast.success(isRegenerate ? '3D Geometry Refined' : '3D Geometry Synthesized');
-    } catch (error) {
-      console.error('3D Generation Error:', error);
-      toast.error(`Generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsGenerating3D(false);
-    }
-  }, [selectedComponent, diagram, updateDiagram, updateItem, toast]);
-
-
-  const handleComponentDrop = useCallback((component: ElectronicComponent, x: number, y: number) => {
-    if (!diagram) return;
-    const newComponent = { ...component, id: `comp-${Date.now()}`, position: { x, y } };
-    updateDiagram({
-      ...diagram,
-      components: [...diagram.components, newComponent]
-    });
-  }, [diagram, updateDiagram]);
-
-  const handleComponentDoubleClick = useCallback((component: ElectronicComponent) => {
-    handleOpenComponentInfo(component);
-  }, [handleOpenComponentInfo]);
-
   return (
     <AppLayout
-      inventory={<Inventory onSelect={handleOpenComponentInfo} />}
+      inventory={
+        <Suspense fallback={<div className="flex items-center justify-center h-full text-neon-cyan animate-pulse text-xs">Loading Components...</div>}>
+          <Inventory onSelect={handleOpenComponentInfo} />
+        </Suspense>
+      }
       assistant={
         <AssistantSidebar>
           <ErrorBoundary>
             <div className="flex flex-col h-full overflow-hidden">
-              <AssistantTabs 
-                activeTab={assistantTab} 
-                onTabChange={setAssistantTab} 
+              <AssistantTabs
+                activeTab={assistantTab}
+                onTabChange={setAssistantTab}
               />
 
               <div className="flex-1 overflow-hidden">
@@ -854,9 +741,13 @@ const MainLayoutComponent: React.FC = () => {
                 ) : assistantTab === 'diagnostic' ? (
                   <DebugWorkbench />
                 ) : assistantTab === 'analytics' ? (
-                  <AnalyticsDashboard />
+                  <Suspense fallback={<div className="flex items-center justify-center h-full text-neon-cyan animate-pulse text-xs">Loading Analytics...</div>}>
+                    <AnalyticsDashboard />
+                  </Suspense>
                 ) : (
-                  <SystemLogViewer />
+                  <Suspense fallback={<div className="flex items-center justify-center h-full text-neon-cyan animate-pulse text-xs">Loading Logs...</div>}>
+                    <SystemLogViewer />
+                  </Suspense>
                 )}
               </div>
 
@@ -876,11 +767,8 @@ const MainLayoutComponent: React.FC = () => {
             <Suspense fallback={<div className="fixed inset-0 bg-black/50 z-50 text-neon-cyan">Loading...</div>}>
               <ComponentEditorModal
                 component={selectedComponent}
-                onClose={() => setSelectedComponent(null)}
-                onSave={(updated) => {
-                  setInventory(inventory.map((i) => (i.id === updated.id ? updated : i)));
-                  setSelectedComponent(null);
-                }}
+                onClose={handleCloseComponentEditor}
+                onSave={handleComponentSave}
                 explanation={modalContent}
                 isGenerating3D={isGenerating3D}
                 onGenerate3D={handleGenerate3D}
@@ -902,7 +790,9 @@ const MainLayoutComponent: React.FC = () => {
       <TacticalHUD />
       <MentorOverlay />
       {isDashboardVisible ? (
-        <DashboardView />
+        <Suspense fallback={<div className="flex items-center justify-center h-full text-neon-cyan animate-pulse text-xs">Loading Dashboard...</div>}>
+          <DashboardView />
+        </Suspense>
       ) : (
           <>
             <DiagramCanvas
@@ -924,8 +814,8 @@ const MainLayoutComponent: React.FC = () => {
               }}
             />
             {isNeuralLinkActive && (
-              <NeuralCursor 
-                landmarks={gestureResult?.landmarks[0] || null} 
+              <NeuralCursor
+                landmarks={gestureResult?.landmarks[0] || null}
                 isEngaged={isHandEngaged || false}
                 containerRect={canvasRef.current?.getContainerRect() || null}
               />
@@ -933,79 +823,23 @@ const MainLayoutComponent: React.FC = () => {
           </>
       )}
       {contextMenu && (
-        <div 
-          className="fixed z-50 bg-cyber-black panel-surface border border-neon-cyan/20 shadow-2xl py-1 min-w-[180px] panel-frame animate-fade-in-right"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-        >
-          <div className="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5 mb-1 flex items-center gap-2">
-            <div className="w-1 h-1 bg-neon-cyan animate-pulse" />
-            Component Actions
-          </div>
-          <button 
-            className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-neon-cyan/10 hover:text-neon-cyan transition-colors flex items-center gap-2 group"
-            onClick={() => {
-              const comp = diagram?.components.find(c => c.id === contextMenu.componentId);
-              if (comp) handleOpenComponentInfo(comp);
-            }}
-          >
-            <svg className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-            Edit
-          </button>
-          <button 
-            className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-neon-cyan/10 hover:text-neon-cyan transition-colors flex items-center gap-2 group"
-            onClick={() => {
-               const comp = diagram?.components.find(c => c.id === contextMenu.componentId);
-               if (comp) {
-                   const newComp = {
-                       ...comp,
-                       id: `${comp.sourceInventoryId || 'comp'}-${Date.now()}`,
-                       name: `${comp.name} (Copy)`
-                   };
-                   updateDiagram({
-                       ...diagram!,
-                       components: [...diagram!.components, newComp],
-                   });
-                   setContextMenu(null);
-               }
-            }}
-          >
-            <svg className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
-            Duplicate
-          </button>
-          <button 
-            className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-neon-cyan/10 hover:text-neon-cyan transition-colors flex items-center gap-2 group"
-            onClick={() => {
-               const comp = diagram?.components.find(c => c.id === contextMenu.componentId);
-               if (comp) handleOpenComponentInfo(comp); 
-            }}
-          >
-            <svg className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" /></svg>
-            Generate 3D
-          </button>
-          <div className="h-px bg-white/5 my-1 mx-2" />
-          <button 
-            className="w-full text-left px-4 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-2 group"
-            onClick={() => {
-               const newDiagram = {
-                   ...diagram!,
-                   components: diagram!.components.filter(c => c.id !== contextMenu.componentId),
-                   connections: diagram!.connections.filter(c => c.fromComponentId !== contextMenu.componentId && c.toComponentId !== contextMenu.componentId)
-               };
-               updateDiagram(newDiagram);
-               setContextMenu(null);
-            }}
-          >
-            <svg className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            Delete
-          </button>
-        </div>
+        <ComponentContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          componentId={contextMenu.componentId}
+          diagram={diagram}
+          onEdit={handleOpenComponentInfo}
+          onDuplicate={handleContextMenuDuplicate}
+          onGenerate3D={handleOpenComponentInfo}
+          onDelete={handleContextMenuDelete}
+        />
       )}
       <Gatekeeper />
       <CyberToast />
-      <OmniSearch 
-        isOpen={isSearchOpen} 
-        onClose={() => setIsSearchOpen(false)} 
-        onSelect={handleSearchSelect} 
+      <OmniSearch
+        isOpen={isSearchOpen}
+        onClose={handleCloseSearch}
+        onSelect={handleSearchSelect}
       />
     </AppLayout>
   );

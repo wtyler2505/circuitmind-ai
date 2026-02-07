@@ -1,17 +1,6 @@
-import React, { useState, useEffect, useRef, lazy, Suspense, memo } from 'react';
+import React, { lazy, Suspense, memo } from 'react';
 import { ElectronicComponent } from '../types';
-import { useToast } from '../hooks/useToast';
-
-// Type alias for component types
-type ComponentType = ElectronicComponent['type'];
-
-import {
-  generateComponentThumbnail,
-  smartFillComponent,
-  assistComponentEditor,
-  extractPinoutFromPDF,
-} from '../services/geminiService';
-import { datasheetProcessor } from '../services/datasheetProcessor';
+import { useComponentEditorForm } from '../hooks/useComponentEditorForm';
 
 // Lazy load Three.js viewer (heavy dependency)
 const ThreeViewer = lazy(() => import('./ThreeViewer'));
@@ -25,51 +14,6 @@ interface ComponentEditorModalProps {
   onGenerate3D: (name: string, type: string, prompt?: string, imageUrl?: string, precision?: 'draft' | 'masterpiece') => void;
 }
 
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'model';
-  text: string;
-  images?: string[]; // URLs of images found
-  actions?: ('GENERATE_IMAGE' | 'GENERATE_3D')[]; // Suggestions
-}
-
-// Reuse resize logic (could be moved to utility file in future refactor)
-const resizeImage = (base64Str: string, maxWidth = 800, maxHeight = 800): Promise<string> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.src = base64Str;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
-
-      if (width > height) {
-        if (width > maxWidth) {
-          height *= maxWidth / width;
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxHeight) {
-          width *= maxHeight / height;
-          height = maxHeight;
-        }
-      }
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
-      } else {
-        resolve(base64Str);
-      }
-    };
-    img.onerror = () => resolve(base64Str);
-  });
-};
-
 const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
   component,
   onClose,
@@ -78,349 +22,21 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
   isGenerating3D,
   onGenerate3D,
 }) => {
-  const [activeTab, setActiveTab] = useState<'info' | 'edit' | '3d' | 'image'>('info');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const toast = useToast();
-
-  // Edit State
-  const [editedName, setEditedName] = useState(component.name);
-  const [editedType, setEditedType] = useState<ElectronicComponent['type']>(component.type);
-  const [editedDescription, setEditedDescription] = useState(component.description);
-  const [editedPins, setEditedPins] = useState(component.pins?.join(', ') || '');
-  const [editedDatasheetUrl, setEditedDatasheetUrl] = useState(component.datasheetUrl || '');
-  const [editedThreeDModelUrl, setEditedThreeDModelUrl] = useState(component.threeDModelUrl || '');
-  const [editedImageUrl, setEditedImageUrl] = useState(component.imageUrl || '');
-  const [editedQuantity, setEditedQuantity] = useState(component.quantity || 1);
-  const [editedPrecisionLevel, setEditedPrecisionLevel] = useState<'draft' | 'masterpiece'>(component.precisionLevel || 'draft');
-
-  const [imagePrompt, setImagePrompt] = useState('');
-  const [threeDPrompt, setThreeDPrompt] = useState('');
-
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [isAiThinking, setIsAiThinking] = useState(false);
-  const [isExtractingDatasheet, setIsExtractingDatasheet] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [is3DCodeApproved, setIs3DCodeApproved] = useState(false);
-  const [imageLoadError, setImageLoadError] = useState(false);
-  const [isImageLoading, setIsImageLoading] = useState(false);
-
-  const datasheetInputRef = useRef<HTMLInputElement>(null);
-
-  // AI Chat Assistant State
-  const [showAiChat, setShowAiChat] = useState(false);
-  const [chatInput, setChatInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      role: 'model',
-      text: 'Hi! I can help you edit this component. I have access to search and can find datasheets or images for you. How can I help?',
-    },
-  ]);
-  const [isChatLoading, setIsChatLoading] = useState(false);
-  const [extractionLogs, setExtractionLogs] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (isExtractingDatasheet) {
-      const interval = setInterval(() => {
-        const logs = [
-          'Initializing Neural Vision...',
-          'Scanning Datasheet Structure...',
-          'Identifying Pin Configuration Table...',
-          'Extracting Electrical Characteristics...',
-          'Validating Logic Levels...',
-          'Normalizing Pin Labels...'
-        ];
-        setExtractionLogs(prev => {
-          const nextIndex = prev.length % logs.length;
-          return [...prev.slice(-4), logs[nextIndex]];
-        });
-      }, 800);
-      return () => clearInterval(interval);
-    } else {
-      setExtractionLogs([]);
-    }
-  }, [isExtractingDatasheet]);
-
-  useEffect(() => {
-    setEditedName(component.name);
-    setEditedType(component.type);
-    setEditedDescription(component.description);
-    setEditedPins(component.pins?.join(', ') || '');
-    setEditedDatasheetUrl(component.datasheetUrl || '');
-    setEditedThreeDModelUrl(component.threeDModelUrl || '');
-    setEditedImageUrl(component.imageUrl || '');
-    setEditedQuantity(component.quantity || 1);
-    setEditedPrecisionLevel(component.precisionLevel || 'draft');
-  }, [component]);
-
-  useEffect(() => {
-    setIs3DCodeApproved(false);
-  }, [component.id, component.threeCode]);
-
-  // Track changes for Save button state
-  useEffect(() => {
-    const pinsStr = component.pins?.join(', ') || '';
-    const isDirty =
-      editedName !== component.name ||
-      editedType !== component.type ||
-      editedDescription !== component.description ||
-      editedPins !== pinsStr ||
-      editedDatasheetUrl !== (component.datasheetUrl || '') ||
-      editedThreeDModelUrl !== (component.threeDModelUrl || '') ||
-      editedImageUrl !== (component.imageUrl || '') ||
-      editedQuantity !== (component.quantity || 1) ||
-      editedPrecisionLevel !== (component.precisionLevel || 'draft');
-
-    setHasChanges(isDirty);
-  }, [
-    editedName,
-    editedType,
-    editedDescription,
-    editedPins,
-    editedDatasheetUrl,
-    editedThreeDModelUrl,
-    editedImageUrl,
-    editedQuantity,
-    editedPrecisionLevel,
-    component,
-  ]);
-
-  // Scroll chat to bottom
-  useEffect(() => {
-    if (showAiChat) {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages, showAiChat]);
-
-  // Reset image error state when URL changes
-  useEffect(() => {
-    setImageLoadError(false);
-    if (editedImageUrl) {
-      setIsImageLoading(true);
-    }
-  }, [editedImageUrl]);
-
-  const handleDatasheetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsExtractingDatasheet(true);
-    try {
-      const base64 = await datasheetProcessor.fileToBase64(file);
-      const metadata = await extractPinoutFromPDF(base64);
-      
-      if (metadata) {
-        if (metadata.pins.length > 0) {
-          const pinNames = metadata.pins.map(p => p.name).join(', ');
-          setEditedPins(pinNames);
-        }
-        
-        const specSummary = `Logic: ${metadata.specs.logicLevel}. Voltage: ${metadata.specs.voltageMin}V - ${metadata.specs.voltageMax}V. ${metadata.specs.currentLimit ? `Max Current: ${metadata.specs.currentLimit}mA.` : ''}`;
-        setEditedDescription(prev => prev ? `${prev}\n\n${specSummary}` : specSummary);
-        
-        toast.success(`Extracted ${metadata.pins.length} pins with ${Math.round(metadata.confidence * 100)}% confidence.`);
-      } else {
-        toast.error('Could not extract data from this datasheet.');
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('Error processing PDF datasheet.');
-    } finally {
-      setIsExtractingDatasheet(false);
-      if (datasheetInputRef.current) datasheetInputRef.current.value = '';
-    }
-  };
-
-  const handleSave = () => {
-    const pinsArray = editedPins
-      .split(',')
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
-    onSave({
-      ...component,
-      name: editedName,
-      type: editedType,
-      description: editedDescription,
-      pins: pinsArray,
-      datasheetUrl: editedDatasheetUrl,
-      threeDModelUrl: editedThreeDModelUrl,
-      imageUrl: editedImageUrl,
-      quantity: editedQuantity,
-      precisionLevel: editedPrecisionLevel,
-    });
-    setHasChanges(false);
-    setActiveTab('info');
-  };
-
-  const has3DCode = Boolean(component.threeCode);
-  const has3DModel = Boolean(component.threeDModelUrl);
-  const canRenderThreeCode = has3DCode && is3DCodeApproved;
-  const codePreview = component.threeCode
-    ? component.threeCode.split('\n').slice(0, 16).join('\n')
-    : '';
-  const isCodeTruncated = component.threeCode ? component.threeCode.split('\n').length > 16 : false;
-
-  const handleGenerateThumbnail = async () => {
-    setIsGeneratingImage(true);
-    try {
-      const base64 = await generateComponentThumbnail(editedName, imagePrompt);
-      setEditedImageUrl(`data:image/png;base64,${base64}`);
-      setActiveTab('image'); // Switch to image tab to see result
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to generate image.');
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
-
-  const handleAiAssist = async () => {
-    if (!editedName) return;
-    setIsAiThinking(true);
-    try {
-      const result = await smartFillComponent(editedName, editedType);
-      if (result.description) setEditedDescription(result.description);
-      if (result.pins) setEditedPins(result.pins.join(', '));
-      if (result.type) setEditedType(result.type as ComponentType);
-      if (result.datasheetUrl) setEditedDatasheetUrl(result.datasheetUrl);
-    } catch (_e) {
-      toast.warning('AI could not find details for this component.');
-    } finally {
-      setIsAiThinking(false);
-    }
-  };
-
-  const handleSendChat = async (overrideInput?: string) => {
-    const userMsg = overrideInput || chatInput;
-    if (!userMsg.trim()) return;
-
-    setChatInput('');
-    setChatMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), role: 'user', text: userMsg },
-    ]);
-    setIsChatLoading(true);
-
-    const currentData: Partial<ElectronicComponent> = {
-      name: editedName,
-      type: editedType,
-      description: editedDescription,
-      pins: editedPins
-        .split(',')
-        .map((p) => p.trim())
-        .filter((p) => p),
-      datasheetUrl: editedDatasheetUrl,
-      threeDModelUrl: editedThreeDModelUrl,
-      imageUrl: editedImageUrl,
-      quantity: editedQuantity,
-    };
-
-    // Prepare history for API (simplified)
-    const apiHistory = chatMessages.map((m) => ({ role: m.role, text: m.text }));
-
-    try {
-      const { updates, reply, foundImages, suggestedActions } = await assistComponentEditor(
-        apiHistory,
-        currentData,
-        userMsg
-      );
-
-      // Apply updates
-      if (updates.name) setEditedName(updates.name);
-      if (updates.type) setEditedType(updates.type as ComponentType);
-      if (updates.description) setEditedDescription(updates.description);
-      if (updates.pins) setEditedPins(updates.pins.join(', '));
-      if (updates.datasheetUrl) setEditedDatasheetUrl(updates.datasheetUrl);
-      if (updates.threeDModelUrl) setEditedThreeDModelUrl(updates.threeDModelUrl);
-      if (updates.imageUrl) setEditedImageUrl(updates.imageUrl);
-      if (updates.quantity !== undefined) setEditedQuantity(updates.quantity);
-
-      // Filter to valid action types
-      const validActions = suggestedActions.filter(
-        (a): a is 'GENERATE_IMAGE' | 'GENERATE_3D' =>
-          a === 'GENERATE_IMAGE' || a === 'GENERATE_3D'
-      );
-
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: 'model',
-          text: reply,
-          images: foundImages,
-          actions: validActions.length > 0 ? validActions : undefined,
-        },
-      ]);
-    } catch (e) {
-      console.error(e);
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: 'model',
-          text: 'Sorry, I had trouble searching for that information. Please try again.',
-        },
-      ]);
-    } finally {
-      setIsChatLoading(false);
-    }
-  };
-
-  const handleAction = async (action: string) => {
-    if (action === 'GENERATE_IMAGE') {
-      setChatMessages((prev) => [
-        ...prev,
-        { id: Date.now().toString(), role: 'user', text: 'Generate an image for this component.' },
-      ]);
-      handleGenerateThumbnail();
-    } else if (action === 'GENERATE_3D') {
-      setChatMessages((prev) => [
-        ...prev,
-        { id: Date.now().toString(), role: 'user', text: 'Generate a 3D model code for this.' },
-      ]);
-      onGenerate3D(editedName, editedType, threeDPrompt, editedImageUrl, editedPrecisionLevel);
-      setActiveTab('3d');
-    }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result as string;
-      const resized = await resizeImage(base64);
-      setEditedImageUrl(resized);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const selectFoundImage = (url: string) => {
-    setEditedImageUrl(url);
-    setChatMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), role: 'user', text: 'Use this image.' },
-    ]);
-    setChatMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), role: 'model', text: 'Updated component image.' },
-    ]);
-  };
+  const form = useComponentEditorForm({ component, onSave, onGenerate3D });
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
-      {isExtractingDatasheet && (
+      {form.isExtractingDatasheet && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-slate-900 border border-neon-cyan/50 p-6 cut-corner-md w-80 shadow-[0_0_30px_rgba(0,243,255,0.2)]">
             <h3 className="text-neon-cyan font-bold uppercase tracking-widest mb-4 animate-pulse">
               ANALYZING_DATASHEET
             </h3>
             <div className="font-mono text-[10px] text-slate-300 space-y-1 h-32 overflow-hidden border-l border-neon-cyan/20 pl-2">
-              {extractionLogs.map((log, i) => (
+              {form.extractionLogs.map((log, i) => (
                 <div key={i} className="animate-fade-in opacity-80">
                   <span className="text-neon-cyan mr-2">›</span>
                   {log}
@@ -432,21 +48,21 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
         </div>
       )}
       <div
-        className={`bg-cyber-card border border-neon-cyan/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh] md:max-h-[80vh] transition-all duration-300 ${showAiChat ? 'w-full max-w-4xl' : 'w-full max-w-2xl'}`}
+        className={`bg-cyber-card border border-neon-cyan/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh] md:max-h-[80vh] transition-all duration-300 ${form.showAiChat ? 'w-full max-w-4xl' : 'w-full max-w-2xl'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-4 md:p-6 border-b border-slate-700 flex justify-between items-start shrink-0">
           <div className="flex items-center gap-3 md:gap-4">
-            {editedImageUrl ? (
+            {form.editedImageUrl ? (
               <img
-                src={editedImageUrl}
+                src={form.editedImageUrl}
                 alt="Thumbnail"
                 className="w-10 h-10 md:w-12 md:h-12 rounded border border-slate-600 object-cover"
               />
             ) : (
               <div className="w-10 h-10 md:w-12 md:h-12 rounded border border-slate-600 bg-black flex items-center justify-center text-slate-300 font-mono font-bold text-xl">
-                {editedType.charAt(0).toUpperCase()}
+                {form.editedType.charAt(0).toUpperCase()}
               </div>
             )}
             <div>
@@ -473,26 +89,26 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
         {/* Tabs - Scrollable on mobile */}
         <div className="flex border-b border-slate-700 bg-slate-900/50 shrink-0 overflow-x-auto">
           <button
-            onClick={() => setActiveTab('info')}
-            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 whitespace-nowrap ${activeTab === 'info' ? 'border-neon-cyan text-neon-cyan bg-neon-cyan/5' : 'border-transparent text-slate-400 hover:text-white'}`}
+            onClick={() => form.setActiveTab('info')}
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 whitespace-nowrap ${form.activeTab === 'info' ? 'border-neon-cyan text-neon-cyan bg-neon-cyan/5' : 'border-transparent text-slate-400 hover:text-white'}`}
           >
             INFO
           </button>
           <button
-            onClick={() => setActiveTab('edit')}
-            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 whitespace-nowrap ${activeTab === 'edit' ? 'border-neon-green text-neon-green bg-neon-green/5' : 'border-transparent text-slate-400 hover:text-white'}`}
+            onClick={() => form.setActiveTab('edit')}
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 whitespace-nowrap ${form.activeTab === 'edit' ? 'border-neon-green text-neon-green bg-neon-green/5' : 'border-transparent text-slate-400 hover:text-white'}`}
           >
             EDIT
           </button>
           <button
-            onClick={() => setActiveTab('image')}
-            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 whitespace-nowrap ${activeTab === 'image' ? 'border-neon-amber text-neon-amber bg-neon-amber/5' : 'border-transparent text-slate-400 hover:text-white'}`}
+            onClick={() => form.setActiveTab('image')}
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 whitespace-nowrap ${form.activeTab === 'image' ? 'border-neon-amber text-neon-amber bg-neon-amber/5' : 'border-transparent text-slate-400 hover:text-white'}`}
           >
             IMAGE
           </button>
           <button
-            onClick={() => setActiveTab('3d')}
-            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 whitespace-nowrap ${activeTab === '3d' ? 'border-neon-purple text-neon-purple bg-neon-purple/5' : 'border-transparent text-slate-400 hover:text-white'}`}
+            onClick={() => form.setActiveTab('3d')}
+            className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 whitespace-nowrap ${form.activeTab === '3d' ? 'border-neon-purple text-neon-purple bg-neon-purple/5' : 'border-transparent text-slate-400 hover:text-white'}`}
           >
             3D MODEL
           </button>
@@ -501,7 +117,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
         <div className="flex flex-1 overflow-hidden">
           {/* Main Content Area */}
           <div className={`flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6`}>
-            {activeTab === 'info' && (
+            {form.activeTab === 'info' && (
               <>
                 <div className="prose prose-invert prose-sm max-w-none">
                   <p className="text-slate-300 italic mb-4">{component.description}</p>
@@ -562,7 +178,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
               </>
             )}
 
-            {activeTab === 'edit' && (
+            {form.activeTab === 'edit' && (
               <div className="space-y-6">
                 <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-4">
                   <div className="flex items-center justify-between">
@@ -585,11 +201,11 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       </label>
                       <div className="flex gap-2">
                         <button
-                          onClick={handleAiAssist}
-                          disabled={isAiThinking || !editedName}
+                          onClick={form.handleAiAssist}
+                          disabled={form.isAiThinking || !form.editedName}
                           className="text-[10px] font-bold text-neon-cyan hover:text-white flex items-center gap-1 transition-colors disabled:opacity-80 border border-neon-cyan/30 px-2 py-0.5 rounded bg-neon-cyan/5"
                         >
-                          {isAiThinking ? (
+                          {form.isAiThinking ? (
                             <span className="animate-pulse">ANALYZING...</span>
                           ) : (
                             <>
@@ -611,8 +227,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                           )}
                         </button>
                         <button
-                          onClick={() => setShowAiChat(!showAiChat)}
-                          className={`text-[10px] font-bold flex items-center gap-1 transition-colors border px-2 py-0.5 rounded ${showAiChat ? 'bg-neon-purple text-white border-neon-purple' : 'text-neon-purple hover:text-white border-neon-purple/30 bg-neon-purple/5'}`}
+                          onClick={() => form.setShowAiChat(!form.showAiChat)}
+                          className={`text-[10px] font-bold flex items-center gap-1 transition-colors border px-2 py-0.5 rounded ${form.showAiChat ? 'bg-neon-purple text-white border-neon-purple' : 'text-neon-purple hover:text-white border-neon-purple/30 bg-neon-purple/5'}`}
                         >
                           <svg
                             className="w-3 h-3"
@@ -635,8 +251,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       id="editedName"
                       name="editedName"
                       type="text"
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
+                      value={form.editedName}
+                      onChange={(e) => form.setEditedName(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
                     />
                   </div>
@@ -653,8 +269,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       <select
                         id="editedType"
                         name="editedType"
-                        value={editedType}
-                        onChange={(e) => setEditedType(e.target.value as ComponentType)}
+                        value={form.editedType}
+                        onChange={(e) => form.setEditedType(e.target.value as ElectronicComponent['type'])}
                         className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-2 text-white focus:border-neon-green focus:outline-none"
                       >
                         <option value="microcontroller">Microcontroller</option>
@@ -676,8 +292,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                         name="editedQuantity"
                         type="number"
                         min="0"
-                        value={editedQuantity}
-                        onChange={(e) => setEditedQuantity(parseInt(e.target.value) || 0)}
+                        value={form.editedQuantity}
+                        onChange={(e) => form.setEditedQuantity(parseInt(e.target.value) || 0)}
                         className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white focus:border-neon-green focus:outline-none"
                       />
                     </div>
@@ -705,8 +321,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                     <textarea
                       id="editedDescription"
                       name="editedDescription"
-                      value={editedDescription}
-                      onChange={(e) => setEditedDescription(e.target.value)}
+                      value={form.editedDescription}
+                      onChange={(e) => form.setEditedDescription(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none h-24 resize-none transition-all"
                       placeholder="Enter a short description for this component..."
                     />
@@ -724,8 +340,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       id="editedPins"
                       name="editedPins"
                       type="text"
-                      value={editedPins}
-                      onChange={(e) => setEditedPins(e.target.value)}
+                      value={form.editedPins}
+                      onChange={(e) => form.setEditedPins(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none font-mono text-sm"
                       placeholder="Comma separated: VCC, GND, D1, D2..."
                     />
@@ -755,18 +371,18 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                         id="editedImageUrl"
                         name="editedImageUrl"
                         type="text"
-                        value={editedImageUrl}
-                        onChange={(e) => setEditedImageUrl(e.target.value)}
+                        value={form.editedImageUrl}
+                        onChange={(e) => form.setEditedImageUrl(e.target.value)}
                         className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none"
                         placeholder="https://example.com/image.png"
                       />
                       <button
-                        onClick={handleGenerateThumbnail}
-                        disabled={isGeneratingImage || !editedName}
+                        onClick={form.handleGenerateThumbnail}
+                        disabled={form.isGeneratingImage || !form.editedName}
                         className="bg-neon-amber/10 border border-neon-amber/50 text-neon-amber w-10 h-full rounded hover:bg-neon-amber hover:text-black disabled:opacity-80 transition-colors flex items-center justify-center shrink-0"
                         title="Auto-generate AI Thumbnail"
                       >
-                        {isGeneratingImage ? (
+                        {form.isGeneratingImage ? (
                           <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                           <svg
@@ -800,18 +416,18 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                         id="editedDatasheetUrl"
                         name="editedDatasheetUrl"
                         type="url"
-                        value={editedDatasheetUrl}
-                        onChange={(e) => setEditedDatasheetUrl(e.target.value)}
+                        value={form.editedDatasheetUrl}
+                        onChange={(e) => form.setEditedDatasheetUrl(e.target.value)}
                         className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none"
                         placeholder="https://example.com/datasheet.pdf"
                       />
                       <button
-                        onClick={() => datasheetInputRef.current?.click()}
-                        disabled={isExtractingDatasheet}
+                        onClick={() => form.datasheetInputRef.current?.click()}
+                        disabled={form.isExtractingDatasheet}
                         className="bg-neon-cyan/10 border border-neon-cyan/50 text-neon-cyan px-3 rounded hover:bg-neon-cyan hover:text-black disabled:opacity-80 transition-colors flex items-center justify-center gap-2 text-[10px] font-bold uppercase shrink-0"
                         title="Extract pins from PDF"
                       >
-                        {isExtractingDatasheet ? (
+                        {form.isExtractingDatasheet ? (
                           <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                           <svg
@@ -836,8 +452,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                         type="file"
                         accept="application/pdf"
                         className="hidden"
-                        ref={datasheetInputRef}
-                        onChange={handleDatasheetUpload}
+                        ref={form.datasheetInputRef}
+                        onChange={form.handleDatasheetUpload}
                       />
                     </div>
                   </div>
@@ -854,8 +470,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       id="editedThreeDModelUrl"
                       name="editedThreeDModelUrl"
                       type="url"
-                      value={editedThreeDModelUrl}
-                      onChange={(e) => setEditedThreeDModelUrl(e.target.value)}
+                      value={form.editedThreeDModelUrl}
+                      onChange={(e) => form.setEditedThreeDModelUrl(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-white placeholder-slate-300 focus:border-neon-green focus:outline-none"
                       placeholder="https://example.com/model.glb"
                     />
@@ -864,42 +480,42 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
 
                 <div className="pt-2">
                   <button
-                    onClick={handleSave}
-                    disabled={!hasChanges}
+                    onClick={form.handleSave}
+                    disabled={!form.hasChanges}
                     className={`w-full font-bold py-3 rounded transition-all shadow-lg transform active:scale-[0.98] ${
-                      hasChanges
+                      form.hasChanges
                         ? 'bg-neon-green text-black hover:bg-green-400 shadow-[0_0_15px_rgba(0,255,157,0.3)] hover:shadow-[0_0_25px_rgba(0,255,157,0.5)]'
                         : 'bg-slate-700 text-slate-300 cursor-not-allowed opacity-80'
                     }`}
                   >
-                    {hasChanges ? 'SAVE CHANGES' : 'NO CHANGES'}
+                    {form.hasChanges ? 'SAVE CHANGES' : 'NO CHANGES'}
                   </button>
                 </div>
               </div>
             )}
 
-            {activeTab === 'image' && (
+            {form.activeTab === 'image' && (
               <div className="flex flex-col h-full gap-4">
                 <div className="bg-black/50 border border-slate-700 rounded-xl overflow-hidden aspect-square relative flex items-center justify-center max-h-[300px] mx-auto w-full">
-                  {editedImageUrl && !imageLoadError ? (
+                  {form.editedImageUrl && !form.imageLoadError ? (
                     <>
-                      {isImageLoading && (
+                      {form.isImageLoading && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
                           <div className="w-8 h-8 border-2 border-neon-amber border-t-transparent rounded-full animate-spin"></div>
                         </div>
                       )}
                       <img
-                        src={editedImageUrl}
+                        src={form.editedImageUrl}
                         alt="Preview"
-                        className={`w-full h-full object-contain transition-opacity ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-                        onLoad={() => setIsImageLoading(false)}
+                        className={`w-full h-full object-contain transition-opacity ${form.isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                        onLoad={() => form.setIsImageLoading(false)}
                         onError={() => {
-                          setIsImageLoading(false);
-                          setImageLoadError(true);
+                          form.setIsImageLoading(false);
+                          form.setImageLoadError(true);
                         }}
                       />
                     </>
-                  ) : imageLoadError ? (
+                  ) : form.imageLoadError ? (
                     <div className="text-red-400 text-center p-4">
                       <svg
                         className="w-16 h-16 mx-auto mb-2 opacity-70"
@@ -918,8 +534,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       <p className="text-xs text-slate-500 mt-1">The image URL may be invalid or blocked</p>
                       <button
                         onClick={() => {
-                          setImageLoadError(false);
-                          setEditedImageUrl('');
+                          form.setImageLoadError(false);
+                          form.setEditedImageUrl('');
                         }}
                         className="mt-3 text-xs text-neon-cyan hover:text-white transition-colors"
                       >
@@ -950,8 +566,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                   <div className="space-y-1">
                     <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Optional Refinement Prompt</label>
                     <textarea
-                      value={imagePrompt}
-                      onChange={(e) => setImagePrompt(e.target.value)}
+                      value={form.imagePrompt}
+                      onChange={(e) => form.setImagePrompt(e.target.value)}
                       placeholder="e.g. realistic product photo, dark blue board, high detail..."
                       className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white focus:border-neon-amber focus:outline-none h-16 resize-none"
                     />
@@ -959,7 +575,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <button
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => form.fileInputRef.current?.click()}
                       className="bg-slate-800 text-slate-200 font-bold py-3 rounded hover:bg-slate-700 transition-colors uppercase tracking-widest text-xs border border-slate-600 flex items-center justify-center gap-2"
                     >
                       <svg
@@ -981,16 +597,16 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      ref={fileInputRef}
-                      onChange={handleImageUpload}
+                      ref={form.fileInputRef}
+                      onChange={form.handleImageUpload}
                     />
 
                     <button
-                      onClick={handleGenerateThumbnail}
-                      disabled={isGeneratingImage || !editedName}
+                      onClick={form.handleGenerateThumbnail}
+                      disabled={form.isGeneratingImage || !form.editedName}
                       className="bg-neon-amber text-black font-bold py-3 rounded hover:bg-white transition-colors uppercase tracking-widest text-xs shadow-lg disabled:opacity-80 flex items-center justify-center gap-2"
                     >
-                      {isGeneratingImage ? (
+                      {form.isGeneratingImage ? (
                         <>
                           <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                           GENERATING...
@@ -1019,7 +635,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
               </div>
             )}
 
-            {activeTab === '3d' && (
+            {form.activeTab === '3d' && (
               <div className="flex flex-col h-full min-h-[300px] md:min-h-[400px]">
                 <div className="mb-4 space-y-4">
                   <div className="flex justify-between items-center">
@@ -1027,7 +643,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       INTERACTIVE 3D VIEW
                     </h4>
                     <button
-                      onClick={() => onGenerate3D(editedName, editedType, threeDPrompt, editedImageUrl, editedPrecisionLevel)}
+                      onClick={() => onGenerate3D(form.editedName, form.editedType, form.threeDPrompt, form.editedImageUrl, form.editedPrecisionLevel)}
                       disabled={isGenerating3D}
                       className="text-xs bg-slate-800 border border-slate-600 hover:border-neon-purple hover:text-neon-purple px-3 py-1 rounded transition-colors disabled:opacity-80"
                     >
@@ -1046,8 +662,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                         {(['draft', 'masterpiece'] as const).map((level) => (
                           <button
                             key={level}
-                            onClick={() => setEditedPrecisionLevel(level)}
-                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase transition-all border ${editedPrecisionLevel === level ? 'bg-neon-purple/20 border-neon-purple text-neon-purple shadow-[0_0_10px_rgba(188,19,254,0.2)]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}
+                            onClick={() => form.setEditedPrecisionLevel(level)}
+                            className={`flex-1 py-1.5 rounded text-[10px] font-bold uppercase transition-all border ${form.editedPrecisionLevel === level ? 'bg-neon-purple/20 border-neon-purple text-neon-purple shadow-[0_0_10px_rgba(188,19,254,0.2)]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'}`}
                           >
                             {level}
                           </button>
@@ -1055,24 +671,24 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                       </div>
                     </div>
                     <div className="w-1/3 text-[9px] text-slate-500 font-mono leading-tight italic border-l border-slate-800 pl-3">
-                      {editedPrecisionLevel === 'masterpiece' 
-                        ? 'Highest fidelity. PBR materials & procedural details.' 
+                      {form.editedPrecisionLevel === 'masterpiece'
+                        ? 'Highest fidelity. PBR materials & procedural details.'
                         : 'Fast generation. Basic shapes & colors.'}
                     </div>
                   </div>
-                  
+
                   <div className="space-y-1">
                     <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Optional 3D Refinement</label>
                     <textarea
-                      value={threeDPrompt}
-                      onChange={(e) => setThreeDPrompt(e.target.value)}
+                      value={form.threeDPrompt}
+                      onChange={(e) => form.setThreeDPrompt(e.target.value)}
                       placeholder="e.g. make it blue, add 4 long pins, make the base taller..."
                       className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-xs text-white focus:border-neon-purple focus:outline-none h-16 resize-none"
                     />
                   </div>
                 </div>
                 <div className="flex-1 bg-black rounded-xl overflow-hidden border border-slate-700 relative">
-                  {(has3DModel || canRenderThreeCode) && !isGenerating3D ? (
+                  {(form.has3DModel || form.canRenderThreeCode) && !isGenerating3D ? (
                     <>
                       <Suspense
                         fallback={
@@ -1082,17 +698,17 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                         }
                       >
                         <ThreeViewer
-                          code={canRenderThreeCode ? component.threeCode : undefined}
+                          code={form.canRenderThreeCode ? component.threeCode : undefined}
                           modelUrl={component.threeDModelUrl}
                         />
                       </Suspense>
-                      {has3DCode && !is3DCodeApproved && (
+                      {form.has3DCode && !form.is3DCodeApproved && (
                         <div className="absolute left-3 right-3 bottom-3 bg-slate-950/90 border border-slate-700 rounded-lg p-3 text-[11px] text-slate-300">
                           <div className="flex flex-col gap-2">
                             <div className="flex items-center justify-between gap-3">
                               <span>AI 3D code is blocked until you run it.</span>
                               <button
-                                onClick={() => setIs3DCodeApproved(true)}
+                                onClick={() => form.setIs3DCodeApproved(true)}
                                 className="bg-neon-purple text-black px-3 py-1 rounded text-[10px] font-bold hover:bg-purple-300 transition-colors"
                               >
                                 RUN 3D CODE
@@ -1103,8 +719,8 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                                 Preview code
                               </summary>
                               <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[10px] text-slate-200">
-                                {codePreview}
-                                {isCodeTruncated ? '\n...' : ''}
+                                {form.codePreview}
+                                {form.isCodeTruncated ? '\n...' : ''}
                               </pre>
                             </details>
                           </div>
@@ -1120,18 +736,18 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                             Constructing Geometry...
                           </span>
                         </>
-                      ) : has3DCode ? (
+                      ) : form.has3DCode ? (
                         <>
                           <p className="text-sm text-slate-300">AI-generated 3D code is ready.</p>
                           <p className="text-[11px] text-slate-300 max-w-xs">
                             Review the code and run it when you are ready.
                           </p>
                           <div className="w-full max-w-md bg-slate-950/80 border border-slate-700 rounded p-3 text-[10px] font-mono text-slate-200 max-h-32 overflow-auto whitespace-pre-wrap">
-                            {codePreview}
-                            {isCodeTruncated ? '\n...' : ''}
+                            {form.codePreview}
+                            {form.isCodeTruncated ? '\n...' : ''}
                           </div>
                           <button
-                            onClick={() => setIs3DCodeApproved(true)}
+                            onClick={() => form.setIs3DCodeApproved(true)}
                             className="bg-neon-purple text-black px-4 py-2 rounded text-xs font-bold hover:bg-purple-300 transition-colors"
                           >
                             RUN 3D CODE
@@ -1157,7 +773,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
           </div>
 
           {/* AI CHAT SIDE PANEL */}
-          {showAiChat && (
+          {form.showAiChat && (
             <div className="w-80 border-l border-slate-700 bg-slate-900/50 flex flex-col animate-fade-in-right">
               <div className="p-3 border-b border-slate-700 flex justify-between items-center bg-slate-900">
                 <h4 className="text-xs font-bold text-neon-purple font-mono flex items-center gap-2">
@@ -1165,7 +781,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                   AI ASSISTANT
                 </h4>
                 <button
-                  onClick={() => setShowAiChat(false)}
+                  onClick={() => form.setShowAiChat(false)}
                   className="text-slate-300 hover:text-white"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1180,35 +796,35 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
               </div>
 
               <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar bg-slate-950/30">
-                {chatMessages.length === 1 && (
+                {form.chatMessages.length === 1 && (
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     <button
-                      onClick={() => handleSendChat("Find the datasheet for this component")}
+                      onClick={() => form.handleSendChat("Find the datasheet for this component")}
                       className="text-[10px] bg-slate-800 border border-slate-700 hover:border-neon-purple text-slate-300 hover:text-white p-2 rounded text-left transition-colors"
                     >
                       📄 Find Datasheet
                     </button>
                     <button
-                      onClick={() => handleSendChat("What is the pinout for this?")}
+                      onClick={() => form.handleSendChat("What is the pinout for this?")}
                       className="text-[10px] bg-slate-800 border border-slate-700 hover:border-neon-purple text-slate-300 hover:text-white p-2 rounded text-left transition-colors"
                     >
                       🔌 Get Pinout
                     </button>
                     <button
-                      onClick={() => handleSendChat("Find a product image")}
+                      onClick={() => form.handleSendChat("Find a product image")}
                       className="text-[10px] bg-slate-800 border border-slate-700 hover:border-neon-purple text-slate-300 hover:text-white p-2 rounded text-left transition-colors"
                     >
                       🖼️ Search Image
                     </button>
                     <button
-                      onClick={() => handleSendChat("Suggest compatible parts")}
+                      onClick={() => form.handleSendChat("Suggest compatible parts")}
                       className="text-[10px] bg-slate-800 border border-slate-700 hover:border-neon-purple text-slate-300 hover:text-white p-2 rounded text-left transition-colors"
                     >
                       🔗 Compatible Parts
                     </button>
                   </div>
                 )}
-                {chatMessages.map((msg) => (
+                {form.chatMessages.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
@@ -1226,7 +842,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                           <div
                             key={i}
                             className="flex-shrink-0 w-16 h-16 rounded border border-slate-600 overflow-hidden cursor-pointer hover:border-neon-cyan relative group"
-                            onClick={() => selectFoundImage(img)}
+                            onClick={() => form.selectFoundImage(img)}
                           >
                             <img src={img} alt="Found" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center">
@@ -1255,7 +871,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                         {msg.actions.map((action, i) => (
                           <button
                             key={i}
-                            onClick={() => handleAction(action)}
+                            onClick={() => form.handleAction(action)}
                             className="text-[10px] bg-neon-cyan/10 border border-neon-cyan/40 text-neon-cyan px-2 py-1 rounded hover:bg-neon-cyan hover:text-black transition-colors"
                           >
                             {action.replace('_', ' ')}
@@ -1265,7 +881,7 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                     )}
                   </div>
                 ))}
-                {isChatLoading && (
+                {form.isChatLoading && (
                   <div className="flex justify-start">
                     <div className="bg-slate-800 p-2 rounded border border-slate-700 flex gap-1">
                       <div className="w-1.5 h-1.5 bg-neon-purple rounded-full animate-bounce"></div>
@@ -1274,23 +890,23 @@ const ComponentEditorModalComponent: React.FC<ComponentEditorModalProps> = ({
                     </div>
                   </div>
                 )}
-                <div ref={chatEndRef} />
+                <div ref={form.chatEndRef} />
               </div>
 
               <div className="p-3 border-t border-slate-700 bg-slate-900">
                 <div className="relative">
                   <input
                     type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendChat()}
+                    value={form.chatInput}
+                    onChange={(e) => form.setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && form.handleSendChat()}
                     placeholder="Edit pins, description..."
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-xs text-white focus:outline-none focus:border-neon-purple"
-                    disabled={isChatLoading}
+                    disabled={form.isChatLoading}
                   />
                   <button
-                    onClick={() => handleSendChat()}
-                    disabled={!chatInput.trim() || isChatLoading}
+                    onClick={() => form.handleSendChat()}
+                    disabled={!form.chatInput.trim() || form.isChatLoading}
                                 className="absolute right-1 top-1 p-1 text-slate-300 hover:text-neon-purple disabled:opacity-80"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
