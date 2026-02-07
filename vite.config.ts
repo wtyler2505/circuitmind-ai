@@ -48,6 +48,8 @@ export default defineConfig(({ mode }) => {
           },
           workbox: {
             globPatterns: ['**/*.{js,css,html,ico,png,webp,svg}'],
+            maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB per-file limit
+            navigateFallback: 'index.html',
             runtimeCaching: [
               {
                 urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -60,6 +62,28 @@ export default defineConfig(({ mode }) => {
                   },
                   cacheableResponse: {
                     statuses: [0, 200]
+                  }
+                }
+              },
+              {
+                urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'images-cache',
+                  expiration: {
+                    maxEntries: 60,
+                    maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                  }
+                }
+              },
+              {
+                urlPattern: /\.(?:js|css)$/i,
+                handler: 'StaleWhileRevalidate',
+                options: {
+                  cacheName: 'static-resources',
+                  expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
                   }
                 }
               }

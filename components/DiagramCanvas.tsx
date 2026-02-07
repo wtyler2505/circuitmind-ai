@@ -7,9 +7,13 @@ import React, {
   useImperativeHandle,
   useCallback,
   useReducer,
+  lazy,
+  Suspense,
 } from 'react';
 import { WiringDiagram, ElectronicComponent, WireConnection } from '../types';
-import { Wire, DiagramNode, COMPONENT_WIDTH, COMPONENT_HEIGHT, SVG_GRADIENTS, SVG_FILTERS, Diagram3DView } from './diagram';
+import { Wire, DiagramNode, COMPONENT_WIDTH, COMPONENT_HEIGHT, SVG_GRADIENTS, SVG_FILTERS } from './diagram';
+
+const Diagram3DView = lazy(() => import('./diagram/Diagram3DView'));
 import { PredictiveGhost } from './diagram/PredictiveGhost';
 import { diagramReducer, INITIAL_STATE } from './diagram/diagramState';
 import { useHUD } from '../contexts/HUDContext';
@@ -1150,15 +1154,17 @@ const DiagramCanvasRenderer = ({
         </div>
 
         {viewMode === '3d' ? (
-          <div className="w-full h-full">
-            <Diagram3DView
-              ref={view3DRef}
-              diagram={diagram}
-              positions={state.nodePositions}
-              onComponentClick={(component) => onComponentSelect?.(component.id)}
-              onGenerate3D={onGenerate3D}
-            />
-          </div>
+          <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-cyber-dark text-neon-cyan">Loading 3D view...</div>}>
+            <div className="w-full h-full">
+              <Diagram3DView
+                ref={view3DRef}
+                diagram={diagram}
+                positions={state.nodePositions}
+                onComponentClick={(component) => onComponentSelect?.(component.id)}
+                onGenerate3D={onGenerate3D}
+              />
+            </div>
+          </Suspense>
         ) : (
           <svg ref={svgRef} className="w-full h-full pointer-events-none" data-testid="diagram-svg">
             <g transform={`translate(${state.pan.x}, ${state.pan.y}) scale(${state.zoom})`}>

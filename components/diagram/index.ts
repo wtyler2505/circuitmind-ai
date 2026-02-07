@@ -5,7 +5,8 @@ export type { WireHighlightState } from './Wire';
 export { default as DiagramNode } from './DiagramNode';
 export type { NodeHighlightState } from './DiagramNode';
 
-export { default as Diagram3DView } from './Diagram3DView';
+// Diagram3DView is NOT re-exported here — it's lazy-loaded directly in DiagramCanvas.tsx
+// to keep it in a separate chunk. Import from './diagram/Diagram3DView' if needed.
 
 // Component shape registry for Fritzing-style visuals
 export {
