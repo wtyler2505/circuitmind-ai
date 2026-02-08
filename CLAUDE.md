@@ -294,6 +294,56 @@ MainLayout (orchestrator)
 | recharts | 3.7.0 | Charts/graphs |
 | virtua | 0.48.3 | List virtualization |
 
+## Agent Teams - Project File Ownership
+
+When using agent teams on this project, teammates MUST own non-overlapping file sets. Use these boundaries:
+
+| Domain | Files Owned | Good Teammate Name |
+|--------|-------------|-------------------|
+| UI Components | `components/*.tsx` (not diagram/) | `ui-dev` |
+| Canvas/Diagram | `components/DiagramCanvas.tsx`, `components/diagram/` | `canvas-dev` |
+| 3D/ThreeViewer | `components/ThreeViewer.tsx`, `services/three*.ts` | `3d-dev` |
+| State/Contexts | `contexts/*.tsx` | `state-dev` |
+| Hooks/Actions | `hooks/*.ts`, `hooks/actions/` | `hooks-dev` |
+| AI/Gemini | `services/gemini/`, `services/aiMetricsService.ts`, `services/geminiService.ts` | `ai-dev` |
+| Services (other) | `services/*.ts` (not gemini/, three*) | `services-dev` |
+| Testing | `tests/`, `components/__tests__/`, `services/__tests__/` | `test-dev` |
+| Styles/Config | `styles/`, `tailwind.config.js`, `vite.config.ts`, `tsconfig.json` | `config-dev` |
+
+**Common team compositions:**
+
+**Feature work (3-4 teammates):**
+```
+Create an agent team. Spawn teammates:
+- ui-dev: owns components/ (builds the UI)
+- state-dev: owns contexts/ and hooks/ (wires state)
+- ai-dev: owns services/gemini/ (handles AI integration)
+- test-dev: owns tests/ (writes test coverage)
+Require plan approval for state-dev and ai-dev.
+```
+
+**Refactoring (2-3 teammates):**
+```
+Create an agent team. Spawn teammates:
+- refactor-dev: owns the files being refactored
+- test-dev: writes/updates tests for refactored code
+- reviewer: read-only, reviews changes and challenges approaches
+Use delegate mode for the lead.
+```
+
+**Debugging (3-5 teammates):**
+```
+Create an agent team to investigate [issue]. Spawn teammates for
+competing hypotheses. Have them challenge each other's theories.
+```
+
+**Key context to include in spawn prompts:**
+- State lives in React Context (`contexts/*.tsx`), NOT Redux
+- Dual-sync pattern: inventory AND diagram must stay in sync (see `hooks/useInventorySync.ts`)
+- Gemini schemas: OBJECT types MUST have `properties: {}`
+- `liveSessionRef` uses `useRef`, NOT `useState`
+- Z-Index layers: Canvas(0) < Header(10) < Chat(20) < Inventory(40) < Modals(50)
+
 <!-- BEGIN BRAINGRID INTEGRATION -->
 ## BrainGrid Integration
 
