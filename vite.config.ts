@@ -96,6 +96,7 @@ export default defineConfig(({ mode }) => {
         setupFiles: './tests/setup.tsx',
         globals: true,
         clearMocks: true,
+        sequence: { concurrent: false },
       },
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),

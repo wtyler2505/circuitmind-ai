@@ -344,3 +344,5 @@ describe('Accessibility: AssistantSidebar', () => {
     expect(results).toHaveNoViolations();
   });
 });
+
+

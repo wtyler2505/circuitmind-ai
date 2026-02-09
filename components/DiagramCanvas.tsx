@@ -14,6 +14,7 @@ import { COMPONENT_WIDTH, COMPONENT_HEIGHT } from './diagram';
 const Diagram3DView = lazy(() => import('./diagram/Diagram3DView'));
 import { diagramReducer, INITIAL_STATE } from './diagram/diagramState';
 import { useUser } from '../contexts/UserContext';
+import { useInventory } from '../contexts/InventoryContext';
 
 // Extracted hooks
 import { useCanvasHighlights } from '../hooks/useCanvasHighlights';
@@ -27,8 +28,11 @@ import { useCanvasHUD } from '../hooks/useCanvasHUD';
 import CanvasToolbar from './diagram/canvas/CanvasToolbar';
 import CanvasMinimap from './diagram/canvas/CanvasMinimap';
 import WireLabelEditor from './diagram/canvas/WireLabelEditor';
+import ExportDialog from './diagram/canvas/ExportDialog';
 import { DropZoneOverlay, EmptyDiagramOverlay, NoDiagramPlaceholder } from './diagram/canvas/CanvasOverlays';
 import Canvas2DContent from './diagram/canvas/Canvas2DContent';
+import { exportService } from '../services/exportService';
+import type { ExportFormat, PngResolution } from '../services/exportService';
 
 type ViewMode = '2d' | '3d';
 
@@ -88,6 +92,7 @@ const DiagramCanvasRenderer = ({
   onGenerate3D,
 }: DiagramCanvasProps, ref: React.ForwardedRef<DiagramCanvasRef>) => {
   const { user } = useUser();
+  const { inventory } = useInventory();
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const view3DRef = useRef<{ getSnapshotBlob: () => Promise<Blob | null> }>(null);
@@ -99,6 +104,8 @@ const DiagramCanvasRenderer = ({
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [showMinimap, setShowMinimap] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const highlights = useCanvasHighlights();
   const exportUtils = useCanvasExport(svgRef, diagram);
@@ -117,6 +124,37 @@ const DiagramCanvasRenderer = ({
       dispatch({ type: 'UPDATE_NODE_POSITION', payload: { nodeId: componentId, x: pos.x + dx, y: pos.y + dy } });
     }
   }, [state.nodePositions]);
+
+  const handleExport = useCallback(async (format: ExportFormat, pngResolution: PngResolution) => {
+    if (!diagram || !svgRef.current) return;
+    setIsExporting(true);
+    try {
+      let result;
+      switch (format) {
+        case 'svg':
+          result = await exportService.exportSVG(svgRef.current, diagram);
+          break;
+        case 'png':
+          result = await exportService.exportPNG(svgRef.current, diagram, pngResolution);
+          break;
+        case 'pdf':
+          result = await exportService.exportPDF(svgRef.current, diagram, inventory);
+          break;
+        case 'bom-csv':
+          result = exportService.exportBOMCSV(diagram, inventory);
+          break;
+        case 'bom-json':
+          result = exportService.exportBOMJSON(diagram, inventory);
+          break;
+      }
+      if (result) exportService.triggerDownload(result.blob, result.filename);
+      setShowExportDialog(false);
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [diagram, inventory]);
 
   useImperativeHandle(ref, () => ({
     setZoom: (level: number) => dispatch({ type: 'SET_ZOOM', payload: level }),
@@ -191,10 +229,7 @@ const DiagramCanvasRenderer = ({
         onSnapToggle={() => setSnapToGrid(!snapToGrid)}
         viewMode={viewMode}
         onViewModeToggle={() => setViewMode(viewMode === '2d' ? '3d' : '2d')}
-        svgExportStatus={exportUtils.svgExportStatus}
-        pngExportStatus={exportUtils.pngExportStatus}
-        onExportSVG={exportUtils.handleExportSVG}
-        onExportPNG={exportUtils.handleExportPNG}
+        onOpenExport={() => setShowExportDialog(true)}
         zoom={state.zoom}
       />
 
@@ -263,6 +298,14 @@ const DiagramCanvasRenderer = ({
         showMinimap={showMinimap}
         onMinimapClick={layout.handleMinimapClick}
         onToggleMinimap={setShowMinimap}
+      />
+
+      <ExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        onExport={handleExport}
+        isExporting={isExporting}
+        hasDiagram={!isDiagramEmpty}
       />
     </div>
   );

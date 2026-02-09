@@ -1,7 +1,6 @@
 import React from 'react';
 import type { DiagramAction } from '../diagramState';
 
-type ExportStatus = 'idle' | 'exporting' | 'done' | 'error';
 type ViewMode = '2d' | '3d';
 
 interface CanvasToolbarProps {
@@ -14,58 +13,9 @@ interface CanvasToolbarProps {
   onSnapToggle: () => void;
   viewMode: ViewMode;
   onViewModeToggle: () => void;
-  svgExportStatus: ExportStatus;
-  pngExportStatus: ExportStatus;
-  onExportSVG: () => void;
-  onExportPNG: () => void;
+  onOpenExport: () => void;
   zoom: number;
 }
-
-const ExportButton = React.memo(({
-  status,
-  onClick,
-  format,
-  colorActive,
-  colorIdle,
-}: {
-  status: ExportStatus;
-  onClick: () => void;
-  format: string;
-  colorActive: string;
-  colorIdle: string;
-}) => {
-  const statusClasses = {
-    done: 'bg-green-500 border-green-400 text-white shadow-[0_0_12px_rgba(34,197,94,0.5)]',
-    error: 'bg-red-500/20 border-red-500/50 text-red-400',
-    exporting: `${colorActive} animate-pulse`,
-    idle: `bg-slate-950/85 border-slate-700/80 text-slate-300 hover:text-white ${colorIdle}`,
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={status !== 'idle'}
-      className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold cut-corner-sm border shadow-lg transition-all ${statusClasses[status]}`}
-      title={`Export as ${format}`}
-    >
-      {status === 'done' ? (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      ) : status === 'exporting' ? (
-        <div className={`w-4 h-4 border-2 ${format === 'SVG' ? 'border-emerald-400' : 'border-blue-400'} border-t-transparent rounded-full animate-spin`} />
-      ) : (
-        <img src="/assets/ui/action-save.webp" alt="" className="w-4 h-4 opacity-80 invert" onError={(e) => (e.currentTarget.style.display = 'none')} />
-      )}
-      <span className="hidden md:inline">
-        {status === 'done' ? 'DONE' : status === 'error' ? 'ERROR' : status === 'exporting' ? '...' : format}
-      </span>
-    </button>
-  );
-});
-
-ExportButton.displayName = 'ExportButton';
 
 const CanvasToolbar = React.memo(({
   dispatch,
@@ -77,10 +27,7 @@ const CanvasToolbar = React.memo(({
   onSnapToggle,
   viewMode,
   onViewModeToggle,
-  svgExportStatus,
-  pngExportStatus,
-  onExportSVG,
-  onExportPNG,
+  onOpenExport,
   zoom,
 }: CanvasToolbarProps) => {
   return (
@@ -185,22 +132,15 @@ const CanvasToolbar = React.memo(({
           <img src={`/assets/ui/${viewMode === '3d' ? 'action-2d' : 'action-3d'}.webp`} alt="" className={`w-4 h-4 ${viewMode === '3d' ? 'opacity-90' : 'opacity-70'}`} onError={(e) => (e.currentTarget.style.display = 'none')} />
           <span className="hidden md:inline">{viewMode === '3d' ? '2D' : '3D'}</span>
         </button>
-        <div className="flex gap-1">
-          <ExportButton
-            status={svgExportStatus}
-            onClick={onExportSVG}
-            format="SVG"
-            colorActive="bg-emerald-500/30 border-emerald-500/50 text-emerald-400"
-            colorIdle="hover:border-emerald-500 hover:bg-emerald-500/10"
-          />
-          <ExportButton
-            status={pngExportStatus}
-            onClick={onExportPNG}
-            format="PNG"
-            colorActive="bg-blue-500/30 border-blue-500/50 text-blue-400"
-            colorIdle="hover:border-blue-500 hover:bg-blue-500/10"
-          />
-        </div>
+        <button
+          type="button"
+          onClick={onOpenExport}
+          className="flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold cut-corner-sm border shadow-lg transition-colors bg-slate-950/85 border-slate-700/80 text-slate-300 hover:text-white hover:border-neon-cyan"
+          title="Export diagram"
+        >
+          <img src="/assets/ui/action-save.webp" alt="" className="w-4 h-4 opacity-80 invert" onError={(e) => (e.currentTarget.style.display = 'none')} />
+          <span className="hidden md:inline">Export</span>
+        </button>
       </div>
     </>
   );
