@@ -92,7 +92,8 @@ export function extractResistance(component: ElectronicComponent): number {
     return component.electrical.resistance;
   }
 
-  const searchText = `${component.name} ${component.description}`.toLowerCase();
+  // Use original case for SI prefix parsing (M = mega, m = milli)
+  const searchText = `${component.name} ${component.description}`;
 
   // Priority 2: Look for Ω or "ohm" patterns
   const ohmValue = parseElectricalValue(searchText, 'Ω');
@@ -207,15 +208,7 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
   const descLower = component.description.toLowerCase();
   const searchText = `${nameLower} ${descLower}`;
 
-  // 1. Resistor: name contains 'resistor' or starts with 'R' + number
-  if (searchText.includes('resistor') || /\br\d/i.test(nameLower)) {
-    return {
-      type: 'resistor',
-      resistance: extractResistance(component),
-    };
-  }
-
-  // 2. Potentiometer / trimpot: variable resistor
+  // 1. Potentiometer / trimpot: variable resistor (before generic resistor)
   if (/potentiometer|trimpot|pot\b/.test(searchText)) {
     return {
       type: 'resistor',
@@ -223,7 +216,7 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
     };
   }
 
-  // 3. Thermistor / NTC / PTC: temperature-dependent resistor
+  // 2. Thermistor / NTC / PTC: temperature-dependent resistor
   if (/thermistor|ntc|ptc/.test(searchText)) {
     return {
       type: 'resistor',
@@ -231,11 +224,19 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
     };
   }
 
-  // 4. Photoresistor / LDR: light-dependent resistor
+  // 3. Photoresistor / LDR: light-dependent resistor
   if (/photoresistor|ldr|light.?dependent/.test(searchText)) {
     return {
       type: 'resistor',
       resistance: component.electrical?.resistance ?? 10000, // Default 10kΩ (mid-light)
+    };
+  }
+
+  // 4. Resistor (generic): name contains 'resistor' or starts with 'R' + number
+  if (searchText.includes('resistor') || /\br\d/i.test(nameLower)) {
+    return {
+      type: 'resistor',
+      resistance: extractResistance(component),
     };
   }
 
@@ -423,7 +424,26 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
     };
   }
 
-  // 26. Sensor: type='sensor' — high impedance input
+  // 26. Display: LCD, OLED, TFT (modeled as load)
+  if (/lcd|oled|tft|display|screen/.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.resistance ?? 200, // Backlight + driver
+      maxCurrent: component.electrical?.maxCurrent ?? 0.05, // 50mA typical
+    };
+  }
+
+  // 27. Optocoupler / optoisolator
+  if (/optocoupler|optoisolator|opto/.test(searchText)) {
+    return {
+      type: 'led', // LED side modeled as LED
+      resistance: 50, // Input LED + phototransistor
+      voltage: 1.2, // Forward voltage
+      maxCurrent: 0.02,
+    };
+  }
+
+  // 28. Sensor: type='sensor' — high impedance input
   if (component.type === 'sensor') {
     return {
       type: 'resistor',
@@ -431,7 +451,7 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
     };
   }
 
-  // 27. Actuator: type='actuator' — resistive load
+  // 29. Actuator: type='actuator' — resistive load
   if (component.type === 'actuator') {
     return {
       type: 'resistor',
@@ -440,7 +460,7 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
     };
   }
 
-  // 28. Microcontroller: type='microcontroller'
+  // 30. Microcontroller: type='microcontroller'
   // MCUs default to wire; pin-specific behavior handled by simulation engine
   if (component.type === 'microcontroller') {
     return {
@@ -460,4 +480,4 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
  * Total number of component identification patterns.
  * Used for testing to verify all patterns are present.
  */
-export const PATTERN_COUNT = 28;
+export const PATTERN_COUNT = 30;
