@@ -24,17 +24,31 @@
 
 ## Project Structure
 
-- `App.tsx` holds app state; entry is `index.tsx` with `index.html`/`index.css`.
-- UI in `components/`, hooks in `hooks/`, services in `services/`, shared types in `types.ts`.
-- Docs + datasets in `docs/` (inventory under `docs/misc/inventory/`).
+- **Entry**: `index.tsx` → `App.tsx` (20 nested context providers) → `MainLayout`.
+- **Frontend**: `components/` (108 files), `hooks/` (46 files), `services/` (82 files), `contexts/` (19 providers), shared types in `types.ts`.
+- **Backend**: `server/` — Express 5 + SQLite (better-sqlite3) API on port 3001. Separate `package.json`. Routes: catalog, inventory, locations, stock-moves, search, export, migrate, identify (AI vision), STT.
+- **Conductor**: `conductor/` — spec-driven development system. Product vision, tech stack, and tracks registry (~40 completed feature tracks).
+- **Docs & data**: `docs/` (extended documentation), `data/` (initial inventory, tutorials), `ref/` (12 architecture reference docs), `fritzing-parts/` (10k+ part library).
+- **Config & tooling**: `scripts/` (build/audit utilities), `audits/`, `.braingrid/` (spec-driven dev integration), `.claude/` (Claude Code config).
 
 ## Build, Test, and Dev Commands
 
+### Frontend (root)
+
 - `npm install`
-- `npm run dev` (requires `GEMINI_API_KEY` in `.env.local`)
-- `npm run build`
-- `npm run preview`
-- `npm run test` / `npm run test:watch`
+- `npm run dev` — Vite dev server (requires `GEMINI_API_KEY` in `.env.local`)
+- `npm run build` / `npm run preview`
+- `npm run test` / `npm run test:watch` — Vitest
+- `npm run test:visual` — Playwright screenshot tests
+- `npm run lint` / `npm run lint:fix` — ESLint
+- `npm run format` / `npm run format:check` — Prettier
+
+### Backend (`server/`)
+
+- `cd server && npm install`
+- `npm run dev` — tsx watch (port 3001)
+- `npm run start` — production mode
+- Systemd service: `server/circuitmind.service`
 
 ## Coding Style & Naming
 
@@ -44,15 +58,31 @@
 
 ## Testing
 
-- Vitest + Testing Library configured in `tests/setup.ts`.
-- Tests live near code (`components/__tests__`, `hooks/__tests__`); mock Gemini calls.
+- **Framework**: Vitest + React Testing Library; setup in `tests/setup.ts`, utilities in `tests/test-utils.tsx`.
+- **Component tests**: `components/__tests__/` (8 test files).
+- **Service tests**: `services/__tests__/` (7 test files).
+- **Hook tests**: `hooks/__tests__/`.
+- **Accessibility**: `tests/accessibility.test.tsx` + dev-time axe-core auditing in `index.tsx` + `jest-axe`.
+- **Visual/E2E**: Playwright config at `playwright.config.ts`; screenshot scripts in `scripts/`.
+- Mock Gemini calls in tests; never hit real APIs.
 
 ## Commits & PRs
 
 - No established convention; use concise imperative messages (e.g., "Add live audio reconnect").
 - For PRs: summary, screenshots for UI changes, doc updates when behavior changes.
 
+## Agent Documentation
+
+Multiple agent-specific instruction files exist at root:
+
+- `AGENTS.md` — this file; general rules for any AI agent.
+- `CLAUDE.md` — detailed architecture reference for Claude Code (385 lines: providers, services, pitfalls, complexity hotspots, agent teams).
+- `GEMINI.md` — Gemini CLI reference (tech stack, models, analysis tools, reasoning frameworks).
+- `conductor/index.md` — product vision, tech stack, workflow, and tracks registry.
+- `ref/` — 12 detailed reference docs (architecture, components, contexts, hooks, services, patterns, pitfalls, etc.).
+
 ## Security & Docs
 
 - Secrets live in `.env.local` only; never commit them.
-- See `CLAUDE.md` and `docs/` for architecture, services, and data references.
+- Git pre-commit hook installed via `npm run prepare` (runs gitleaks scan).
+- See `CLAUDE.md`, `GEMINI.md`, `conductor/`, and `ref/` for deep architectural context.

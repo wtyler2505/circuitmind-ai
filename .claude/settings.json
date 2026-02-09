@@ -34,6 +34,18 @@
 	"includeCoAuthoredBy": true,
 	"cleanupPeriodDays": 30,
 	"hooks": {
+		"SessionStart": [
+			{
+				"matcher": "",
+				"hooks": [
+					{
+						"type": "command",
+						"command": ".claude/hooks/session-start-initref-check.sh",
+						"timeout": 5000
+					}
+				]
+			}
+		],
 		"PostToolUse": [
 			{
 				"matcher": "TaskUpdate",

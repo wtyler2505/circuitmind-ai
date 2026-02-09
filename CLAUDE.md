@@ -26,14 +26,16 @@ npm run test:visual  # Playwright screenshot tests
 Flat root layout (no `src/` directory). All code lives at project root:
 
 ```
-├── App.tsx              # Root component (17 context providers)
-├── types.ts             # All TypeScript interfaces (289 LOC)
+├── App.tsx              # Root component (20 context providers)
+├── types.ts             # All TypeScript interfaces (290 LOC)
 ├── index.tsx            # React entry point
 ├── index.css            # Global styles
-├── components/          # 78 files across 7 subdirectories
-├── services/            # 77 files across 12 subdirectories
-├── hooks/               # 20 files (13 hooks + 6 action handlers)
-├── contexts/            # 17 React Context providers
+├── components/          # 108 files across 8+ subdirectories
+├── services/            # 82 files across 12 subdirectories
+├── hooks/               # 46 files (40 hooks + 6 action handlers)
+├── contexts/            # 19 React Context providers
+├── server/              # Express 5 + SQLite backend (port 3001)
+├── conductor/           # Spec-driven dev (product vision, tracks)
 ├── data/                # Initial inventory, tutorials
 ├── styles/              # Color definitions
 ├── ref/                 # 12 reference docs (architecture, APIs, patterns)
@@ -41,6 +43,7 @@ Flat root layout (no `src/` directory). All code lives at project root:
 ├── tests/               # Test setup and utilities
 ├── scripts/             # Build/audit utility scripts
 ├── public/              # Static assets (UI, parts, mediapipe)
+├── fritzing-parts/      # 10k+ Fritzing part library
 └── .braingrid/          # BrainGrid spec-driven dev integration
 ```
 
@@ -49,8 +52,8 @@ Flat root layout (no `src/` directory). All code lives at project root:
 | Priority | File | Why |
 |----------|------|-----|
 | 1 | types.ts | All interfaces (ActionType, ElectronicComponent, WiringDiagram, etc.) |
-| 2 | App.tsx | Root orchestration, 17 nested context providers |
-| 3 | contexts/*.tsx | Domain state (17 contexts) |
+| 2 | App.tsx | Root orchestration, 20 nested context providers |
+| 3 | contexts/*.tsx | Domain state (19 contexts) |
 | 4 | services/gemini/ | Modular AI integration (5 core + 11 feature files) |
 | 5 | services/componentValidator.ts | Inventory ↔ diagram consistency (502 LOC) |
 | 6 | services/storage.ts | Dual persistence: localStorage + IndexedDB (324 LOC) |
@@ -63,7 +66,7 @@ Flat root layout (no `src/` directory). All code lives at project root:
 
 ## Architecture
 
-**State**: React Context API (17 providers) + App.tsx coordination. No Redux.
+**State**: React Context API (20 providers) + App.tsx coordination. No Redux.
 
 ### Context Providers (nesting order from App.tsx)
 
@@ -74,10 +77,13 @@ Flat root layout (no `src/` directory). All code lives at project root:
 | HealthContext | System health (CPU, memory, frame rate) |
 | AuthContext | Authentication & session |
 | UserContext | User profile & preferences |
-| NotificationContext | Toast/alert notifications |
+| ToastProvider | Toast notification system (from hooks/useToast) |
+| NotificationContext | Alert notifications |
 | DashboardContext | Dashboard widget layout |
 | MacroContext | Action macro recording/playback |
 | InventoryContext | Component library (source of truth) |
+| AdvancedInventoryContext | Catalog/location-aware inventory (server-backed) |
+| SyncContext | Cross-device sync state |
 | ConversationContext | Chat sessions (wraps useConversations) |
 | DiagramContext | Diagram state + undo/redo history |
 | SelectionContext | Multi-select state |
@@ -102,7 +108,7 @@ Canvas(0) < Header(10) < Chat(20) < Inventory(40) < Modals(50)
 
 ## Services Architecture
 
-**77 files** organized by domain:
+**82 files** organized by domain:
 
 | Directory | Files | Purpose |
 |-----------|-------|---------|
@@ -132,6 +138,7 @@ Canvas(0) < Header(10) < Chat(20) < Inventory(40) < Modals(50)
 |----------|-------|----------|
 | WIRING | gemini-2.5-pro | Wiring diagram generation (accuracy) |
 | CHAT | gemini-2.5-flash | Default chat (speed) |
+| CONTEXT_CHAT_DEFAULT | gemini-2.5-flash | Context-aware chat (speed) |
 | CONTEXT_CHAT_COMPLEX | gemini-2.5-pro | Complex chat queries (accuracy) |
 | VISION | gemini-2.5-pro | Image analysis |
 | IMAGE | gemini-2.5-flash | Multimodal input |
@@ -145,6 +152,7 @@ Canvas(0) < Header(10) < Chat(20) < Inventory(40) < Modals(50)
 | CODE_GEN | gemini-2.5-pro | Three.js code generation |
 | THINKING | gemini-2.5-flash | Deep thinking mode |
 | SMART_FILL / PART_FINDER / AUTO_ID | gemini-2.5-flash | Component intelligence |
+| ASSIST_EDITOR / SUGGEST_PROJECTS | gemini-2.5-flash | Editor AI chat, project suggestions |
 
 ## Hooks & Action System
 
@@ -159,6 +167,7 @@ ActionIntent → useAIActions.execute()
 ```
 
 **Handler modules** (hooks/actions/):
+
 - `diagramHandlers.ts` — addComponent, removeComponent, clearCanvas, createConnection, removeConnection
 - `canvasHandlers.ts` — highlight, centerOn, zoomTo, panTo, resetView, highlightWire
 - `navHandlers.ts` — openInventory, closeInventory, openSettings, closeSettings, openComponentEditor, switchGenerationMode
@@ -313,6 +322,7 @@ When using agent teams on this project, teammates MUST own non-overlapping file 
 **Common team compositions:**
 
 **Feature work (3-4 teammates):**
+
 ```
 Create an agent team. Spawn teammates:
 - ui-dev: owns components/ (builds the UI)
@@ -323,6 +333,7 @@ Require plan approval for state-dev and ai-dev.
 ```
 
 **Refactoring (2-3 teammates):**
+
 ```
 Create an agent team. Spawn teammates:
 - refactor-dev: owns the files being refactored
@@ -332,12 +343,14 @@ Use delegate mode for the lead.
 ```
 
 **Debugging (3-5 teammates):**
+
 ```
 Create an agent team to investigate [issue]. Spawn teammates for
 competing hypotheses. Have them challenge each other's theories.
 ```
 
 **Key context to include in spawn prompts:**
+
 - State lives in React Context (`contexts/*.tsx`), NOT Redux
 - Dual-sync pattern: inventory AND diagram must stay in sync (see `hooks/useInventorySync.ts`)
 - Gemini schemas: OBJECT types MUST have `properties: {}`
@@ -381,4 +394,5 @@ braingrid task update TASK-456 --status COMPLETED
 <!-- END BRAINGRID INTEGRATION -->
 
 ## Project Reference
+
 @.ref/project-dna.md

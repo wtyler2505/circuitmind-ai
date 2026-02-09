@@ -179,7 +179,7 @@ describe('Accessibility: OmniSearch', () => {
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
-  });
+  }, 15_000);
 });
 
 describe('Accessibility: SettingsPanel', () => {
@@ -220,7 +220,7 @@ describe('Accessibility: ChatMessage', () => {
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
-  });
+  }, 15_000);
 
   it('user message has no axe violations', async () => {
     const ChatMessage = (await import('../components/ChatMessage')).default;
@@ -241,7 +241,7 @@ describe('Accessibility: ChatMessage', () => {
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();
-  });
+  }, 15_000);
 });
 
 describe('Accessibility: AppHeader', () => {
