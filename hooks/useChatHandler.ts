@@ -4,6 +4,7 @@ import { ACTION_SAFETY } from '../types';
 import { chatWithAI, chatWithContext } from '../services/gemini/features/chat';
 import { generateEditedImage, generateConceptImage, generateCircuitVideo } from '../services/gemini/features/media';
 import { generateWiringDiagram } from '../services/gemini/features/wiring';
+import { truncateHistory } from '../services/gemini/contextLimits';
 import type { WiringDiagram } from '../types';
 
 type GenerationMode = 'chat' | 'image' | 'video';
@@ -78,12 +79,22 @@ export function useChatHandler({
         const conversationMessages = conversationManager.messages.filter(
           (msg) => msg.conversationId === sentUserMessage.conversationId
         );
-        const chatHistory = conversationMessages
+        const rawHistory = conversationMessages
           .filter((msg) => msg.role === 'user' || msg.role === 'model')
           .map((msg) => ({
             role: msg.role as 'user' | 'model',
             parts: [{ text: msg.content }],
           }));
+
+        // Truncate history to fit within Gemini's context window.
+        // Cast back to the text-only shape since we only construct text parts above.
+        const { messages: truncatedHistory, dropped } = truncateHistory(rawHistory);
+        const chatHistory = truncatedHistory as Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }>;
+        if (dropped > 0) {
+          console.warn(
+            `[ChatHandler] Truncated ${dropped} older messages to fit context window`
+          );
+        }
 
         if (generationMode === 'image') {
           await handleImageGeneration(

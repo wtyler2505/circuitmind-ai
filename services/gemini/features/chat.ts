@@ -1,11 +1,11 @@
 import { AIContext, GroundingSource } from "../../../types";
 import { getAIClient, MODELS } from "../client";
 import { PROMPTS } from "../prompts";
-import { 
-    GeminiChatMessage, 
-    GeminiPart, 
-    GeminiTool, 
-    GeminiConfig, 
+import {
+    GeminiChatMessage,
+    GeminiPart,
+    GeminiTool,
+    GeminiConfig,
     GeminiGroundingChunk,
     ContextAwareChatResponse,
     STRUCTURED_RESPONSE_SCHEMA
@@ -17,6 +17,7 @@ import { healthMonitor } from "../../healthMonitor";
 import { connectivityService } from "../../connectivityService";
 import { auditService } from "../../logging/auditService";
 import { UserProfile } from "../../userProfileService";
+import { isTokenOverflowError } from "../contextLimits";
 
 export const chatWithAI = async (
   message: string,
@@ -120,7 +121,16 @@ export const chatWithAI = async (
      const latency = Date.now() - startTime;
      healthMonitor.recordAiLatency(latency);
      aiMetricsService.logMetric({ model, operation: 'chatWithAI', latencyMs: latency, success: false, error: String(error) });
-     
+
+     if (isTokenOverflowError(error)) {
+       auditService.log('warn', 'gemini-chat', `Token limit exceeded (${history.length} messages)`, { latency });
+       console.warn("Chat token overflow:", error);
+       return {
+         text: "This conversation is too long for the AI to process. Please start a new conversation to continue.",
+         groundingSources: []
+       };
+     }
+
      auditService.log('error', 'gemini-chat', `AI Request failed: ${String(error)}`, { latency });
      console.error("Chat Error", error);
      return { text: "Connection error.", groundingSources: [] };
@@ -286,7 +296,18 @@ export const chatWithContext = async (
     const latency = Date.now() - startTime;
     healthMonitor.recordAiLatency(latency);
     aiMetricsService.logMetric({ model, operation: 'chatWithContext', latencyMs: latency, success: false, error: String(error) });
-    
+
+    if (isTokenOverflowError(error)) {
+      auditService.log('warn', 'gemini-context-chat', `Token limit exceeded (${history.length} messages)`, { latency });
+      console.warn("Context Chat token overflow:", error);
+      return {
+        text: "This conversation is too long for the AI to process. Please start a new conversation to continue.",
+        componentMentions: [],
+        suggestedActions: [],
+        groundingSources: [],
+      };
+    }
+
     auditService.log('error', 'gemini-context-chat', `Context Chat failed: ${String(error)}`, { latency });
     console.error("Context Chat Error:", error);
     return {

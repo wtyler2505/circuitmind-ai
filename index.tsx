@@ -9,6 +9,11 @@ if (typeof window !== 'undefined') {
   window.Buffer = window.Buffer || Buffer;
 }
 
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[Unhandled Rejection]', event.reason);
+});
+
 interface GlobalErrorBoundaryProps {
   children: ReactNode;
 }
