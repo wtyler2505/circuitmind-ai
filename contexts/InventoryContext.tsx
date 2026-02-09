@@ -25,6 +25,11 @@ export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: El
 
   // Initialize inventory
   useEffect(() => {
+    if (initialData) {
+      setInventory(initialData);
+      setIsLoading(false);
+      return;
+    }
     const init = async () => {
       try {
         const saved = await storageService.getItem('cm_inventory');
