@@ -17,6 +17,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
 import { SelectionProvider } from './contexts/SelectionContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AdvancedInventoryProvider } from './contexts/AdvancedInventoryContext';
+import { SyncProvider } from './contexts/SyncContext';
 import { ToastProvider } from './hooks/useToast';
 import { INITIAL_INVENTORY } from './data/initialInventory';
 import { diagnosticsHub } from './services/error/diagnosticsHub';
@@ -38,23 +40,27 @@ export default function App() {
                   <DashboardProvider>
                     <MacroProvider>
                       <InventoryProvider initialData={INITIAL_INVENTORY}>
-                        <ConversationProvider>
-                          <DiagramProvider>
-                            <SelectionProvider>
-                              <TelemetryProvider>
-                                <HUDProvider>
-                                  <SimulationProvider>
-                                    <VoiceAssistantProvider>
-                                      <TutorialProvider>
-                                        <MainLayout />
-                                      </TutorialProvider>
-                                    </VoiceAssistantProvider>
-                                  </SimulationProvider>
-                                </HUDProvider>
-                              </TelemetryProvider>
-                            </SelectionProvider>
-                          </DiagramProvider>
-                        </ConversationProvider>
+                        <AdvancedInventoryProvider>
+                          <SyncProvider>
+                            <ConversationProvider>
+                              <DiagramProvider>
+                                <SelectionProvider>
+                                  <TelemetryProvider>
+                                    <HUDProvider>
+                                      <SimulationProvider>
+                                        <VoiceAssistantProvider>
+                                          <TutorialProvider>
+                                            <MainLayout />
+                                          </TutorialProvider>
+                                        </VoiceAssistantProvider>
+                                      </SimulationProvider>
+                                    </HUDProvider>
+                                  </TelemetryProvider>
+                                </SelectionProvider>
+                              </DiagramProvider>
+                            </ConversationProvider>
+                          </SyncProvider>
+                        </AdvancedInventoryProvider>
                       </InventoryProvider>
                     </MacroProvider>
                   </DashboardProvider>

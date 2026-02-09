@@ -18,6 +18,7 @@ export const AppHeader = React.memo(() => {
   const { setSettingsOpen, setSettingsInitialTab } = useLayout();
   const { user } = useUser();
   const { isEditMode, setEditMode } = useDashboard();
+  const { activeView, setActiveView } = useLayout();
 
   // Feedback states for SAVE/LOAD buttons
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -192,9 +193,27 @@ export const AppHeader = React.memo(() => {
 
         <div className="w-px h-4 bg-white/10" />
 
+        {/* Inventory Management */}
+        <button
+          onClick={() => setActiveView(activeView === 'inventory-mgmt' ? 'canvas' : 'inventory-mgmt')}
+          className={`h-7 px-3 text-[9px] font-bold uppercase tracking-widest cut-corner-sm transition-all border flex items-center gap-1.5 ${
+            activeView === 'inventory-mgmt'
+              ? 'bg-neon-green/20 text-neon-green border-neon-green/50 shadow-[0_0_10px_rgba(34,197,94,0.3)]'
+              : 'bg-white/5 text-slate-400 border-white/10 hover:bg-neon-green/10 hover:text-neon-green hover:border-neon-green/30'
+          }`}
+          title="Inventory Management"
+        >
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          INVENTORY
+        </button>
+
+        <div className="w-px h-4 bg-white/10" />
+
         {/* Dashboard Group */}
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => setEditMode(!isEditMode)}
             className={`h-7 px-3 text-[9px] font-bold uppercase tracking-widest cut-corner-sm transition-all border ${
               isEditMode 

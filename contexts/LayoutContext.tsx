@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { storageService } from '../services/storage';
 
 export type UIMode = 'design' | 'wiring' | 'debug';
+export type ActiveView = 'canvas' | 'dashboard' | 'inventory-mgmt';
 
 interface LayoutSnapshot {
   isInventoryOpen: boolean;
@@ -54,6 +55,10 @@ interface LayoutContextType {
   // Neural Link (Gestures)
   neuralLinkEnabled: boolean;
   setNeuralLinkEnabled: (enabled: boolean) => void;
+
+  // Active View (canvas, dashboard, inventory management)
+  activeView: ActiveView;
+  setActiveView: (view: ActiveView) => void;
 
   // Constants
   inventoryDefaultWidth: number;
@@ -150,6 +155,9 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return false;
     }
   });
+
+  // Active View State
+  const [activeView, setActiveView] = useState<ActiveView>('canvas');
 
   // Neural Link State
   const [neuralLinkEnabled, setNeuralLinkEnabled] = useState(() => {
@@ -267,12 +275,13 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     activeSidebar, setActiveSidebar,
     lowPerformanceMode, setLowPerformanceMode,
     neuralLinkEnabled, setNeuralLinkEnabled,
+    activeView, setActiveView,
     inventoryDefaultWidth,
     assistantDefaultWidth
   }), [
     activeMode, setActiveMode, isInventoryOpen, inventoryPinned, inventoryWidth,
     isAssistantOpen, assistantPinned, assistantWidth, isSettingsOpen, settingsInitialTab,
-    isFocusMode, activeSidebar, lowPerformanceMode, neuralLinkEnabled
+    isFocusMode, activeSidebar, lowPerformanceMode, neuralLinkEnabled, activeView
   ]);
 
   return (

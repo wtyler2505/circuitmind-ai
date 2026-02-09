@@ -1,0 +1,15 @@
+[Unit]
+Description=CircuitMind AI Server
+After=network.target
+
+[Service]
+Type=simple
+User=wtyler
+WorkingDirectory=/home/wtyler/circuitmind-ai/server
+ExecStart=/usr/bin/node --import tsx index.ts
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

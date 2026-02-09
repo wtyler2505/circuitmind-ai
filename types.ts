@@ -264,7 +264,7 @@ export interface AIContext {
   componentList?: string[]; // List of "id: name" for context awareness
   recentActions: string[];
   recentHistory?: ActionDelta[];
-  activeView: 'canvas' | 'component-editor' | 'inventory' | 'settings';
+  activeView: 'canvas' | 'component-editor' | 'inventory' | 'settings' | 'inventory-mgmt';
   inventorySummary: string;
   userProfile?: unknown; 
   relevantLessons?: unknown[];

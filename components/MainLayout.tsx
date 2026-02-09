@@ -19,6 +19,7 @@ import { AssistantContent } from './layout/assistant/AssistantContent';
 // Lazy Components
 const ComponentEditorModal = lazy(() => import('./ComponentEditorModal'));
 const SettingsPanel = lazy(() => import('./SettingsPanel'));
+const InventoryMgmtView = lazy(() => import('./inventory-mgmt/InventoryMgmtView'));
 
 // Contexts
 import { useVoiceAssistant } from '../contexts/VoiceAssistantContext';
@@ -59,6 +60,8 @@ const MainLayoutComponent: React.FC = () => {
     isSettingsOpen,
     setSettingsOpen,
     neuralLinkEnabled,
+    activeView,
+    setActiveView,
   } = useLayout();
 
   const toast = useToastApi();
@@ -163,7 +166,10 @@ const MainLayoutComponent: React.FC = () => {
   // Local UI state
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
-  const [isDashboardVisible, setIsDashboardVisible] = useState(false);
+  const isDashboardVisible = activeView === 'dashboard';
+  const setIsDashboardVisible = useCallback((visible: boolean) => {
+    setActiveView(visible ? 'dashboard' : 'canvas');
+  }, [setActiveView]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useKeyboardShortcuts({
@@ -310,7 +316,11 @@ const MainLayoutComponent: React.FC = () => {
     >
       <TacticalHUD />
       <MentorOverlay />
-      {isDashboardVisible ? (
+      {activeView === 'inventory-mgmt' ? (
+        <Suspense fallback={<div className="flex items-center justify-center h-full text-cyan-400">Loading Inventory Management...</div>}>
+          <InventoryMgmtView onClose={() => setActiveView('canvas')} />
+        </Suspense>
+      ) : isDashboardVisible ? (
         <DashboardView />
       ) : (
         <>
