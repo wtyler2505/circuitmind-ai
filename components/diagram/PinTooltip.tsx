@@ -235,5 +235,5 @@ const PinTooltip = memo<PinTooltipProps>(function PinTooltip({
   );
 });
 
-export default PinTooltip;
+export default memo(PinTooltip);
 export { formatVoltage, formatCurrent };
