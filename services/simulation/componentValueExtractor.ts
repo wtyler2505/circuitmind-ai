@@ -107,7 +107,7 @@ export function extractResistance(component: ElectronicComponent): number {
 
   // Priority 3: Bare number with k/K/M/G prefix (e.g., "10k resistor")
   // This handles cases like "10k resistor" without explicit unit
-  const bareNumberMatch = searchText.match(/(\\d+\\.?\\d*)\\s*(p|n|µ|u|m|k|K|M|G)\\s*resistor/i);
+  const bareNumberMatch = searchText.match(/(\d+\.?\d*)\s*(p|n|µ|u|m|k|K|M|G)\s*resistor/i);
   if (bareNumberMatch) {
     const baseValue = parseFloat(bareNumberMatch[1]);
     const prefix = bareNumberMatch[2];
@@ -191,15 +191,13 @@ export function extractCurrent(component: ElectronicComponent): number {
 /**
  * Identify the electrical model for a component based on its type and name.
  *
- * Model identification rules:
- * - Resistor: type='other' AND name contains 'resistor'
- * - LED: name contains 'led'
- * - Voltage source: type='power'
- * - Capacitor: name contains 'capacitor' or 'cap'
- * - Inductor: name contains 'inductor' or 'coil'
- * - Wire/jumper: name contains 'wire' or 'jumper'
- * - Microcontroller: type='microcontroller' (behavior depends on pin context, default wire)
- * - Default: wire (0.001Ω)
+ * 25+ pattern rules covering common electronic components:
+ * resistors, LEDs, power supplies, batteries, voltage regulators,
+ * capacitors, inductors, diodes, transistors, op-amps, switches,
+ * relays, fuses, crystals, connectors, motors, speakers, buzzers,
+ * potentiometers, thermistors, photoresistors, and more.
+ *
+ * Priority: explicit `electrical` field > name regex > type default > wire fallback
  *
  * @param component - Component to identify
  * @returns Electrical model for MNA simulation
@@ -209,29 +207,94 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
   const descLower = component.description.toLowerCase();
   const searchText = `${nameLower} ${descLower}`;
 
-  // Resistor: type='other' AND name contains 'resistor'
-  if (component.type === 'other' && searchText.includes('resistor')) {
+  // 1. Resistor: name contains 'resistor' or starts with 'R' + number
+  if (searchText.includes('resistor') || /\br\d/i.test(nameLower)) {
     return {
       type: 'resistor',
       resistance: extractResistance(component),
     };
   }
 
-  // LED: name contains 'led'
-  if (searchText.includes('led')) {
-    const resistance = extractResistance(component);
+  // 2. Potentiometer / trimpot: variable resistor
+  if (/potentiometer|trimpot|pot\b/.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: extractResistance(component),
+    };
+  }
+
+  // 3. Thermistor / NTC / PTC: temperature-dependent resistor
+  if (/thermistor|ntc|ptc/.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: extractResistance(component),
+    };
+  }
+
+  // 4. Photoresistor / LDR: light-dependent resistor
+  if (/photoresistor|ldr|light.?dependent/.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.resistance ?? 10000, // Default 10kΩ (mid-light)
+    };
+  }
+
+  // 5. LED: name contains 'led'
+  if (/\bled\b/.test(searchText)) {
+    const resistance = component.electrical?.resistance ?? 20; // LED series Rd
     const voltage = component.electrical?.forwardVoltage ?? 2.0; // Standard red LED
     const maxCurrent = extractCurrent(component);
 
     return {
       type: 'led',
-      resistance: resistance > 0 ? resistance : 20, // LEDs need series resistance
+      resistance,
       voltage,
       maxCurrent,
     };
   }
 
-  // Voltage source: type='power'
+  // 6. Diode (non-LED): name contains 'diode', '1N4148', '1N4001', etc.
+  if (/diode|1n\d{4}/i.test(searchText)) {
+    return {
+      type: 'led', // Modeled same as LED (Vf + series R)
+      resistance: 10, // Low series resistance
+      voltage: component.electrical?.forwardVoltage ?? 0.7, // Silicon diode
+      maxCurrent: component.electrical?.maxCurrent ?? 1.0,
+    };
+  }
+
+  // 7. Zener diode
+  if (/zener/.test(searchText)) {
+    return {
+      type: 'led',
+      resistance: 5,
+      voltage: component.electrical?.forwardVoltage ?? 5.1, // Common zener voltage
+      maxCurrent: component.electrical?.maxCurrent ?? 0.05,
+    };
+  }
+
+  // 8. Voltage regulator: 78xx series, LM317, LDO, etc.
+  if (/78\d{2}|79\d{2}|lm317|ldo|regulator/i.test(searchText)) {
+    // Extract voltage from regulator designation (7805→5V, 7812→12V)
+    const regMatch = searchText.match(/78(\d{2})/);
+    const voltage = regMatch
+      ? parseInt(regMatch[1], 10)
+      : extractVoltage(component);
+    return {
+      type: 'voltage_source',
+      voltage,
+    };
+  }
+
+  // 9. Battery
+  if (/battery|cell|lipo|li-ion|alkaline|cr\d{4}|aa\b|aaa\b|9v\b/.test(searchText)) {
+    return {
+      type: 'voltage_source',
+      voltage: extractVoltage(component),
+    };
+  }
+
+  // 10. Power supply / voltage source: type='power'
   if (component.type === 'power') {
     return {
       type: 'voltage_source',
@@ -239,34 +302,146 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
     };
   }
 
-  // Capacitor: name contains 'capacitor' or 'cap'
-  if (searchText.includes('capacitor') || /\bcaps?\b/.test(searchText)) {
-    // In DC analysis, capacitors are open circuits
+  // 11. Capacitor: name contains 'capacitor', 'cap', or 'C' + number
+  if (searchText.includes('capacitor') || /\bcaps?\b/.test(searchText) || /\bc\d/i.test(nameLower)) {
     return {
-      type: 'capacitor_dc',
+      type: 'capacitor_dc', // Open circuit in DC
     };
   }
 
-  // Inductor: name contains 'inductor' or 'coil'
-  if (searchText.includes('inductor') || searchText.includes('coil')) {
-    // In DC analysis, inductors are short circuits (with tiny resistance)
+  // 12. Inductor / coil / choke
+  if (/inductor|coil|choke/.test(searchText)) {
     return {
       type: 'inductor_dc',
-      resistance: 0.001, // Near-zero resistance
+      resistance: 0.001, // Short circuit in DC
     };
   }
 
-  // Wire/jumper: name contains 'wire' or 'jumper'
-  if (searchText.includes('wire') || searchText.includes('jumper')) {
+  // 13. Transformer
+  if (/transformer/.test(searchText)) {
+    return {
+      type: 'inductor_dc',
+      resistance: 0.01,
+    };
+  }
+
+  // 14. Switch / button / push button
+  if (/switch|button|push.?button|tact/.test(searchText)) {
+    // Switches default to closed (low resistance); open = removed from circuit
     return {
       type: 'wire',
-      resistance: 0.001, // Near-zero resistance
+      resistance: 0.001,
     };
   }
 
-  // Microcontroller: type='microcontroller'
-  // MCUs can act as inputs (high impedance), outputs (voltage sources), or pass-through
-  // Default to wire behavior; context-specific behavior handled by simulation engine
+  // 15. Relay: treated as switch (coil side ignored in DC)
+  if (/relay/.test(searchText)) {
+    return {
+      type: 'wire',
+      resistance: 0.001,
+    };
+  }
+
+  // 16. Fuse: very low resistance until blown
+  if (/fuse/.test(searchText)) {
+    return {
+      type: 'wire',
+      resistance: 0.01,
+      maxCurrent: component.electrical?.maxCurrent ?? 1.0,
+    };
+  }
+
+  // 17. Crystal / oscillator: open circuit in DC
+  if (/crystal|oscillator|xtal/.test(searchText)) {
+    return {
+      type: 'capacitor_dc', // No DC path
+    };
+  }
+
+  // 18. Transistor (BJT): NPN/PNP — modeled as resistive load
+  if (/transistor|bjt|npn|pnp|2n\d{4}|bc\d{3}/i.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.resistance ?? 1000, // Simplified linear model
+    };
+  }
+
+  // 19. MOSFET: N-ch/P-ch — modeled as resistive load
+  if (/mosfet|fet\b|irf\d|nch|pch|n-channel|p-channel/i.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.resistance ?? 100, // Rds(on) range
+    };
+  }
+
+  // 20. Op-amp: high input impedance
+  if (/op.?amp|lm358|lm741|tl072|ne5532/i.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.inputImpedance ?? 1e7, // 10MΩ input
+    };
+  }
+
+  // 21. Motor / servo
+  if (/motor|servo/.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.resistance ?? 50, // Typical small motor
+      maxCurrent: component.electrical?.maxCurrent ?? 0.5,
+    };
+  }
+
+  // 22. Speaker / buzzer / piezo
+  if (/speaker|buzzer|piezo/.test(searchText)) {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.resistance ?? 8, // 8Ω speaker
+    };
+  }
+
+  // 23. Connector / header / terminal
+  if (/connector|header|terminal|pin.?header|socket|jack/.test(searchText)) {
+    return {
+      type: 'wire',
+      resistance: 0.001,
+    };
+  }
+
+  // 24. Wire / jumper / bridge
+  if (/wire|jumper|bridge/.test(searchText)) {
+    return {
+      type: 'wire',
+      resistance: 0.001,
+    };
+  }
+
+  // 25. Breadboard
+  if (/breadboard/.test(searchText)) {
+    return {
+      type: 'wire',
+      resistance: 0.001,
+    };
+  }
+
+  // 26. Sensor: type='sensor' — high impedance input
+  if (component.type === 'sensor') {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.resistance ?? 10000, // Default 10kΩ
+    };
+  }
+
+  // 27. Actuator: type='actuator' — resistive load
+  if (component.type === 'actuator') {
+    return {
+      type: 'resistor',
+      resistance: component.electrical?.resistance ?? 100,
+      maxCurrent: component.electrical?.maxCurrent ?? 0.5,
+    };
+  }
+
+  // 28. Microcontroller: type='microcontroller'
+  // MCUs default to wire; pin-specific behavior handled by simulation engine
   if (component.type === 'microcontroller') {
     return {
       type: 'wire',
@@ -280,3 +455,9 @@ export function identifyComponentModel(component: ElectronicComponent): Componen
     resistance: 0.001,
   };
 }
+
+/**
+ * Total number of component identification patterns.
+ * Used for testing to verify all patterns are present.
+ */
+export const PATTERN_COUNT = 28;
