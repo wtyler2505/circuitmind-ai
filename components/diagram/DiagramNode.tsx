@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElectronicComponent } from '../../types';
 import { getComponentShape, calculatePinPositions, COLORS, type ComponentShape } from './componentShapes';
@@ -6,6 +6,7 @@ import { useTelemetry } from '../../contexts/TelemetryContext';
 import { useSimulation } from '../../contexts/SimulationContext';
 import { BreadboardVisual } from './parts/Breadboard';
 import { FzpzVisual } from './parts/FzpzVisual';
+import PinTooltip from './PinTooltip';
 
 // Default dimensions (used for layout calculations)
 const COMPONENT_WIDTH = 180;
@@ -733,6 +734,7 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
   onPinLeave,
   onNudge,
 }) {
+  const [hoveredPin, setHoveredPin] = useState<string | null>(null);
   const isHighlighted = !!highlight;
 
   const shape = useMemo(() => {
@@ -791,6 +793,22 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
       if (onDoubleClick) onDoubleClick(component);
     },
     [onDoubleClick, component]
+  );
+
+  const handlePinHoverEnter = useCallback(
+    (e: React.MouseEvent, compId: string, pin: string) => {
+      setHoveredPin(pin);
+      onPinEnter?.(e, compId, pin);
+    },
+    [onPinEnter]
+  );
+
+  const handlePinHoverLeave = useCallback(
+    (e: React.MouseEvent, compId: string, pin: string) => {
+      setHoveredPin(null);
+      onPinLeave?.(e, compId, pin);
+    },
+    [onPinLeave]
   );
 
   const { liveData } = useTelemetry();
@@ -992,10 +1010,10 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
             shape={shape}
             onPointerDown={onPinPointerDown}
             onPointerUp={onPinPointerUp}
-            onMouseEnter={onPinEnter}
-            onMouseLeave={onPinLeave}
+            onMouseEnter={handlePinHoverEnter}
+            onMouseLeave={handlePinHoverLeave}
           />
-          <TelemetryOverlay 
+          <TelemetryOverlay
             pin={pinDef.name}
             componentId={component.id}
             x={pinDef.x}
@@ -1008,6 +1026,15 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
             x={pinDef.x}
             y={pinDef.y}
           />
+          {hoveredPin === pinDef.name && (
+            <PinTooltip
+              pin={pinDef.name}
+              componentId={component.id}
+              x={pinDef.x}
+              y={pinDef.y}
+              isRightSide={pinDef.side === 'right'}
+            />
+          )}
         </React.Fragment>
       ))}
 
