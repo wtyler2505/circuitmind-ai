@@ -18,8 +18,8 @@ export const CollaboratorList: React.FC = () => {
     if (!awareness) return;
 
     const updatePeers = () => {
-      const states = Array.from(awareness.getStates().values());
-      setPeers(states.filter(s => s.user));
+      const states = Array.from(awareness.getStates().values()) as Array<Partial<PeerState>>;
+      setPeers(states.filter((s): s is PeerState => !!s.user));
     };
 
     awareness.on('change', updatePeers);

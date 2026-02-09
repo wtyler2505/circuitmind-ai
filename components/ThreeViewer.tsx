@@ -291,7 +291,7 @@ const ThreeViewerContent = forwardRef<ThreeViewerRef, ThreeViewerProps>(({ code,
       {!hasContent && !error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center text-slate-300 p-6 pointer-events-none z-20">
           <div className="w-20 h-20 flex items-center justify-center">
-            <img src="/assets/ui/logo.webp" alt="" className="w-16 h-16 object-contain opacity-40 grayscale animate-pulse-slow" />
+            <img src="/assets/ui/logo.webp" alt="CircuitMind AI" className="w-16 h-16 object-contain opacity-40 grayscale animate-pulse-slow" />
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-bold text-slate-100 uppercase tracking-[0.2em]">No 3D model yet.</h3>
@@ -308,12 +308,12 @@ const ThreeViewerContent = forwardRef<ThreeViewerRef, ThreeViewerProps>(({ code,
           <button onClick={() => { setError(null); loadContent(); }} className="mt-2 text-red-400 hover:text-white underline uppercase tracking-tighter font-bold">Retry Construction</button>
         </div>
       )}
-      <button onClick={() => setShowControls(!showControls)} className="absolute top-2 right-2 bg-slate-800/80 p-2 rounded text-slate-300 hover:text-white transition-colors z-10">
+      <button onClick={() => setShowControls(!showControls)} aria-label={showControls ? 'Hide lighting controls' : 'Show lighting controls'} className="absolute top-2 right-2 bg-slate-800/80 p-2 rounded text-slate-300 hover:text-white transition-colors z-10">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
         </svg>
       </button>
-      <button onClick={() => setXrayMode(!xrayMode)} className={`absolute top-2 right-12 p-2 rounded transition-colors z-10 font-bold text-xs uppercase tracking-wider border ${xrayMode ? 'bg-neon-cyan/20 border-neon-cyan text-neon-cyan' : 'bg-slate-800/80 border-transparent text-slate-400 hover:text-white'}`}>{xrayMode ? 'X-RAY ON' : 'X-RAY'}</button>
+      <button onClick={() => setXrayMode(!xrayMode)} aria-pressed={xrayMode} aria-label="Toggle X-ray mode" className={`absolute top-2 right-12 p-2 rounded transition-colors z-10 font-bold text-xs uppercase tracking-wider border ${xrayMode ? 'bg-neon-cyan/20 border-neon-cyan text-neon-cyan' : 'bg-slate-800/80 border-transparent text-slate-400 hover:text-white'}`}>{xrayMode ? 'X-RAY ON' : 'X-RAY'}</button>
       {showControls && (
         <div className="absolute top-12 right-2 bg-slate-900/90 backdrop-blur border border-slate-700 p-4 rounded-lg w-64 text-xs shadow-xl z-20">
           <h4 className="text-neon-cyan font-bold mb-3 uppercase tracking-wider border-b border-slate-700 pb-2">Lighting Studio</h4>

@@ -60,6 +60,28 @@ class GlobalErrorBoundary extends Component<GlobalErrorBoundaryProps, GlobalErro
   }
 }
 
+// Development-only accessibility auditing with axe-core
+if (import.meta.env.DEV) {
+  import('axe-core').then((axe) => {
+    const runAxe = () => {
+      axe.default.run(document.body, { reporter: 'v2' }).then((results) => {
+        if (results.violations.length > 0) {
+          console.groupCollapsed(
+            `%c[axe] ${results.violations.length} accessibility violation(s)`,
+            'color: #ff6b6b; font-weight: bold'
+          );
+          results.violations.forEach((v) => {
+            console.warn(`[${v.impact}] ${v.help}`, v.helpUrl, v.nodes);
+          });
+          console.groupEnd();
+        }
+      });
+    };
+    // Run after initial render settles
+    setTimeout(runAxe, 2000);
+  });
+}
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");

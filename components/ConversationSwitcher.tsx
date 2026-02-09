@@ -116,6 +116,17 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        onKeyDown={(e) => {
+          if (e.key === 'Escape' && isOpen) {
+            e.preventDefault();
+            setIsOpen(false);
+          } else if ((e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') && !isOpen) {
+            e.preventDefault();
+            setIsOpen(true);
+          }
+        }}
         className="flex items-center gap-2 px-2 py-1 bg-white/5 hover:bg-white/10 cut-corner-sm text-[10px] text-slate-200 border border-white/10 transition-colors uppercase tracking-wider max-w-full"
       >
         <svg
@@ -149,7 +160,30 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-64 panel-surface panel-frame cut-corner-sm border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.9)] z-50 overflow-hidden backdrop-blur-xl">
+        <div
+          role="listbox"
+          aria-label="Conversations"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setIsOpen(false);
+              setEditingId(null);
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              const items = e.currentTarget.querySelectorAll<HTMLElement>('[role="option"]');
+              const current = Array.from(items).findIndex((el) => el === document.activeElement);
+              const next = current < items.length - 1 ? current + 1 : 0;
+              items[next]?.focus();
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              const items = e.currentTarget.querySelectorAll<HTMLElement>('[role="option"]');
+              const current = Array.from(items).findIndex((el) => el === document.activeElement);
+              const prev = current > 0 ? current - 1 : items.length - 1;
+              items[prev]?.focus();
+            }
+          }}
+          className="absolute top-full left-0 mt-1 w-64 panel-surface panel-frame cut-corner-sm border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.9)] z-50 overflow-hidden backdrop-blur-xl"
+        >
           {/* New Conversation Button */}
           <button
             onClick={() => {
@@ -172,7 +206,9 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
           {/* Conversation List */}
           <div className="max-h-60 overflow-y-auto custom-scrollbar bg-[#050608]">
             {sortedConversations.map((conv) => (
-              <div
+              <button
+                type="button"
+                role="option"
                 key={conv.id}
                 onClick={() => {
                   if (editingId !== conv.id) {
@@ -180,7 +216,18 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                     setIsOpen(false);
                   }
                 }}
-                className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-all border-l-2 ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (editingId !== conv.id) {
+                      onSwitchConversation(conv.id);
+                      setIsOpen(false);
+                    }
+                  }
+                }}
+                aria-label={`Switch to conversation: ${conv.title}`}
+                aria-selected={conv.id === activeConversationId}
+                className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-all border-l-2 w-full text-left ${
                   conv.id === activeConversationId
                     ? 'bg-neon-cyan/5 border-neon-cyan'
                     : 'hover:bg-white/5 border-transparent hover:border-slate-600'
@@ -287,7 +334,7 @@ const ConversationSwitcher: React.FC<ConversationSwitcherProps> = ({
                     )}
                   </div>
                 )}
-              </div>
+              </button>
             ))}
           </div>
 

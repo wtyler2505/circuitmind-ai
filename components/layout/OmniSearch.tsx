@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { searchIndexer, IndexedDocument } from '../../services/search/searchIndexer';
 import { motion } from 'framer-motion';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface OmniSearchProps {
   isOpen: boolean;
@@ -10,8 +11,9 @@ interface OmniSearchProps {
 
 export const OmniSearch: React.FC<OmniSearchProps> = ({ isOpen, onClose, onSelect }) => {
   const [query, setQuery] = useState('');
-  const [results, setErrors] = useState<unknown[]>([]);
+  const [results, setResults] = useState<IndexedDocument[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const trapRef = useFocusTrap<HTMLDivElement>({ enabled: isOpen, onClose, autoFocus: false });
 
   useEffect(() => {
     if (isOpen) {
@@ -22,17 +24,21 @@ export const OmniSearch: React.FC<OmniSearchProps> = ({ isOpen, onClose, onSelec
   useEffect(() => {
     if (query.trim()) {
       const searchResults = searchIndexer.search(query);
-      setErrors(searchResults);
+      setResults(searchResults);
     } else {
-      setErrors([]);
+      setResults([]);
     }
   }, [query]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[500] bg-cyber-black/80 backdrop-blur-md flex items-start justify-center pt-24 px-6">
-      <motion.div 
+    <div className="fixed inset-0 z-[500] bg-cyber-black/80 backdrop-blur-md flex items-start justify-center pt-24 px-6" role="presentation">
+      <motion.div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="omnisearch-title"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="w-full max-w-2xl bg-cyber-black panel-surface border border-white/10 cut-corner-md shadow-[0_0_60px_rgba(0,0,0,0.9)] overflow-hidden panel-frame"
@@ -45,6 +51,8 @@ export const OmniSearch: React.FC<OmniSearchProps> = ({ isOpen, onClose, onSelec
           <input
             ref={inputRef}
             type="text"
+            id="omnisearch-title"
+            aria-label="Search circuit components and wires"
             placeholder="SEARCH_CIRCUIT_INTEL... (Ctrl + K)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

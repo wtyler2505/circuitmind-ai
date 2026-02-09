@@ -457,38 +457,46 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
             </div>
           </div>
 
-          <div className="flex border-b border-white/5 mt-1">
+          <div className="flex border-b border-white/5 mt-1" role="tablist" aria-label="Inventory sections">
             <button
+              role="tab"
+              aria-selected={activeTab === 'list'}
               onClick={() => setActiveTab('list')}
-              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'list' 
-                  ? 'border-neon-cyan text-white bg-neon-cyan/5' 
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'list'
+                  ? 'border-neon-cyan text-white bg-neon-cyan/5'
                   : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
               }`}
             >
               ASSETS
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === 'add'}
               onClick={() => setActiveTab('add')}
-              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'add' 
-                  ? 'border-neon-green text-white bg-neon-green/5' 
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'add'
+                  ? 'border-neon-green text-white bg-neon-green/5'
                   : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
               }`}
             >
               NEW
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === 'tools'}
               onClick={() => setActiveTab('tools')}
-              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'tools' 
-                  ? 'border-neon-purple text-white bg-neon-purple/5' 
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'tools'
+                  ? 'border-neon-purple text-white bg-neon-purple/5'
                   : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
               }`}
             >
               TOOLS
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === 'macros'}
               onClick={() => setActiveTab('macros')}
-              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'macros' 
-                  ? 'border-neon-amber text-white bg-neon-amber/5' 
+              className={`flex-1 py-2 text-[9px] font-bold tracking-[0.2em] transition-all border-b-2 ${ activeTab === 'macros'
+                  ? 'border-neon-amber text-white bg-neon-amber/5'
                   : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
               }`}
             >

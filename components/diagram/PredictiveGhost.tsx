@@ -103,6 +103,7 @@ const GhostAction: React.FC<{
                   onReject(prediction.id);
                 }}
                 className="bg-slate-800 text-slate-400 text-[8px] font-bold px-1.5 py-0.5 cut-corner-xs transition-all hover:text-white"
+                aria-label="Dismiss wire suggestion"
               >
                 ×
               </button>

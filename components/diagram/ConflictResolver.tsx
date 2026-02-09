@@ -1,5 +1,6 @@
 import React from 'react';
 import { WiringDiagram } from '../../types';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface ConflictResolverProps {
   local: WiringDiagram;
@@ -8,11 +9,12 @@ interface ConflictResolverProps {
 }
 
 export const ConflictResolver: React.FC<ConflictResolverProps> = ({ local, remote, onResolve }) => {
+  const trapRef = useFocusTrap<HTMLDivElement>({});
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] flex items-center justify-center p-6">
-      <div className="bg-slate-950 border border-red-500/30 w-full max-w-4xl cut-corner-md flex flex-col shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] flex items-center justify-center p-6" role="presentation">
+      <div ref={trapRef} role="alertdialog" aria-modal="true" aria-labelledby="conflict-title" className="bg-slate-950 border border-red-500/30 w-full max-w-4xl cut-corner-md flex flex-col shadow-[0_0_50px_rgba(239,68,68,0.2)]">
         <div className="p-4 border-b border-white/5 bg-red-950/20">
-          <h2 className="text-sm font-bold text-red-400 uppercase tracking-[0.3em] flex items-center gap-3">
+          <h2 id="conflict-title" className="text-sm font-bold text-red-400 uppercase tracking-[0.3em] flex items-center gap-3">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>

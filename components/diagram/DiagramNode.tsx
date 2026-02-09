@@ -26,6 +26,7 @@ interface DiagramNodeProps {
   onSelect?: (componentId: string) => void;
   onContextMenu?: (componentId: string, x: number, y: number) => void;
   onDoubleClick?: (component: ElectronicComponent) => void;
+  onNudge?: (componentId: string, dx: number, dy: number) => void;
   onPinPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, isRightSide: boolean) => void;
   onPinPointerUp: (e: React.PointerEvent, nodeId: string, pin: string) => void;
   onMouseEnter?: (e: React.MouseEvent, component: ElectronicComponent) => void;
@@ -730,6 +731,7 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
   onMouseLeave,
   onPinEnter,
   onPinLeave,
+  onNudge,
 }) {
   const isHighlighted = !!highlight;
 
@@ -861,7 +863,10 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
   return (
     <g
       transform={`translate(${position.x}, ${position.y})`}
-      className={`pointer-events-auto cursor-grab active:cursor-grabbing ${isHighlighted && highlight.pulse ? 'component-highlighted' : ''} ${hasActiveTelemetry ? 'telemetry-active' : ''} ${hasLogicError ? 'logic-error' : ''}`}
+      tabIndex={0}
+      role="button"
+      aria-label={`${component.name} (${component.type})${isSelected ? ', selected' : ''}${hasLogicError ? ', has logic error' : ''}`}
+      className={`pointer-events-auto cursor-grab active:cursor-grabbing ${isHighlighted && highlight.pulse ? 'component-highlighted' : ''} ${hasActiveTelemetry ? 'telemetry-active' : ''} ${hasLogicError ? 'logic-error' : ''} focus-visible:outline-none`}
       style={
         isHighlighted
           ? ({ '--highlight-color': highlight.color } as React.CSSProperties)
@@ -873,6 +878,20 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
       onDoubleClick={handleDoubleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick(e as unknown as React.MouseEvent);
+        } else if (e.key === 'Escape') {
+          (e.target as SVGElement).blur();
+        } else if (onNudge && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          e.preventDefault();
+          const step = e.shiftKey ? 10 : 1;
+          const dx = e.key === 'ArrowRight' ? step : e.key === 'ArrowLeft' ? -step : 0;
+          const dy = e.key === 'ArrowDown' ? step : e.key === 'ArrowUp' ? -step : 0;
+          onNudge(component.id, dx, dy);
+        }
+      }}
     >
       {/* Glow effect for highlighted/selected components */}
       {(isHighlighted || isSelected) && (

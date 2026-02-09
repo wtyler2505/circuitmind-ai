@@ -104,6 +104,7 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
+          ...(mode === 'production' ? { 'axe-core': path.resolve(__dirname, 'scripts/empty-module.js') } : {}),
         }
       },
       build: {
@@ -115,6 +116,11 @@ export default defineConfig(({ mode }) => {
               'vendor-ai': ['@google/genai'],
               'vendor-ui': ['framer-motion'],
               'vendor-markdown': ['react-markdown', 'remark-gfm', 'remark-breaks'],
+              'vendor-collab': ['yjs', 'y-webrtc'],
+              'vendor-git': ['isomorphic-git', '@isomorphic-git/lightning-fs'],
+              'vendor-charts': ['recharts'],
+              'vendor-i18n': ['i18next', 'i18next-browser-languagedetector', 'i18next-http-backend', 'react-i18next'],
+              'vendor-pdf': ['jspdf'],
             }
           }
         },

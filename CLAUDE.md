@@ -379,3 +379,6 @@ braingrid task update TASK-456 --status COMPLETED
 **Full documentation:** [.braingrid/README.md](./.braingrid/README.md)
 
 <!-- END BRAINGRID INTEGRATION -->
+
+## Project Reference
+@.ref/project-dna.md

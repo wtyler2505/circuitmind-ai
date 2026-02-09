@@ -6,6 +6,7 @@ import { getStoredApiKey, setStoredApiKey } from '../services/apiKeyStorage';
 import { datasetService } from '../services/datasetService';
 import IconButton from './IconButton';
 import { useLayout } from '../contexts/LayoutContext';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { DeveloperPortal } from './settings/DeveloperPortal';
 import { ConfigPortal } from './settings/ConfigPortal';
 import { DiagnosticsView } from './settings/DiagnosticsView';
@@ -107,6 +108,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'api' | 'profile' | 'parts' | 'ai' | 'layout' | 'dev' | 'config' | 'diagnostics' | 'locale'>(initialTab);
   const resetSnapshotRef = useRef<LayoutSnapshot | null>(null);
   const toast = useToast();
+  const trapRef = useFocusTrap<HTMLDivElement>({ enabled: isOpen, onClose });
   
   const {
     isInventoryOpen, setInventoryOpen,
@@ -292,8 +294,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-slate-950 rounded-xl shadow-2xl w-full max-w-lg mx-4 border border-slate-800/80">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" role="presentation">
+      <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="settings-panel-title" className="bg-slate-950 rounded-xl shadow-2xl w-full max-w-lg mx-4 border border-slate-800/80">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-slate-950/70">
           <div className="flex items-center gap-3">
@@ -316,98 +318,154 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            <h2 className="text-lg font-semibold text-white uppercase tracking-[0.3em]">Settings</h2>
+            <h2 id="settings-panel-title" className="text-lg font-semibold text-white uppercase tracking-[0.3em]">Settings</h2>
           </div>
           <IconButton icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>} label="Close settings" variant="ghost" onClick={onClose} />
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-800/80 bg-slate-950/60 overflow-x-auto custom-scrollbar">
+        <div
+          role="tablist"
+          aria-label="Settings sections"
+          className="flex border-b border-slate-800/80 bg-slate-950/60 overflow-x-auto custom-scrollbar"
+          onKeyDown={(e) => {
+            const tabs: Array<typeof activeTab> = ['api', 'profile', 'parts', 'ai', 'layout', 'dev', 'config', 'diagnostics', 'locale'];
+            const idx = tabs.indexOf(activeTab);
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              const next = tabs[(idx + 1) % tabs.length];
+              setActiveTab(next);
+              const nextEl = e.currentTarget.querySelector(`[aria-selected="true"]`)?.nextElementSibling as HTMLElement | null;
+              if (nextEl) nextEl.focus(); else (e.currentTarget.children[0] as HTMLElement)?.focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              const prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+              setActiveTab(prev);
+              const prevEl = e.currentTarget.querySelector(`[aria-selected="true"]`)?.previousElementSibling as HTMLElement | null;
+              if (prevEl) prevEl.focus(); else (e.currentTarget.children[tabs.length - 1] as HTMLElement)?.focus();
+            } else if (e.key === 'Home') {
+              e.preventDefault();
+              setActiveTab(tabs[0]);
+              (e.currentTarget.children[0] as HTMLElement)?.focus?.();
+            } else if (e.key === 'End') {
+              e.preventDefault();
+              setActiveTab(tabs[tabs.length - 1]);
+              (e.currentTarget.children[tabs.length - 1] as HTMLElement)?.focus?.();
+            }
+          }}
+        >
           <button
+            role="tab"
+            aria-selected={activeTab === 'api'}
+            tabIndex={activeTab === 'api' ? 0 : -1}
             onClick={() => setActiveTab('api')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'api' 
-                ? 'border-neon-cyan text-white bg-white/5' 
+              activeTab === 'api'
+                ? 'border-neon-cyan text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
             API KEY
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'profile'}
+            tabIndex={activeTab === 'profile' ? 0 : -1}
             onClick={() => setActiveTab('profile')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'profile' 
-                ? 'border-neon-pink text-white bg-white/5' 
+              activeTab === 'profile'
+                ? 'border-neon-pink text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
             PROFILE
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'parts'}
+            tabIndex={activeTab === 'parts' ? 0 : -1}
             onClick={() => setActiveTab('parts')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'parts' 
-                ? 'border-neon-cyan text-white bg-white/5' 
+              activeTab === 'parts'
+                ? 'border-neon-cyan text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
             PARTS
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'ai'}
+            tabIndex={activeTab === 'ai' ? 0 : -1}
             onClick={() => setActiveTab('ai')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'ai' 
-                ? 'border-neon-purple text-white bg-white/5' 
+              activeTab === 'ai'
+                ? 'border-neon-purple text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
             AI AUTONOMY
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'layout'}
+            tabIndex={activeTab === 'layout' ? 0 : -1}
             onClick={() => setActiveTab('layout')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'layout' 
-                ? 'border-neon-amber text-white bg-white/5' 
+              activeTab === 'layout'
+                ? 'border-neon-amber text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
             LAYOUT
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'dev'}
+            tabIndex={activeTab === 'dev' ? 0 : -1}
             onClick={() => setActiveTab('dev')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'dev' 
-                ? 'border-neon-green text-white bg-white/5' 
+              activeTab === 'dev'
+                ? 'border-neon-green text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
             DEVELOPER
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'config'}
+            tabIndex={activeTab === 'config' ? 0 : -1}
             onClick={() => setActiveTab('config')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'config' 
-                ? 'border-neon-amber text-white bg-white/5' 
+              activeTab === 'config'
+                ? 'border-neon-amber text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
             CONFIG
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'diagnostics'}
+            tabIndex={activeTab === 'diagnostics' ? 0 : -1}
             onClick={() => setActiveTab('diagnostics')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'diagnostics' 
-                ? 'border-red-500 text-white bg-white/5' 
+              activeTab === 'diagnostics'
+                ? 'border-red-500 text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >
             DIAGNOSTICS
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'locale'}
+            tabIndex={activeTab === 'locale' ? 0 : -1}
             onClick={() => setActiveTab('locale')}
             className={`flex-1 min-w-[80px] py-3 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-              activeTab === 'locale' 
-                ? 'border-neon-cyan text-white bg-white/5' 
+              activeTab === 'locale'
+                ? 'border-neon-cyan text-white bg-white/5'
                 : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
             }`}
           >

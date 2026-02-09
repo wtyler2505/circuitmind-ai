@@ -37,9 +37,11 @@ class SearchIndexer {
   /**
    * Performs a search across the index.
    */
-  search(query: string, category?: SearchableCategory) {
-    const searchOptions = category ? { filter: (res: IndexedDocument) => res.category === category } : undefined;
-    return this.miniSearch.search(query, searchOptions);
+  search(query: string, category?: SearchableCategory): IndexedDocument[] {
+    // MiniSearch SearchResult includes stored fields at runtime but not in TS types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const searchOptions = category ? { filter: (res: any) => res.category === category } : undefined;
+    return this.miniSearch.search(query, searchOptions) as unknown as IndexedDocument[];
   }
 
   clear() {

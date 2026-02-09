@@ -27,7 +27,7 @@ describe('SettingsPanel', () => {
 
     render(<SettingsPanel isOpen={true} onClose={() => undefined} />);
 
-    await user.click(screen.getByRole('button', { name: /layout/i }));
+    await user.click(screen.getByRole('tab', { name: /layout/i }));
     
     // Verify initial state
     const inventoryToggle = screen.getByLabelText('Inventory open on launch');
@@ -62,7 +62,7 @@ describe('SettingsPanel', () => {
 
     render(<SettingsPanel isOpen={true} onClose={() => undefined} />);
 
-    await user.click(screen.getByRole('button', { name: /layout/i }));
+    await user.click(screen.getByRole('tab', { name: /layout/i }));
     
     // Verify initial values in UI
     expect(screen.getByLabelText('Inventory open on launch')).toBeChecked();

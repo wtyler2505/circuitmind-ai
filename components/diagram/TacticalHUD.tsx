@@ -98,8 +98,9 @@ const HUDItem: React.FC<HUDItemProps> = ({ fragment }) => {
         </div>
 
         {/* Action icons could go here */}
-        <button 
+        <button
           onClick={() => removeFragment(fragment.id)}
+          aria-label="Remove HUD fragment"
           className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-white text-slate-400"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom';
+import { toHaveNoViolations } from 'jest-axe';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, vi, expect } from 'vitest';
+
+// Extend vitest expect with axe matchers for accessibility testing
+expect.extend(toHaveNoViolations);
 
 // Manual mock for IndexedDB
 if (!global.indexedDB) {

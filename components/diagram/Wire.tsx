@@ -2,6 +2,11 @@ import React, { memo } from 'react';
 import { WireConnection, ElectronicComponent } from '../../types';
 import { BezierWire } from './wiring/BezierWire';
 
+export interface WireHighlightState {
+  color: string;
+  pulse: boolean;
+}
+
 interface WireProps {
   connection: WireConnection;
   index: number;

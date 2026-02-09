@@ -47,7 +47,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         {!isFocusMode && header}
         
         {/* Canvas Area */}
-        <div className={`flex-1 relative overflow-hidden bg-cyber-black canvas-grid ${!isFocusMode ? 'border-y border-white/5' : ''}`}>
+        <main id="main-content" className={`flex-1 relative overflow-hidden bg-cyber-black canvas-grid ${!isFocusMode ? 'border-y border-white/5' : ''}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={activeMode}
@@ -60,7 +60,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               {children}
             </motion.div>
           </AnimatePresence>
-        </div>
+        </main>
 
         {!isFocusMode && statusRail}
       </div>

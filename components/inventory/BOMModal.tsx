@@ -6,6 +6,7 @@ import { fetchPartDetails } from '../../services/geminiService';
 import { useDiagram } from '../../contexts/DiagramContext';
 import { useInventory } from '../../contexts/InventoryContext';
 import { useToast } from '../../hooks/useToast';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface BOMModalProps {
   onClose: () => void;
@@ -15,6 +16,7 @@ export const BOMModal: React.FC<BOMModalProps> = ({ onClose }) => {
   const { diagram } = useDiagram();
   const { inventory } = useInventory();
   const toast = useToast();
+  const trapRef = useFocusTrap<HTMLDivElement>({ onClose });
 
   const [report, setReport] = useState<BOMReport | null>(null);
   const [isEnriching, setIsEnriching] = useState(false);
@@ -92,14 +94,14 @@ export const BOMModal: React.FC<BOMModalProps> = ({ onClose }) => {
   if (!report) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-slate-950 border border-slate-800 w-full max-w-4xl h-[80vh] flex flex-col cut-corner-md shadow-2xl panel-frame">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" role="presentation">
+      <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="bom-modal-title" className="bg-slate-950 border border-slate-800 w-full max-w-4xl h-[80vh] flex flex-col cut-corner-md shadow-2xl panel-frame">
         {/* Header */}
         <div className="p-4 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
-          <h2 className="text-sm font-bold text-white uppercase tracking-[0.3em] panel-title">
+          <h2 id="bom-modal-title" className="text-sm font-bold text-white uppercase tracking-[0.3em] panel-title">
             <span className="text-neon-cyan">Project</span>_BOM_Manifest
           </h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
+          <button onClick={onClose} aria-label="Close BOM modal" className="text-slate-500 hover:text-white transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

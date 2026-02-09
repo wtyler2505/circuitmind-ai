@@ -71,7 +71,7 @@ export const AppHeader = React.memo(() => {
   }, [loadFromQuickSlot]);
 
   return (
-    <div className="h-10 panel-header flex items-center justify-between px-3 shrink-0 z-20 gap-4">
+    <header role="banner" className="h-10 panel-header flex items-center justify-between px-3 shrink-0 z-20 gap-4">
       {/* Brand Plate */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 select-none group">
@@ -170,9 +170,10 @@ export const AppHeader = React.memo(() => {
             <svg className="w-3 h-3 text-neon-amber opacity-70 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
-            <select 
+            <select
               value={currentBranch}
               onChange={(e) => setCurrentBranch(e.target.value)}
+              aria-label="Select branch"
               className="bg-transparent text-[9px] font-bold text-slate-400 focus:outline-none uppercase tracking-widest cursor-pointer group-hover:text-white transition-colors"
             >
               <option value="master">MASTER</option>
@@ -289,6 +290,6 @@ export const AppHeader = React.memo(() => {
 
       {isBOMOpen && <BOMModal onClose={() => setIsBOMOpen(false)} />}
       {isSecurityOpen && <SecurityReport onClose={() => setIsSecurityOpen(false)} />}
-    </div>
+    </header>
   );
 });

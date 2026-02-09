@@ -629,3 +629,166 @@ body {
   filter: none !important;
 
 }
+
+/* =====================================
+   WCAG 2.1 AA: Reduced Motion (SC 2.3.3)
+   Respects OS-level prefers-reduced-motion.
+   ===================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .component-highlighted,
+  .telemetry-active,
+  .logic-error,
+  .wire-highlighted,
+  .wire-flow-ants,
+  .attention-ring,
+  .shimmer-loading,
+  .loading-tech,
+  .animate-pulse-slow {
+    animation: none !important;
+  }
+
+  .slide-in-right,
+  .fade-up,
+  .animate-fade-in-right {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .typing-dot:nth-child(1),
+  .typing-dot:nth-child(2),
+  .typing-dot:nth-child(3) {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .panel-frame::before,
+  .panel-frame:hover::before {
+    transition: none !important;
+  }
+
+  .panel-loading::before {
+    animation: none !important;
+  }
+
+  .canvas-grid {
+    background-image:
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 24px),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 24px);
+    background-size: 24px 24px, 24px 24px;
+  }
+}
+
+/* =====================================
+   WCAG 2.1 AA: Focus Indicators (SC 2.4.7)
+   Visible focus rings for keyboard navigation
+   on dark backgrounds.
+   ===================================== */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="option"]:focus-visible,
+[role="separator"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--color-neon-cyan);
+  outline-offset: 2px;
+}
+
+/* SVG focus indicators (outline doesn't render well on SVG elements) */
+svg g[tabindex]:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 3px var(--color-neon-cyan)) drop-shadow(0 0 6px var(--color-neon-cyan));
+}
+
+/* Keyboard-only focus ring for high-contrast mode */
+@media (forced-colors: active) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="option"]:focus-visible,
+  [role="separator"]:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+/* =====================================
+   WCAG 2.1 AA: Minimum Text Size (SC 1.4.4)
+   Enforce readable minimums for body text.
+   ===================================== */
+
+@layer base {
+  p, li, td, th, dd, dt, figcaption {
+    font-size: max(0.6875rem, 11px);
+  }
+}
+
+/* =====================================
+   WCAG 2.1 AA: Skip Navigation (SC 2.4.1)
+   Hidden link visible on focus for keyboard users.
+   ===================================== */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--color-neon-cyan);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* =====================================
+   WCAG 2.1 AA: Forced Colors / High Contrast
+   Support for Windows High Contrast mode.
+   ===================================== */
+
+@media (forced-colors: active) {
+  .panel-surface,
+  .panel-header,
+  .panel-rail,
+  .control-tile,
+  .message-slab,
+  .message-user,
+  .message-assistant {
+    border: 1px solid CanvasText;
+  }
+
+  .panel-title {
+    text-shadow: none;
+  }
+
+  button,
+  [role="button"] {
+    border: 1px solid ButtonText;
+  }
+}

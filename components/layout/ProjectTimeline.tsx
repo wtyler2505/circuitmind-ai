@@ -2,8 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { gitService } from '../../services/gitService';
 import { useDiagram } from '../../contexts/DiagramContext';
 
+interface GitLogEntry {
+  oid: string;
+  commit: {
+    message: string;
+    author: {
+      name: string;
+      email: string;
+      timestamp: number;
+    };
+  };
+}
+
 export const ProjectTimeline: React.FC = () => {
-  const [history, setHistory] = useState<unknown[]>([]);
+  const [history, setHistory] = useState<GitLogEntry[]>([]);
   const { updateDiagram, diagram } = useDiagram();
 
   const [isLoading, setIsLoading] = useState(false);

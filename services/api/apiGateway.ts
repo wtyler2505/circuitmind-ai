@@ -34,7 +34,7 @@ export const initAPIGateway = (getContext: () => GatewayContext) => {
     
     // External tools can only trigger safe actions if not admin
     const { executeAction } = getContext();
-    const result = await executeAction(req.body, false);
+    const result = await executeAction(req.body as ActionIntent, false);
     
     return { status: result.success ? 200 : 400, body: result };
   });

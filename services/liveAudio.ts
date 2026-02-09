@@ -306,7 +306,6 @@ export class LiveSession {
     this.inputContext = null;
     this.outputContext = null;
     this.session = null;
-    this.getCanvasSnapshot = null;
     this.nextStartTime = 0;
   }
 }
