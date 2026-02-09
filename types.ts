@@ -14,6 +14,15 @@ export interface ElectronicComponent {
   threeDModelUrl?: string; // URL to a GLB/GLTF model
   precisionLevel?: 'draft' | 'masterpiece'; // 3D generation fidelity
 
+  // Electrical properties for MNA simulation
+  electrical?: {
+    resistance?: number; // Ohms
+    forwardVoltage?: number; // Volts (LEDs, diodes)
+    maxCurrent?: number; // Amps
+    outputVoltage?: number; // Volts (voltage sources, regulators)
+    inputImpedance?: number; // Ohms (MCU inputs)
+  };
+
   // 2D Engine Upgrade (Fritzing Parity)
   fzpzSource?: ArrayBuffer; // Original source if imported
   footprint?: ComponentFootprint;
