@@ -13,7 +13,8 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,css,md}\"",
-    "test:visual": "playwright test scripts/capture-screenshots.ts"
+    "test:visual": "playwright test scripts/capture-screenshots.ts",
+    "prepare": "node -e \"const{cpSync,chmodSync}=require('fs');const p=require('path');try{cpSync(p.join('scripts','hooks','pre-commit'),p.join('.git','hooks','pre-commit'));chmodSync(p.join('.git','hooks','pre-commit'),0o755);console.log('Git hooks installed.')}catch(e){}\""
   },
   "dependencies": {
     "@google/gemini-cli": "^0.26.0",

@@ -1,7 +1,28 @@
+# Gitleaks configuration for CircuitMind AI
+# https://github.com/gitleaks/gitleaks
+
+title = "CircuitMind AI Secret Scanning"
+
+[extend]
+useDefault = true
+
+# Additional rules for project-specific patterns
+[[rules]]
+id = "gemini-api-key"
+description = "Google Gemini / Google AI API Key"
+regex = '''AIzaSy[0-9A-Za-z_-]{33}'''
+keywords = ["AIzaSy"]
+
+[[rules]]
+id = "generic-api-key-assignment"
+description = "Generic API key assignment in code"
+regex = '''(?i)(?:api[_-]?key|apikey)\s*[:=]\s*['\"][0-9a-zA-Z_\-]{20,}['\"]'''
+keywords = ["api_key", "apikey", "API_KEY"]
+
+# Allowlist: files that legitimately reference key patterns without containing secrets
 [allowlist]
-description = "Ignore false positive generic-api-key findings in documentation"
-fingerprints = [
-    "356416e8d6da36873b7b7151797a96dc19c22976:docs/misc/inventory/examples_library/circuit_002_ultrasonic_distance/README.md:generic-api-key:21",
-    "356416e8d6da36873b7b7151797a96dc19c22976:docs/misc/inventory/examples_library/circuit_007_esp32_ultrasonic/README.md:generic-api-key:26",
-    "356416e8d6da36873b7b7151797a96dc19c22976:docs/misc/inventory/examples_library/circuit_008_ws2812b_strip/README.md:generic-api-key:28"
+paths = [
+  '''.env\.example$''',
+  '''\.gitleaks\.toml$''',
+  '''package-lock\.json$''',
 ]

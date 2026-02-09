@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# CircuitMind AI - Pre-commit secret detection via Gitleaks
+# Scans staged files for secrets before allowing commit.
+
+if ! command -v gitleaks &> /dev/null; then
+  echo "⚠️  gitleaks not found. Install it to enable secret scanning:"
+  echo "   https://github.com/gitleaks/gitleaks#installing"
+  echo "   Skipping secret scan."
+  exit 0
+fi
+
+echo "🔒 Scanning staged changes for secrets..."
+
+gitleaks git --pre-commit --config="$(git rev-parse --show-toplevel)/.gitleaks.toml" --verbose 2>&1
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "❌ SECRET DETECTED — commit blocked."
+  echo ""
+  echo "Remediation steps:"
+  echo "  1. Remove the secret from the staged file(s)"
+  echo "  2. Store secrets in .env.local (gitignored) instead"
+  echo "  3. Use .env.example as a template (no real values)"
+  echo "  4. Run 'git diff --cached' to review staged changes"
+  echo ""
+  echo "To bypass (NOT recommended): git commit --no-verify"
+  exit 1
+fi
+
+echo "✅ No secrets detected."
+exit 0
