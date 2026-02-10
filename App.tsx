@@ -10,6 +10,7 @@ import { HUDProvider } from './contexts/HUDContext';
 import { TelemetryProvider } from './contexts/TelemetryContext';
 import { SimulationProvider } from './contexts/SimulationContext';
 import { TutorialProvider } from './contexts/TutorialContext';
+import { QuestProvider } from './contexts/QuestContext';
 import { HealthProvider } from './contexts/HealthContext';
 import { MacroProvider } from './contexts/MacroContext';
 import { DashboardProvider } from './contexts/DashboardContext';
@@ -50,7 +51,9 @@ export default function App() {
                                       <SimulationProvider>
                                         <VoiceAssistantProvider>
                                           <TutorialProvider>
-                                            <MainLayout />
+                                            <QuestProvider>
+                                              <MainLayout />
+                                            </QuestProvider>
                                           </TutorialProvider>
                                         </VoiceAssistantProvider>
                                       </SimulationProvider>
