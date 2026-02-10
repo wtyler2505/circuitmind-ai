@@ -357,6 +357,54 @@ competing hypotheses. Have them challenge each other's theories.
 - `liveSessionRef` uses `useRef`, NOT `useState`
 - Z-Index layers: Canvas(0) < Header(10) < Chat(20) < Inventory(40) < Modals(50)
 
+## BrainGrid REQ Execution — Agent Team Protocol
+
+### Decision: Team or Solo?
+
+Analyze each task's EDIT footprint (files it will modify, not read).
+
+| Condition | Action |
+|-----------|--------|
+| Tasks edit **different** files with no shared type contracts | Agent team |
+| Tasks edit **same** files | Solo, sequential |
+| Tasks edit different files but one changes types/interfaces the other consumes | Solo, or sequence the dependency first |
+| Mixed independence | Agents for independent tasks, lead handles coupled ones |
+| Greenfield with obvious scope | Skip assessment, spawn directly |
+| Uncertain scope (might already be done) | Explore agents assess first |
+
+### Execution Flow
+
+1. **Analyze**: Check each task's edit footprint + cross-task type dependencies
+2. **Decide**: Team or solo per the matrix above
+3. **Spawn**: Each agent gets non-overlapping edit ownership + BrainGrid context
+4. **Verify incrementally**: tsc after EACH agent completes (catch errors early)
+5. **Commit once**: Single commit after ALL agents done + tsc + tests pass
+6. **Push + update**: Push to remote. BrainGrid status updates are best-effort (known API bug).
+
+### Agent Collision Protocol
+
+If an agent discovers it needs to edit a file owned by another agent:
+1. STOP — do not edit the file
+2. Report to lead what change is needed and why
+3. Lead coordinates: reassigns edit, sequences it, or handles after both complete
+
+### Agent Prompt Template (required context)
+
+- Project ID: `eb99a64d-77b4-46d8-b9b5-1663bc2cfb80`
+- REQ ID + Task ID
+- Files they MAY edit (exclusive list)
+- Files they may READ but not edit
+- "Run `npx tsc --noEmit` before reporting done"
+- Relevant gotchas from CLAUDE.md
+
+### What Lead Handles (never delegated)
+
+- File ownership / edit-footprint analysis
+- BrainGrid status updates
+- Git commit + push
+- Final tsc + test verification
+- Cross-agent conflict resolution
+
 <!-- BEGIN BRAINGRID INTEGRATION -->
 ## BrainGrid Integration
 
