@@ -38,21 +38,50 @@ export const calculateBezierPath = (
     return `M ${start.x} ${start.y} C ${start.x} ${start.y + 50}, ${end.x} ${end.y + 50}, ${end.x} ${end.y}`;
   }
   
-  // Multi-point Bezier
-  // M start -> C ... p1 -> C ... p2 -> ... end
-  let path = `M ${start.x} ${start.y}`;
-  
-  // To keep it simple for MVP, just lines between points?
-  // No, we want Curves.
-  // We need to construct a spline.
-  
-  // TODO: Implement Catmull-Rom or similar for smooth path through arbitrary points.
-  // For now, linear segments for debug.
-  points.forEach(p => {
-      path += ` L ${p.x} ${p.y}`;
-  });
-  path += ` L ${end.x} ${end.y}`;
-  
+  // Multi-point path: Catmull-Rom spline converted to cubic Bezier curves.
+  // Build the full ordered point array including start and end.
+  const allPoints: Array<{ x: number; y: number; handleIn?: { dx: number; dy: number }; handleOut?: { dx: number; dy: number } }> = [
+    start,
+    ...points,
+    end,
+  ];
+
+  let path = `M ${allPoints[0].x} ${allPoints[0].y}`;
+
+  // For each segment P[i] -> P[i+1], we need the surrounding points P[i-1] and P[i+2]
+  // to compute Catmull-Rom tangents. For edge cases, mirror the missing neighbor.
+  for (let i = 0; i < allPoints.length - 1; i++) {
+    const p0 = i > 0 ? allPoints[i - 1] : { x: 2 * allPoints[0].x - allPoints[1].x, y: 2 * allPoints[0].y - allPoints[1].y };
+    const p1 = allPoints[i];
+    const p2 = allPoints[i + 1];
+    const p3 = i + 2 < allPoints.length ? allPoints[i + 2] : { x: 2 * p2.x - p1.x, y: 2 * p2.y - p1.y };
+
+    // Catmull-Rom to cubic Bezier conversion:
+    //   cp1 = P1 + (P2 - P0) / 6
+    //   cp2 = P2 - (P3 - P1) / 6
+    // This uses the standard tension factor of 6 (equivalent to alpha=0.5 centripetal).
+    let cp1x = p1.x + (p2.x - p0.x) / 6;
+    let cp1y = p1.y + (p2.y - p0.y) / 6;
+    let cp2x = p2.x - (p3.x - p1.x) / 6;
+    let cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    // If the source point has an explicit handleOut, override cp1.
+    const srcPoint = allPoints[i] as { x: number; y: number; handleOut?: { dx: number; dy: number } };
+    if (srcPoint.handleOut) {
+      cp1x = p1.x + srcPoint.handleOut.dx;
+      cp1y = p1.y + srcPoint.handleOut.dy;
+    }
+
+    // If the destination point has an explicit handleIn, override cp2.
+    const dstPoint = allPoints[i + 1] as { x: number; y: number; handleIn?: { dx: number; dy: number } };
+    if (dstPoint.handleIn) {
+      cp2x = p2.x + dstPoint.handleIn.dx;
+      cp2y = p2.y + dstPoint.handleIn.dy;
+    }
+
+    path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+
   return path;
 };
 

@@ -287,6 +287,66 @@ export interface AIAutonomySettings {
   customUnsafeActions: ActionType[]; // Actions user marked as unsafe
 }
 
+// =====================================
+// Quest System
+// =====================================
+
+export interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  prerequisites: string[]; // quest IDs that must be completed first
+  componentsRequired: string[]; // component types needed
+  validationRules: QuestValidationRule[];
+  estimatedMinutes: number;
+  pointsReward: number;
+  badge?: string;
+  category: 'basics' | 'circuits' | 'programming' | 'advanced';
+}
+
+export interface QuestValidationRule {
+  type: 'component_placed' | 'wire_connected' | 'simulation_run' | 'component_count' | 'specific_connection';
+  target?: string; // component type or pin ID
+  count?: number;
+  description: string;
+}
+
+export interface UserProgress {
+  completedQuests: string[];
+  currentQuestId: string | null;
+  skillLevel: number;
+  totalPoints: number;
+  badgesEarned: string[];
+  tutorialsCompleted: string[];
+  startedAt: string; // ISO date
+  lastActivityAt: string; // ISO date
+}
+
+export interface TutorialStep {
+  id: string;
+  title: string;
+  description: string;
+  instructions?: string; // Alias for description (used by BootcampPanel)
+  targetSelector?: string; // CSS selector for highlight
+  targetElementId?: string; // Alternative element targeting
+  placement: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  action?: 'click' | 'drag' | 'type' | 'observe';
+  mentorTip?: string;
+  completionCheck?: () => boolean;
+  condition?: (state: { diagram: WiringDiagram | null; inventory: ElectronicComponent[] }) => boolean;
+}
+
+export interface Tutorial {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: 'beginner' | 'intermediate' | 'expert';
+  steps: TutorialStep[];
+  prerequisiteQuest?: string;
+  estimatedMinutes: number;
+}
+
 declare global {
   interface AIStudio {
     hasSelectedApiKey: () => Promise<boolean>;
