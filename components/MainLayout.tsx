@@ -2,21 +2,42 @@ import React, { useState, useRef, useCallback, lazy, Suspense, useEffect, memo }
 import { AppLayout } from './layout/AppLayout';
 import { AppHeader } from './layout/AppHeader';
 import { StatusRail } from './layout/StatusRail';
-import Inventory from './Inventory';
-import AssistantSidebar from './AssistantSidebar';
-import DiagramCanvas, { DiagramCanvasRef } from './DiagramCanvas';
-import { NeuralCursor } from './diagram/NeuralCursor';
-import { TacticalHUD } from './diagram/TacticalHUD';
-import { SimControls } from './layout/SimControls';
-import { MentorOverlay } from './layout/MentorOverlay';
-import { DashboardView } from './dashboard/DashboardView';
-import { Gatekeeper } from './auth/Gatekeeper';
-import { CyberToast } from './layout/CyberToast';
-import { OmniSearch } from './layout/OmniSearch';
-import { ContextMenuOverlay } from './layout/ContextMenuOverlay';
-import { AssistantContent } from './layout/assistant/AssistantContent';
+import type { DiagramCanvasRef } from './DiagramCanvas';
 
-// Lazy Components
+// Lazy-loaded components — code-split into separate chunks
+const Inventory = lazy(() => import('./Inventory'));
+const AssistantSidebar = lazy(() => import('./AssistantSidebar'));
+const DiagramCanvas = lazy(() => import('./DiagramCanvas'));
+const DashboardView = lazy(() =>
+  import('./dashboard/DashboardView').then(m => ({ default: m.DashboardView }))
+);
+const NeuralCursor = lazy(() =>
+  import('./diagram/NeuralCursor').then(m => ({ default: m.NeuralCursor }))
+);
+const TacticalHUD = lazy(() =>
+  import('./diagram/TacticalHUD').then(m => ({ default: m.TacticalHUD }))
+);
+const SimControls = lazy(() =>
+  import('./layout/SimControls').then(m => ({ default: m.SimControls }))
+);
+const MentorOverlay = lazy(() =>
+  import('./layout/MentorOverlay').then(m => ({ default: m.MentorOverlay }))
+);
+const Gatekeeper = lazy(() =>
+  import('./auth/Gatekeeper').then(m => ({ default: m.Gatekeeper }))
+);
+const CyberToast = lazy(() =>
+  import('./layout/CyberToast').then(m => ({ default: m.CyberToast }))
+);
+const OmniSearch = lazy(() =>
+  import('./layout/OmniSearch').then(m => ({ default: m.OmniSearch }))
+);
+const ContextMenuOverlay = lazy(() =>
+  import('./layout/ContextMenuOverlay').then(m => ({ default: m.ContextMenuOverlay }))
+);
+const AssistantContent = lazy(() =>
+  import('./layout/assistant/AssistantContent').then(m => ({ default: m.AssistantContent }))
+);
 const ComponentEditorModal = lazy(() => import('./ComponentEditorModal'));
 const SettingsPanel = lazy(() => import('./SettingsPanel'));
 const InventoryMgmtView = lazy(() => import('./inventory-mgmt/InventoryMgmtView'));
@@ -243,8 +264,13 @@ const MainLayoutComponent: React.FC = () => {
 
   return (
     <AppLayout
-      inventory={<Inventory onSelect={actions.handleOpenComponentInfo} />}
+      inventory={
+        <Suspense fallback={<div className="w-full h-full" />}>
+          <Inventory onSelect={actions.handleOpenComponentInfo} />
+        </Suspense>
+      }
       assistant={
+        <Suspense fallback={<div className="w-full h-full" />}>
         <AssistantSidebar>
           <AssistantContent
             assistantTab={assistantTab}
@@ -275,14 +301,17 @@ const MainLayoutComponent: React.FC = () => {
             onClose={handleCloseAssistant}
           />
         </AssistantSidebar>
+        </Suspense>
       }
       header={<AppHeader />}
       statusRail={<StatusRail />}
       modals={
         <>
-          <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-30">
-            <SimControls />
-          </div>
+          <Suspense fallback={null}>
+            <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-30">
+              <SimControls />
+            </div>
+          </Suspense>
           {actions.selectedComponent && (
             <Suspense
               fallback={
@@ -314,16 +343,22 @@ const MainLayoutComponent: React.FC = () => {
         </>
       }
     >
-      <TacticalHUD />
-      <MentorOverlay />
+      <Suspense fallback={null}>
+        <TacticalHUD />
+      </Suspense>
+      <Suspense fallback={null}>
+        <MentorOverlay />
+      </Suspense>
       {activeView === 'inventory-mgmt' ? (
         <Suspense fallback={<div className="flex items-center justify-center h-full text-cyan-400">Loading Inventory Management...</div>}>
           <InventoryMgmtView onClose={() => setActiveView('canvas')} />
         </Suspense>
       ) : isDashboardVisible ? (
-        <DashboardView />
+        <Suspense fallback={<div className="flex items-center justify-center h-full text-cyan-400">Loading Dashboard...</div>}>
+          <DashboardView />
+        </Suspense>
       ) : (
-        <>
+        <Suspense fallback={<div className="flex items-center justify-center h-full text-cyan-400/50 text-xs font-mono">Initializing canvas...</div>}>
           <DiagramCanvas
             ref={setCanvasRef}
             diagram={actions.diagram}
@@ -343,32 +378,42 @@ const MainLayoutComponent: React.FC = () => {
             }}
           />
           {isNeuralLinkActive && (
-            <NeuralCursor
-              landmarks={gestureResult?.landmarks[0] || null}
-              isEngaged={isHandEngaged || false}
-              containerRect={canvasRef.current?.getContainerRect() || null}
-            />
+            <Suspense fallback={null}>
+              <NeuralCursor
+                landmarks={gestureResult?.landmarks[0] || null}
+                isEngaged={isHandEngaged || false}
+                containerRect={canvasRef.current?.getContainerRect() || null}
+              />
+            </Suspense>
           )}
-        </>
+        </Suspense>
       )}
       {actions.contextMenu && (
-        <ContextMenuOverlay
-          contextMenu={actions.contextMenu}
-          diagram={actions.diagram}
-          onEdit={actions.handleOpenComponentInfo}
-          onDuplicate={actions.handleContextMenuDuplicate}
-          onGenerate3D={actions.handleOpenComponentInfo}
-          onDelete={actions.handleContextMenuDelete}
-          onClose={() => actions.setContextMenu(null)}
-        />
+        <Suspense fallback={null}>
+          <ContextMenuOverlay
+            contextMenu={actions.contextMenu}
+            diagram={actions.diagram}
+            onEdit={actions.handleOpenComponentInfo}
+            onDuplicate={actions.handleContextMenuDuplicate}
+            onGenerate3D={actions.handleOpenComponentInfo}
+            onDelete={actions.handleContextMenuDelete}
+            onClose={() => actions.setContextMenu(null)}
+          />
+        </Suspense>
       )}
-      <Gatekeeper />
-      <CyberToast />
-      <OmniSearch
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSelect={handleSearchSelect}
-      />
+      <Suspense fallback={null}>
+        <Gatekeeper />
+      </Suspense>
+      <Suspense fallback={null}>
+        <CyberToast />
+      </Suspense>
+      <Suspense fallback={null}>
+        <OmniSearch
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          onSelect={handleSearchSelect}
+        />
+      </Suspense>
     </AppLayout>
   );
 };

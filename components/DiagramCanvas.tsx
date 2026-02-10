@@ -2,6 +2,7 @@ import React, {
   useState,
   useRef,
   useCallback,
+  useMemo,
   forwardRef,
   useImperativeHandle,
   useReducer,
@@ -33,6 +34,11 @@ import { DropZoneOverlay, EmptyDiagramOverlay, NoDiagramPlaceholder } from './di
 import Canvas2DContent from './diagram/canvas/Canvas2DContent';
 import { exportService } from '../services/exportService';
 import type { ExportFormat, PngResolution } from '../services/exportService';
+
+// Viewport culling constants for SVG rendering optimization.
+// Components outside the padded viewport are not rendered, saving DOM nodes.
+const VIEWPORT_CULL_PADDING = 200; // Diagram-space px buffer at viewport edges
+const MAX_COMPONENT_EXTENT = 500; // Generous upper bound (breadboard ~400px)
 
 type ViewMode = '2d' | '3d';
 
@@ -156,6 +162,70 @@ const DiagramCanvasRenderer = ({
     }
   }, [diagram, inventory]);
 
+  // ── Viewport Culling ──────────────────────────────────────────────
+  // Always-on culling that prevents rendering off-screen components and
+  // wires.  Runs a cheap bounds-check per component; the real win is
+  // avoiding 100+ SVG elements per off-screen DiagramNode.
+  const visibleComponents = useMemo(() => {
+    const vw = layout.viewportSize.width;
+    const vh = layout.viewportSize.height;
+    if (!vw || !vh || !diagram) return layout.renderComponents;
+
+    const viewLeft = -state.pan.x / state.zoom;
+    const viewTop = -state.pan.y / state.zoom;
+    const viewRight = (vw - state.pan.x) / state.zoom;
+    const viewBottom = (vh - state.pan.y) / state.zoom;
+
+    return layout.renderComponents.filter((comp) => {
+      // Always render interactive / highlighted components
+      if (
+        comp.id === state.activeNodeId ||
+        comp.id === selectedComponentId ||
+        comp.id === state.hoveredNodeId ||
+        highlights.highlightedComponents.has(comp.id)
+      ) {
+        return true;
+      }
+      const pos = state.nodePositions.get(comp.id);
+      if (!pos) return true; // Unpositioned — keep visible for auto-layout
+
+      return (
+        pos.x + MAX_COMPONENT_EXTENT >= viewLeft - VIEWPORT_CULL_PADDING &&
+        pos.x <= viewRight + VIEWPORT_CULL_PADDING &&
+        pos.y + MAX_COMPONENT_EXTENT >= viewTop - VIEWPORT_CULL_PADDING &&
+        pos.y <= viewBottom + VIEWPORT_CULL_PADDING
+      );
+    });
+  }, [
+    layout.renderComponents,
+    layout.viewportSize.width,
+    layout.viewportSize.height,
+    state.pan.x,
+    state.pan.y,
+    state.zoom,
+    state.nodePositions,
+    state.activeNodeId,
+    state.hoveredNodeId,
+    selectedComponentId,
+    highlights.highlightedComponents,
+    diagram,
+  ]);
+
+  const visibleComponentIds = useMemo(
+    () => new Set(visibleComponents.map((c) => c.id)),
+    [visibleComponents]
+  );
+
+  const visibleConnections = useMemo(() => {
+    if (!diagram) return layout.renderConnections;
+    return layout.renderConnections.filter(
+      ({ conn, index }) =>
+        visibleComponentIds.has(conn.fromComponentId) ||
+        visibleComponentIds.has(conn.toComponentId) ||
+        highlights.highlightedWires.has(index)
+    );
+  }, [layout.renderConnections, visibleComponentIds, highlights.highlightedWires, diagram]);
+
   useImperativeHandle(ref, () => ({
     setZoom: (level: number) => dispatch({ type: 'SET_ZOOM', payload: level }),
     getZoom: () => state.zoom,
@@ -253,8 +323,8 @@ const DiagramCanvasRenderer = ({
           selectedComponentId={selectedComponentId}
           snapToGrid={snapToGrid}
           uniqueColors={layout.uniqueColors}
-          renderConnections={layout.renderConnections}
-          renderComponents={layout.renderComponents}
+          renderConnections={visibleConnections}
+          renderComponents={visibleComponents}
           highlightedComponents={highlights.highlightedComponents}
           highlightedWires={highlights.highlightedWires}
           stagedActions={stagedActions}

@@ -1051,5 +1051,5 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
   );
 });
 
-export default memo(DiagramNode);
+export default DiagramNode;
 export { COMPONENT_WIDTH, COMPONENT_HEIGHT };

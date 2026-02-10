@@ -117,17 +117,26 @@ export default defineConfig(({ mode }) => {
       build: {
         rollupOptions: {
           output: {
-            manualChunks: {
-              'vendor-react': ['react', 'react-dom'],
-              'vendor-three': ['three'],
-              'vendor-ai': ['@google/genai'],
-              'vendor-ui': ['framer-motion'],
-              'vendor-markdown': ['react-markdown', 'remark-gfm', 'remark-breaks'],
-              'vendor-collab': ['yjs', 'y-webrtc'],
-              'vendor-git': ['isomorphic-git', '@isomorphic-git/lightning-fs'],
-              'vendor-charts': ['recharts'],
-              'vendor-i18n': ['i18next', 'i18next-browser-languagedetector', 'i18next-http-backend', 'react-i18next'],
-              'vendor-pdf': ['jspdf'],
+            manualChunks(id: string) {
+              // --- Vendor chunks ---
+              if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return 'vendor-react';
+              if (id.includes('node_modules/three/')) return 'vendor-three';
+              if (id.includes('node_modules/@google/genai/')) return 'vendor-ai';
+              if (id.includes('node_modules/framer-motion/')) return 'vendor-ui';
+              if (id.includes('node_modules/react-markdown/') || id.includes('node_modules/remark-gfm/') || id.includes('node_modules/remark-breaks/')) return 'vendor-markdown';
+              if (id.includes('node_modules/yjs/') || id.includes('node_modules/y-webrtc/')) return 'vendor-collab';
+              if (id.includes('node_modules/isomorphic-git/') || id.includes('node_modules/@isomorphic-git/')) return 'vendor-git';
+              if (id.includes('node_modules/recharts/')) return 'vendor-charts';
+              if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next/')) return 'vendor-i18n';
+              if (id.includes('node_modules/jspdf/')) return 'vendor-pdf';
+              if (id.includes('node_modules/mathjs/')) return 'vendor-math';
+              if (id.includes('node_modules/react-grid-layout/')) return 'vendor-grid';
+              if (id.includes('node_modules/jszip/')) return 'vendor-zip';
+              if (id.includes('node_modules/xml-js/')) return 'vendor-xml';
+
+              // --- App service chunks (split heavy service domains out of index) ---
+              if (id.includes('/services/gemini/')) return 'app-gemini';
+              if (id.includes('/services/simulation/') || id.includes('/services/simulationEngine')) return 'app-simulation';
             }
           }
         },

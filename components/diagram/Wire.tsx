@@ -180,4 +180,4 @@ export const Wire: React.FC<WireProps> = memo(({
 
 Wire.displayName = 'Wire';
 
-export default memo(Wire);
+export default Wire;
