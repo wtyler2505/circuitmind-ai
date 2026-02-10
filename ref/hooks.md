@@ -1,14 +1,70 @@
 # CircuitMind AI - Hooks Reference
 
-Custom React hooks for state management and business logic.
+Custom React hooks for state management and business logic. **40 hooks** in `hooks/` plus **6 action handler files** in `hooks/actions/`.
 
-## useConversations (346 LOC)
+## Hook Directory
+
+```
+hooks/
+├── actions/                    # Action handler registry
+│   ├── index.ts               # Handler registry + getHandler()
+│   ├── types.ts               # ActionHandler type definitions
+│   ├── canvasHandlers.ts      # highlight, centerOn, zoomTo, panTo, resetView, highlightWire
+│   ├── navHandlers.ts         # openInventory, closeInventory, openSettings, closeSettings, openComponentEditor, switchGenerationMode
+│   ├── diagramHandlers.ts     # addComponent, removeComponent, clearCanvas, createConnection, removeConnection
+│   └── appControlHandlers.ts  # undo, redo, saveDiagram, loadDiagram, setUserLevel, learnFact, analyzeVisuals
+│
+├── __tests__/                 # Hook tests
+│
+├── useAIActions.ts            # Action dispatch hub (250 LOC)
+├── useAIContextBuilder.ts     # Builds AI context from app state
+├── useActionHistory.ts        # Action history for undo support
+├── useAutonomySettings.ts     # AI action safety classifications
+├── useCanvasExport.ts         # Canvas export (PNG/SVG/PDF)
+├── useCanvasHighlights.ts     # Canvas highlight state management
+├── useCanvasHUD.ts            # Canvas HUD state
+├── useCanvasInteraction.ts    # Canvas drag/drop/select interactions
+├── useCanvasLayout.ts         # Canvas layout and positioning
+├── useCanvasWiring.ts         # Wire drawing and editing
+├── useChatHandler.ts          # Chat message sending and receiving
+├── useClickOutside.ts         # Click outside detection
+├── useConnectivity.ts         # Online/offline connectivity state
+├── useConversations.ts        # Conversation CRUD + IndexedDB (349 LOC)
+├── useDiagram3DScene.ts       # Three.js scene management
+├── useDiagram3DSync.ts        # 3D diagram sync with 2D state
+├── useDiagram3DTelemetry.ts   # 3D performance telemetry
+├── useEditorAIChat.ts         # Component editor AI chat
+├── useEditorFormState.ts      # Component editor form state
+├── useEditorModalHandlers.ts  # Component editor modal handlers
+├── useFocusTrap.ts            # Focus trap for modals
+├── useGestureTracking.ts      # MediaPipe gesture tracking
+├── useHoverBehavior.ts        # Hover delay and behavior
+├── useInventoryApi.ts         # Server-backed inventory API calls
+├── useInventorySync.ts        # Inventory-diagram auto-sync (444 LOC)
+├── useKeyboardShortcuts.ts    # Global keyboard shortcuts
+├── useMainLayoutActions.ts    # MainLayout action handlers
+├── useNeuralLink.ts           # Neural link AI feedback
+├── useNeuralLinkEffects.ts    # Neural link visual effects
+├── useOfflineSync.ts          # Offline sync queue
+├── usePermissions.ts          # Permission checking
+├── useResizeHandler.ts        # Window/panel resize handler
+├── useSearchIndex.ts          # Full-text search indexing
+├── useSecurityAudit.ts        # Client-side security auditing
+├── useSync.ts                 # Yjs CRDT sync
+├── useToast.tsx               # Toast notification system (provides ToastProvider)
+├── useVoiceRecorder.ts        # Voice recording
+└── useWebcam.ts               # Webcam capture
+```
+
+---
+
+## Core Hooks
+
+### useConversations (349 LOC)
 
 **Location**: `hooks/useConversations.ts`
 
 Manages chat conversations with IndexedDB persistence.
-
-### Interface
 
 ```typescript
 interface UseConversationsReturn {
@@ -26,49 +82,15 @@ interface UseConversationsReturn {
 }
 ```
 
-### Usage
-
-```typescript
-const {
-  conversations,
-  messages,
-  createConversation,
-  addMessage
-} = useConversations();
-
-// Create new conversation
-const id = await createConversation('My Circuit Design');
-
-// Add message
-await addMessage({
-  id: crypto.randomUUID(),
-  conversationId: id,
-  role: 'user',
-  content: 'Design a LED circuit',
-  timestamp: Date.now()
-});
-```
-
 ---
 
-## useAIActions
+### useAIActions (250 LOC)
 
 **Location**: `hooks/useAIActions.ts`
 
-Dispatches AI-suggested actions with safety checks.
-
-### Interface
+Dispatches AI-suggested actions with safety checks. Routes actions to handlers in `hooks/actions/`.
 
 ```typescript
-interface UseAIActionsOptions {
-  canvasRef: RefObject<DiagramCanvasRef>;
-  onDiagramUpdate: (diagram: WiringDiagram) => void;
-  onOpenInventory?: () => void;
-  onOpenSettings?: () => void;
-  diagram: WiringDiagram | null;
-  inventory: ElectronicComponent[];
-}
-
 interface UseAIActionsReturn {
   execute: (action: ActionIntent) => Promise<ActionResult>;
   pendingActions: ActionIntent[];
@@ -78,135 +100,23 @@ interface UseAIActionsReturn {
 }
 ```
 
-### Action Routing
+### Action Routing (from hooks/actions/index.ts)
 
-Actions are routed to handlers in `hooks/actions/`:
-
-| Action Type | Handler | Safety |
-|-------------|---------|--------|
-| highlight | highlightHandler | Safe |
-| centerOn | viewHandler | Safe |
-| zoomTo | viewHandler | Safe |
-| resetView | viewHandler | Safe |
-| openInventory | uiHandler | Safe |
-| addComponent | componentHandler | Unsafe |
-| removeComponent | componentHandler | Unsafe |
-| createConnection | connectionHandler | Unsafe |
-| deleteConnection | connectionHandler | Unsafe |
-
-### Usage
-
-```typescript
-const aiActions = useAIActions({
-  canvasRef,
-  onDiagramUpdate: updateDiagram,
-  diagram,
-  inventory
-});
-
-// Execute action (auto-checks safety)
-const result = await aiActions.execute({
-  type: 'highlight',
-  targetId: 'comp-1',
-  payloadJson: JSON.stringify({ color: 'cyan', pulse: true })
-});
-
-// Handle pending unsafe actions
-aiActions.pendingActions.forEach(action => {
-  // Show confirmation UI
-});
-await aiActions.confirmAction(actionId);
-```
+| Action Type | Handler File | Safety |
+|-------------|-------------|--------|
+| highlight, centerOn, zoomTo, panTo, resetView, highlightWire | `canvasHandlers.ts` | Safe |
+| openInventory, closeInventory, openSettings, closeSettings, openComponentEditor, switchGenerationMode | `navHandlers.ts` | Safe |
+| addComponent, removeComponent, clearCanvas, createConnection, removeConnection | `diagramHandlers.ts` | Unsafe |
+| undo, redo, saveDiagram, loadDiagram | `appControlHandlers.ts` | Mixed |
+| setUserLevel, learnFact, analyzeVisuals | `appControlHandlers.ts` | Safe |
 
 ---
 
-## useAutonomySettings
-
-**Location**: `hooks/useAutonomySettings.ts`
-
-Manages AI action safety classifications.
-
-### Interface
-
-```typescript
-interface AIAutonomySettings {
-  customSafeActions: ActionType[];    // User-marked as safe
-  customUnsafeActions: ActionType[];  // User-marked as unsafe
-  requireConfirmationForAll: boolean; // Override: confirm everything
-}
-
-interface UseAutonomySettingsReturn {
-  settings: AIAutonomySettings;
-  isSafe: (actionType: ActionType) => boolean;
-  markAsSafe: (actionType: ActionType) => void;
-  markAsUnsafe: (actionType: ActionType) => void;
-  resetToDefaults: () => void;
-}
-```
-
-### Default Classifications
-
-```typescript
-const ACTION_SAFETY: Record<ActionType, boolean> = {
-  highlight: true,
-  centerOn: true,
-  zoomTo: true,
-  resetView: true,
-  openInventory: true,
-  closeInventory: true,
-  addComponent: false,
-  removeComponent: false,
-  createConnection: false,
-  deleteConnection: false,
-  modifyComponent: false,
-  generateDiagram: false,
-};
-```
-
-### Persistence
-
-Saves to `localStorage.cm_ai_autonomy`
-
----
-
-## useActionHistory
-
-**Location**: `hooks/useActionHistory.ts`
-
-Tracks action history for undo support.
-
-### Interface
-
-```typescript
-interface ActionRecord {
-  id: string;
-  type: ActionType;
-  timestamp: number;
-  conversationId?: string;
-  before: unknown;  // State before action
-  after: unknown;   // State after action
-}
-
-interface UseActionHistoryReturn {
-  record: (action: ActionRecord) => Promise<void>;
-  getRecent: (limit?: number) => Promise<ActionRecord[]>;
-  undo: (id: string) => Promise<unknown>;  // Returns 'before' state
-}
-```
-
----
-
-## useInventorySync
+### useInventorySync (444 LOC)
 
 **Location**: `hooks/useInventorySync.ts`
 
-Automatically syncs diagram components with inventory changes.
-
-### Purpose
-
-Inventory is the **single source of truth**. When inventory items are updated (pins changed, name updated, etc.), the diagram's component instances must reflect those changes.
-
-### Interface
+Automatically syncs diagram components with inventory changes. Inventory is the **single source of truth**.
 
 ```typescript
 interface UseInventorySyncOptions {
@@ -218,54 +128,35 @@ interface UseInventorySyncOptions {
 // No return value - works via side effects
 ```
 
-### Sync Logic
+---
+
+### useAutonomySettings
+
+**Location**: `hooks/useAutonomySettings.ts`
+
+Manages AI action safety classifications. Users can override default safe/unsafe settings.
 
 ```typescript
-// When inventory changes:
-// 1. Find matching components in diagram by ID
-// 2. Update diagram components with new inventory data
-// 3. Preserve diagram-specific data (position, connections)
-
-useEffect(() => {
-  if (!diagram) return;
-
-  const inventoryMap = new Map(inventory.map(i => [i.id, i]));
-  const needsUpdate = diagram.components.some(dc => {
-    const invItem = inventoryMap.get(dc.id);
-    return invItem && !isEqual(dc, invItem);
-  });
-
-  if (needsUpdate) {
-    onDiagramUpdate({
-      ...diagram,
-      components: diagram.components.map(dc =>
-        inventoryMap.get(dc.id) || dc
-      )
-    });
-  }
-}, [inventory, diagram]);
+interface UseAutonomySettingsReturn {
+  settings: AIAutonomySettings;
+  isSafe: (actionType: ActionType) => boolean;
+  markAsSafe: (actionType: ActionType) => void;
+  markAsUnsafe: (actionType: ActionType) => void;
+  resetToDefaults: () => void;
+}
 ```
+
+**Persistence**: `localStorage.cm_ai_autonomy`
 
 ---
 
-## useToast
+### useToast
 
 **Location**: `hooks/useToast.tsx`
 
-Lightweight toast notification system.
-
-### Interface
+Lightweight toast notification system. Also exports `ToastProvider` (context provider #6 in App.tsx).
 
 ```typescript
-type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-interface Toast {
-  id: string;
-  type: ToastType;
-  message: string;
-  duration?: number;  // Default: 3000ms
-}
-
 interface UseToastReturn {
   toasts: Toast[];
   toast: (message: string, type?: ToastType, duration?: number) => void;
@@ -278,49 +169,110 @@ interface UseToastReturn {
 }
 ```
 
-### Usage
+---
 
-```typescript
-const { toast, success, error } = useToast();
+### useActionHistory
 
-// Quick methods
-success('Component added!');
-error('Failed to save');
-warning('Low stock');
+**Location**: `hooks/useActionHistory.ts`
 
-// Custom
-toast('Processing...', 'info', 5000);
-```
-
-### Styling
-
-Matches app's dark theme:
-- Success: Green border
-- Error: Red border
-- Warning: Yellow/orange border
-- Info: Cyan border
+Tracks action history for undo support via IndexedDB.
 
 ---
 
-## Action Handlers (hooks/actions/)
+## Canvas Hooks (Extracted from DiagramCanvas)
 
-Modular action handlers extracted from useAIActions.
+These hooks were extracted from the original monolithic DiagramCanvas.tsx during refactoring:
 
-### Structure
+| Hook | Purpose |
+|------|---------|
+| `useCanvasInteraction.ts` | Drag/drop, selection, pan/zoom interactions |
+| `useCanvasLayout.ts` | Component positioning and layout |
+| `useCanvasWiring.ts` | Wire drawing and editing |
+| `useCanvasHighlights.ts` | Highlight state management |
+| `useCanvasHUD.ts` | Canvas heads-up display state |
+| `useCanvasExport.ts` | Canvas export (PNG/SVG/PDF) |
 
-```
-hooks/actions/
-├── index.ts           # Handler registry + exports
-├── highlightHandler.ts
-├── viewHandler.ts
-├── componentHandler.ts
-├── connectionHandler.ts
-└── uiHandler.ts
-```
+---
 
-### Handler Interface
+## 3D Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useDiagram3DScene.ts` | Three.js scene lifecycle management |
+| `useDiagram3DSync.ts` | Sync 3D view with 2D diagram state |
+| `useDiagram3DTelemetry.ts` | 3D rendering performance telemetry |
+
+---
+
+## Editor Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useEditorFormState.ts` | Component editor form field state |
+| `useEditorAIChat.ts` | AI chat within the component editor |
+| `useEditorModalHandlers.ts` | Modal open/close/save handlers |
+
+---
+
+## AI/ML Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useAIContextBuilder.ts` | Builds `AIContext` from current app state for Gemini |
+| `useChatHandler.ts` | Handles chat message sending/receiving with Gemini |
+| `useNeuralLink.ts` | Neural link AI feedback system |
+| `useNeuralLinkEffects.ts` | Visual effects for neural link |
+| `useGestureTracking.ts` | MediaPipe gesture recognition |
+
+---
+
+## Infrastructure Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useClickOutside.ts` | Detect clicks outside a ref element |
+| `useFocusTrap.ts` | Trap keyboard focus within modals |
+| `useKeyboardShortcuts.ts` | Global keyboard shortcut registration |
+| `useResizeHandler.ts` | Window and panel resize handling |
+| `useHoverBehavior.ts` | Hover delay and behavior control |
+| `useConnectivity.ts` | Online/offline connectivity detection |
+| `usePermissions.ts` | Permission checking for actions |
+
+---
+
+## Data/Sync Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useInventoryApi.ts` | Server-backed inventory CRUD via REST API |
+| `useSearchIndex.ts` | Full-text search index (MiniSearch) |
+| `useSync.ts` | Yjs CRDT real-time sync |
+| `useOfflineSync.ts` | Offline operation queue |
+| `useSecurityAudit.ts` | Client-side security auditing |
+
+---
+
+## Media Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useVoiceRecorder.ts` | Voice recording and audio capture |
+| `useWebcam.ts` | Webcam capture for component identification |
+
+---
+
+## Layout Hook
+
+| Hook | Purpose |
+|------|---------|
+| `useMainLayoutActions.ts` | MainLayout action routing and coordination |
+
+---
+
+## Action Handler Interface
 
 ```typescript
+// hooks/actions/types.ts
 interface ActionContext {
   canvasRef: RefObject<DiagramCanvasRef>;
   diagram: WiringDiagram | null;
@@ -330,9 +282,10 @@ interface ActionContext {
   onOpenSettings?: () => void;
 }
 
-interface ActionHandler {
-  (action: ActionIntent, context: ActionContext): Promise<ActionResult>;
-}
+type ActionHandler<T = unknown> = (
+  action: ActionIntent,
+  context: ActionContext
+) => Promise<ActionResult>;
 
 interface ActionResult {
   success: boolean;
@@ -345,14 +298,39 @@ interface ActionResult {
 
 ```typescript
 // hooks/actions/index.ts
-const handlers: Record<ActionType, ActionHandler> = {
-  highlight: highlightHandler,
-  centerOn: viewHandler,
-  zoomTo: viewHandler,
-  // ...
+import * as canvas from './canvasHandlers';
+import * as nav from './navHandlers';
+import * as diagram from './diagramHandlers';
+import * as app from './appControlHandlers';
+
+export const actionHandlers: Partial<Record<ActionType, ActionHandler<any>>> = {
+  highlight: canvas.highlight,
+  centerOn: canvas.centerOn,
+  zoomTo: canvas.zoomTo,
+  panTo: canvas.panTo,
+  resetView: canvas.resetView,
+  highlightWire: canvas.highlightWire,
+  openInventory: nav.openInventory,
+  closeInventory: nav.closeInventory,
+  openSettings: nav.openSettings,
+  closeSettings: nav.closeSettings,
+  openComponentEditor: nav.openComponentEditor,
+  switchGenerationMode: nav.switchGenerationMode,
+  addComponent: diagram.addComponent,
+  removeComponent: diagram.removeComponent,
+  clearCanvas: diagram.clearCanvas,
+  createConnection: diagram.createConnection,
+  removeConnection: diagram.removeConnection,
+  undo: app.handleUndo,
+  redo: app.handleRedo,
+  saveDiagram: app.handleSaveDiagram,
+  loadDiagram: app.handleLoadDiagram,
+  setUserLevel: app.handleSetUserLevel,
+  learnFact: app.handleLearnFact,
+  analyzeVisuals: app.handleAnalyzeVisuals,
 };
 
-export const getHandler = (type: ActionType): ActionHandler | null => {
-  return handlers[type] || null;
-};
+export function getHandler(type: ActionType): ActionHandler<unknown> | undefined {
+  return actionHandlers[type] as ActionHandler<unknown> | undefined;
+}
 ```

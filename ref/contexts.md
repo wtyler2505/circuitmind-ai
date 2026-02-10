@@ -1,15 +1,115 @@
 # CircuitMind AI - Contexts Reference
 
-React Context providers for domain-specific state management.
+React Context providers for domain-specific state management. 19 context files in `contexts/` plus `ToastProvider` in `hooks/useToast.tsx` = 20 providers nested in `App.tsx`.
 
-## DiagramContext
+## Provider Hierarchy (from App.tsx)
+
+Providers are nested in a load-bearing order. Diagram depends on inventory being loaded first.
+
+```tsx
+<LayoutProvider>
+  <AssistantStateProvider>
+    <HealthProvider>
+      <AuthProvider>
+        <UserProvider>
+          <ToastProvider>
+            <NotificationProvider>
+              <DashboardProvider>
+                <MacroProvider>
+                  <InventoryProvider initialData={INITIAL_INVENTORY}>
+                    <AdvancedInventoryProvider>
+                      <SyncProvider>
+                        <ConversationProvider>
+                          <DiagramProvider>
+                            <SelectionProvider>
+                              <TelemetryProvider>
+                                <HUDProvider>
+                                  <SimulationProvider>
+                                    <VoiceAssistantProvider>
+                                      <TutorialProvider>
+                                        <MainLayout />
+                                      </TutorialProvider>
+                                    </VoiceAssistantProvider>
+                                  </SimulationProvider>
+                                </HUDProvider>
+                              </TelemetryProvider>
+                            </SelectionProvider>
+                          </DiagramProvider>
+                        </ConversationProvider>
+                      </SyncProvider>
+                    </AdvancedInventoryProvider>
+                  </InventoryProvider>
+                </MacroProvider>
+              </DashboardProvider>
+            </NotificationProvider>
+          </ToastProvider>
+        </UserProvider>
+      </AuthProvider>
+    </HealthProvider>
+  </AssistantStateProvider>
+</LayoutProvider>
+```
+
+---
+
+## All 20 Providers
+
+| # | Context | File | Hook | Purpose |
+|---|---------|------|------|---------|
+| 1 | LayoutContext | `contexts/LayoutContext.tsx` | `useLayout()` | UI layout, sidebars, modes, focus |
+| 2 | AssistantStateContext | `contexts/AssistantStateContext.tsx` | `useAssistantState()` | AI generation mode, image size, deep thinking |
+| 3 | HealthContext | `contexts/HealthContext.tsx` | `useHealth()` | System health (CPU, memory, frame rate) |
+| 4 | AuthContext | `contexts/AuthContext.tsx` | `useAuth()` | Authentication & session |
+| 5 | UserContext | `contexts/UserContext.tsx` | `useUser()` | User profile & preferences |
+| 6 | ToastProvider | `hooks/useToast.tsx` | `useToast()` | Toast notification system |
+| 7 | NotificationContext | `contexts/NotificationContext.tsx` | `useNotifications()` | Alert notifications |
+| 8 | DashboardContext | `contexts/DashboardContext.tsx` | `useDashboard()` | Dashboard widget layout |
+| 9 | MacroContext | `contexts/MacroContext.tsx` | `useMacro()` | Action macro recording/playback |
+| 10 | InventoryContext | `contexts/InventoryContext.tsx` | `useInventory()` | Component library (source of truth) |
+| 11 | AdvancedInventoryContext | `contexts/AdvancedInventoryContext.tsx` | `useAdvancedInventory()` | Server-backed catalog/location-aware inventory |
+| 12 | SyncContext | `contexts/SyncContext.tsx` | `useSync()` | Cross-device sync state |
+| 13 | ConversationContext | `contexts/ConversationContext.tsx` | `useConversationContext()` | Chat sessions (wraps useConversations) |
+| 14 | DiagramContext | `contexts/DiagramContext.tsx` | `useDiagram()` | Diagram state + undo/redo history |
+| 15 | SelectionContext | `contexts/SelectionContext.tsx` | `useSelection()` | Multi-select state |
+| 16 | TelemetryContext | `contexts/TelemetryContext.tsx` | `useTelemetry()` | Event tracking & analytics |
+| 17 | HUDContext | `contexts/HUDContext.tsx` | `useHUD()` | Heads-up display content |
+| 18 | SimulationContext | `contexts/SimulationContext.tsx` | `useSimulation()` | Circuit simulation state |
+| 19 | VoiceAssistantContext | `contexts/VoiceAssistantContext.tsx` | `useVoiceAssistant()` | Voice I/O, live audio mode |
+| 20 | TutorialContext | `contexts/TutorialContext.tsx` | `useTutorial()` | Tutorial progression |
+
+---
+
+## Key Context APIs
+
+### InventoryContext (Source of Truth)
+
+**Location**: `contexts/InventoryContext.tsx`
+**Hook**: `useInventory()`
+
+Manages the component library with CRUD operations. This is the **single source of truth** for components -- diagram syncs FROM inventory via `useInventorySync`.
+
+```typescript
+interface InventoryContextType {
+  inventory: ElectronicComponent[];
+  setInventory: React.Dispatch<React.SetStateAction<ElectronicComponent[]>>;
+  addItem: (item: ElectronicComponent) => void;
+  updateItem: (item: ElectronicComponent) => void;
+  removeItem: (id: string) => void;
+  removeMany: (ids: string[]) => void;
+  updateMany: (items: ElectronicComponent[]) => void;
+}
+```
+
+**Persistence**: Auto-saves to `localStorage.cm_inventory` on changes. Accepts optional `initialData` prop for seeding.
+
+---
+
+### DiagramContext
 
 **Location**: `contexts/DiagramContext.tsx`
 **Hook**: `useDiagram()`
 
 Manages the active wiring diagram with undo/redo history.
-
-### Interface
 
 ```typescript
 interface DiagramContextType {
@@ -28,88 +128,19 @@ interface DiagramContextType {
   loadFromQuickSlot: () => void;
 }
 
-// DiagramUpdater supports functional updates
 type DiagramUpdater = WiringDiagram | null | ((current: WiringDiagram | null) => WiringDiagram | null);
 ```
 
-### Usage
-
-```typescript
-const { diagram, updateDiagram, undo, canUndo } = useDiagram();
-
-// Direct update
-updateDiagram({ ...diagram, title: 'New Title' });
-
-// Functional update (safer for concurrent updates)
-updateDiagram(current => ({
-  ...current,
-  components: [...current.components, newComponent]
-}));
-```
-
-### Persistence
-
-- Auto-saves to `localStorage.cm_autosave` on changes
-- Loads from localStorage on initialization
-- Quick slot: `localStorage.savedDiagram`
+**Persistence**: Auto-saves to `localStorage.cm_autosave`. Quick slot: `localStorage.savedDiagram`.
 
 ---
 
-## InventoryContext
-
-**Location**: `contexts/InventoryContext.tsx`
-**Hook**: `useInventory()`
-
-Manages the component library with CRUD operations.
-
-### Interface
-
-```typescript
-interface InventoryContextType {
-  inventory: ElectronicComponent[];
-  setInventory: React.Dispatch<React.SetStateAction<ElectronicComponent[]>>;
-  addItem: (item: ElectronicComponent) => void;
-  updateItem: (item: ElectronicComponent) => void;
-  removeItem: (id: string) => void;
-  removeMany: (ids: string[]) => void;
-  updateMany: (items: ElectronicComponent[]) => void;
-}
-```
-
-### Usage
-
-```typescript
-const { inventory, addItem, updateItem, removeMany } = useInventory();
-
-// Add new component
-addItem({
-  id: crypto.randomUUID(),
-  name: 'New Sensor',
-  type: 'sensor',
-  pins: ['VCC', 'GND', 'OUT'],
-  quantity: 1
-});
-
-// Bulk operations
-removeMany(['id1', 'id2', 'id3']);
-updateMany(updatedItems);
-```
-
-### Persistence
-
-- Auto-saves to `localStorage.cm_inventory` on changes
-- Accepts optional `initialData` prop for seeding
-
----
-
-## LayoutContext
+### LayoutContext
 
 **Location**: `contexts/LayoutContext.tsx`
 **Hook**: `useLayout()`
 
 Manages UI layout state: sidebars, panels, modals.
-
-### Interface
 
 ```typescript
 interface LayoutContextType {
@@ -139,34 +170,21 @@ interface LayoutContextType {
 }
 ```
 
-### Width Constraints
+**Width Constraints**:
 
 | Panel | Default | Min | Max |
 |-------|---------|-----|-----|
 | Inventory | 360px | 280px | 520px |
 | Assistant | 380px | 300px | 560px |
 
-### Persistence Keys
-
-| Key | Purpose |
-|-----|---------|
-| `cm_inventory_open_default` | Inventory open state |
-| `cm_inventory_pinned_default` | Inventory pinned state |
-| `cm_inventory_width` | Inventory panel width |
-| `cm_assistant_open_default` | Assistant open state |
-| `cm_assistant_pinned_default` | Assistant pinned state |
-| `cm_assistant_width` | Assistant panel width |
-
 ---
 
-## ConversationContext
+### ConversationContext
 
 **Location**: `contexts/ConversationContext.tsx`
 **Hook**: `useConversationContext()`
 
 Provides active conversation ID and switching functionality.
-
-### Interface
 
 ```typescript
 interface ConversationContextType {
@@ -175,130 +193,69 @@ interface ConversationContextType {
 }
 ```
 
-### Usage
-
-```typescript
-const { activeConversationId, setActiveConversationId } = useConversationContext();
-
-// Switch conversation
-setActiveConversationId('conv-123');
-```
-
 ---
 
-## AssistantStateContext
+### AssistantStateContext
 
 **Location**: `contexts/AssistantStateContext.tsx`
 **Hook**: `useAssistantState()`
 
-Tracks AI assistant status and pending actions.
-
-### Interface
-
-```typescript
-interface AssistantStateContextType {
-  isProcessing: boolean;
-  setIsProcessing: (processing: boolean) => void;
-  pendingActions: ActionIntent[];
-  setPendingActions: (actions: ActionIntent[]) => void;
-  lastError: string | null;
-  setLastError: (error: string | null) => void;
-}
-```
-
-### Usage
-
-```typescript
-const { isProcessing, pendingActions } = useAssistantState();
-
-// Show loading indicator while AI processes
-{isProcessing && <Spinner />}
-
-// Display pending actions for user approval
-{pendingActions.map(action => <ActionCard key={action.id} action={action} />)}
-```
+Tracks AI assistant status and generation mode.
 
 ---
 
-## VoiceAssistantContext
+### VoiceAssistantContext
 
 **Location**: `contexts/VoiceAssistantContext.tsx`
 **Hook**: `useVoiceAssistant()`
 
-Manages voice input/output state for live audio features.
-
-### Interface
-
-```typescript
-interface VoiceAssistantContextType {
-  isRecording: boolean;
-  setIsRecording: (recording: boolean) => void;
-  isPlayingAudio: boolean;
-  setIsPlayingAudio: (playing: boolean) => void;
-  transcription: string;
-  setTranscription: (text: string) => void;
-  liveSession: LiveSession | null;
-  setLiveSession: (session: LiveSession | null) => void;
-  connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
-  setConnectionStatus: (status: ConnectionStatus) => void;
-}
-```
-
-### Usage
-
-```typescript
-const {
-  isRecording,
-  setIsRecording,
-  liveSession,
-  connectionStatus
-} = useVoiceAssistant();
-
-// Start recording
-const startRecording = async () => {
-  if (!liveSession) {
-    const session = new LiveSession(setConnectionStatus);
-    await session.connect();
-    setLiveSession(session);
-  }
-  setIsRecording(true);
-};
-```
+Manages voice input/output state for live audio features. Uses `useRef` (not `useState`) for `liveSessionRef`.
 
 ---
 
-## Provider Hierarchy
+### SimulationContext
 
-Recommended provider nesting order in `App.tsx`:
+**Location**: `contexts/SimulationContext.tsx`
+**Hook**: `useSimulation()`
 
-```tsx
-<LayoutProvider>
-  <InventoryProvider initialData={INITIAL_INVENTORY}>
-    <DiagramProvider>
-      <ConversationContext.Provider value={...}>
-        <AssistantStateContext.Provider value={...}>
-          <VoiceAssistantContext.Provider value={...}>
-            <MainLayout />
-          </VoiceAssistantContext.Provider>
-        </AssistantStateContext.Provider>
-      </ConversationContext.Provider>
-    </DiagramProvider>
-  </InventoryProvider>
-</LayoutProvider>
-```
+Circuit simulation state including MNA results, running status, and error state.
+
+---
+
+### SelectionContext
+
+**Location**: `contexts/SelectionContext.tsx`
+**Hook**: `useSelection()`
+
+Multi-select state for canvas components.
+
+---
+
+### Other Contexts
+
+| Context | Purpose |
+|---------|---------|
+| HealthContext | System health monitoring (CPU, memory, frame rate) |
+| AuthContext | Authentication and session management |
+| UserContext | User profile, preferences, skill level |
+| NotificationContext | Alert notification queue |
+| DashboardContext | Dashboard widget layout (react-grid-layout) |
+| MacroContext | Action macro recording and playback |
+| AdvancedInventoryContext | Server-backed catalog and location-aware inventory |
+| SyncContext | Cross-device sync state (Yjs/WebRTC) |
+| TelemetryContext | Event tracking and analytics |
+| HUDContext | Heads-up display content |
+| TutorialContext | Tutorial/quest progression |
 
 ---
 
 ## Cross-Context Communication
-
-Some operations require coordinating between contexts:
 
 ### Dual Component Sync
 
 When editing a component, update both inventory AND diagram:
 
 ```typescript
-// In ComponentEditorModal or similar
 const { updateItem } = useInventory();
 const { updateDiagram, diagram } = useDiagram();
 
