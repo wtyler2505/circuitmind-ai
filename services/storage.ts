@@ -1,10 +1,17 @@
 import { ElectronicComponent, ActionRecord, Conversation, EnhancedChatMessage } from '../types';
+import { transactionQueue } from './transactionQueue';
 
 /**
  * Storage Service
- * 
+ *
  * Provides a safe wrapper for localStorage with quota protection
  * AND IndexedDB persistence for heavy/structured data.
+ *
+ * Write operations are routed through a transaction queue that provides:
+ * - Write coalescing (rapid saves collapse to one write)
+ * - Sequential per-store execution (no interleaved transactions)
+ * - Cross-store parallelism (independent stores flush concurrently)
+ * - Retry with exponential backoff for transient failures
  */
 
 // ============================================================================
@@ -22,13 +29,20 @@ const STORES = {
   PARTS: 'parts' // Store for binary FZPZ data and cached views
 };
 
-const openDB = (): Promise<IDBDatabase> => {
+/**
+ * Opens (or creates) the CircuitMind IndexedDB database.
+ *
+ * Exported so the transaction queue can dynamically import it at flush time
+ * without circular dependency issues (transactionQueue.ts never imports
+ * storage.ts at module-init; it uses `await import('./storage')` lazily).
+ */
+export const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    
+
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      
+
       if (!db.objectStoreNames.contains(STORES.INVENTORY)) {
         db.createObjectStore(STORES.INVENTORY, { keyPath: 'id' });
       }
@@ -66,9 +80,9 @@ export const storageService = {
       return true;
     } catch (e: unknown) {
       if (e instanceof DOMException && (
-        e.code === 22 || 
-        e.code === 1014 || 
-        e.name === 'QuotaExceededError' || 
+        e.code === 22 ||
+        e.code === 1014 ||
+        e.name === 'QuotaExceededError' ||
         e.name === 'NS_ERROR_DOM_QUOTA_REACHED')
       ) {
         console.warn('LocalStorage quota exceeded. Attempting purge...');
@@ -84,11 +98,11 @@ export const storageService = {
 
   handleQuotaExceeded: (key: string, value: string): boolean => {
     const keys = Object.keys(localStorage);
-    
+
     // 1. Purge 3D code cache
     const cacheKeys = keys.filter(k => k.startsWith('cm_3d_code_cache_'));
     cacheKeys.forEach(k => localStorage.removeItem(k));
-    
+
     try {
       localStorage.setItem(key, value);
       return true;
@@ -112,7 +126,7 @@ export const storageService = {
 };
 
 // ============================================================================
-// INDEXED DB OPERATIONS (Action History)
+// INDEXED DB HELPERS
 // ============================================================================
 
 /**
@@ -125,7 +139,7 @@ const sanitizeForDB = (obj: unknown): Record<string, unknown> | null => {
     // structuredClone is native and handles circular refs + many types better than JSON
     return window.structuredClone(obj) as Record<string, unknown>;
   } catch (_e) {
-    // If it fails (e.g. contains functions or complex circular refs), 
+    // If it fails (e.g. contains functions or complex circular refs),
     // use a robust custom stringifier that drops circularities.
     try {
       const cache = new Set();
@@ -144,23 +158,106 @@ const sanitizeForDB = (obj: unknown): Record<string, unknown> | null => {
   }
 };
 
+// ============================================================================
+// INDEXED DB WRITE OPERATIONS (Queued)
+// ============================================================================
+
+/**
+ * Records an action to the action history store.
+ * Routed through the transaction queue for write coalescing.
+ */
 export const recordAction = async (action: ActionRecord) => {
   if (!action || !action.id) {
     console.error('Cannot record action: Missing ID');
     return;
   }
 
-  const db = await openDB();
   const sanitizedAction = sanitizeForDB(action);
   if (!sanitizedAction) return;
 
-  return new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORES.ACTION_HISTORY, 'readwrite');
-    tx.objectStore(STORES.ACTION_HISTORY).put(sanitizedAction);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
+  transactionQueue.enqueue({
+    id: `${STORES.ACTION_HISTORY}::put::${action.id}`,
+    store: STORES.ACTION_HISTORY,
+    type: 'put',
+    data: sanitizedAction,
+    timestamp: Date.now(),
   });
 };
+
+/**
+ * Saves a conversation record.
+ * Routed through the transaction queue. Rapid updates to the same
+ * conversation ID coalesce (only the latest metadata is written).
+ */
+export const saveConversation = async (conv: Conversation) => {
+  if (!conv || !conv.id) {
+    console.error('Cannot save conversation: Missing ID');
+    return;
+  }
+
+  const sanitizedConv = sanitizeForDB(conv);
+  if (!sanitizedConv) return;
+
+  transactionQueue.enqueue({
+    id: `${STORES.CONVERSATIONS}::put::${conv.id}`,
+    store: STORES.CONVERSATIONS,
+    type: 'put',
+    data: sanitizedConv,
+    timestamp: Date.now(),
+  });
+};
+
+/**
+ * Saves a chat message.
+ * Routed through the transaction queue. Rapid updates to the same
+ * message ID coalesce (e.g. streaming updates that write the same
+ * message multiple times as content grows).
+ */
+export const saveMessage = async (msg: EnhancedChatMessage) => {
+  if (!msg || !msg.id) {
+    console.error('Cannot save message: Missing ID');
+    return;
+  }
+
+  const sanitizedMsg = sanitizeForDB(msg);
+  if (!sanitizedMsg) return;
+
+  transactionQueue.enqueue({
+    id: `${STORES.MESSAGES}::put::${msg.id}`,
+    store: STORES.MESSAGES,
+    type: 'put',
+    data: sanitizedMsg,
+    timestamp: Date.now(),
+  });
+};
+
+/**
+ * Replaces the entire inventory store with the given items.
+ * Uses clear-and-put to atomically replace all data within a single
+ * IndexedDB transaction. Routed through the transaction queue so that
+ * rapid calls (e.g. dragging components) coalesce — only the LAST
+ * snapshot is actually written.
+ */
+export const saveInventoryToDB = async (items: ElectronicComponent[]) => {
+  if (!Array.isArray(items)) return;
+
+  // Pre-sanitize all items before enqueuing so the queue payload is clean.
+  const sanitized = items
+    .map(item => sanitizeForDB(item))
+    .filter((s): s is Record<string, unknown> => s !== null && s.id != null);
+
+  transactionQueue.enqueue({
+    id: `${STORES.INVENTORY}::clear-and-put`,
+    store: STORES.INVENTORY,
+    type: 'clear-and-put',
+    data: sanitized,
+    timestamp: Date.now(),
+  });
+};
+
+// ============================================================================
+// INDEXED DB READ OPERATIONS (Direct — no queuing needed)
+// ============================================================================
 
 export const getRecentActions = async (limit: number = 10): Promise<ActionRecord[]> => {
   const db = await openDB();
@@ -168,7 +265,7 @@ export const getRecentActions = async (limit: number = 10): Promise<ActionRecord
     const tx = db.transaction(STORES.ACTION_HISTORY, 'readonly');
     const store = tx.objectStore(STORES.ACTION_HISTORY);
     const request = store.getAll();
-    
+
     request.onsuccess = () => {
       const results = request.result as ActionRecord[];
       resolve(results.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit));
@@ -183,28 +280,6 @@ export const deleteAction = async (id: string) => {
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORES.ACTION_HISTORY, 'readwrite');
     tx.objectStore(STORES.ACTION_HISTORY).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-};
-
-// ============================================================================
-// INDEXED DB OPERATIONS (Conversations & Messages)
-// ============================================================================
-
-export const saveConversation = async (conv: Conversation) => {
-  if (!conv || !conv.id) {
-    console.error('Cannot save conversation: Missing ID');
-    return;
-  }
-
-  const db = await openDB();
-  const sanitizedConv = sanitizeForDB(conv);
-  if (!sanitizedConv) return;
-
-  return new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORES.CONVERSATIONS, 'readwrite');
-    tx.objectStore(STORES.CONVERSATIONS).put(sanitizedConv);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -229,7 +304,7 @@ export const deleteConversation = async (id: string) => {
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction([STORES.CONVERSATIONS, STORES.MESSAGES], 'readwrite');
     tx.objectStore(STORES.CONVERSATIONS).delete(id);
-    
+
     // Also delete all messages for this conversation
     const msgStore = tx.objectStore(STORES.MESSAGES);
     const index = msgStore.index('conversationId');
@@ -251,24 +326,6 @@ export const getPrimaryConversation = async (): Promise<Conversation | null> => 
   return convs.find(c => c.isPrimary) || null;
 };
 
-export const saveMessage = async (msg: EnhancedChatMessage) => {
-  if (!msg || !msg.id) {
-    console.error('Cannot save message: Missing ID');
-    return;
-  }
-
-  const db = await openDB();
-  const sanitizedMsg = sanitizeForDB(msg);
-  if (!sanitizedMsg) return;
-
-  return new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORES.MESSAGES, 'readwrite');
-    tx.objectStore(STORES.MESSAGES).put(sanitizedMsg);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-};
-
 export const loadMessages = async (conversationId: string): Promise<EnhancedChatMessage[]> => {
   if (!conversationId) {
     console.warn('loadMessages called without conversationId');
@@ -288,32 +345,6 @@ export const loadMessages = async (conversationId: string): Promise<EnhancedChat
   });
 };
 
-// ============================================================================
-// INDEXED DB OPERATIONS (Inventory)
-// ============================================================================
-
-export const saveInventoryToDB = async (items: ElectronicComponent[]) => {
-  if (!Array.isArray(items)) return;
-
-  const db = await openDB();
-  return new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORES.INVENTORY, 'readwrite');
-    const store = tx.objectStore(STORES.INVENTORY);
-    
-    store.clear().onsuccess = () => {
-      items.forEach(item => {
-        const sanitized = sanitizeForDB(item);
-        if (sanitized && sanitized.id) {
-          store.put(sanitized);
-        }
-      });
-    };
-
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-};
-
 export const loadInventoryFromDB = async (): Promise<ElectronicComponent[]> => {
   const db = await openDB();
   const tx = db.transaction(STORES.INVENTORY, 'readonly');
@@ -321,4 +352,20 @@ export const loadInventoryFromDB = async (): Promise<ElectronicComponent[]> => {
   return new Promise((resolve) => {
     request.onsuccess = () => resolve(request.result || []);
   });
+};
+
+// ============================================================================
+// FLUSH UTILITY
+// ============================================================================
+
+/**
+ * Forces an immediate flush of all pending write operations.
+ *
+ * Call this before page unload to ensure no data is lost:
+ * ```ts
+ * window.addEventListener('beforeunload', () => { flushPendingWrites(); });
+ * ```
+ */
+export const flushPendingWrites = (): Promise<void> => {
+  return transactionQueue.flush();
 };

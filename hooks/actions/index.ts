@@ -10,7 +10,8 @@ export * from './types';
 /**
  * Registry mapping action types to their handlers
  */
-export const actionHandlers: Partial<Record<ActionType, ActionHandler<unknown>>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const actionHandlers: Partial<Record<ActionType, ActionHandler<any>>> = {
   // Canvas actions
   highlight: canvas.highlight,
   centerOn: canvas.centerOn,
@@ -48,5 +49,5 @@ export const actionHandlers: Partial<Record<ActionType, ActionHandler<unknown>>>
  * Get handler for an action type
  */
 export function getHandler(type: ActionType): ActionHandler<unknown> | undefined {
-  return actionHandlers[type];
+  return actionHandlers[type] as ActionHandler<unknown> | undefined;
 }

@@ -83,7 +83,7 @@ export const extractSuggestedActions = (
         }
         return {
             type: a.type as ActionType,
-            label: a.label,
+            label: a.label ?? '',
             payload,
             safe: a.safe ?? false,
         };

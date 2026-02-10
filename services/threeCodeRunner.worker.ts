@@ -118,7 +118,7 @@ self.onmessage = async (e: MessageEvent) => {
           if (canvas.convertToBlob && typeof canvas.convertToBlob === 'function') {
              blob = await canvas.convertToBlob();
           } else if (canvas.toBlob && typeof canvas.toBlob === 'function') {
-             blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve));
+             blob = await new Promise<Blob | null>(resolve => canvas.toBlob!(resolve));
           } else if (canvas instanceof ImageBitmap) {
              // ImageBitmaps are already efficient, but we might need to convert for serialization if required
              // For now, we assume ImageBitmap can be handled or transfered, but strict JSON serialization might fail.

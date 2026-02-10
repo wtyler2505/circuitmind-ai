@@ -24,7 +24,7 @@ const mockSimulationResult = {
   nodeVoltages: { 0: 0, 1: 5.0, 2: 2.5 },
   branchCurrents: { comp1: 0.02, comp2: 0.001 },
   powerDissipation: { comp1: 0.1, comp2: 0.0025 },
-  errors: [],
+  errors: [] as Array<{ type: string; message: string; severity: string; affectedComponentIds: string[] }>,
   usedMNA: true,
   totalPower: 0.1025,
   nodeCount: 3,

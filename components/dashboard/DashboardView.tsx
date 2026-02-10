@@ -1,6 +1,6 @@
 import React from 'react';
 import * as RGL from 'react-grid-layout';
-import { useDashboard, DashboardWidget } from '../../contexts/DashboardContext';
+import { useDashboard, DashboardWidget, WidgetLayout } from '../../contexts/DashboardContext';
 import { WidgetWrapper } from './WidgetWrapper';
 
 // Multi-fallback resolver for react-grid-layout
@@ -56,7 +56,7 @@ export const DashboardView: React.FC = () => {
         rowHeight={100}
         isDraggable={isEditMode}
         isResizable={isEditMode}
-        onLayoutChange={(currentLayout) => updateLayout(currentLayout)}
+        onLayoutChange={(currentLayout: WidgetLayout[]) => updateLayout(currentLayout)}
         draggableHandle=".cursor-grab"
       >
         {widgets.map(widget => (

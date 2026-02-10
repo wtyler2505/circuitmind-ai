@@ -148,17 +148,17 @@ const MainLayoutComponent: React.FC = () => {
     getCameraSnapshot,
     registerVisualContextProvider,
     unregisterVisualContextProvider,
-    toast,
+    toast: toast as Parameters<typeof useNeuralLinkEffects>[0]['toast'],
   });
 
   useGestureTracking({
     isNeuralLinkActive,
     gestureResult,
-    isHandEngaged,
+    isHandEngaged: isHandEngaged ?? undefined,
     assistantTab,
     setAssistantTab,
     canvasRef,
-    toast,
+    toast: toast as Parameters<typeof useGestureTracking>[0]['toast'],
   });
 
   // Assistant State
@@ -202,7 +202,7 @@ const MainLayoutComponent: React.FC = () => {
     setIsDashboardVisible,
     isSearchOpen,
     setIsSearchOpen,
-    toast,
+    toast: toast as Parameters<typeof useKeyboardShortcuts>[0]['toast'],
   });
 
   const aiContext = useAIContextBuilder({
@@ -215,7 +215,7 @@ const MainLayoutComponent: React.FC = () => {
     activeSelectionPath,
     canvasRef,
     isLoading,
-    aiActions,
+    aiActions: aiActions as Parameters<typeof useAIContextBuilder>[0]['aiActions'],
   });
 
   const handleSendEnhancedMessage = useChatHandler({

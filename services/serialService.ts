@@ -56,7 +56,7 @@ class SerialService {
     }
 
     try {
-      await this.port.open({ baudRate: options.baudRate });
+      await this.port!.open({ baudRate: options.baudRate });
       this.isReading = true;
       this.readLoop();
     } catch (e) {
