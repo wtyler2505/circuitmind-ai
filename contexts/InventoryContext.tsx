@@ -93,14 +93,19 @@ export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: El
         const updated = { 
           ...comp, 
           fzpzSource: cached.binary,
-          // Note: We might need to re-parse the XML to get the full footprint if not cached
-          // But for now let's assume we need to re-load if footprint is missing
+          footprint: cached.footprint || comp.footprint,
+          pins: cached.pins || comp.pins,
+          internalBuses: cached.internalBuses || comp.internalBuses,
+          fzpzDiagnostics: cached.diagnostics?.length ? cached.diagnostics : comp.fzpzDiagnostics,
         };
         
-        // If footprint is missing, re-parse the binary
-        if (!updated.footprint) {
+        // If any critical parsed metadata is missing, re-parse the binary
+        if (!updated.footprint || !updated.pins) {
           const part = await FzpzLoader.load(cached.binary);
           updated.footprint = part.component.footprint;
+          updated.pins = part.component.pins;
+          updated.internalBuses = part.component.internalBuses;
+          updated.fzpzDiagnostics = part.diagnostics.length > 0 ? part.diagnostics : undefined;
         }
 
         updateItem(updated);
@@ -118,6 +123,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: El
         ...comp,
         fzpzSource: buffer,
         footprint: part.component.footprint,
+        pins: part.component.pins,
+        internalBuses: part.component.internalBuses,
+        fzpzDiagnostics: part.diagnostics.length > 0 ? part.diagnostics : undefined,
         description: part.component.description || comp.description
       };
 
@@ -126,6 +134,11 @@ export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: El
         id,
         binary: buffer,
         breadboardSvg: part.svgs.breadboard,
+        schematicSvg: part.svgs.schematic,
+        footprint: part.component.footprint,
+        pins: part.component.pins,
+        internalBuses: part.component.internalBuses,
+        diagnostics: part.diagnostics,
         lastUsed: Date.now()
       });
 

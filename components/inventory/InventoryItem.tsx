@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { ElectronicComponent } from '../../types';
 import { getTypeIcon } from './inventoryUtils';
 import { partStorageService } from '../../services/partStorageService';
@@ -29,6 +29,12 @@ const InventoryItem: React.FC<InventoryItemProps> = ({
   onImageError
 }) => {
   const [cachedThumbnail, setCachedThumbnail] = useState<string | null>(null);
+  const [showDiagTooltip, setShowDiagTooltip] = useState(false);
+  const diagRef = useRef<HTMLSpanElement>(null);
+
+  const diagnostics = item.fzpzDiagnostics;
+  const hasErrors = diagnostics?.some(d => d.level === 'error');
+  const diagCount = diagnostics?.length || 0;
 
   useEffect(() => {
     const checkCache = async () => {
@@ -112,6 +118,32 @@ const InventoryItem: React.FC<InventoryItemProps> = ({
               {item.pins.length}P
             </span>
           )}
+          {diagCount > 0 && (
+            <span
+              ref={diagRef}
+              className={`relative text-[8px] font-mono uppercase tracking-wider border px-1 cursor-help ${
+                hasErrors
+                  ? 'text-red-400 border-red-600/40'
+                  : 'text-amber-400 border-amber-600/40'
+              }`}
+              onMouseEnter={() => setShowDiagTooltip(true)}
+              onMouseLeave={() => setShowDiagTooltip(false)}
+              aria-label={`${diagCount} diagnostic issue${diagCount > 1 ? 's' : ''}`}
+            >
+              {hasErrors ? 'ERR' : 'WARN'}
+              {showDiagTooltip && diagnostics && (
+                <span className="absolute z-50 left-0 top-full mt-1 w-56 bg-slate-900 border border-slate-700 rounded p-2 shadow-lg">
+                  {diagnostics.map((d, i) => (
+                    <span key={i} className={`block text-[10px] leading-tight mb-1 last:mb-0 ${
+                      d.level === 'error' ? 'text-red-300' : 'text-amber-300'
+                    }`}>
+                      {d.message}
+                    </span>
+                  ))}
+                </span>
+              )}
+            </span>
+          )}
         </div>
       </div>
 
@@ -165,6 +197,7 @@ export default memo(InventoryItem, (prev, next) => {
     prev.isSelected === next.isSelected &&
     prev.item.id === next.item.id &&
     prev.item.quantity === next.item.quantity &&
-    prev.brokenImage === next.brokenImage
+    prev.brokenImage === next.brokenImage &&
+    prev.item.fzpzDiagnostics === next.item.fzpzDiagnostics
   );
 });

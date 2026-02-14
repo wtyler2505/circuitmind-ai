@@ -1,0 +1,33 @@
+{
+  "version": 3,
+  "skills": {
+    "cache-components": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel/next.js.git",
+      "skillPath": ".claude-plugin/plugins/cache-components/skills/cache-components/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-02-07T23:07:47.890Z",
+      "updatedAt": "2026-02-07T23:07:47.890Z"
+    },
+    "claude-md-improver": {
+      "source": "anthropics/claude-plugins-official",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/claude-plugins-official.git",
+      "skillPath": "plugins/claude-md-management/skills/claude-md-improver/SKILL.md",
+      "skillFolderHash": "7188018e6710998fbc3227fdacd1b2b6e0508c38",
+      "installedAt": "2026-02-07T23:39:54.759Z",
+      "updatedAt": "2026-02-07T23:39:54.759Z"
+    },
+    "claude-automation-recommender": {
+      "source": "anthropics/claude-plugins-official",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/claude-plugins-official.git",
+      "skillPath": "plugins/claude-code-setup/skills/claude-automation-recommender/SKILL.md",
+      "skillFolderHash": "b43f4a9072318526305d3ddf2d6bedfbf860ae93",
+      "installedAt": "2026-02-07T23:39:54.814Z",
+      "updatedAt": "2026-02-07T23:39:54.814Z"
+    }
+  },
+  "dismissed": {}
+}

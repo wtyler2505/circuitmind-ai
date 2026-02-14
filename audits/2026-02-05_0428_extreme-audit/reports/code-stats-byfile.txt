@@ -1,0 +1,60 @@
+───────────────────────────────────────────────────────────────────────────────
+Language                 Files     Lines   Blanks  Comments     Code Complexity
+───────────────────────────────────────────────────────────────────────────────
+TypeScript                 192     31622     3636      2061    25925       4492
+───────────────────────────────────────────────────────────────────────────────
+~nts/diagram/Diagram3DView.tsx      1948      290       220     1438        294
+~ents/ComponentEditorModal.tsx      1317       70        11     1236        195
+components/DiagramCanvas.tsx        1380      114        40     1226        359
+components/SettingsPanel.tsx        1003       58        24      921        144
+services/threePrimitives.ts         1258      170       206      882        100
+components/MainLayout.tsx           1016      103        49      864        239
+components/Inventory.tsx             976       85        30      861        153
+~nents/diagram/DiagramNode.tsx      1009      103        51      855        177
+components/ChatPanel.tsx             866       61        31      774        155
+~ts/diagram/componentShapes.ts       697       56        97      544         74
+~gemini/features/components.ts       524       59        37      428         87
+components/ChatMessage.tsx           479       35        20      424         65
+~ervices/componentValidator.ts       502       66        93      343         66
+components/ThreeViewer.tsx           350       18         3      329         77
+hooks/useConversations.ts            349       44        30      275         72
+~__/componentValidator.test.ts       379       79        29      271         15
+~ents/ConversationSwitcher.tsx       306       22        14      270         47
+~mponents/layout/AppHeader.tsx       294       24         2      268         77
+services/storage.ts                  324       40        32      252         46
+services/liveAudio.ts                312       42        19      251         39
+~vices/gemini/features/chat.ts       299       35        16      248         90
+~ests__/DiagramCanvas.test.tsx       316       62        12      242          3
+services/gemini/prompts.ts           389      149         4      236         63
+contexts/LayoutContext.tsx           291       36        24      231         62
+~ices/gemini/features/media.ts       245       25         3      217         43
+services/aiContextBuilder.ts         316       48        55      213         62
+hooks/useAIActions.ts                251       29        12      210         36
+services/responseParser.ts           280       31        46      203         30
+services/gemini/types.ts             243       20        24      199          2
+~/settings/ProfileSettings.tsx       214       16         3      195         16
+~_tests__/ThreeViewer.test.tsx       197        7         0      190          1
+services/fzpzLoader.ts               213       23        10      180         51
+~t/assistant/AssistantTabs.tsx       192       17         1      174         23
+~onents/inventory/BOMModal.tsx       185       18         0      167         25
+~ks/actions/diagramHandlers.ts       196       31         1      164         22
+~nents/diagram/diagramState.ts       208       35        12      161         53
+hooks/useToast.tsx                   227       33        36      158         16
+~onents/settings/SyncPanel.tsx       165       11         2      152         10
+~xts/VoiceAssistantContext.tsx       182       24         7      151         32
+~ces/threeCodeRunner.worker.ts       195       25        22      148         43
+~s/inventory/InventoryItem.tsx       149        9         0      140         16
+hooks/useInventorySync.ts            225       35        52      138         30
+contexts/DiagramContext.tsx          157       18         2      137         37
+~ervices/userProfileService.ts       167       27         7      133         16
+services/serialService.ts            180       19        31      130         32
+services/gitService.ts               154       20         4      130          4
+~layout/AnalyticsDashboard.tsx       148       14         5      129          8
+~nts/layout/DebugWorkbench.tsx       138       12         0      126         17
+contexts/InventoryContext.tsx        158       22        12      124         23
+~s/inventory/InventoryList.tsx       138       12         2      124         15
+~mponents/AssistantSidebar.tsx       145       13        18      114         15
+hooks/useNeuralLink.ts               131       19         2      110         22
+~/settings/DeveloperPortal.tsx       117        9         0      108          7
+~ents/inventory/MacroPanel.tsx       116        8         0      108         11
+~omponents/auth/Gatekeeper.tsx       111       11         0      100         22

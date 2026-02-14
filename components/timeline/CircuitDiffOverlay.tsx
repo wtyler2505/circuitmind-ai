@@ -18,6 +18,10 @@
 import React, { useMemo } from 'react';
 import type { WiringDiagram, ElectronicComponent, WireConnection } from '../../types';
 import {
+  calculateWireEndpoints,
+  resolveComponentBounds,
+} from '../diagram';
+import {
   diffDiagrams,
   formatDiffSummary,
   type DiagramDiff,
@@ -32,9 +36,6 @@ const COLORS = {
   removed: '#ef4444',
   modified: '#ffaa00',
 } as const;
-
-const COMPONENT_WIDTH = 180;
-const COMPONENT_HEIGHT = 100;
 
 // ---------------------------------------------------------------------------
 // Props
@@ -81,8 +82,9 @@ function getPosition(
   }
   // Auto-layout fallback: simple grid
   const cols = 4;
-  const gapX = COMPONENT_WIDTH + 40;
-  const gapY = COMPONENT_HEIGHT + 40;
+  const fallbackBounds = resolveComponentBounds(comp);
+  const gapX = fallbackBounds.width + 40;
+  const gapY = fallbackBounds.height + 40;
   return {
     x: 20 + (fallbackIndex % cols) * gapX,
     y: 20 + Math.floor(fallbackIndex / cols) * gapY,
@@ -97,15 +99,21 @@ function getPosition(
 function resolveWireEndpoints(
   wire: WireConnection,
   componentPositions: Map<string, { x: number; y: number }>,
+  componentLookup: Map<string, ElectronicComponent>,
 ): { x1: number; y1: number; x2: number; y2: number } | null {
-  const from = componentPositions.get(wire.fromComponentId);
-  const to = componentPositions.get(wire.toComponentId);
-  if (!from || !to) return null;
+  const fromPos = componentPositions.get(wire.fromComponentId);
+  const toPos = componentPositions.get(wire.toComponentId);
+  if (!fromPos || !toPos) return null;
+
+  const fromComponent = componentLookup.get(wire.fromComponentId);
+  const toComponent = componentLookup.get(wire.toComponentId);
+  const endpoints = calculateWireEndpoints(wire, fromComponent, toComponent, fromPos, toPos);
+
   return {
-    x1: from.x + COMPONENT_WIDTH,
-    y1: from.y + COMPONENT_HEIGHT / 2,
-    x2: to.x,
-    y2: to.y + COMPONENT_HEIGHT / 2,
+    x1: endpoints.startX,
+    y1: endpoints.startY,
+    x2: endpoints.endX,
+    y2: endpoints.endY,
   };
 }
 
@@ -116,6 +124,8 @@ function resolveWireEndpoints(
 interface ComponentOutlineProps {
   x: number;
   y: number;
+  width: number;
+  height: number;
   color: string;
   label: string;
   dashed?: boolean;
@@ -125,6 +135,8 @@ interface ComponentOutlineProps {
 const ComponentOutline: React.FC<ComponentOutlineProps> = ({
   x,
   y,
+  width,
+  height,
   color,
   label,
   dashed = false,
@@ -134,8 +146,8 @@ const ComponentOutline: React.FC<ComponentOutlineProps> = ({
     <rect
       x={x}
       y={y}
-      width={COMPONENT_WIDTH}
-      height={COMPONENT_HEIGHT}
+      width={width}
+      height={height}
       rx={6}
       ry={6}
       fill="none"
@@ -146,8 +158,8 @@ const ComponentOutline: React.FC<ComponentOutlineProps> = ({
     />
     {/* Component label */}
     <text
-      x={x + COMPONENT_WIDTH / 2}
-      y={y + COMPONENT_HEIGHT / 2 + 4}
+      x={x + width / 2}
+      y={y + height / 2 + 4}
       textAnchor="middle"
       fill={color}
       fontSize={11}
@@ -162,17 +174,17 @@ const ComponentOutline: React.FC<ComponentOutlineProps> = ({
         <line
           x1={x + 4}
           y1={y + 4}
-          x2={x + COMPONENT_WIDTH - 4}
-          y2={y + COMPONENT_HEIGHT - 4}
+          x2={x + width - 4}
+          y2={y + height - 4}
           stroke={color}
           strokeWidth={1.5}
           opacity={0.6}
         />
         <line
-          x1={x + COMPONENT_WIDTH - 4}
+          x1={x + width - 4}
           y1={y + 4}
           x2={x + 4}
-          y2={y + COMPONENT_HEIGHT - 4}
+          y2={y + height - 4}
           stroke={color}
           strokeWidth={1.5}
           opacity={0.6}
@@ -244,6 +256,17 @@ const CircuitDiffOverlayInner: React.FC<CircuitDiffOverlayProps> = ({
     return posMap;
   }, [before, after, positions]);
 
+  const allComponents = useMemo(() => {
+    const componentMap = new Map<string, ElectronicComponent>();
+    before.components.forEach((component) => {
+      componentMap.set(component.id, component);
+    });
+    after.components.forEach((component) => {
+      componentMap.set(component.id, component);
+    });
+    return componentMap;
+  }, [before, after]);
+
   // Early return when diagrams are identical
   const isEmpty =
     diff.added.length === 0 &&
@@ -299,13 +322,16 @@ const CircuitDiffOverlayInner: React.FC<CircuitDiffOverlayProps> = ({
       </defs>
 
       {/* --- Added components (green outline) --- */}
-      {diff.added.map((comp, i) => {
+      {diff.added.map((comp) => {
         const pos = allPositions.get(comp.id) ?? { x: 0, y: 0 };
+        const bounds = resolveComponentBounds(comp);
         return (
           <ComponentOutline
             key={`added-${comp.id}`}
             x={pos.x}
             y={pos.y}
+            width={bounds.width}
+            height={bounds.height}
             color={COLORS.added}
             label={`+ ${comp.name}`}
           />
@@ -315,11 +341,14 @@ const CircuitDiffOverlayInner: React.FC<CircuitDiffOverlayProps> = ({
       {/* --- Removed components (red strikethrough) --- */}
       {diff.removed.map((comp) => {
         const pos = allPositions.get(comp.id) ?? { x: 0, y: 0 };
+        const bounds = resolveComponentBounds(comp);
         return (
           <ComponentOutline
             key={`removed-${comp.id}`}
             x={pos.x}
             y={pos.y}
+            width={bounds.width}
+            height={bounds.height}
             color={COLORS.removed}
             label={`- ${comp.name}`}
             strikethrough
@@ -330,11 +359,14 @@ const CircuitDiffOverlayInner: React.FC<CircuitDiffOverlayProps> = ({
       {/* --- Modified components (amber dashed outline) --- */}
       {diff.modified.map(({ after: afterComp }) => {
         const pos = allPositions.get(afterComp.id) ?? { x: 0, y: 0 };
+        const bounds = resolveComponentBounds(afterComp);
         return (
           <ComponentOutline
             key={`modified-${afterComp.id}`}
             x={pos.x}
             y={pos.y}
+            width={bounds.width}
+            height={bounds.height}
             color={COLORS.modified}
             label={`~ ${afterComp.name}`}
             dashed
@@ -344,7 +376,7 @@ const CircuitDiffOverlayInner: React.FC<CircuitDiffOverlayProps> = ({
 
       {/* --- Added wires (green dashed) --- */}
       {diff.addedWires.map((wire, i) => {
-        const pts = resolveWireEndpoints(wire, allPositions);
+        const pts = resolveWireEndpoints(wire, allPositions, allComponents);
         if (!pts) return null;
         return (
           <WireLine
@@ -357,7 +389,7 @@ const CircuitDiffOverlayInner: React.FC<CircuitDiffOverlayProps> = ({
 
       {/* --- Removed wires (red dashed) --- */}
       {diff.removedWires.map((wire, i) => {
-        const pts = resolveWireEndpoints(wire, allPositions);
+        const pts = resolveWireEndpoints(wire, allPositions, allComponents);
         if (!pts) return null;
         return (
           <WireLine

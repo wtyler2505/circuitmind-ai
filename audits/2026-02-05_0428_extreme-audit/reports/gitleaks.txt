@@ -1,0 +1,8 @@
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+[90m4:30AM[0m [31mFTL[0m [1mFailed to load config[0m [36merror=[0m[31m[1m"[[allowlists]] must contain at least one check for: commits, paths, regexes, or stopwords"[0m[0m

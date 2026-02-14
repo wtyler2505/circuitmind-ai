@@ -32,7 +32,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   return (
     <div className="flex h-screen w-screen bg-cyber-dark text-slate-200 overflow-hidden font-sans">
       {/* Left Sidebar Slot */}
-      {!isFocusMode && inventory}
+      {!isFocusMode && (
+        <aside aria-label="Inventory sidebar" className="shrink-0">
+          {inventory}
+        </aside>
+      )}
 
       {/* Main Area */}
       <div
@@ -66,10 +70,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       </div>
 
       {/* Right Sidebar Slot */}
-      {!isFocusMode && assistant}
+      {!isFocusMode && (
+        <aside aria-label="Assistant sidebar" className="shrink-0">
+          {assistant}
+        </aside>
+      )}
 
       {/* Modals Layer */}
-      {modals}
+      <section aria-label="Modal layer">{modals}</section>
     </div>
   );
 };

@@ -42,7 +42,14 @@ export function useAIActions(options: UseAIActionsOptions) {
   // Execute action via handler registry
   const executeAction = useCallback(async (action: ActionIntent, auto: boolean): Promise<ActionResult> => {
     // 0. Permission Check
-    if (action.type === 'addComponent' || action.type === 'removeComponent' || action.type === 'clearCanvas') {
+    if (
+      action.type === 'addComponent' ||
+      action.type === 'updateComponent' ||
+      action.type === 'removeComponent' ||
+      action.type === 'clearCanvas' ||
+      action.type === 'createConnection' ||
+      action.type === 'removeConnection'
+    ) {
       if (!perms.canModifyDiagram) {
         return { action, success: false, timestamp: Date.now(), auto, error: 'Access Denied: Insufficient Permissions' };
       }
@@ -51,6 +58,15 @@ export function useAIActions(options: UseAIActionsOptions) {
       if (!perms.canEditInventory) {
         // Observers can see inventory but maybe not edit? 
         // For now let's be strict if we want to guard the tab
+      }
+    }
+    if (
+      action.type === 'addInventoryPart' ||
+      action.type === 'updateInventoryPart' ||
+      action.type === 'removeInventoryPart'
+    ) {
+      if (!perms.canEditInventory) {
+        return { action, success: false, timestamp: Date.now(), auto, error: 'Access Denied: Inventory edit permissions required' };
       }
     }
 
@@ -113,7 +129,8 @@ export function useAIActions(options: UseAIActionsOptions) {
     canvasRef, inventory, diagram, setInventory,
     setInventoryOpen, setSettingsOpen, setSelectedComponent,
     setGenerationMode, updateDiagram, activeConversationId,
-    recordUndo, addToHistory, handleUndo, handleRedo, saveDiagram, loadDiagram, pushActionDelta
+    recordUndo, addToHistory, handleUndo, handleRedo, saveDiagram, loadDiagram, pushActionDelta,
+    perms, isRecording, addRecordedStep
   ]);
 
   // Staged Actions (Predictions)

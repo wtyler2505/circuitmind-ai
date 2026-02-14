@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { FzpzDiagnostic } from '../../services/fzpzLoader';
 import { useInventory } from '../../contexts/InventoryContext';
 import { FzpzLoader } from '../../services/fzpzLoader';
 import { partStorageService } from '../../services/partStorageService';
@@ -12,6 +13,7 @@ import { useToast } from '../../hooks/useToast';
 export const PartsManager: React.FC = () => {
   const { addItem, inventory } = useInventory();
   const [isImporting, setIsImporting] = useState(false);
+  const [lastDiagnostics, setLastDiagnostics] = useState<{ partName: string; items: FzpzDiagnostic[] } | null>(null);
   const toast = useToast();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,6 +30,13 @@ export const PartsManager: React.FC = () => {
       const buffer = await file.arrayBuffer();
       const part = await FzpzLoader.load(buffer);
 
+      // Surface diagnostics
+      setLastDiagnostics(
+        part.diagnostics.length > 0
+          ? { partName: part.component.name || 'Unknown Part', items: part.diagnostics }
+          : null
+      );
+
       // Check if already exists
       if (inventory.find(i => i.id === part.moduleId)) {
         toast.warning(`Part ${part.component.name} already exists in inventory.`);
@@ -40,6 +49,11 @@ export const PartsManager: React.FC = () => {
         id: part.moduleId,
         binary: buffer,
         breadboardSvg: part.svgs.breadboard,
+        schematicSvg: part.svgs.schematic,
+        footprint: part.component.footprint,
+        pins: part.component.pins,
+        internalBuses: part.component.internalBuses,
+        diagnostics: part.diagnostics,
         lastUsed: Date.now()
       });
 
@@ -51,12 +65,23 @@ export const PartsManager: React.FC = () => {
         description: part.component.description || 'Imported custom part',
         fzpzSource: buffer,
         footprint: part.component.footprint,
+        pins: part.component.pins,
+        internalBuses: part.component.internalBuses,
+        fzpzDiagnostics: part.diagnostics.length > 0 ? part.diagnostics : undefined,
         quantity: 1
       });
 
-      toast.success(`Successfully imported ${part.component.name}`);
+      const hasErrors = part.diagnostics.some(d => d.level === 'error');
+      if (hasErrors) {
+        toast.warning(`Imported ${part.component.name} with errors — check diagnostics below.`);
+      } else if (part.diagnostics.length > 0) {
+        toast.success(`Imported ${part.component.name} with ${part.diagnostics.length} warning(s).`);
+      } else {
+        toast.success(`Successfully imported ${part.component.name}`);
+      }
     } catch (e) {
       console.error('Import failed', e);
+      setLastDiagnostics(null);
       toast.error('Failed to parse FZPZ file. It may be corrupted or non-standard.');
     } finally {
       setIsImporting(false);
@@ -95,6 +120,35 @@ export const PartsManager: React.FC = () => {
           </label>
         </div>
       </div>
+
+      {lastDiagnostics && lastDiagnostics.items.length > 0 && (
+        <div className="bg-slate-900/50 border border-amber-700/40 rounded-xl p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest">
+              Import Diagnostics — {lastDiagnostics.partName}
+            </h4>
+            <button
+              onClick={() => setLastDiagnostics(null)}
+              className="text-slate-500 hover:text-white text-xs"
+              aria-label="Dismiss diagnostics"
+            >
+              ✕
+            </button>
+          </div>
+          <ul className="space-y-1">
+            {lastDiagnostics.items.map((d, i) => (
+              <li key={i} className={`text-[11px] flex items-start gap-2 ${
+                d.level === 'error' ? 'text-red-400' : 'text-amber-300'
+              }`}>
+                <span className={`font-mono text-[9px] mt-0.5 shrink-0 uppercase border px-1 rounded ${
+                  d.level === 'error' ? 'border-red-600' : 'border-amber-600'
+                }`}>{d.level}</span>
+                <span>{d.message}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="space-y-3">
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Library Statistics</h3>

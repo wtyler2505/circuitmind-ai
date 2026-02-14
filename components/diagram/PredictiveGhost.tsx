@@ -1,7 +1,7 @@
 import React from 'react';
 import { PredictiveAction } from '../../services/predictionEngine';
-import { WiringDiagram } from '../../types';
-import { getComponentShape, calculatePinPositions } from './componentShapes';
+import { WiringDiagram, WireConnection } from '../../types';
+import { calculateWireEndpoints, calculateWireMidpoint } from './diagramUtils';
 
 interface PredictiveGhostProps {
   stagedActions: PredictiveAction[];
@@ -57,19 +57,28 @@ const GhostAction: React.FC<{
     
     if (!fromComp || !toComp) return null;
 
-    const fromShape = getComponentShape(fromComp.type, fromComp.name);
-    const toShape = getComponentShape(toComp.type, toComp.name);
+    const ghostConnection: WireConnection = {
+      fromComponentId,
+      fromPin,
+      toComponentId,
+      toPin,
+      description: 'Predicted connection',
+      color: '#00f3ff',
+    };
 
-    const fromPins = calculatePinPositions(fromShape, fromComp.pins || []);
-    const toPins = calculatePinPositions(toShape, toComp.pins || []);
+    const endpoints = calculateWireEndpoints(
+      ghostConnection,
+      fromComp,
+      toComp,
+      startPos,
+      endPos
+    );
 
-    const p1 = fromPins.find(p => p.name === fromPin) || { x: fromShape.width/2, y: fromShape.height/2 };
-    const p2 = toPins.find(p => p.name === toPin) || { x: toShape.width/2, y: toShape.height/2 };
-
-    const x1 = startPos.x + p1.x;
-    const y1 = startPos.y + p1.y;
-    const x2 = endPos.x + p2.x;
-    const y2 = endPos.y + p2.y;
+    const x1 = endpoints.startX;
+    const y1 = endpoints.startY;
+    const x2 = endpoints.endX;
+    const y2 = endpoints.endY;
+    const labelPoint = calculateWireMidpoint(endpoints);
 
     return (
       <g opacity="0.5">
@@ -82,7 +91,7 @@ const GhostAction: React.FC<{
           className="animate-pulse"
         />
         {/* Connection Label & Accept Button */}
-        <foreignObject x={(x1 + x2)/2 - 50} y={(y1 + y2)/2 - 20} width="100" height="45">
+        <foreignObject x={labelPoint.x - 50} y={labelPoint.y - 20} width="100" height="45">
           <div className="flex flex-col items-center gap-1.5 p-1">
             <span className="bg-black/90 text-[7px] text-neon-cyan px-1.5 py-0.5 border border-neon-cyan/20 cut-corner-sm uppercase tracking-tighter whitespace-nowrap shadow-xl">
               {prediction.reasoning}

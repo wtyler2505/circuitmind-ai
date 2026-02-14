@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
 import { WiringDiagram } from '../types';
-import { getComponentShape } from '../components/diagram/componentShapes';
-import { getPinCoordinates } from '../components/diagram/3d/pinCoordinates';
+import { resolvePinWorldPosition } from '../components/diagram/3d/pinCoordinates';
 import { disposeObject } from '../components/diagram/3d/wireUtils';
 import type { SceneRefs } from './useDiagram3DScene';
 
@@ -13,6 +12,12 @@ import type { SceneRefs } from './useDiagram3DScene';
 const SCALE = 0.5;
 const OFFSET_X = -200;
 const OFFSET_Z = -150;
+const PIN_WORLD_CONTEXT = {
+  scale: SCALE,
+  offsetX: OFFSET_X,
+  offsetZ: OFFSET_Z,
+  baseY: 3,
+};
 
 // ============================================================================
 // TELEMETRY SPRITE CREATION
@@ -82,23 +87,18 @@ export const useDiagram3DTelemetry = (
       if (!component) return;
 
       const pos = positions.get(component.id) || { x: 0, y: 0 };
-      const shape = getComponentShape(component.type || 'other', component.name || 'Unknown');
-      const width = shape.width * SCALE;
-      const depth = shape.height * SCALE;
-
-      const pinOffset = getPinCoordinates(
-        component.type || 'other',
-        component.name || 'Unknown',
+      const pinWorld = resolvePinWorldPosition(
+        component,
         pin === 'default' ? '' : pin,
-        width,
-        depth
+        pos,
+        PIN_WORLD_CONTEXT
       );
 
       const sprite = createTelemetrySprite(
         typeof packet.value === 'boolean' ? String(packet.value) : packet.value,
-        pos.x * SCALE + OFFSET_X + width / 2 + pinOffset.x,
-        3 + pinOffset.y,
-        pos.y * SCALE + OFFSET_Z + depth / 2 + pinOffset.z
+        pinWorld.x,
+        pinWorld.y,
+        pinWorld.z
       );
       group.add(sprite);
     });

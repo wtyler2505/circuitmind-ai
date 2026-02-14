@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { ElectronicComponent, WiringDiagram, WireConnection } from '../types';
 import type { DiagramState, DiagramAction } from '../components/diagram/diagramState';
-import { COMPONENT_WIDTH, COMPONENT_HEIGHT } from '../components/diagram';
+import { resolveComponentBounds, resolvePinEndpoint } from '../components/diagram';
 
 const GRID_SIZE = 10;
+const WIRE_PIN_SNAP_DISTANCE = 18;
+const WIRE_PIN_SNAP_DISTANCE_SQ = WIRE_PIN_SNAP_DISTANCE * WIRE_PIN_SNAP_DISTANCE;
 
 interface UseCanvasInteractionArgs {
   state: DiagramState;
@@ -38,6 +40,40 @@ export function useCanvasInteraction({
       y: (clientY - rect.top - state.pan.y) / state.zoom,
     };
   }, [state.pan, state.zoom, containerRectRef]);
+
+  const getSnappedWireCursorPos = useCallback((diagramPos: { x: number; y: number }) => {
+    if (state.interactionMode !== 'creating_wire' || !state.tempWire || !diagram) {
+      return diagramPos;
+    }
+
+    let closestPin: { x: number; y: number } | null = null;
+    let closestDistanceSq = WIRE_PIN_SNAP_DISTANCE_SQ;
+
+    diagram.components.forEach((component) => {
+      const componentPos = state.nodePositions.get(component.id);
+      if (!componentPos || !component.pins?.length) return;
+
+      component.pins.forEach((pin) => {
+        if (component.id === state.tempWire?.startNodeId && pin === state.tempWire?.startPin) {
+          return;
+        }
+
+        const endpoint = resolvePinEndpoint(component, pin, componentPos);
+        if (!endpoint) return;
+
+        const dx = endpoint.x - diagramPos.x;
+        const dy = endpoint.y - diagramPos.y;
+        const distanceSq = dx * dx + dy * dy;
+
+        if (distanceSq <= closestDistanceSq) {
+          closestDistanceSq = distanceSq;
+          closestPin = { x: endpoint.x, y: endpoint.y };
+        }
+      });
+    });
+
+    return closestPin ?? diagramPos;
+  }, [diagram, state.interactionMode, state.tempWire, state.nodePositions]);
 
   // Wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -111,14 +147,15 @@ export function useCanvasInteraction({
     if (rafId.current) return;
     rafId.current = window.requestAnimationFrame(() => {
       const pointerPos = { x: clientX, y: clientY };
-      const diagramPos = getDiagramPos(clientX, clientY);
+      const rawDiagramPos = getDiagramPos(clientX, clientY);
+      const diagramPos = getSnappedWireCursorPos(rawDiagramPos);
       dispatch({
         type: 'POINTER_MOVE',
         payload: { pointerPos, diagramPos, snapToGrid, gridSize: GRID_SIZE },
       });
       rafId.current = null;
     });
-  }, [getDiagramPos, snapToGrid, dispatch]);
+  }, [getDiagramPos, getSnappedWireCursorPos, snapToGrid, dispatch]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     if (rafId.current) {
@@ -155,10 +192,11 @@ export function useCanvasInteraction({
       try {
         const component = JSON.parse(componentData) as ElectronicComponent;
         const rect = containerRectRef.current;
+        const bounds = resolveComponentBounds(component);
         let x = (e.clientX - rect.left - state.pan.x) / state.zoom;
         let y = (e.clientY - rect.top - state.pan.y) / state.zoom;
-        x -= COMPONENT_WIDTH / 2;
-        y -= COMPONENT_HEIGHT / 2;
+        x -= bounds.width / 2;
+        y -= bounds.height / 2;
         if (snapToGrid) {
           x = Math.round(x / GRID_SIZE) * GRID_SIZE;
           y = Math.round(y / GRID_SIZE) * GRID_SIZE;

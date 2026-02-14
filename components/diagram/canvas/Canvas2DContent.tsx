@@ -1,6 +1,7 @@
 import React from 'react';
 import type { WiringDiagram, ElectronicComponent } from '../../../types';
 import type { DiagramState } from '../diagramState';
+import type { PinSide } from '..';
 import { Wire, DiagramNode } from '..';
 import { PredictiveGhost } from '../PredictiveGhost';
 import SvgDefs from './SvgDefs';
@@ -26,7 +27,7 @@ interface Canvas2DContentProps {
   onComponentContextMenu?: (componentId: string, x: number, y: number) => void;
   onComponentDoubleClick?: (component: ElectronicComponent) => void;
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
-  onPinPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, isRightSide: boolean) => void;
+  onPinPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, pinSide: PinSide) => void;
   onPinPointerUp: (e: React.PointerEvent, nodeId: string, pin: string) => void;
   onComponentEnter?: (e: React.MouseEvent, component: ElectronicComponent) => void;
   onComponentLeave?: (e: React.MouseEvent, component: ElectronicComponent) => void;

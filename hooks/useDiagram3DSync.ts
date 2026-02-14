@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { WiringDiagram, ElectronicComponent } from '../types';
-import { getComponentShape } from '../components/diagram/componentShapes';
+import { resolveComponentBounds } from '../components/diagram';
 import { createLODComponent } from '../components/diagram/3d/lodFactories';
 import { createWireMaterial, createPlasticMaterial } from '../components/diagram/3d/materials';
-import { getPinCoordinates } from '../components/diagram/3d/pinCoordinates';
+import { resolvePinWorldPosition } from '../components/diagram/3d/pinCoordinates';
 import { getWireColor, disposeObject } from '../components/diagram/3d/wireUtils';
 import type { SceneRefs } from './useDiagram3DScene';
 
@@ -15,6 +15,12 @@ import type { SceneRefs } from './useDiagram3DScene';
 const SCALE = 0.5;
 const OFFSET_X = -200;
 const OFFSET_Z = -150;
+const PIN_WORLD_CONTEXT = {
+  scale: SCALE,
+  offsetX: OFFSET_X,
+  offsetZ: OFFSET_Z,
+  baseY: 3,
+};
 
 // ============================================================================
 // COMPONENT LABEL CREATION
@@ -137,14 +143,14 @@ export const useDiagram3DSync = (
         return;
       }
 
-      const shape = getComponentShape(component.type || 'other', component.name || 'Unknown');
-      if (!shape || isNaN(shape.width) || isNaN(shape.height)) {
+      const bounds = resolveComponentBounds(component);
+      if (isNaN(bounds.width) || isNaN(bounds.height)) {
         console.warn(`Invalid shape dimensions for ${component.id}`);
         return;
       }
 
-      const width = shape.width * SCALE;
-      const depth = shape.height * SCALE;
+      const width = bounds.width * SCALE;
+      const depth = bounds.height * SCALE;
 
       if (!component.threeCode && !component.threeDModelUrl) {
         missing.push(component);
@@ -185,34 +191,30 @@ export const useDiagram3DSync = (
       const toPos = positions.get(toComponent.id) || { x: 0, y: 0 };
       if (isNaN(fromPos.x) || isNaN(fromPos.y) || isNaN(toPos.x) || isNaN(toPos.y)) return;
 
-      const fromShape = getComponentShape(fromComponent.type || 'other', fromComponent.name || 'Unknown');
-      const toShape = getComponentShape(toComponent.type || 'other', toComponent.name || 'Unknown');
-
-      const fromWidth = fromShape.width * SCALE;
-      const fromDepth = fromShape.height * SCALE;
-      const toWidth = toShape.width * SCALE;
-      const toDepth = toShape.height * SCALE;
-
-      const fromPinOffset = getPinCoordinates(
-        fromComponent.type || 'other', fromComponent.name || 'Unknown',
-        connection.fromPin || '', fromWidth, fromDepth
+      const fromPinWorld = resolvePinWorldPosition(
+        fromComponent,
+        connection.fromPin || '',
+        fromPos,
+        PIN_WORLD_CONTEXT
       );
-      const toPinOffset = getPinCoordinates(
-        toComponent.type || 'other', toComponent.name || 'Unknown',
-        connection.toPin || '', toWidth, toDepth
+      const toPinWorld = resolvePinWorldPosition(
+        toComponent,
+        connection.toPin || '',
+        toPos,
+        PIN_WORLD_CONTEXT
       );
 
-      if (isNaN(fromPinOffset.x) || isNaN(fromPinOffset.z) || isNaN(toPinOffset.x) || isNaN(toPinOffset.z)) {
+      if (isNaN(fromPinWorld.x) || isNaN(fromPinWorld.z) || isNaN(toPinWorld.x) || isNaN(toPinWorld.z)) {
         console.warn('Invalid pin coordinates', connection);
         return;
       }
 
-      const startX = (fromPos.x * SCALE + OFFSET_X + fromWidth / 2) + fromPinOffset.x;
-      const startY = 3 + fromPinOffset.y;
-      const startZ = (fromPos.y * SCALE + OFFSET_Z + fromDepth / 2) + fromPinOffset.z;
-      const endX = (toPos.x * SCALE + OFFSET_X + toWidth / 2) + toPinOffset.x;
-      const endY = 3 + toPinOffset.y;
-      const endZ = (toPos.y * SCALE + OFFSET_Z + toDepth / 2) + toPinOffset.z;
+      const startX = fromPinWorld.x;
+      const startY = fromPinWorld.y;
+      const startZ = fromPinWorld.z;
+      const endX = toPinWorld.x;
+      const endY = toPinWorld.y;
+      const endZ = toPinWorld.z;
 
       const wireGroup = createWireMesh(
         startX, startY, startZ, endX, endY, endZ,

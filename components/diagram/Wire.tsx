@@ -4,6 +4,7 @@ import { BezierWire } from './wiring/BezierWire';
 import { useSimulation } from '../../contexts/SimulationContext';
 import type { MNASimulationResult } from '../../services/simulation/types';
 import { formatCurrent } from './PinTooltip';
+import { calculateWireEndpoints, calculateWireMidpoint } from './diagramUtils';
 
 export interface WireHighlightState {
   color: string;
@@ -21,9 +22,6 @@ interface WireProps {
   onEditClick?: (index: number) => void;
   onDelete?: (index: number) => void;
 }
-
-const COMPONENT_WIDTH = 120;
-const COMPONENT_HEIGHT = 80;
 
 /**
  * Compute wire color based on current magnitude.
@@ -68,31 +66,17 @@ export const Wire: React.FC<WireProps> = memo(({
 
   if (!startComponent || !endComponent || !startPos || !endPos) return null;
 
-  // Calculate start point
-  const startPinIdx = (startComponent.pins || []).indexOf(connection.fromPin);
-  let x1 = startPos.x;
-  let y1 = startPos.y;
-
-  if (startPinIdx !== -1) {
-    x1 += endPos.x < startPos.x ? 0 : COMPONENT_WIDTH;
-    y1 += 40 + startPinIdx * 15;
-  } else {
-    x1 += COMPONENT_WIDTH / 2;
-    y1 += COMPONENT_HEIGHT / 2;
-  }
-
-  // Calculate end point
-  const endPinIdx = (endComponent.pins || []).indexOf(connection.toPin);
-  let x2 = endPos.x;
-  let y2 = endPos.y;
-
-  if (endPinIdx !== -1) {
-    x2 += endPos.x < startPos.x ? COMPONENT_WIDTH : 0;
-    y2 += 40 + endPinIdx * 15;
-  } else {
-    x2 += COMPONENT_WIDTH / 2;
-    y2 += COMPONENT_HEIGHT / 2;
-  }
+  const { startX: x1, startY: y1, endX: x2, endY: y2 } = calculateWireEndpoints(
+    connection,
+    startComponent,
+    endComponent,
+    startPos,
+    endPos
+  );
+  const labelPoint = calculateWireMidpoint(
+    { startX: x1, startY: y1, endX: x2, endY: y2 },
+    connection.path
+  );
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -134,7 +118,7 @@ export const Wire: React.FC<WireProps> = memo(({
 
       {/* Wire current label (shown for significant current) */}
       {wireCurrentInfo && Math.abs(wireCurrentInfo.current) > 1e-4 && (
-        <g transform={`translate(${(x1 + x2) / 2}, ${(y1 + y2) / 2 - 12})`}>
+        <g transform={`translate(${labelPoint.x}, ${labelPoint.y - 12})`}>
           <rect
             x={-24}
             y={-8}
@@ -160,7 +144,7 @@ export const Wire: React.FC<WireProps> = memo(({
       )}
 
       {connection.description && (
-        <g transform={`translate(${(x1 + x2) / 2}, ${(y1 + y2) / 2})`}>
+        <g transform={`translate(${labelPoint.x}, ${labelPoint.y})`}>
           <rect x="-40" y="-10" width="80" height="20" rx="4" fill="#0f172a" stroke="#334155" />
           <text
             x="0"

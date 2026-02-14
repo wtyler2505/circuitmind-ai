@@ -1,0 +1,100 @@
+     53      17.3     6.3       72.7         3     components/layout/SimControls.tsx
+    122       0.0     0.0        0.0         0     components/layout/AnalyticsDashboard.tsx
+     51       7.8     1.7       40.0         6     components/layout/CollaboratorList.tsx
+    123      14.1     3.2       73.2         9     components/layout/DebugWorkbench.tsx
+     52      49.0     5.0      193.0         1     components/layout/MentorOverlay.tsx
+     94       7.1     2.3       34.8        14     components/layout/OmniSearch.tsx
+     80       7.4     1.9       41.8        12     components/layout/SystemLogViewer.tsx
+     77      15.0     2.2       84.6         5     components/layout/SecurityReport.tsx
+     30       7.8     1.0       51.5         4     components/layout/ModeSelector.tsx
+     66      48.0    21.0      207.0         1     components/layout/AppLayout.tsx
+     50       5.6     2.7       35.0         7     components/dashboard/HeatmapWidget.tsx
+     64       5.7     1.0       32.0         6     components/dashboard/DashboardView.tsx
+     38      12.5     3.0       81.5         2     components/dashboard/Sparkline.tsx
+     57       3.0     1.0        9.5         2     components/dashboard/WidgetWrapper.tsx
+     53      37.0     1.0      167.0         1     components/dashboard/AnalogGauge.tsx
+     43      11.3     5.0       61.7         3     components/dashboard/LogicAnalyzerWidget.tsx
+     79      17.2     4.5      123.8         4     components/dashboard/OscilloscopeWidget.tsx
+     30       5.2     1.0       21.0         4     components/dashboard/WidgetLibrary.tsx
+    140       5.3     2.0       25.2        26     components/inventory/InventoryItem.tsx
+     56       8.8     2.0       51.7         6     components/inventory/inventoryUtils.ts
+    165      13.8     3.3       84.4        12     components/inventory/BOMModal.tsx
+    107       8.4     1.6       31.4        14     components/inventory/MacroPanel.tsx
+    122       5.8     1.9       28.5        17     components/inventory/InventoryList.tsx
+    192       8.2     1.8       37.1        26     components/settings/ProfileSettings.tsx
+    147       8.9     1.7       39.7        18     components/settings/SyncPanel.tsx
+    107       9.7     1.5       47.8        12     components/settings/DeveloperPortal.tsx
+     94      15.8     2.7       72.7         6     components/settings/ConfigPortal.tsx
+     94       7.4     1.0       26.0        14     components/settings/LocalizationSettings.tsx
+     67       8.0     1.9       36.7         9     components/settings/DiagnosticsView.tsx
+     93      18.4     4.6       86.6         5     components/settings/PartsManager.tsx
+     92      23.0     7.0      102.2         4     components/auth/Gatekeeper.tsx
+     20       5.0     3.0       39.5         2     components/auth/PermissionGuard.tsx
+     71      16.5     9.5      101.8         4     components/diagram/parts/FzpzVisual.tsx
+     46       8.8     1.8       67.6         5     components/diagram/parts/Breadboard.tsx
+     60      16.0     3.0       82.3         3     components/diagram/wiring/BezierWire.tsx
+   1438      17.2     6.2      154.1        83     components/diagram/Diagram3DView.tsx
+    544       4.2     1.7       27.4        21     components/diagram/componentShapes.ts
+     69       9.0     2.7       56.9         7     components/diagram/NeuralCursor.tsx
+     85       3.8     1.2       18.6        27     components/diagram/DiffOverlay.tsx
+     49      41.0     1.0      214.0         1     components/diagram/RemoteCursor.tsx
+     24       0.0     0.0        0.0         0     components/diagram/index.ts
+     44      37.0     1.0      176.0         1     components/diagram/MismatchMarker.tsx
+     45      18.0     6.0      175.0         2     components/diagram/diagramUtils.ts
+    100      20.0     2.8       93.0         5     components/diagram/TacticalHUD.tsx
+     89       1.0     1.0        3.0         2     components/diagram/Wire.tsx
+    270       3.5     7.2       31.7        11     components/diagram/DiagramNode.tsx
+    161      31.7     7.7      195.7         3     components/diagram/diagramState.ts
+     72      11.7     1.0       49.8         6     components/diagram/ConflictResolver.tsx
+    100       8.2     2.7       47.5        12     components/diagram/PredictiveGhost.tsx
+    441      11.0     3.0       40.7        42     components/ChatMessage.tsx
+    270       8.8     2.7       39.2        32     components/ConversationSwitcher.tsx
+    856      10.5     5.1       66.2        84     components/MainLayout.tsx
+     43       0.0     0.0        0.0         0     components/IconButton.tsx
+   1236      10.8     3.0       47.4       123     components/ComponentEditorModal.tsx
+     91       3.7     1.0       16.7         3     components/ErrorBoundary.tsx
+    939      21.1     2.3       48.8        43     components/SettingsPanel.tsx
+    802       3.9     1.7       19.4        37     components/ChatPanel.tsx
+    861       9.2     3.1       50.9       102     components/Inventory.tsx
+    327      11.1     5.5       92.6        27     components/ThreeViewer.tsx
+    114      18.2     2.3       84.2         6     components/AssistantSidebar.tsx
+   1223       7.0     3.5       51.8       192     components/DiagramCanvas.tsx
+
+===========================================================================================================
+!!!! Warnings (cyclomatic_complexity > 15 or length > 1000 or nloc > 1000000 or parameter_count > 100) !!!!
+================================================
+  NLOC    CCN   token  PARAM  length  location  
+------------------------------------------------
+      50     17    216      0      58 SimControls@9-66@components/layout/SimControls.tsx
+     119     21    651      0     129 DebugWorkbench@6-134@components/layout/DebugWorkbench.tsx
+      86     19    470      0      93 OmniSearch@11-103@components/layout/OmniSearch.tsx
+      48     21    207      0      54 AppLayout@21-74@components/layout/AppLayout.tsx
+     113     27    616      0     120 InventoryItem@30-149@components/inventory/InventoryItem.tsx
+     154     29   1000      0     170 BOMModal@14-183@components/inventory/BOMModal.tsx
+      82     17    450      0      91 InventoryList@45-135@components/inventory/InventoryList.tsx
+     189     23    940      0     204 ProfileSettings@5-208@components/settings/ProfileSettings.tsx
+      88     19    429      0     101 PartsManager@12-112@components/settings/PartsManager.tsx
+      89     25    406      0      96 Gatekeeper@5-100@components/auth/Gatekeeper.tsx
+      63     35    404      0      84 FzpzVisual@17-100@components/diagram/parts/FzpzVisual.tsx
+      55     53    598      0      74 getPinCoordinates@84-157@components/diagram/Diagram3DView.tsx
+      90     97    864      0     110 createComponentAtLOD@649-758@components/diagram/Diagram3DView.tsx
+      10     21     92      0      10 getWireColor@1203-1212@components/diagram/Diagram3DView.tsx
+     531    181   4421      0     708 (anonymous)@1237-1944@components/diagram/Diagram3DView.tsx
+      28     69    319      0      42 getPinColor@40-81@components/diagram/DiagramNode.tsx
+      93     21    558      1     118 clampZoom@91-208@components/diagram/diagramState.ts
+      88     21    555      0      99 PredictiveGhost@18-116@components/diagram/PredictiveGhost.tsx
+     423     84   1662      0     443 ChatMessage@33-475@components/ChatMessage.tsx
+     252     55   1215      0     276 ConversationSwitcher@31-306@components/ConversationSwitcher.tsx
+     803    345   5477      0     946 MainLayoutComponent@67-1012@components/MainLayout.tsx
+    1168    233   5492      0    1238 ComponentEditorModalComponent@80-1317@components/ComponentEditorModal.tsx
+     859     51   1994      0     899 SettingsPanel@102-1000@components/SettingsPanel.tsx
+     837    211   5091      0     946 Inventory@31-976@components/Inventory.tsx
+      18     19    130      0      18 disposeObject@28-45@components/ThreeViewer.tsx
+      70     25    583      0      70 (anonymous)@104-173@components/ThreeViewer.tsx
+      94     35    936      0      97 (anonymous)@175-271@components/ThreeViewer.tsx
+      12     35    201      0      18 resolveWireColor@81-98@components/DiagramCanvas.tsx
+    1139    441   9466      0    1262 DiagramCanvasRenderer@113-1374@components/DiagramCanvas.tsx
+==========================================================================================
+Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
+------------------------------------------------------------------------------------------
+     14855       9.4     3.0       52.9     1324           29      0.02    0.61

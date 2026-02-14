@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify';
 import { ElectronicComponent } from '../../../types';
 import { partStorageService } from '../../../services/partStorageService';
 import { FzpzLoader } from '../../../services/fzpzLoader';
+import { FOOTPRINT_CANVAS_SCALE } from '../componentShapes';
 
 interface FzpzVisualProps {
   component: ElectronicComponent;
@@ -61,8 +62,8 @@ export const FzpzVisual: React.FC<FzpzVisualProps> = ({ component }) => {
   if (!svgContent) {
     return (
       <rect 
-        width={component.footprint?.width || 50} 
-        height={component.footprint?.height || 50} 
+        width={component.footprint ? component.footprint.width * FOOTPRINT_CANVAS_SCALE : 50} 
+        height={component.footprint ? component.footprint.height * FOOTPRINT_CANVAS_SCALE : 50} 
         fill="#333" 
         stroke="#666" 
         strokeWidth="1"
@@ -88,12 +89,22 @@ export const FzpzVisual: React.FC<FzpzVisualProps> = ({ component }) => {
     FORBID_ATTR: ['onclick', 'onload', 'onerror', 'onmouseover']
   });
 
-  const width = component.footprint?.width || 10;
-  const height = component.footprint?.height || 10;
+  const width = component.footprint ? component.footprint.width * FOOTPRINT_CANVAS_SCALE : 10;
+  const height = component.footprint ? component.footprint.height * FOOTPRINT_CANVAS_SCALE : 10;
+  const viewBoxParts = viewBox.split(/\s+/);
+  const vbWidthRaw = viewBoxParts[2];
+  const vbHeightRaw = viewBoxParts[3];
+  const vbWidth = Number(vbWidthRaw);
+  const vbHeight = Number(vbHeightRaw);
+
+  const hasValidViewBox = Number.isFinite(vbWidth) && Number.isFinite(vbHeight) && vbWidth > 0 && vbHeight > 0;
+  const scaleX = hasValidViewBox ? width / vbWidth : 1;
+  const scaleY = hasValidViewBox ? height / vbHeight : 1;
 
   return (
     <g
       className="fzpz-content"
+      transform={hasValidViewBox ? `scale(${scaleX} ${scaleY})` : undefined}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   );

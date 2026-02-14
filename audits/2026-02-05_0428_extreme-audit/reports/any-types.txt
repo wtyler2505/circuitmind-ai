@@ -1,0 +1,17 @@
+contexts/DashboardContext.tsx:15:  props?: any;
+hooks/useConversations.ts:155:  const createConversation = useCallback(async (isPrimaryArg: any = false): Promise<string> => {
+hooks/useNeuralLink.ts:89:    } catch (e: any) {
+services/__tests__/storageSanitization.test.ts:9:    const circular: any = { name: 'root' };
+services/__tests__/userProfileService.test.ts:9:    put: (val: any) => {
+services/__tests__/componentValidator.test.ts:30:const createDiagram = (components: ElectronicComponent[] = [], connections: any[] = []): WiringDiagram => ({
+services/gemini/features/media.ts:118:    const config: any = {
+services/gemini/features/predictions.ts:28:    return parsed.map((p: any) => ({
+services/gemini/features/components.ts:305:  let deepSpec: any = null;
+services/gemini/features/components.ts:367:          let imagePart: any = null;
+services/fzpzLoader.ts:160:    connectorArray.forEach((c: any) => {
+services/liveAudio.ts:216:          const mediaParts: any[] = [];
+services/componentValidator.ts:483:  model: any, // Three.js Object3D (as JSON or instance)
+services/datasheetProcessor.ts:41:  validateMetadata(data: any): data is ScrapedMetadata {
+services/gesture/GestureEngine.ts:10:  handedness: any[][];
+services/standardsService.ts:22:    params?: any;
+services/storage.ts:100:          const pruned = inv.map((item: any) => ({

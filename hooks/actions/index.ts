@@ -4,6 +4,7 @@ import * as canvas from './canvasHandlers';
 import * as nav from './navHandlers';
 import * as diagram from './diagramHandlers';
 import * as app from './appControlHandlers';
+import * as inventory from './inventoryHandlers';
 
 export * from './types';
 
@@ -30,10 +31,16 @@ export const actionHandlers: Partial<Record<ActionType, ActionHandler<any>>> = {
 
   // Diagram mutation actions
   addComponent: diagram.addComponent,
+  updateComponent: diagram.updateComponent,
   removeComponent: diagram.removeComponent,
   clearCanvas: diagram.clearCanvas,
   createConnection: diagram.createConnection,
   removeConnection: diagram.removeConnection,
+
+  // Inventory mutation actions
+  addInventoryPart: inventory.addInventoryPart,
+  updateInventoryPart: inventory.updateInventoryPart,
+  removeInventoryPart: inventory.removeInventoryPart,
   
   // App Control (God Mode)
   undo: app.handleUndo,

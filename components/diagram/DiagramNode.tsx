@@ -1,7 +1,14 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElectronicComponent } from '../../types';
-import { getComponentShape, calculatePinPositions, COLORS, type ComponentShape } from './componentShapes';
+import {
+  getComponentShape,
+  calculatePinPositions,
+  COLORS,
+  FOOTPRINT_CANVAS_SCALE,
+  type ComponentShape,
+} from './componentShapes';
+import type { PinSide } from './diagramUtils';
 import { useTelemetry } from '../../contexts/TelemetryContext';
 import { useSimulation } from '../../contexts/SimulationContext';
 import { BreadboardVisual } from './parts/Breadboard';
@@ -28,7 +35,7 @@ interface DiagramNodeProps {
   onContextMenu?: (componentId: string, x: number, y: number) => void;
   onDoubleClick?: (component: ElectronicComponent) => void;
   onNudge?: (componentId: string, dx: number, dy: number) => void;
-  onPinPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, isRightSide: boolean) => void;
+  onPinPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, pinSide: PinSide) => void;
   onPinPointerUp: (e: React.PointerEvent, nodeId: string, pin: string) => void;
   onMouseEnter?: (e: React.MouseEvent, component: ElectronicComponent) => void;
   onMouseLeave?: (e: React.MouseEvent, component: ElectronicComponent) => void;
@@ -180,9 +187,9 @@ interface PinProps {
   x: number;
   y: number;
   nodeId: string;
-  isRightSide: boolean;
+  pinSide: PinSide;
   shape: ComponentShape;
-  onPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, isRightSide: boolean) => void;
+  onPointerDown: (e: React.PointerEvent, nodeId: string, pin: string, pinSide: PinSide) => void;
   onPointerUp: (e: React.PointerEvent, nodeId: string, pin: string) => void;
   onMouseEnter?: (e: React.MouseEvent, nodeId: string, pin: string) => void;
   onMouseLeave?: (e: React.MouseEvent, nodeId: string, pin: string) => void;
@@ -193,16 +200,18 @@ const Pin = memo<PinProps>(function Pin({
   x,
   y,
   nodeId,
-  isRightSide,
+  pinSide,
   shape,
   onPointerDown,
   onPointerUp,
   onMouseEnter,
   onMouseLeave,
 }) {
+  const isRightSide = pinSide === 'right';
+
   const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => onPointerDown(e, nodeId, pin, isRightSide),
-    [onPointerDown, nodeId, pin, isRightSide]
+    (e: React.PointerEvent) => onPointerDown(e, nodeId, pin, pinSide),
+    [onPointerDown, nodeId, pin, pinSide]
   );
 
   const handlePointerUp = useCallback(
@@ -743,8 +752,8 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
     if (component.footprint) {
       return {
         ...base,
-        width: component.footprint.width,
-        height: component.footprint.height
+        width: component.footprint.width * FOOTPRINT_CANVAS_SCALE,
+        height: component.footprint.height * FOOTPRINT_CANVAS_SCALE,
       };
     }
     return base;
@@ -1006,7 +1015,7 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
             x={pinDef.x}
             y={pinDef.y}
             nodeId={component.id}
-            isRightSide={pinDef.side === 'right'}
+            pinSide={pinDef.side}
             shape={shape}
             onPointerDown={onPinPointerDown}
             onPointerUp={onPinPointerUp}

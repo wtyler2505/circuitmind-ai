@@ -10,7 +10,7 @@ import React, {
   Suspense,
 } from 'react';
 import { WiringDiagram, ElectronicComponent } from '../types';
-import { COMPONENT_WIDTH, COMPONENT_HEIGHT } from './diagram';
+import { resolveComponentBounds } from './diagram';
 
 const Diagram3DView = lazy(() => import('./diagram/Diagram3DView'));
 import { diagramReducer, INITIAL_STATE } from './diagram/diagramState';
@@ -237,8 +237,10 @@ const DiagramCanvasRenderer = ({
       if (pos && containerRef.current) {
         if (targetZoom) dispatch({ type: 'SET_ZOOM', payload: targetZoom });
         const z = targetZoom ?? state.zoom;
-        const x = containerRef.current.clientWidth / 2 - (pos.x + COMPONENT_WIDTH / 2) * z;
-        const y = containerRef.current.clientHeight / 2 - (pos.y + COMPONENT_HEIGHT / 2) * z;
+        const component = diagram?.components.find((candidate) => candidate.id === componentId);
+        const bounds = resolveComponentBounds(component);
+        const x = containerRef.current.clientWidth / 2 - (pos.x + bounds.width / 2) * z;
+        const y = containerRef.current.clientHeight / 2 - (pos.y + bounds.height / 2) * z;
         dispatch({ type: 'SET_PAN', payload: { x, y } });
       }
     },

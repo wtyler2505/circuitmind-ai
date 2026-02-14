@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import type { ElectronicComponent } from '../../../types';
+import { resolveComponentBounds, resolvePinEndpointWithFallback } from '../diagramUtils';
 
 // ============================================================================
 // PIN COORDINATES - Calculate local 3D offset for a specific pin on a component
@@ -99,4 +101,36 @@ export const getPinCoordinates = (
     return getBreadboardPinPosition(pinName, width, depth);
   }
   return getGenericPinPosition(pinName, width, depth);
+};
+
+export interface PinWorldResolveContext {
+  scale: number;
+  offsetX: number;
+  offsetZ: number;
+  baseY?: number;
+}
+
+export const resolvePinWorldPosition = (
+  component: ElectronicComponent | undefined,
+  pinName: string,
+  componentPosition: { x: number; y: number },
+  context: PinWorldResolveContext
+): THREE.Vector3 => {
+  const endpoint = resolvePinEndpointWithFallback(component, pinName, componentPosition, 'bottom');
+  const bounds = resolveComponentBounds(component);
+  const pinYOffset = component
+    ? getPinCoordinates(
+      component.type || 'other',
+      component.name || 'Unknown',
+      pinName,
+      bounds.width * context.scale,
+      bounds.height * context.scale
+    ).y
+    : 2;
+
+  return new THREE.Vector3(
+    endpoint.x * context.scale + context.offsetX,
+    (context.baseY ?? 3) + pinYOffset,
+    endpoint.y * context.scale + context.offsetZ
+  );
 };

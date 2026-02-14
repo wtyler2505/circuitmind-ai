@@ -1,7 +1,12 @@
 import { useCallback } from 'react';
 import type { WiringDiagram, WireConnection } from '../types';
 import type { DiagramState, DiagramAction } from '../components/diagram/diagramState';
-import { COMPONENT_WIDTH, COMPONENT_HEIGHT } from '../components/diagram';
+import {
+  calculateWireEndpoints,
+  calculateWireMidpoint,
+  resolvePinEndpointWithFallback,
+} from '../components/diagram';
+import type { PinSide } from '../components/diagram';
 
 interface UseCanvasWiringArgs {
   state: DiagramState;
@@ -20,7 +25,7 @@ export function useCanvasWiring({
     e: React.PointerEvent,
     nodeId: string,
     pin: string,
-    isRightSide: boolean
+    pinSide: PinSide
   ) => {
     e.stopPropagation();
     e.preventDefault();
@@ -28,10 +33,16 @@ export function useCanvasWiring({
     const pos = state.nodePositions.get(nodeId);
     if (!pos) return;
     const startNode = diagram.components.find((n) => n.id === nodeId);
-    const pinIndex = (startNode?.pins || []).indexOf(pin);
-    const pinY = pos.y + 40 + pinIndex * 15;
-    const pinX = isRightSide ? pos.x + COMPONENT_WIDTH : pos.x;
-    dispatch({ type: 'START_WIRE', payload: { startNodeId: nodeId, startPin: pin, startX: pinX, startY: pinY } });
+    const endpoint = resolvePinEndpointWithFallback(startNode, pin, pos, pinSide);
+    dispatch({
+      type: 'START_WIRE',
+      payload: {
+        startNodeId: nodeId,
+        startPin: pin,
+        startX: endpoint.x,
+        startY: endpoint.y,
+      },
+    });
   }, [diagram, state.nodePositions, dispatch]);
 
   const handlePinPointerUp = useCallback((e: React.PointerEvent, nodeId: string, pin: string) => {
@@ -81,31 +92,14 @@ export function useCanvasWiring({
     if (startPos && endPos) {
       const startComp = diagram.components.find(c => c.id === conn.fromComponentId);
       const endComp = diagram.components.find(c => c.id === conn.toComponentId);
-      let x1 = startPos.x, y1 = startPos.y;
-      const startPinIdx = (startComp?.pins || []).indexOf(conn.fromPin);
-      if (startPinIdx !== -1) {
-        x1 += endPos.x < startPos.x ? 0 : COMPONENT_WIDTH;
-        y1 += 40 + startPinIdx * 15;
-      } else {
-        x1 += COMPONENT_WIDTH / 2;
-        y1 += COMPONENT_HEIGHT + 10;
-      }
-
-      let x2 = endPos.x, y2 = endPos.y;
-      const endPinIdx = (endComp?.pins || []).indexOf(conn.toPin);
-      if (endPinIdx !== -1) {
-        x2 += endPos.x < startPos.x ? COMPONENT_WIDTH : 0;
-        y2 += 40 + endPinIdx * 15;
-      } else {
-        x2 += COMPONENT_WIDTH / 2;
-        y2 += COMPONENT_HEIGHT + 10;
-      }
+      const endpoints = calculateWireEndpoints(conn, startComp, endComp, startPos, endPos);
+      const midpoint = calculateWireMidpoint(endpoints, conn.path);
       dispatch({
         type: 'START_EDIT_WIRE',
         payload: {
           index,
           description: conn.description || '',
-          position: { x: (x1 + x2) / 2, y: (y1 + y2) / 2 },
+          position: midpoint,
         },
       });
     }

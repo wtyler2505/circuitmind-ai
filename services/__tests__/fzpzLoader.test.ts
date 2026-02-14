@@ -68,4 +68,24 @@ describe('FzpzLoader', () => {
 
     expect(footprint.width).toBe(10);
   });
+
+  it('should derive internal buses for breadboard-style connector names', () => {
+    const loader = FzpzLoader as any;
+    const buses = loader.deriveInternalBuses('Breadboard Large', [
+      'pin_0_0',
+      'pin_0_1',
+      'pin_0_2',
+      'pin_0_5',
+      'pin_0_6',
+      'vcc_top_0',
+      'vcc_top_1',
+      'gnd_top_0',
+      'gnd_top_1',
+    ]) as string[][];
+
+    expect(buses.some((group) => group.includes('pin_0_0') && group.includes('pin_0_2'))).toBe(true);
+    expect(buses.some((group) => group.includes('pin_0_5') && group.includes('pin_0_6'))).toBe(true);
+    expect(buses.some((group) => group.includes('vcc_top_0') && group.includes('vcc_top_1'))).toBe(true);
+    expect(buses.some((group) => group.includes('gnd_top_0') && group.includes('gnd_top_1'))).toBe(true);
+  });
 });

@@ -65,6 +65,11 @@ const ACTION_LABELS: Record<ActionType, { label: string; description: string; ca
     setUserLevel: { label: 'Set Experience', description: 'Adjust AI teaching level', category: 'System' },
     learnFact: { label: 'Learn Fact', description: 'Save user preference/fact', category: 'System' },
     analyzeVisuals: { label: 'Analyze Visuals', description: 'Take canvas snapshot for AI', category: 'System' },
+
+    // Inventory lifecycle actions
+    addInventoryPart: { label: 'Add Inventory Part', description: 'Add a new part to local inventory', category: 'Diagram' },
+    updateInventoryPart: { label: 'Update Inventory Part', description: 'Modify an existing inventory part', category: 'Diagram' },
+    removeInventoryPart: { label: 'Remove Inventory Part', description: 'Delete a part from local inventory', category: 'Diagram' },
   };
 
 const CATEGORIES = ['Canvas', 'Navigation', 'Project', 'Diagram', 'Forms', 'System'] as const;

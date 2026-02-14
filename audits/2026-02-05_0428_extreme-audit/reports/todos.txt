@@ -1,0 +1,1 @@
+components/diagram/wiring/BezierWire.tsx:49:  // TODO: Implement Catmull-Rom or similar for smooth path through arbitrary points.

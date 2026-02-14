@@ -27,6 +27,7 @@ export interface ElectronicComponent {
   fzpzSource?: ArrayBuffer; // Original source if imported
   footprint?: ComponentFootprint;
   internalBuses?: Array<string[]>; // e.g. [['pin1', 'pin2', 'pin3']] for breadboard rails
+  fzpzDiagnostics?: { level: 'warning' | 'error'; code: string; message: string }[];
 }
 
 // Support for complex paths
@@ -119,6 +120,11 @@ export type ActionType =
   | 'clearCanvas'
   | 'createConnection'
   | 'removeConnection'
+
+  // Inventory Part Lifecycle
+  | 'addInventoryPart'
+  | 'updateInventoryPart'
+  | 'removeInventoryPart'
   
   // Forms (Legacy/Specific)
   | 'fillField'
@@ -164,6 +170,11 @@ export const ACTION_SAFETY: Record<ActionType, boolean> = {
   clearCanvas: false,
   createConnection: false,
   removeConnection: false,
+
+  // Inventory - unsafe
+  addInventoryPart: false,
+  updateInventoryPart: false,
+  removeInventoryPart: false,
   
   // Forms - unsafe
   fillField: false,

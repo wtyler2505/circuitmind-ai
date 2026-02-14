@@ -1,0 +1,30 @@
+components/MainLayout.tsx(684,63): error TS2339: Property 'id' does not exist on type 'unknown'.
+components/diagram/Diagram3DView.tsx(1151,3): error TS2741: Property 'isGroup' is missing in type 'InstancedMesh<CylinderGeometry, MeshBasicMaterial, InstancedMeshEventMap>' but required in type 'Group<Object3DEventMap>'.
+components/diagram/index.ts(3,15): error TS2614: Module '"./Wire"' has no exported member 'WireHighlightState'. Did you mean to use 'import WireHighlightState from "./Wire"' instead?
+components/layout/CollaboratorList.tsx(22,16): error TS2345: Argument of type '{ [x: string]: any; }[]' is not assignable to parameter of type 'SetStateAction<PeerState[]>'.
+  Type '{ [x: string]: any; }[]' is not assignable to type 'PeerState[]'.
+    Property 'user' is missing in type '{ [x: string]: any; }' but required in type 'PeerState'.
+components/layout/OmniSearch.tsx(53,69): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'IndexedDocument'.
+  Type '{}' is missing the following properties from type 'IndexedDocument': id, category, title, body
+components/layout/OmniSearch.tsx(70,26): error TS2339: Property 'id' does not exist on type 'unknown'.
+components/layout/OmniSearch.tsx(71,41): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'IndexedDocument'.
+  Type '{}' is missing the following properties from type 'IndexedDocument': id, category, title, body
+components/layout/OmniSearch.tsx(75,23): error TS2339: Property 'category' does not exist on type 'unknown'.
+components/layout/OmniSearch.tsx(77,24): error TS2339: Property 'category' does not exist on type 'unknown'.
+components/layout/OmniSearch.tsx(81,26): error TS2339: Property 'title' does not exist on type 'unknown'.
+components/layout/OmniSearch.tsx(83,92): error TS2339: Property 'body' does not exist on type 'unknown'.
+components/layout/OmniSearch.tsx(86,24): error TS2339: Property 'category' does not exist on type 'unknown'.
+components/layout/ProjectTimeline.tsx(68,32): error TS2339: Property 'oid' does not exist on type 'unknown'.
+components/layout/ProjectTimeline.tsx(75,40): error TS2339: Property 'commit' does not exist on type 'unknown'.
+components/layout/ProjectTimeline.tsx(78,31): error TS2339: Property 'oid' does not exist on type 'unknown'.
+components/layout/ProjectTimeline.tsx(84,31): error TS2339: Property 'commit' does not exist on type 'unknown'.
+components/layout/ProjectTimeline.tsx(89,60): error TS2339: Property 'oid' does not exist on type 'unknown'.
+services/api/apiGateway.ts(37,40): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'ActionIntent'.
+  Type '{}' is missing the following properties from type 'ActionIntent': type, payload, label, safe
+services/liveAudio.ts(309,10): error TS2339: Property 'getCanvasSnapshot' does not exist on type 'LiveSession'.
+services/search/searchIndexer.ts(42,42): error TS2345: Argument of type '{ filter: (res: IndexedDocument) => boolean; }' is not assignable to parameter of type 'SearchOptions'.
+  Types of property 'filter' are incompatible.
+    Type '(res: IndexedDocument) => boolean' is not assignable to type '(result: SearchResult) => boolean'.
+      Types of parameters 'res' and 'result' are incompatible.
+        Type 'SearchResult' is missing the following properties from type 'IndexedDocument': category, title, body
+services/storage.ts(306,36): error TS2339: Property 'id' does not exist on type 'unknown'.

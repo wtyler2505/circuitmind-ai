@@ -2,6 +2,7 @@ import { render, screen, fireEvent, act } from '../../tests/test-utils';
 import { createRef } from 'react';
 import DiagramCanvas, { DiagramCanvasRef } from '../DiagramCanvas';
 import { WiringDiagram, ElectronicComponent } from '../../types';
+import { resolveComponentBounds } from '../diagram/diagramUtils';
 
 // Mock component data
 const mockComponent: ElectronicComponent = {
@@ -11,6 +12,22 @@ const mockComponent: ElectronicComponent = {
   pins: ['5V', 'GND', 'D2', 'D3'],
   description: 'Main controller',
   quantity: 1,
+};
+
+const mockFootprintComponent: ElectronicComponent = {
+  id: 'comp-fzpz',
+  name: 'Scaled FZPZ Part',
+  type: 'other',
+  pins: ['PIN_A', 'PIN_B'],
+  description: 'Footprint-aware component',
+  footprint: {
+    width: 20,
+    height: 10,
+    pins: [
+      { id: 'PIN_A', x: 1, y: 2 },
+      { id: 'PIN_B', x: 19, y: 8 },
+    ],
+  },
 };
 
 const mockComponent2: ElectronicComponent = {
@@ -50,6 +67,13 @@ const diagramWithConnection: WiringDiagram = {
     },
   ],
   explanation: 'LED connected to Arduino',
+};
+
+const diagramWithFootprintComponent: WiringDiagram = {
+  title: 'Footprint Diagram',
+  components: [mockFootprintComponent],
+  connections: [],
+  explanation: 'Contains footprint-aware part',
 };
 
 describe('DiagramCanvas', () => {
@@ -214,6 +238,33 @@ describe('DiagramCanvas', () => {
       act(() => {
         ref.current?.centerOnComponent('comp-1', 1.5);
       });
+    });
+
+    it('centers using resolved component bounds for footprint-scaled parts', () => {
+      const widthSpy = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1000);
+      const heightSpy = vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(800);
+
+      try {
+        const ref = createRef<DiagramCanvasRef>();
+        render(<DiagramCanvas ref={ref} diagram={diagramWithFootprintComponent} {...defaultProps} />);
+
+        const position = ref.current?.getComponentPosition('comp-fzpz');
+        expect(position).toBeDefined();
+        if (!position) throw new Error('Expected comp-fzpz to have an initial position');
+
+        act(() => {
+          ref.current?.centerOnComponent('comp-fzpz', 1);
+        });
+
+        const bounds = resolveComponentBounds(mockFootprintComponent);
+        expect(ref.current?.getPan()).toEqual({
+          x: 500 - (position.x + bounds.width / 2),
+          y: 400 - (position.y + bounds.height / 2),
+        });
+      } finally {
+        widthSpy.mockRestore();
+        heightSpy.mockRestore();
+      }
     });
   });
 

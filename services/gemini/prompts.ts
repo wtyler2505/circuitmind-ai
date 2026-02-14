@@ -216,6 +216,7 @@ ACTION TYPES you can suggest:
 - undo, redo, saveDiagram, loadDiagram
 - addComponent, updateComponent, removeComponent, clearCanvas
 - createConnection, removeConnection
+- addInventoryPart, updateInventoryPart, removeInventoryPart
 - setUserLevel, learnFact, analyzeVisuals
 
 RESPONSE FORMAT (CRITICAL):

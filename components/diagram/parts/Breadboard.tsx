@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { ElectronicComponent } from '../../../types';
+import { FOOTPRINT_CANVAS_SCALE } from '../componentShapes';
 
 interface BreadboardProps {
   component: ElectronicComponent;
@@ -30,10 +30,22 @@ export const BreadboardVisual: React.FC<BreadboardProps> = ({ component }) => {
       // For now, let's assume we render a placeholder or the "God Mode" generated SVG.
       return (
           <g>
-              <rect width={component.footprint.width * 10} height={component.footprint.height * 10} fill="#f5f6f7" stroke="#e2e4e8" />
+              <rect
+                width={component.footprint.width * FOOTPRINT_CANVAS_SCALE}
+                height={component.footprint.height * FOOTPRINT_CANVAS_SCALE}
+                fill="#f5f6f7"
+                stroke="#e2e4e8"
+              />
               {/* Holes */}
               {component.footprint.pins.map(p => (
-                  <rect key={p.id} x={p.x * 10 - 2} y={p.y * 10 - 2} width="4" height="4" fill="#333" />
+                  <rect
+                    key={p.id}
+                    x={p.x * FOOTPRINT_CANVAS_SCALE - 2}
+                    y={p.y * FOOTPRINT_CANVAS_SCALE - 2}
+                    width="4"
+                    height="4"
+                    fill="#333"
+                  />
               ))}
           </g>
       );

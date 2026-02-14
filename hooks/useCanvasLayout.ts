@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import type { WiringDiagram, ElectronicComponent } from '../types';
 import type { DiagramState, DiagramAction } from '../components/diagram/diagramState';
-import { COMPONENT_WIDTH, COMPONENT_HEIGHT } from '../components/diagram';
+import { resolveComponentBounds } from '../components/diagram';
 
 const VIRTUALIZATION_THRESHOLD = 100;
 const VIEWPORT_PADDING = 240;
@@ -118,8 +118,9 @@ export function useCanvasLayout({
       dispatch({ type: 'SET_HOVERED_NODE', payload: foundNode.id });
       const pos = state.nodePositions.get(foundNode.id);
       if (pos && containerRef.current) {
-        const x = containerRef.current.clientWidth / 2 - (pos.x + COMPONENT_WIDTH / 2) * state.zoom;
-        const y = containerRef.current.clientHeight / 2 - (pos.y + COMPONENT_HEIGHT / 2) * state.zoom;
+        const bounds = resolveComponentBounds(foundNode);
+        const x = containerRef.current.clientWidth / 2 - (pos.x + bounds.width / 2) * state.zoom;
+        const y = containerRef.current.clientHeight / 2 - (pos.y + bounds.height / 2) * state.zoom;
         dispatch({ type: 'SET_PAN', payload: { x, y } });
       }
     }
@@ -133,10 +134,11 @@ export function useCanvasLayout({
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     filteredComponents.forEach((c) => {
       const pos = state.nodePositions.get(c.id) || { x: 0, y: 0 };
+      const bounds = resolveComponentBounds(c);
       minX = Math.min(minX, pos.x);
       minY = Math.min(minY, pos.y);
-      maxX = Math.max(maxX, pos.x + COMPONENT_WIDTH);
-      maxY = Math.max(maxY, pos.y + COMPONENT_HEIGHT);
+      maxX = Math.max(maxX, pos.x + bounds.width);
+      maxY = Math.max(maxY, pos.y + bounds.height);
     });
     const padding = 50;
     return {
@@ -169,8 +171,9 @@ export function useCanvasLayout({
     return filteredComponents.filter((comp) => {
       const pos = state.nodePositions.get(comp.id);
       if (!pos) return true;
-      const right = pos.x + COMPONENT_WIDTH;
-      const bottom = pos.y + COMPONENT_HEIGHT;
+      const bounds = resolveComponentBounds(comp);
+      const right = pos.x + bounds.width;
+      const bottom = pos.y + bounds.height;
       return (
         right >= viewportBounds.minX &&
         pos.x <= viewportBounds.maxX &&

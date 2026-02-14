@@ -68,6 +68,9 @@ const COLORS = {
   stroke: TOKENS.ui.stroke, // Added for consistency
 };
 
+// Footprint values are stored in 0.1" grid units; convert to canvas pixels.
+export const FOOTPRINT_CANVAS_SCALE = 10;
+
 // ============================================================
 // SVG GRADIENT DEFINITIONS - For realistic 3D depth illusion
 // ============================================================
@@ -624,8 +627,8 @@ export function calculatePinPositions(
   if (component?.footprint?.pins) {
     return component.footprint.pins.map(p => ({
       name: p.id,
-      x: p.x,
-      y: p.y,
+      x: p.x * FOOTPRINT_CANVAS_SCALE,
+      y: p.y * FOOTPRINT_CANVAS_SCALE,
       side: p.x < component.footprint!.width / 2 ? 'left' : 'right' // Heuristic for side
     }));
   }

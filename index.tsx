@@ -67,24 +67,41 @@ class GlobalErrorBoundary extends Component<GlobalErrorBoundaryProps, GlobalErro
 
 // Development-only accessibility auditing with axe-core
 if (import.meta.env.DEV) {
-  import('axe-core').then((axe) => {
-    const runAxe = () => {
-      axe.default.run(document.body, { reporter: 'v2' }).then((results) => {
-        if (results.violations.length > 0) {
-          console.groupCollapsed(
-            `%c[axe] ${results.violations.length} accessibility violation(s)`,
-            'color: #ff6b6b; font-weight: bold'
-          );
-          results.violations.forEach((v) => {
-            console.warn(`[${v.impact}] ${v.help}`, v.helpUrl, v.nodes);
-          });
-          console.groupEnd();
-        }
-      });
-    };
-    // Run after initial render settles
-    setTimeout(runAxe, 2000);
-  });
+  type DevAxeWindow = Window & {
+    __CM_AXE_SCHEDULED__?: boolean;
+    requestIdleCallback?: (cb: () => void, options?: { timeout?: number }) => number;
+  };
+
+  const query = new URLSearchParams(window.location.search);
+  const axeEnabled = query.get('axe') === '1' || window.localStorage.getItem('CM_RUN_AXE') === '1';
+  const win = window as DevAxeWindow;
+  if (axeEnabled && !win.__CM_AXE_SCHEDULED__) {
+    win.__CM_AXE_SCHEDULED__ = true;
+    import('axe-core').then((axe) => {
+      const runAxe = () => {
+        axe.default.run(document.body, { reporter: 'v2' }).then((results) => {
+          if (results.violations.length > 0) {
+            console.groupCollapsed(
+              `%c[axe] ${results.violations.length} accessibility violation(s)`,
+              'color: #ff6b6b; font-weight: bold'
+            );
+            results.violations.forEach((v) => {
+              console.warn(`[${v.impact}] ${v.help}`, v.helpUrl, v.nodes);
+            });
+            console.groupEnd();
+          }
+        });
+      };
+
+      const requestIdle = win.requestIdleCallback;
+
+      if (requestIdle) {
+        requestIdle(() => runAxe(), { timeout: 4000 });
+      } else {
+        setTimeout(runAxe, 2500);
+      }
+    });
+  }
 }
 
 const rootElement = document.getElementById('root');

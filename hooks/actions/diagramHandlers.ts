@@ -13,6 +13,12 @@ interface RemoveComponentPayload {
   componentId: string;
 }
 
+interface UpdateComponentPayload {
+  componentId: string;
+  updates?: Partial<ElectronicComponent>;
+  component?: Partial<ElectronicComponent>;
+}
+
 interface CreateConnectionPayload {
   fromComponentId: string;
   fromPin: string;
@@ -62,6 +68,50 @@ export async function addComponent(
   if (x !== undefined && y !== undefined) {
     canvasRef.current?.setComponentPosition(newComponent.id, x, y);
   }
+
+  await recordUndo(undoRecord);
+  return { success: true };
+}
+
+export async function updateComponent(
+  payload: UpdateComponentPayload,
+  context: ActionContext
+): Promise<HandlerResult> {
+  const { componentId, updates, component } = payload;
+  const { diagram, updateDiagram, activeConversationId, recordUndo } = context;
+
+  if (!diagram) {
+    return { success: false, error: 'No active diagram' };
+  }
+
+  if (!componentId) {
+    return { success: false, error: 'Missing componentId' };
+  }
+
+  const target = diagram.components.find((c) => c.id === componentId);
+  if (!target) {
+    return { success: false, error: 'Component not found in diagram' };
+  }
+
+  const patch = updates || component || {};
+  if (Object.keys(patch).length === 0) {
+    return { success: false, error: 'No update fields provided' };
+  }
+
+  const undoRecord: ActionRecord = {
+    id: generateId(),
+    timestamp: Date.now(),
+    type: 'updateComponent',
+    payload: { componentId, patch },
+    conversationId: activeConversationId || undefined,
+    undoable: true,
+    snapshotBefore: JSON.parse(JSON.stringify(diagram)),
+  };
+
+  updateDiagram({
+    ...diagram,
+    components: diagram.components.map((c) => (c.id === componentId ? { ...c, ...patch } : c)),
+  });
 
   await recordUndo(undoRecord);
   return { success: true };
@@ -160,6 +210,11 @@ export async function removeConnection(
     undoable: true,
     snapshotBefore: JSON.parse(JSON.stringify(diagram)),
   };
+
+  updateDiagram({
+    ...diagram,
+    connections: diagram.connections.filter((_, i) => i !== wireIndex),
+  });
 
   await recordUndo(undoRecord);
   return { success: true };

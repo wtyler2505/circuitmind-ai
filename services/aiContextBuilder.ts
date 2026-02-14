@@ -227,6 +227,11 @@ export function buildDetailedDiagramContext(diagram: WiringDiagram): string {
   sections.push('## Components');
   diagram.components.forEach((comp, idx) => {
     sections.push(`${idx + 1}. **${comp.name}** (${comp.type})`);
+
+    if (comp.footprint) {
+      sections.push(`   Footprint: ${comp.footprint.width} x ${comp.footprint.height}`);
+      sections.push(`   Connectors: ${comp.footprint.pins.length}`);
+    }
     
     // FZPZ Metadata
     if (comp.footprint?.pins) {
@@ -238,6 +243,15 @@ export function buildDetailedDiagramContext(diagram: WiringDiagram): string {
 
     if (comp.description) {
       sections.push(`   ${comp.description.substring(0, 150)}`);
+    }
+
+    if (comp.internalBuses && comp.internalBuses.length > 0) {
+      const busPreview = comp.internalBuses
+        .slice(0, 3)
+        .map((bus) => `[${bus.join(', ')}]`)
+        .join('; ');
+      const more = comp.internalBuses.length > 3 ? ` (+${comp.internalBuses.length - 3} more)` : '';
+      sections.push(`   Internal Buses: ${busPreview}${more}`);
     }
   });
 

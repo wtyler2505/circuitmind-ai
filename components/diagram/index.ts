@@ -1,5 +1,15 @@
 export { default as Wire } from './Wire';
-export { getSmartPath, calculateWireEndpoints, COMPONENT_WIDTH, COMPONENT_HEIGHT } from './diagramUtils';
+export {
+  getSmartPath,
+  calculateWireEndpoints,
+  calculateWireMidpoint,
+  resolvePinEndpoint,
+  resolvePinEndpointWithFallback,
+  resolveComponentBounds,
+  COMPONENT_WIDTH,
+  COMPONENT_HEIGHT,
+} from './diagramUtils';
+export type { PinSide } from './diagramUtils';
 export type { WireHighlightState } from './Wire';
 
 export { default as DiagramNode } from './DiagramNode';

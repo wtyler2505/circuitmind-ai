@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hoverboard Motor Wiring Playground</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--panel:#111118;--border:#1e1e2e;--text:#c8c8d4;
+  --accent:#00d4ff;--warn:#ff6b35;--danger:#ff3355;--success:#33ff99;
+  --motor36:#ff9500;--motor25:#9b59b6;--batt36:#e74c3c;--batt25:#8e44ad;
+  --arduino:#0066cc;--esp32:#2ecc71;--buck:#f1c40f;--ctrl:#e67e22;
+  --phase-y:#ffd700;--phase-b:#4169e1;--phase-g:#32cd32;
+  --font:system-ui,-apple-system,sans-serif;--mono:'SF Mono',Consolas,monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font:13px/1.4 var(--font)}
+#app{display:grid;grid-template-columns:320px 1fr 340px;grid-template-rows:1fr 180px;height:100vh;gap:1px;background:var(--border)}
+#guide-panel{grid-row:1/2;background:var(--panel);overflow-y:auto;display:flex;flex-direction:column}
+#viewport{grid-row:1/2;background:#050510;position:relative}
+#inspector{grid-row:1/2;background:var(--panel);overflow-y:auto}
+#prompt-bar{grid-column:1/-1;background:var(--panel);display:flex;flex-direction:column;border-top:1px solid var(--border)}
+canvas{display:block}
+h1{font-size:15px;padding:12px 16px;border-bottom:1px solid var(--border);color:var(--accent);letter-spacing:.5px}
+h2{font-size:13px;color:var(--accent);margin:0 0 8px;text-transform:uppercase;letter-spacing:.8px}
+h3{font-size:12px;color:#999;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+.panel-body{padding:12px 16px;flex:1}
+.step{padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.step:hover{border-color:#333;background:#151520}
+.step.active{border-color:var(--accent);background:#0a1525;box-shadow:0 0 12px rgba(0,212,255,.15)}
+.step.done{border-color:var(--success);opacity:.7}
+.step-num{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--border);color:#666;text-align:center;line-height:22px;font-size:11px;font-weight:700;margin-right:8px}
+.step.active .step-num{background:var(--accent);color:#000}
+.step.done .step-num{background:var(--success);color:#000}
+.step-title{font-weight:600;font-size:12px}
+.step-desc{font-size:11px;color:#777;margin-top:4px;line-height:1.5}
+.step-safety{font-size:11px;color:var(--warn);margin-top:4px;padding:4px 8px;background:rgba(255,107,53,.08);border-radius:4px}
+.step-nav{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)}
+.step-nav button{flex:1;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--panel);color:var(--text);cursor:pointer;font-size:12px;transition:all .2s}
+.step-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.step-nav button:disabled{opacity:.3;cursor:default}
+#inspector h1{color:var(--warn)}
+.spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.spec-item{padding:6px 8px;background:#0a0a14;border-radius:4px}
+.spec-label{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.3px}
+.spec-value{font-size:13px;font-weight:600;margin-top:2px}
+.pin-list{font-size:11px;line-height:1.8}
+.pin-list .pin{display:flex;align-items:center;gap:6px;padding:2px 0}
+.pin-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.wire-trace{padding:6px 8px;margin:4px 0;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid transparent;transition:all .2s}
+.wire-trace:hover{border-color:var(--accent);background:#0a1525}
+.wire-trace.highlighted{border-color:var(--accent);background:#0a1525}
+.safety-panel{margin-top:12px}
+.safety-item{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:4px 0;border-radius:4px;font-size:11px}
+.safety-ok{background:rgba(51,255,153,.06);color:var(--success)}
+.safety-warn{background:rgba(255,107,53,.08);color:var(--warn)}
+.safety-danger{background:rgba(255,51,85,.08);color:var(--danger)}
+.safety-icon{font-size:14px}
+#prompt-bar{padding:12px 16px}
+#prompt-bar .prompt-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#prompt-bar .prompt-header h2{margin:0}
+#prompt-text{font:12px/1.6 var(--mono);color:#999;overflow-y:auto;flex:1;white-space:pre-wrap}
+.copy-btn{padding:6px 14px;border:1px solid var(--accent);border-radius:4px;background:transparent;color:var(--accent);cursor:pointer;font-size:11px;transition:all .2s}
+.copy-btn:hover{background:var(--accent);color:#000}
+.copy-btn.copied{background:var(--success);border-color:var(--success);color:#000}
+#viewport-overlay{position:absolute;top:12px;left:12px;display:flex;gap:8px;z-index:10}
+.view-btn{padding:5px 10px;border:1px solid var(--border);border-radius:4px;background:rgba(17,17,24,.8);color:#888;cursor:pointer;font-size:11px;backdrop-filter:blur(8px);transition:all .2s}
+.view-btn:hover,.view-btn.active{border-color:var(--accent);color:var(--accent)}
+#viewport-info{position:absolute;bottom:12px;left:12px;font-size:11px;color:#555;z-index:10}
+.legend{position:absolute;top:12px;right:12px;z-index:10;background:rgba(17,17,24,.85);border:1px solid var(--border);border-radius:6px;padding:10px 12px;backdrop-filter:blur(8px)}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;color:#888;padding:2px 0}
+.legend-color{width:20px;height:3px;border-radius:2px}
+.tab-bar{display:flex;border-bottom:1px solid var(--border)}
+.tab{flex:1;padding:8px;text-align:center;font-size:11px;color:#666;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:#999}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#222;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#333}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="guide-panel">
+  <h1>WIRING GUIDE</h1>
+  <div class="panel-body" id="steps-container"></div>
+  <div class="step-nav">
+    <button id="prev-btn" disabled onclick="prevStep()">Previous</button>
+    <button id="next-btn" onclick="nextStep()">Next Step</button>
+  </div>
+</div>
+
+<div id="viewport">
+  <div id="viewport-overlay">
+    <button class="view-btn active" onclick="setView('perspective', this)">3D</button>
+    <button class="view-btn" onclick="setView('top', this)">Top</button>
+    <button class="view-btn" onclick="setView('front', this)">Front</button>
+    <button class="view-btn" onclick="setView('wiring', this)">Wiring</button>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div id="viewport-info">Click component to inspect | Scroll to zoom | Drag to rotate</div>
+</div>
+
+<div id="inspector">
+  <h1>INSPECTOR</h1>
+  <div class="tab-bar">
+    <div class="tab active" onclick="showTab('comp-tab',this)">Component</div>
+    <div class="tab" onclick="showTab('wire-tab',this)">Wires</div>
+    <div class="tab" onclick="showTab('safety-tab',this)">Safety</div>
+  </div>
+  <div class="tab-content active" id="comp-tab">
+    <div class="panel-body" id="comp-info">
+      <p style="color:#555;font-style:italic;margin-top:20px">Click a component in the 3D view to inspect its specifications, pinout, and connections.</p>
+    </div>
+  </div>
+  <div class="tab-content" id="wire-tab">
+    <div class="panel-body" id="wire-list"></div>
+  </div>
+  <div class="tab-content" id="safety-tab">
+    <div class="panel-body" id="safety-list"></div>
+  </div>
+</div>
+
+<div id="prompt-bar">
+  <div class="prompt-header">
+    <h2>Wiring Summary</h2>
+    <button class="copy-btn" onclick="copyPrompt()">Copy</button>
+  </div>
+  <div id="prompt-text">Complete the wiring steps above to generate a full wiring summary...</div>
+</div>
+
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ─── COMPONENT DATABASE ─────────────────────────────────────────────
+const COMPONENTS = {
+  motor36a: {
+    name: 'Hoverboard Motor 36V (Left)',
+    type: 'motor', voltage: 36, category: 'motor36',
+    specs: { 'Voltage': '36V nominal', 'Type': 'BLDC Hub Motor', 'Phases': '3 (Y/B/G)', 'Hall Sensors': '5 wire (R/Bk/Y/B/G)', 'Resistance': '~1-2Ω per phase', 'KV Rating': '~16 RPM/V', 'Source': 'Salvaged hoverboard' },
+    pins: [
+      { name: 'Phase U', color: '#ffd700', wire: 'thick', desc: 'Yellow - Motor phase A' },
+      { name: 'Phase V', color: '#4169e1', wire: 'thick', desc: 'Blue - Motor phase B' },
+      { name: 'Phase W', color: '#32cd32', wire: 'thick', desc: 'Green - Motor phase C' },
+      { name: 'Hall +5V', color: '#ff3333', wire: 'thin', desc: 'Red - Hall sensor power' },
+      { name: 'Hall GND', color: '#333', wire: 'thin', desc: 'Black - Hall sensor ground' },
+      { name: 'Hall U', color: '#ffd700', wire: 'thin', desc: 'Yellow - Hall sensor A' },
+      { name: 'Hall V', color: '#4169e1', wire: 'thin', desc: 'Blue - Hall sensor B' },
+      { name: 'Hall W', color: '#32cd32', wire: 'thin', desc: 'Green - Hall sensor C' }
+    ]
+  },
+  motor36b: {
+    name: 'Hoverboard Motor 36V (Right)',
+    type: 'motor', voltage: 36, category: 'motor36',
+    specs: { 'Voltage': '36V nominal', 'Type': 'BLDC Hub Motor', 'Phases': '3 (Y/B/G)', 'Hall Sensors': '5 wire (R/Bk/Y/B/G)', 'Resistance': '~1-2Ω per phase', 'KV Rating': '~16 RPM/V', 'Source': 'Salvaged hoverboard' },
+    pins: [
+      { name: 'Phase U', color: '#ffd700', wire: 'thick' },
+      { name: 'Phase V', color: '#4169e1', wire: 'thick' },
+      { name: 'Phase W', color: '#32cd32', wire: 'thick' },
+      { name: 'Hall +5V', color: '#ff3333', wire: 'thin' },
+      { name: 'Hall GND', color: '#333', wire: 'thin' },
+      { name: 'Hall U', color: '#ffd700', wire: 'thin' },
+      { name: 'Hall V', color: '#4169e1', wire: 'thin' },
+      { name: 'Hall W', color: '#32cd32', wire: 'thin' }
+    ]
+  },
+  motor25a: {
+    name: 'Hoverboard Motor 25V (Left)',
+    type: 'motor', voltage: 25, category: 'motor25',
+    specs: { 'Voltage': '25V nominal', 'Type': 'BLDC Hub Motor', 'Phases': '3 (Y/B/G)', 'Hall Sensors': '5 wire (R/Bk/Y/B/G)', 'Resistance': '~1-2Ω per phase', 'Source': 'Salvaged hoverboard' },
+    pins: [
+      { name: 'Phase U', color: '#ffd700', wire: 'thick' },
+      { name: 'Phase V', color: '#4169e1', wire: 'thick' },
+      { name: 'Phase W', color: '#32cd32', wire: 'thick' },
+      { name: 'Hall +5V', color: '#ff3333', wire: 'thin' },
+      { name: 'Hall GND', color: '#333', wire: 'thin' },
+      { name: 'Hall U', color: '#ffd700', wire: 'thin' },
+      { name: 'Hall V', color: '#4169e1', wire: 'thin' },
+      { name: 'Hall W', color: '#32cd32', wire: 'thin' }
+    ]
+  },
+  motor25b: {
+    name: 'Hoverboard Motor 25V (Right)',
+    type: 'motor', voltage: 25, category: 'motor25',
+    specs: { 'Voltage': '25V nominal', 'Type': 'BLDC Hub Motor', 'Phases': '3 (Y/B/G)', 'Hall Sensors': '5 wire (R/Bk/Y/B/G)', 'Resistance': '~1-2Ω per phase', 'Source': 'Salvaged hoverboard' },
+    pins: [
+      { name: 'Phase U', color: '#ffd700', wire: 'thick' },
+      { name: 'Phase V', color: '#4169e1', wire: 'thick' },
+      { name: 'Phase W', color: '#32cd32', wire: 'thick' },
+      { name: 'Hall +5V', color: '#ff3333', wire: 'thin' },
+      { name: 'Hall GND', color: '#333', wire: 'thin' },
+      { name: 'Hall U', color: '#ffd700', wire: 'thin' },
+      { name: 'Hall V', color: '#4169e1', wire: 'thin' },
+      { name: 'Hall W', color: '#32cd32', wire: 'thin' }
+    ]
+  },
+  ctrl1: {
+    name: 'RioRand Controller #1 (36V-L)',
+    type: 'controller', category: 'ctrl',
+    specs: { 'Model': 'RioRand BLD-120A', 'Input Voltage': '6-60V DC', 'Max Power': '350W', 'Control': 'Hall sensor (sensored)', 'Speed Input': '0-5V analog or PWM 1-10KHz', 'Direction': 'F/R pin (HIGH=CW)', 'Terminals': 'DC+/DC-, U/V/W, Hall(5), SV/COM/FR' },
+    pins: [
+      { name: 'DC+', color: '#ff3333', desc: 'Power positive (36V)' },
+      { name: 'DC-', color: '#333', desc: 'Power negative (GND)' },
+      { name: 'U', color: '#ffd700', desc: 'Motor phase A output' },
+      { name: 'V', color: '#4169e1', desc: 'Motor phase B output' },
+      { name: 'W', color: '#32cd32', desc: 'Motor phase C output' },
+      { name: '+5V', color: '#ff6666', desc: 'Hall sensor +5V supply' },
+      { name: 'GND', color: '#444', desc: 'Hall sensor ground' },
+      { name: 'HU', color: '#ffd700', desc: 'Hall sensor A input' },
+      { name: 'HV', color: '#4169e1', desc: 'Hall sensor B input' },
+      { name: 'HW', color: '#32cd32', desc: 'Hall sensor C input' },
+      { name: 'SV', color: '#ff9500', desc: 'Speed signal (0-5V / PWM)' },
+      { name: 'COM', color: '#888', desc: 'Signal common/ground' },
+      { name: 'F/R', color: '#9b59b6', desc: 'Direction: HIGH=FWD' }
+    ]
+  },
+  ctrl2: { name: 'RioRand Controller #2 (36V-R)', type: 'controller', category: 'ctrl',
+    specs: { 'Model': 'RioRand BLD-120A', 'Input Voltage': '6-60V DC', 'Max Power': '350W', 'Control': 'Hall sensor (sensored)', 'Speed Input': '0-5V analog or PWM 1-10KHz', 'Direction': 'F/R pin (HIGH=CW)', 'Terminals': 'DC+/DC-, U/V/W, Hall(5), SV/COM/FR' },
+    pins: [
+      { name: 'DC+', color: '#ff3333' }, { name: 'DC-', color: '#333' },
+      { name: 'U', color: '#ffd700' }, { name: 'V', color: '#4169e1' }, { name: 'W', color: '#32cd32' },
+      { name: '+5V', color: '#ff6666' }, { name: 'GND', color: '#444' },
+      { name: 'HU', color: '#ffd700' }, { name: 'HV', color: '#4169e1' }, { name: 'HW', color: '#32cd32' },
+      { name: 'SV', color: '#ff9500' }, { name: 'COM', color: '#888' }, { name: 'F/R', color: '#9b59b6' }
+    ]
+  },
+  ctrl3: { name: 'RioRand Controller #3 (25V-L)', type: 'controller', category: 'ctrl',
+    specs: { 'Model': 'RioRand BLD-120A', 'Input Voltage': '6-60V DC', 'Max Power': '350W', 'Control': 'Hall sensor (sensored)', 'Speed Input': '0-5V analog or PWM 1-10KHz', 'Direction': 'F/R pin (HIGH=CW)' },
+    pins: [
+      { name: 'DC+', color: '#ff3333' }, { name: 'DC-', color: '#333' },
+      { name: 'U', color: '#ffd700' }, { name: 'V', color: '#4169e1' }, { name: 'W', color: '#32cd32' },
+      { name: '+5V', color: '#ff6666' }, { name: 'GND', color: '#444' },
+      { name: 'HU', color: '#ffd700' }, { name: 'HV', color: '#4169e1' }, { name: 'HW', color: '#32cd32' },
+      { name: 'SV', color: '#ff9500' }, { name: 'COM', color: '#888' }, { name: 'F/R', color: '#9b59b6' }
+    ]
+  },
+  ctrl4: { name: 'RioRand Controller #4 (25V-R)', type: 'controller', category: 'ctrl',
+    specs: { 'Model': 'RioRand BLD-120A', 'Input Voltage': '6-60V DC', 'Max Power': '350W', 'Control': 'Hall sensor (sensored)', 'Speed Input': '0-5V analog or PWM 1-10KHz', 'Direction': 'F/R pin (HIGH=CW)' },
+    pins: [
+      { name: 'DC+', color: '#ff3333' }, { name: 'DC-', color: '#333' },
+      { name: 'U', color: '#ffd700' }, { name: 'V', color: '#4169e1' }, { name: 'W', color: '#32cd32' },
+      { name: '+5V', color: '#ff6666' }, { name: 'GND', color: '#444' },
+      { name: 'HU', color: '#ffd700' }, { name: 'HV', color: '#4169e1' }, { name: 'HW', color: '#32cd32' },
+      { name: 'SV', color: '#ff9500' }, { name: 'COM', color: '#888' }, { name: 'F/R', color: '#9b59b6' }
+    ]
+  },
+  arduino: {
+    name: 'Arduino Mega 2560',
+    type: 'mcu', category: 'arduino',
+    specs: { 'MCU': 'ATmega2560', 'Clock': '16 MHz', 'Digital I/O': '54 pins', 'PWM Pins': '15 (pins 2-13, 44-46)', 'Analog In': '16 (A0-A15)', 'Serial': '4x UART', 'Operating V': '5V', 'Input V': '7-12V (VIN)', 'Flash': '256 KB', 'SRAM': '8 KB' },
+    pins: [
+      { name: 'VIN', color: '#ff3333', desc: '7-12V input power' },
+      { name: 'GND', color: '#333', desc: 'Ground' },
+      { name: '5V OUT', color: '#ff6666', desc: '5V regulated output (max 500mA)' },
+      { name: 'D2 (PWM)', color: '#00d4ff', desc: 'PWM → Ctrl #1 speed' },
+      { name: 'D3 (PWM)', color: '#00d4ff', desc: 'PWM → Ctrl #2 speed' },
+      { name: 'D4 (PWM)', color: '#00d4ff', desc: 'PWM → Ctrl #3 speed' },
+      { name: 'D5 (PWM)', color: '#00d4ff', desc: 'PWM → Ctrl #4 speed' },
+      { name: 'D22', color: '#9b59b6', desc: 'Digital → Ctrl #1 F/R' },
+      { name: 'D23', color: '#9b59b6', desc: 'Digital → Ctrl #2 F/R' },
+      { name: 'D24', color: '#9b59b6', desc: 'Digital → Ctrl #3 F/R' },
+      { name: 'D25', color: '#9b59b6', desc: 'Digital → Ctrl #4 F/R' },
+      { name: 'TX1 (18)', color: '#e67e22', desc: 'Serial1 TX → ESP32 RX' },
+      { name: 'RX1 (19)', color: '#e67e22', desc: 'Serial1 RX ← ESP32 TX' }
+    ]
+  },
+  esp32: {
+    name: 'ESP32 NodeMCU-32 (38-pin)',
+    type: 'mcu', category: 'esp32',
+    specs: { 'CPU': 'Xtensa LX6 Dual-Core', 'Clock': '240 MHz', 'WiFi': '802.11 b/g/n', 'Bluetooth': '4.2 + BLE', 'GPIO': '32 usable', 'PWM': '16 channels', 'ADC': '12-bit (18 ch)', 'DAC': '2x 8-bit', 'Operating V': '3.3V logic', 'Power': '5V via VIN or USB' },
+    pins: [
+      { name: 'VIN', color: '#ff3333', desc: '5V input power' },
+      { name: 'GND', color: '#333', desc: 'Ground' },
+      { name: '3V3', color: '#ff6666', desc: '3.3V output' },
+      { name: 'GPIO16 (RX2)', color: '#e67e22', desc: 'Serial2 RX ← Mega TX1' },
+      { name: 'GPIO17 (TX2)', color: '#e67e22', desc: 'Serial2 TX → Mega RX1' }
+    ]
+  },
+  batt36: {
+    name: '36V 4400mAh Li-Ion Battery',
+    type: 'battery', category: 'batt36',
+    specs: { 'Nominal V': '36V (10S)', 'Full Charge': '42V', 'Cutoff': '30V', 'Capacity': '4400 mAh (158.4 Wh)', 'Chemistry': 'Li-Ion 10S', 'Max Discharge': '~15-20A', 'Supplies': '2x 36V motors + Arduino (via buck)' },
+    pins: [
+      { name: 'B+', color: '#ff3333', desc: 'Positive terminal (36-42V)' },
+      { name: 'B-', color: '#333', desc: 'Negative terminal (GND)' }
+    ]
+  },
+  batt25: {
+    name: '25.2V 4Ah Li-Ion Battery',
+    type: 'battery', category: 'batt25',
+    specs: { 'Nominal V': '25.2V (7S)', 'Full Charge': '29.4V', 'Cutoff': '21V', 'Capacity': '4000 mAh (100.8 Wh)', 'Chemistry': 'Li-Ion 7S', 'Max Discharge': '~10-15A', 'Supplies': '2x 25V motors' },
+    pins: [
+      { name: 'B+', color: '#ff3333', desc: 'Positive terminal (25.2-29.4V)' },
+      { name: 'B-', color: '#333', desc: 'Negative terminal (GND)' }
+    ]
+  },
+  buck1: {
+    name: 'LM2596S Buck #1 (→12V for Mega)',
+    type: 'regulator', category: 'buck',
+    specs: { 'IC': 'LM2596S', 'Input Range': '3-40V DC', 'Output': 'Adjustable 1.5-35V', 'Set To': '12V (for Arduino VIN)', 'Max Current': '3A (practical 2A)', 'Efficiency': '~92%', 'Switching': '65 KHz' },
+    pins: [
+      { name: 'IN+', color: '#ff3333', desc: 'Input positive (from 36V battery)' },
+      { name: 'IN-', color: '#333', desc: 'Input negative (GND)' },
+      { name: 'OUT+', color: '#ff9500', desc: 'Output positive (12V adjusted)' },
+      { name: 'OUT-', color: '#444', desc: 'Output negative (GND)' }
+    ]
+  },
+  buck2: {
+    name: 'LM2596S Buck #2 (→5V for ESP32)',
+    type: 'regulator', category: 'buck',
+    specs: { 'IC': 'LM2596S', 'Input Range': '3-40V DC', 'Output': 'Adjustable 1.5-35V', 'Set To': '5V (for ESP32 VIN)', 'Max Current': '3A (practical 2A)', 'Efficiency': '~92%', 'Switching': '65 KHz' },
+    pins: [
+      { name: 'IN+', color: '#ff3333', desc: 'Input positive (from 36V battery)' },
+      { name: 'IN-', color: '#333', desc: 'Input negative (GND)' },
+      { name: 'OUT+', color: '#ff9500', desc: 'Output positive (5V adjusted)' },
+      { name: 'OUT-', color: '#444', desc: 'Output negative (GND)' }
+    ]
+  },
+  breadboard1: {
+    name: 'Breadboard (Signal Bus)',
+    type: 'breadboard', category: 'breadboard',
+    specs: { 'Size': '830 tie-points', 'Use': 'Signal-level connections ONLY', 'Power Rails': '2 (not used for motor power)', 'NOTE': 'NEVER route motor power through breadboard' },
+    pins: []
+  }
+};
+
+// ─── WIRING STEPS ────────────────────────────────────────────────────
+const STEPS = [
+  {
+    title: 'Lay Out Components',
+    desc: 'Position all components on your workbench. Motors on the outer edges, controllers near their paired motors, batteries center-back, MCUs and breadboard center-front.',
+    safety: null,
+    wires: [],
+    highlight: Object.keys(COMPONENTS)
+  },
+  {
+    title: '36V Battery → Controllers #1 & #2',
+    desc: 'Connect the 36V battery B+ (red) to DC+ on controllers #1 and #2. Connect B- (black) to DC- on both. Use 14-16 AWG wire for these high-current connections. Solder or use proper screw terminals — no breadboard.',
+    safety: 'HIGH CURRENT PATH. Use minimum 14 AWG wire. Ensure battery has a fuse or BMS. Check polarity twice before connecting.',
+    wires: ['batt36-ctrl1-power', 'batt36-ctrl2-power'],
+    highlight: ['batt36', 'ctrl1', 'ctrl2']
+  },
+  {
+    title: '25.2V Battery → Controllers #3 & #4',
+    desc: 'Connect the 25.2V battery B+ to DC+ on controllers #3 and #4. Connect B- to DC- on both. Same wire gauge as step 2.',
+    safety: 'HIGH CURRENT PATH. Use minimum 14 AWG wire. Different voltage rail — keep wiring separate from 36V system.',
+    wires: ['batt25-ctrl3-power', 'batt25-ctrl4-power'],
+    highlight: ['batt25', 'ctrl3', 'ctrl4']
+  },
+  {
+    title: '36V Motors → Controllers #1 & #2',
+    desc: 'Connect each 36V motor\'s 3 phase wires to its controller: Yellow→U, Blue→V, Green→W. Use the thick motor wires. If motor spins backward later, swap any two phase wires.',
+    safety: 'Motor phases carry high current. Use proper connectors (XT60/bullet). Incorrect phasing won\'t damage anything — motor will just spin backward or vibrate.',
+    wires: ['motor36a-ctrl1-phase', 'motor36b-ctrl2-phase'],
+    highlight: ['motor36a', 'ctrl1', 'motor36b', 'ctrl2']
+  },
+  {
+    title: '25V Motors → Controllers #3 & #4',
+    desc: 'Same as step 4 but for the 25V motors: Yellow→U, Blue→V, Green→W on controllers #3 and #4.',
+    safety: 'Same precautions as step 4.',
+    wires: ['motor25a-ctrl3-phase', 'motor25b-ctrl4-phase'],
+    highlight: ['motor25a', 'ctrl3', 'motor25b', 'ctrl4']
+  },
+  {
+    title: 'Hall Sensors → Controllers',
+    desc: 'Connect each motor\'s 5 thin hall sensor wires to its controller\'s hall terminals: Red→+5V, Black→GND, Yellow→HU, Blue→HV, Green→HW. These must match — sensor colors paired with phase colors.',
+    safety: 'Low voltage (5V) but critical for commutation. Wrong hall wiring = motor won\'t spin or will jitter violently. Double-check color matching.',
+    wires: ['motor36a-ctrl1-hall', 'motor36b-ctrl2-hall', 'motor25a-ctrl3-hall', 'motor25b-ctrl4-hall'],
+    highlight: ['motor36a', 'ctrl1', 'motor36b', 'ctrl2', 'motor25a', 'ctrl3', 'motor25b', 'ctrl4']
+  },
+  {
+    title: 'Buck #1: 36V → 12V for Arduino',
+    desc: 'Connect 36V battery B+ → Buck #1 IN+, B- → IN-. BEFORE connecting output: Adjust the potentiometer with a multimeter until OUT+ reads 12V. Then connect OUT+ → Arduino VIN, OUT- → Arduino GND.',
+    safety: 'ADJUST VOLTAGE BEFORE CONNECTING. Feeding >20V into Arduino VIN will destroy it. Verify 12V with multimeter first.',
+    wires: ['batt36-buck1', 'buck1-arduino'],
+    highlight: ['batt36', 'buck1', 'arduino']
+  },
+  {
+    title: 'Buck #2: 36V → 5V for ESP32',
+    desc: 'Connect 36V battery B+ → Buck #2 IN+, B- → IN-. Adjust potentiometer to output exactly 5V. Connect OUT+ → ESP32 VIN, OUT- → ESP32 GND.',
+    safety: 'ESP32 is 3.3V logic internally. The VIN pin accepts 5V and regulates down. NEVER feed more than 5V to VIN. Verify with multimeter.',
+    wires: ['batt36-buck2', 'buck2-esp32'],
+    highlight: ['batt36', 'buck2', 'esp32']
+  },
+  {
+    title: 'Common Ground Bus',
+    desc: 'Connect all ground references together on the breadboard power rail: Arduino GND, ESP32 GND, all 4 controller COM pins, Buck #1 OUT-, Buck #2 OUT-. This is essential for signal integrity.',
+    safety: 'Ground loop can cause noise. Use star grounding from a single point if possible. Keep ground wires short.',
+    wires: ['ground-bus'],
+    highlight: ['arduino', 'esp32', 'ctrl1', 'ctrl2', 'ctrl3', 'ctrl4', 'breadboard1']
+  },
+  {
+    title: 'Arduino PWM → Controller Speed Signals',
+    desc: 'On the breadboard, connect: Arduino D2 → Ctrl #1 SV, Arduino D3 → Ctrl #2 SV, Arduino D4 → Ctrl #3 SV, Arduino D5 → Ctrl #4 SV. These PWM signals (490Hz, 0-5V) control motor speed.',
+    safety: 'Signal level only — safe through breadboard. Arduino 5V PWM is compatible with controller 0-5V speed input.',
+    wires: ['arduino-ctrl-speed'],
+    highlight: ['arduino', 'ctrl1', 'ctrl2', 'ctrl3', 'ctrl4', 'breadboard1']
+  },
+  {
+    title: 'Arduino Digital → Controller Direction',
+    desc: 'Connect: Arduino D22 → Ctrl #1 F/R, D23 → Ctrl #2 F/R, D24 → Ctrl #3 F/R, D25 → Ctrl #4 F/R. HIGH = forward, LOW = reverse.',
+    safety: 'Signal level only. Do NOT change direction while motor is spinning at speed — decelerate first.',
+    wires: ['arduino-ctrl-dir'],
+    highlight: ['arduino', 'ctrl1', 'ctrl2', 'ctrl3', 'ctrl4', 'breadboard1']
+  },
+  {
+    title: 'Arduino ↔ ESP32 Serial Link',
+    desc: 'Connect Arduino TX1 (pin 18) → ESP32 GPIO16 (RX2), and ESP32 GPIO17 (TX2) → Arduino RX1 (pin 19). Add a voltage divider (1KΩ + 2KΩ) on the Arduino TX → ESP32 RX line to step 5V down to 3.3V.',
+    safety: 'VOLTAGE DIVIDER REQUIRED on Arduino TX→ESP32 RX. ESP32 GPIO is 3.3V tolerant ONLY. Direct 5V will damage it. Use 1KΩ series + 2KΩ to ground = 3.33V.',
+    wires: ['arduino-esp32-serial'],
+    highlight: ['arduino', 'esp32', 'breadboard1']
+  }
+];
+
+// ─── THREE.JS SCENE ──────────────────────────────────────────────────
+const viewport = document.getElementById('viewport');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050510);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(0, 18, 22);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+viewport.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+viewport.appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.48;
+controls.minDistance = 5;
+controls.maxDistance = 50;
+
+// Lighting
+const ambient = new THREE.AmbientLight(0x334466, 0.6);
+scene.add(ambient);
+const key = new THREE.DirectionalLight(0xffffff, 1.2);
+key.position.set(8, 15, 10);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -20; key.shadow.camera.right = 20;
+key.shadow.camera.top = 20; key.shadow.camera.bottom = -20;
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x6688ff, 0.3);
+fill.position.set(-5, 8, -5);
+scene.add(fill);
+const rim = new THREE.PointLight(0x00d4ff, 0.4, 30);
+rim.position.set(0, 10, -10);
+scene.add(rim);
+
+// Workbench
+const benchGeo = new THREE.BoxGeometry(36, 0.3, 24);
+const benchMat = new THREE.MeshStandardMaterial({ color: 0x1a1a24, roughness: 0.8 });
+const bench = new THREE.Mesh(benchGeo, benchMat);
+bench.position.y = -0.15;
+bench.receiveShadow = true;
+scene.add(bench);
+
+// Grid on bench
+const gridHelper = new THREE.GridHelper(36, 72, 0x222233, 0x15151f);
+gridHelper.position.y = 0.01;
+scene.add(gridHelper);
+
+// ─── 3D COMPONENT BUILDERS ──────────────────────────────────────────
+const meshes = {};
+const componentGroups = {};
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function makeLabel(text, color = '#aaa') {
+  const div = document.createElement('div');
+  div.textContent = text;
+  div.style.cssText = `font:bold 9px system-ui;color:${color};background:rgba(0,0,0,.7);padding:2px 5px;border-radius:3px;white-space:nowrap;pointer-events:none`;
+  const obj = new CSS2DObject(div);
+  return obj;
+}
+
+function buildMotor(id, x, z, color) {
+  const g = new THREE.Group();
+  // Hub
+  const hub = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.8, 1.8, 0.8, 32),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.7 })
+  );
+  hub.castShadow = true;
+  g.add(hub);
+  // Tire ring
+  const tire = new THREE.Mesh(
+    new THREE.TorusGeometry(2.2, 0.5, 12, 32),
+    new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 })
+  );
+  tire.rotation.x = Math.PI / 2;
+  g.add(tire);
+  // Axle
+  const axle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15, 0.15, 1.4, 8),
+    new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8 })
+  );
+  g.add(axle);
+  // Wire bundle
+  const wires = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, 2, 6),
+    new THREE.MeshStandardMaterial({ color: 0x444444 })
+  );
+  wires.rotation.z = Math.PI / 2;
+  wires.position.set(1.8, 0, 0);
+  g.add(wires);
+
+  g.position.set(x, 1.2, z);
+  g.userData = { componentId: id };
+  scene.add(g);
+  componentGroups[id] = g;
+
+  const label = makeLabel(COMPONENTS[id].name, color === 0xff9500 ? '#ff9500' : '#9b59b6');
+  label.position.set(0, 2, 0);
+  g.add(label);
+
+  // Make all children raycast-able
+  g.traverse(c => { if (c.isMesh) { c.userData.componentId = id; meshes[id] = meshes[id] || []; meshes[id].push(c); }});
+}
+
+function buildController(id, x, z) {
+  const g = new THREE.Group();
+  // PCB
+  const pcb = new THREE.Mesh(
+    new THREE.BoxGeometry(2.4, 0.15, 1.6),
+    new THREE.MeshStandardMaterial({ color: 0x1a5c1a, roughness: 0.6 })
+  );
+  pcb.castShadow = true;
+  g.add(pcb);
+  // Heatsink
+  const hs = new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 0.5, 1.2),
+    new THREE.MeshStandardMaterial({ color: 0x333340, metalness: 0.6, roughness: 0.3 })
+  );
+  hs.position.y = 0.3;
+  g.add(hs);
+  // Terminal blocks
+  for (let i = -0.8; i <= 0.8; i += 0.4) {
+    const t = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 0.25, 0.15),
+      new THREE.MeshStandardMaterial({ color: 0x4444ff })
+    );
+    t.position.set(i, 0.15, -0.85);
+    g.add(t);
+  }
+  // Potentiometer
+  const pot = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, 0.2, 12),
+    new THREE.MeshStandardMaterial({ color: 0x3366cc })
+  );
+  pot.position.set(0.8, 0.2, 0.4);
+  g.add(pot);
+
+  g.position.set(x, 0.08, z);
+  g.userData = { componentId: id };
+  scene.add(g);
+  componentGroups[id] = g;
+
+  const label = makeLabel(COMPONENTS[id].name, '#e67e22');
+  label.position.set(0, 1.2, 0);
+  g.add(label);
+
+  g.traverse(c => { if (c.isMesh) { c.userData.componentId = id; meshes[id] = meshes[id] || []; meshes[id].push(c); }});
+}
+
+function buildArduino(x, z) {
+  const g = new THREE.Group();
+  // PCB
+  const pcb = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 0.12, 1.5),
+    new THREE.MeshStandardMaterial({ color: 0x0055aa, roughness: 0.5 })
+  );
+  pcb.castShadow = true;
+  g.add(pcb);
+  // USB port
+  const usb = new THREE.Mesh(
+    new THREE.BoxGeometry(0.4, 0.25, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8 })
+  );
+  usb.position.set(-1.5, 0.15, 0);
+  g.add(usb);
+  // Pin headers (both sides)
+  for (let side of [-0.65, 0.65]) {
+    const pins = new THREE.Mesh(
+      new THREE.BoxGeometry(2.6, 0.3, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0x222222 })
+    );
+    pins.position.set(0.2, 0.15, side);
+    g.add(pins);
+  }
+  // ATmega chip
+  const chip = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.08, 0.6),
+    new THREE.MeshStandardMaterial({ color: 0x111111 })
+  );
+  chip.position.set(0.3, 0.1, 0);
+  g.add(chip);
+
+  g.position.set(x, 0.06, z);
+  g.userData = { componentId: 'arduino' };
+  scene.add(g);
+  componentGroups['arduino'] = g;
+
+  const label = makeLabel('Arduino Mega 2560', '#0088ff');
+  label.position.set(0, 1, 0);
+  g.add(label);
+
+  g.traverse(c => { if (c.isMesh) { c.userData.componentId = 'arduino'; meshes['arduino'] = meshes['arduino'] || []; meshes['arduino'].push(c); }});
+}
+
+function buildESP32(x, z) {
+  const g = new THREE.Group();
+  const pcb = new THREE.Mesh(
+    new THREE.BoxGeometry(1.4, 0.1, 0.7),
+    new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 })
+  );
+  pcb.castShadow = true;
+  g.add(pcb);
+  // Antenna
+  const ant = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.02, 0.5),
+    new THREE.MeshStandardMaterial({ color: 0x222233 })
+  );
+  ant.position.set(-0.45, 0.06, 0);
+  g.add(ant);
+  // Module
+  const mod = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.12, 0.5),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.3 })
+  );
+  mod.position.set(0.1, 0.1, 0);
+  g.add(mod);
+  // Pin rows
+  for (let side of [-0.32, 0.32]) {
+    const pins = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.2, 0.05),
+      new THREE.MeshStandardMaterial({ color: 0x222222 })
+    );
+    pins.position.set(0.1, 0.1, side);
+    g.add(pins);
+  }
+
+  g.position.set(x, 0.05, z);
+  g.userData = { componentId: 'esp32' };
+  scene.add(g);
+  componentGroups['esp32'] = g;
+
+  const label = makeLabel('ESP32 NodeMCU-32', '#2ecc71');
+  label.position.set(0, 0.8, 0);
+  g.add(label);
+
+  g.traverse(c => { if (c.isMesh) { c.userData.componentId = 'esp32'; meshes['esp32'] = meshes['esp32'] || []; meshes['esp32'].push(c); }});
+}
+
+function buildBattery(id, x, z, color, w, h, d) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(w, h, d),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.6 })
+  );
+  body.castShadow = true;
+  g.add(body);
+  // Terminals
+  const tPos = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.15, 8), new THREE.MeshStandardMaterial({ color: 0xff3333, metalness: 0.8 }));
+  tPos.position.set(-w/4, h/2, 0);
+  g.add(tPos);
+  const tNeg = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.15, 8), new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8 }));
+  tNeg.position.set(w/4, h/2, 0);
+  g.add(tNeg);
+
+  g.position.set(x, h/2, z);
+  g.userData = { componentId: id };
+  scene.add(g);
+  componentGroups[id] = g;
+
+  const label = makeLabel(COMPONENTS[id].name, color === 0xcc3333 ? '#e74c3c' : '#8e44ad');
+  label.position.set(0, h/2 + 0.5, 0);
+  g.add(label);
+
+  g.traverse(c => { if (c.isMesh) { c.userData.componentId = id; meshes[id] = meshes[id] || []; meshes[id].push(c); }});
+}
+
+function buildBuck(id, x, z) {
+  const g = new THREE.Group();
+  const pcb = new THREE.Mesh(
+    new THREE.BoxGeometry(1.0, 0.08, 0.6),
+    new THREE.MeshStandardMaterial({ color: 0x1a2a1a, roughness: 0.5 })
+  );
+  g.add(pcb);
+  // Inductor
+  const ind = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.2, 0.2, 0.25, 12),
+    new THREE.MeshStandardMaterial({ color: 0x333333 })
+  );
+  ind.position.set(-0.2, 0.15, 0);
+  g.add(ind);
+  // Potentiometer
+  const pot = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.08, 0.12, 8),
+    new THREE.MeshStandardMaterial({ color: 0x3355cc })
+  );
+  pot.position.set(0.3, 0.1, 0.1);
+  g.add(pot);
+  // Capacitor
+  const cap = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.12, 0.12, 0.3, 8),
+    new THREE.MeshStandardMaterial({ color: 0x111111 })
+  );
+  cap.position.set(0.2, 0.2, -0.15);
+  g.add(cap);
+
+  g.position.set(x, 0.04, z);
+  g.userData = { componentId: id };
+  scene.add(g);
+  componentGroups[id] = g;
+
+  const label = makeLabel(COMPONENTS[id].name, '#f1c40f');
+  label.position.set(0, 0.8, 0);
+  g.add(label);
+
+  g.traverse(c => { if (c.isMesh) { c.userData.componentId = id; meshes[id] = meshes[id] || []; meshes[id].push(c); }});
+}
+
+function buildBreadboard(id, x, z) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(3.5, 0.1, 1.2),
+    new THREE.MeshStandardMaterial({ color: 0xf5f5e8, roughness: 0.7 })
+  );
+  g.add(body);
+  // Power rails (red/blue lines)
+  for (let [c, zOff] of [[0xff3333, -0.5], [0x3333ff, -0.42], [0xff3333, 0.42], [0x3333ff, 0.5]]) {
+    const rail = new THREE.Mesh(
+      new THREE.BoxGeometry(3.3, 0.02, 0.02),
+      new THREE.MeshStandardMaterial({ color: c })
+    );
+    rail.position.set(0, 0.06, zOff);
+    g.add(rail);
+  }
+  // Holes grid
+  for (let xi = -1.5; xi <= 1.5; xi += 0.12) {
+    for (let zi = -0.3; zi <= 0.3; zi += 0.12) {
+      if (Math.abs(zi) < 0.03) continue; // center gap
+      const hole = new THREE.Mesh(
+        new THREE.CircleGeometry(0.02, 6),
+        new THREE.MeshBasicMaterial({ color: 0x333333 })
+      );
+      hole.rotation.x = -Math.PI / 2;
+      hole.position.set(xi, 0.06, zi);
+      g.add(hole);
+    }
+  }
+
+  g.position.set(x, 0.05, z);
+  g.userData = { componentId: id };
+  scene.add(g);
+  componentGroups[id] = g;
+
+  const label = makeLabel('Breadboard', '#999');
+  label.position.set(0, 0.6, 0);
+  g.add(label);
+
+  g.traverse(c => { if (c.isMesh) { c.userData.componentId = id; meshes[id] = meshes[id] || []; meshes[id].push(c); }});
+}
+
+// ─── BUILD THE SCENE ─────────────────────────────────────────────────
+// Layout: Motors at edges, controllers near motors, batteries center-back, MCUs center-front
+buildMotor('motor36a', -12, -4, 0xff9500);
+buildMotor('motor36b', 12, -4, 0xff9500);
+buildMotor('motor25a', -12, 4, 0x9b59b6);
+buildMotor('motor25b', 12, 4, 0x9b59b6);
+
+buildController('ctrl1', -7, -4);
+buildController('ctrl2', 7, -4);
+buildController('ctrl3', -7, 4);
+buildController('ctrl4', 7, 4);
+
+buildBattery('batt36', -2.5, -7, 0xcc3333, 3, 1.2, 1.5);
+buildBattery('batt25', 2.5, -7, 0x6a2d8e, 2.5, 1, 1.3);
+
+buildBuck('buck1', -2, 2);
+buildBuck('buck2', 2, 2);
+
+buildArduino(0, 5);
+buildESP32(0, 7.5);
+buildBreadboard('breadboard1', 0, 9);
+
+// ─── WIRE SYSTEM ─────────────────────────────────────────────────────
+const wireGroups = {};
+const allWireMeshes = [];
+
+function createWire(from, to, color, thickness = 0.04, wireId = null) {
+  const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
+  mid.y += Math.max(0.5, from.distanceTo(to) * 0.15);
+
+  const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
+  const geo = new THREE.TubeGeometry(curve, 20, thickness, 6, false);
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: 0.6, transparent: true, opacity: 0.9
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  if (wireId) mesh.userData.wireGroup = wireId;
+  scene.add(mesh);
+  allWireMeshes.push(mesh);
+  return mesh;
+}
+
+function addWireGroup(groupId, wires) {
+  wireGroups[groupId] = wires.map(w => {
+    const m = createWire(
+      new THREE.Vector3(...w.from),
+      new THREE.Vector3(...w.to),
+      w.color, w.thick || 0.04, groupId
+    );
+    m.visible = false;
+    return m;
+  });
+}
+
+// Step 2: 36V Battery → Ctrl 1 & 2 power
+addWireGroup('batt36-ctrl1-power', [
+  { from: [-3.2, 1.2, -7], to: [-7.5, 0.3, -4.8], color: 0xff3333, thick: 0.08 },
+  { from: [-1.8, 1.2, -7], to: [-6.5, 0.3, -4.8], color: 0x222222, thick: 0.08 }
+]);
+addWireGroup('batt36-ctrl2-power', [
+  { from: [-3.2, 1.2, -7], to: [7.5, 0.3, -4.8], color: 0xff3333, thick: 0.08 },
+  { from: [-1.8, 1.2, -7], to: [6.5, 0.3, -4.8], color: 0x222222, thick: 0.08 }
+]);
+
+// Step 3: 25.2V Battery → Ctrl 3 & 4 power
+addWireGroup('batt25-ctrl3-power', [
+  { from: [1.8, 1, -7], to: [-7.5, 0.3, 3.2], color: 0xff3333, thick: 0.08 },
+  { from: [3.2, 1, -7], to: [-6.5, 0.3, 3.2], color: 0x222222, thick: 0.08 }
+]);
+addWireGroup('batt25-ctrl4-power', [
+  { from: [1.8, 1, -7], to: [7.5, 0.3, 3.2], color: 0xff3333, thick: 0.08 },
+  { from: [3.2, 1, -7], to: [6.5, 0.3, 3.2], color: 0x222222, thick: 0.08 }
+]);
+
+// Step 4: 36V Motors → Ctrl 1 & 2 phases
+addWireGroup('motor36a-ctrl1-phase', [
+  { from: [-10.2, 1.2, -4], to: [-8.2, 0.3, -4.2], color: 0xffd700, thick: 0.06 },
+  { from: [-10.2, 1.2, -3.8], to: [-8.2, 0.3, -4.0], color: 0x4169e1, thick: 0.06 },
+  { from: [-10.2, 1.2, -3.6], to: [-8.2, 0.3, -3.8], color: 0x32cd32, thick: 0.06 }
+]);
+addWireGroup('motor36b-ctrl2-phase', [
+  { from: [10.2, 1.2, -4], to: [8.2, 0.3, -4.2], color: 0xffd700, thick: 0.06 },
+  { from: [10.2, 1.2, -3.8], to: [8.2, 0.3, -4.0], color: 0x4169e1, thick: 0.06 },
+  { from: [10.2, 1.2, -3.6], to: [8.2, 0.3, -3.8], color: 0x32cd32, thick: 0.06 }
+]);
+
+// Step 5: 25V Motors → Ctrl 3 & 4 phases
+addWireGroup('motor25a-ctrl3-phase', [
+  { from: [-10.2, 1.2, 4], to: [-8.2, 0.3, 3.8], color: 0xffd700, thick: 0.06 },
+  { from: [-10.2, 1.2, 4.2], to: [-8.2, 0.3, 4.0], color: 0x4169e1, thick: 0.06 },
+  { from: [-10.2, 1.2, 4.4], to: [-8.2, 0.3, 4.2], color: 0x32cd32, thick: 0.06 }
+]);
+addWireGroup('motor25b-ctrl4-phase', [
+  { from: [10.2, 1.2, 4], to: [8.2, 0.3, 3.8], color: 0xffd700, thick: 0.06 },
+  { from: [10.2, 1.2, 4.2], to: [8.2, 0.3, 4.0], color: 0x4169e1, thick: 0.06 },
+  { from: [10.2, 1.2, 4.4], to: [8.2, 0.3, 4.2], color: 0x32cd32, thick: 0.06 }
+]);
+
+// Step 6: Hall sensors (thinner wires)
+addWireGroup('motor36a-ctrl1-hall', [
+  { from: [-10.2, 1.0, -4.5], to: [-7.8, 0.3, -3.2], color: 0xff3333, thick: 0.02 },
+  { from: [-10.2, 1.0, -4.6], to: [-7.6, 0.3, -3.2], color: 0x222222, thick: 0.02 },
+  { from: [-10.2, 1.0, -4.7], to: [-7.4, 0.3, -3.2], color: 0xffd700, thick: 0.02 },
+  { from: [-10.2, 1.0, -4.8], to: [-7.2, 0.3, -3.2], color: 0x4169e1, thick: 0.02 },
+  { from: [-10.2, 1.0, -4.9], to: [-7.0, 0.3, -3.2], color: 0x32cd32, thick: 0.02 }
+]);
+addWireGroup('motor36b-ctrl2-hall', [
+  { from: [10.2, 1.0, -4.5], to: [7.8, 0.3, -3.2], color: 0xff3333, thick: 0.02 },
+  { from: [10.2, 1.0, -4.6], to: [7.6, 0.3, -3.2], color: 0x222222, thick: 0.02 },
+  { from: [10.2, 1.0, -4.7], to: [7.4, 0.3, -3.2], color: 0xffd700, thick: 0.02 },
+  { from: [10.2, 1.0, -4.8], to: [7.2, 0.3, -3.2], color: 0x4169e1, thick: 0.02 },
+  { from: [10.2, 1.0, -4.9], to: [7.0, 0.3, -3.2], color: 0x32cd32, thick: 0.02 }
+]);
+addWireGroup('motor25a-ctrl3-hall', [
+  { from: [-10.2, 1.0, 4.5], to: [-7.8, 0.3, 4.8], color: 0xff3333, thick: 0.02 },
+  { from: [-10.2, 1.0, 4.6], to: [-7.6, 0.3, 4.8], color: 0x222222, thick: 0.02 },
+  { from: [-10.2, 1.0, 4.7], to: [-7.4, 0.3, 4.8], color: 0xffd700, thick: 0.02 },
+  { from: [-10.2, 1.0, 4.8], to: [-7.2, 0.3, 4.8], color: 0x4169e1, thick: 0.02 },
+  { from: [-10.2, 1.0, 4.9], to: [-7.0, 0.3, 4.8], color: 0x32cd32, thick: 0.02 }
+]);
+addWireGroup('motor25b-ctrl4-hall', [
+  { from: [10.2, 1.0, 4.5], to: [7.8, 0.3, 4.8], color: 0xff3333, thick: 0.02 },
+  { from: [10.2, 1.0, 4.6], to: [7.6, 0.3, 4.8], color: 0x222222, thick: 0.02 },
+  { from: [10.2, 1.0, 4.7], to: [7.4, 0.3, 4.8], color: 0xffd700, thick: 0.02 },
+  { from: [10.2, 1.0, 4.8], to: [7.2, 0.3, 4.8], color: 0x4169e1, thick: 0.02 },
+  { from: [10.2, 1.0, 4.9], to: [7.0, 0.3, 4.8], color: 0x32cd32, thick: 0.02 }
+]);
+
+// Step 7: 36V → Buck #1 → Arduino
+addWireGroup('batt36-buck1', [
+  { from: [-3.2, 1.2, -7], to: [-2.5, 0.2, 2], color: 0xff3333, thick: 0.04 },
+  { from: [-1.8, 1.2, -7], to: [-1.5, 0.2, 2], color: 0x222222, thick: 0.04 }
+]);
+addWireGroup('buck1-arduino', [
+  { from: [-1.7, 0.2, 2], to: [-1.3, 0.2, 5], color: 0xff9500, thick: 0.04 },
+  { from: [-2.3, 0.2, 2], to: [-1.5, 0.2, 5.3], color: 0x222222, thick: 0.04 }
+]);
+
+// Step 8: 36V → Buck #2 → ESP32
+addWireGroup('batt36-buck2', [
+  { from: [-3.2, 1.2, -7], to: [1.5, 0.2, 2], color: 0xff3333, thick: 0.04 },
+  { from: [-1.8, 1.2, -7], to: [2.5, 0.2, 2], color: 0x222222, thick: 0.04 }
+]);
+addWireGroup('buck2-esp32', [
+  { from: [2.3, 0.2, 2], to: [0.5, 0.15, 7.5], color: 0xff9500, thick: 0.04 },
+  { from: [1.7, 0.2, 2], to: [-0.5, 0.15, 7.5], color: 0x222222, thick: 0.04 }
+]);
+
+// Step 9: Common ground bus
+addWireGroup('ground-bus', [
+  { from: [-1.5, 0.2, 5.3], to: [0, 0.15, 9.3], color: 0x222222, thick: 0.03 },
+  { from: [-0.5, 0.15, 7.5], to: [0, 0.15, 9.3], color: 0x222222, thick: 0.03 },
+  { from: [0, 0.15, 9.3], to: [-7, 0.3, -3.5], color: 0x222222, thick: 0.03 },
+  { from: [0, 0.15, 9.3], to: [7, 0.3, -3.5], color: 0x222222, thick: 0.03 },
+  { from: [0, 0.15, 9.3], to: [-7, 0.3, 4.5], color: 0x222222, thick: 0.03 },
+  { from: [0, 0.15, 9.3], to: [7, 0.3, 4.5], color: 0x222222, thick: 0.03 }
+]);
+
+// Step 10: Arduino PWM → Ctrl SV
+addWireGroup('arduino-ctrl-speed', [
+  { from: [0.5, 0.2, 4.3], to: [-6.5, 0.3, -3.5], color: 0x00d4ff, thick: 0.025 },
+  { from: [0.7, 0.2, 4.3], to: [6.5, 0.3, -3.5], color: 0x00d4ff, thick: 0.025 },
+  { from: [0.9, 0.2, 4.3], to: [-6.5, 0.3, 4.5], color: 0x00d4ff, thick: 0.025 },
+  { from: [1.1, 0.2, 4.3], to: [6.5, 0.3, 4.5], color: 0x00d4ff, thick: 0.025 }
+]);
+
+// Step 11: Arduino Digital → Ctrl F/R
+addWireGroup('arduino-ctrl-dir', [
+  { from: [-0.5, 0.2, 4.3], to: [-6.3, 0.3, -3.5], color: 0x9b59b6, thick: 0.025 },
+  { from: [-0.7, 0.2, 4.3], to: [6.3, 0.3, -3.5], color: 0x9b59b6, thick: 0.025 },
+  { from: [-0.9, 0.2, 4.3], to: [-6.3, 0.3, 4.5], color: 0x9b59b6, thick: 0.025 },
+  { from: [-1.1, 0.2, 4.3], to: [6.3, 0.3, 4.5], color: 0x9b59b6, thick: 0.025 }
+]);
+
+// Step 12: Arduino ↔ ESP32 Serial
+addWireGroup('arduino-esp32-serial', [
+  { from: [1.3, 0.2, 5.5], to: [0.3, 0.15, 7.2], color: 0xe67e22, thick: 0.025 },
+  { from: [1.5, 0.2, 5.5], to: [0.5, 0.15, 7.2], color: 0xe67e22, thick: 0.025 }
+]);
+
+// ─── STEP MANAGEMENT ─────────────────────────────────────────────────
+let currentStep = 0;
+const completedSteps = new Set();
+
+function renderSteps() {
+  const container = document.getElementById('steps-container');
+  container.innerHTML = '';
+  STEPS.forEach((step, i) => {
+    const div = document.createElement('div');
+    div.className = `step ${i === currentStep ? 'active' : ''} ${completedSteps.has(i) ? 'done' : ''}`;
+    div.onclick = () => goToStep(i);
+    div.innerHTML = `
+      <span class="step-num">${i + 1}</span>
+      <span class="step-title">${step.title}</span>
+      <div class="step-desc">${step.desc}</div>
+      ${step.safety ? `<div class="step-safety">${step.safety}</div>` : ''}
+    `;
+    container.appendChild(div);
+  });
+  updateNav();
+}
+
+function goToStep(i) {
+  if (currentStep < i) completedSteps.add(currentStep);
+  currentStep = i;
+  renderSteps();
+  updateScene();
+  updatePrompt();
+}
+
+function nextStep() {
+  if (currentStep < STEPS.length - 1) {
+    completedSteps.add(currentStep);
+    goToStep(currentStep + 1);
+  }
+}
+window.nextStep = nextStep;
+
+function prevStep() {
+  if (currentStep > 0) goToStep(currentStep - 1);
+}
+window.prevStep = prevStep;
+
+function updateNav() {
+  document.getElementById('prev-btn').disabled = currentStep === 0;
+  document.getElementById('next-btn').disabled = currentStep === STEPS.length - 1;
+  document.getElementById('next-btn').textContent = currentStep === STEPS.length - 1 ? 'Complete' : 'Next Step';
+}
+
+// ─── SCENE UPDATE ON STEP CHANGE ─────────────────────────────────────
+function updateScene() {
+  const step = STEPS[currentStep];
+
+  // Show wires for current and all completed steps
+  const activeWires = new Set();
+  completedSteps.forEach(s => STEPS[s].wires.forEach(w => activeWires.add(w)));
+  step.wires.forEach(w => activeWires.add(w));
+
+  Object.entries(wireGroups).forEach(([id, meshArr]) => {
+    meshArr.forEach(m => {
+      m.visible = activeWires.has(id);
+      if (m.material && m.material.emissive) {
+        if (step.wires.includes(id)) {
+          m.material.opacity = 1;
+          m.material.emissive.copy(m.material.color).multiplyScalar(0.3);
+        } else {
+          m.material.opacity = 0.4;
+          m.material.emissive.setHex(0x000000);
+        }
+      }
+    });
+  });
+
+  // Highlight components
+  Object.entries(componentGroups).forEach(([id, group]) => {
+    group.traverse(c => {
+      if (c.isMesh && c.material && c.material.emissive) {
+        if (step.highlight.includes(id)) {
+          c.material.emissive.setHex(0x112233);
+        } else {
+          c.material.emissive.setHex(0x000000);
+        }
+      }
+    });
+  });
+}
+
+// ─── INSPECTOR ───────────────────────────────────────────────────────
+let selectedComponent = null;
+
+function showComponentInfo(id) {
+  selectedComponent = id;
+  const comp = COMPONENTS[id];
+  if (!comp) return;
+
+  const info = document.getElementById('comp-info');
+  let html = `<h2 style="margin-top:8px">${comp.name}</h2>`;
+
+  html += '<h3>Specifications</h3><div class="spec-grid">';
+  Object.entries(comp.specs).forEach(([k, v]) => {
+    html += `<div class="spec-item"><div class="spec-label">${k}</div><div class="spec-value">${v}</div></div>`;
+  });
+  html += '</div>';
+
+  if (comp.pins.length > 0) {
+    html += '<h3>Pinout</h3><div class="pin-list">';
+    comp.pins.forEach(p => {
+      html += `<div class="pin"><span class="pin-dot" style="background:${p.color}"></span><strong>${p.name}</strong>${p.desc ? ` — ${p.desc}` : ''}</div>`;
+    });
+    html += '</div>';
+  }
+
+  info.innerHTML = html;
+
+  // Highlight in 3D
+  Object.values(componentGroups).forEach(g => g.traverse(c => {
+    if (c.isMesh && c.material && c.material.emissive) c.material.emissive.setHex(0x000000);
+  }));
+  if (componentGroups[id]) {
+    componentGroups[id].traverse(c => {
+      if (c.isMesh && c.material && c.material.emissive) c.material.emissive.setHex(0x224488);
+    });
+  }
+
+  showTab('comp-tab', document.querySelector('.tab'));
+}
+
+// ─── WIRE LIST ───────────────────────────────────────────────────────
+function buildWireList() {
+  const container = document.getElementById('wire-list');
+  const wireDescriptions = {
+    'batt36-ctrl1-power': { label: '36V Batt → Ctrl #1 Power', color: '#ff3333', v: '36V', a: '~10A max' },
+    'batt36-ctrl2-power': { label: '36V Batt → Ctrl #2 Power', color: '#ff3333', v: '36V', a: '~10A max' },
+    'batt25-ctrl3-power': { label: '25.2V Batt → Ctrl #3 Power', color: '#8e44ad', v: '25.2V', a: '~10A max' },
+    'batt25-ctrl4-power': { label: '25.2V Batt → Ctrl #4 Power', color: '#8e44ad', v: '25.2V', a: '~10A max' },
+    'motor36a-ctrl1-phase': { label: 'Motor 36V-L → Ctrl #1 Phases', color: '#ffd700', v: '36V AC', a: '~10A' },
+    'motor36b-ctrl2-phase': { label: 'Motor 36V-R → Ctrl #2 Phases', color: '#ffd700', v: '36V AC', a: '~10A' },
+    'motor25a-ctrl3-phase': { label: 'Motor 25V-L → Ctrl #3 Phases', color: '#9b59b6', v: '25V AC', a: '~10A' },
+    'motor25b-ctrl4-phase': { label: 'Motor 25V-R → Ctrl #4 Phases', color: '#9b59b6', v: '25V AC', a: '~10A' },
+    'motor36a-ctrl1-hall': { label: 'Motor 36V-L → Ctrl #1 Hall', color: '#32cd32', v: '5V', a: '<10mA' },
+    'motor36b-ctrl2-hall': { label: 'Motor 36V-R → Ctrl #2 Hall', color: '#32cd32', v: '5V', a: '<10mA' },
+    'motor25a-ctrl3-hall': { label: 'Motor 25V-L → Ctrl #3 Hall', color: '#32cd32', v: '5V', a: '<10mA' },
+    'motor25b-ctrl4-hall': { label: 'Motor 25V-R → Ctrl #4 Hall', color: '#32cd32', v: '5V', a: '<10mA' },
+    'batt36-buck1': { label: '36V Batt → Buck #1 Input', color: '#ff3333', v: '36V', a: '<500mA' },
+    'buck1-arduino': { label: 'Buck #1 (12V) → Arduino VIN', color: '#ff9500', v: '12V', a: '<300mA' },
+    'batt36-buck2': { label: '36V Batt → Buck #2 Input', color: '#ff3333', v: '36V', a: '<500mA' },
+    'buck2-esp32': { label: 'Buck #2 (5V) → ESP32 VIN', color: '#ff9500', v: '5V', a: '<300mA' },
+    'ground-bus': { label: 'Common Ground Bus', color: '#555', v: '0V', a: 'Reference' },
+    'arduino-ctrl-speed': { label: 'Arduino PWM → Ctrl Speed (SV)', color: '#00d4ff', v: '0-5V PWM', a: '<1mA' },
+    'arduino-ctrl-dir': { label: 'Arduino Digital → Ctrl Dir (F/R)', color: '#9b59b6', v: '0/5V', a: '<1mA' },
+    'arduino-esp32-serial': { label: 'Arduino ↔ ESP32 Serial', color: '#e67e22', v: '3.3-5V', a: '<1mA' }
+  };
+
+  let html = '<h2 style="margin-top:8px">All Connections</h2>';
+  Object.entries(wireDescriptions).forEach(([id, w]) => {
+    html += `<div class="wire-trace" onclick="highlightWire('${id}')" id="wire-${id}">
+      <span style="display:inline-block;width:12px;height:3px;background:${w.color};border-radius:2px;margin-right:6px;vertical-align:middle"></span>
+      <strong>${w.label}</strong><br>
+      <span style="color:#666;margin-left:18px">${w.v} | ${w.a}</span>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+window.highlightWire = function(id) {
+  document.querySelectorAll('.wire-trace').forEach(el => el.classList.remove('highlighted'));
+  const el = document.getElementById(`wire-${id}`);
+  if (el) el.classList.add('highlighted');
+
+  allWireMeshes.forEach(m => {
+    if (m.userData.wireGroup === id) {
+      m.visible = true;
+      m.material.opacity = 1;
+      if (m.material.emissive) m.material.emissive.copy(m.material.color).multiplyScalar(0.5);
+    } else if (m.visible) {
+      m.material.opacity = 0.15;
+      if (m.material.emissive) m.material.emissive.setHex(0x000000);
+    }
+  });
+};
+
+// ─── SAFETY CHECKS ───────────────────────────────────────────────────
+function buildSafetyChecks() {
+  const checks = [
+    { status: 'ok', text: '36V battery within controller 6-60V input range' },
+    { status: 'ok', text: '25.2V battery within controller 6-60V input range' },
+    { status: 'ok', text: 'LM2596S input (36V) within 3-40V spec' },
+    { status: 'warn', text: '36V is near LM2596S 40V max — fully charged 10S battery hits 42V. Monitor charge state.' },
+    { status: 'ok', text: 'Buck #1 output (12V) within Arduino VIN 7-12V range' },
+    { status: 'ok', text: 'Buck #2 output (5V) safe for ESP32 VIN' },
+    { status: 'ok', text: 'Arduino 5V PWM compatible with controller 0-5V SV input' },
+    { status: 'warn', text: 'Arduino TX (5V) → ESP32 RX (3.3V): Voltage divider REQUIRED (1KΩ + 2KΩ)' },
+    { status: 'ok', text: 'ESP32 TX (3.3V) → Arduino RX: Safe (3.3V reads as HIGH on 5V Arduino)' },
+    { status: 'danger', text: 'NEVER route motor power through breadboard — max breadboard current ~1A, motors draw 10A+' },
+    { status: 'warn', text: 'Both battery packs need BMS or fuse protection for short circuit safety' },
+    { status: 'warn', text: 'Motor stall current can exceed controller rating — add current limiting in firmware' },
+    { status: 'ok', text: 'Common ground bus ensures signal reference integrity across voltage domains' },
+    { status: 'ok', text: 'Hall sensors run on 5V supplied by controllers — no external power needed' },
+    { status: 'warn', text: 'At full charge, 10S battery = 42V. Verify LM2596S handles 42V safely (spec max 40V). Consider using 25.2V battery for buck converters instead.' }
+  ];
+
+  const container = document.getElementById('safety-list');
+  let html = '<h2 style="margin-top:8px">Safety Validation</h2>';
+  checks.forEach(c => {
+    const icon = c.status === 'ok' ? '✓' : c.status === 'warn' ? '⚠' : '✕';
+    html += `<div class="safety-item safety-${c.status}"><span class="safety-icon">${icon}</span>${c.text}</div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ─── PROMPT OUTPUT ───────────────────────────────────────────────────
+function updatePrompt() {
+  const done = completedSteps.size;
+  const total = STEPS.length;
+
+  if (done === 0 && currentStep === 0) {
+    document.getElementById('prompt-text').textContent = 'Navigate through the wiring steps to build your connection summary...';
+    return;
+  }
+
+  const parts = [
+    `Hoverboard Motor Control System — ${done}/${total} steps completed.\n`,
+    `POWER DISTRIBUTION:`,
+    `• 36V 4400mAh Li-Ion (10S, 42V max) → RioRand Controllers #1 & #2 (DC+/DC-) via 14AWG`,
+    `• 25.2V 4Ah Li-Ion (7S, 29.4V max) → RioRand Controllers #3 & #4 (DC+/DC-) via 14AWG`,
+    `• 36V → LM2596S Buck #1 (adjusted to 12V) → Arduino Mega 2560 VIN`,
+    `• 36V → LM2596S Buck #2 (adjusted to 5V) → ESP32 VIN`,
+    ``,
+    `MOTOR CONNECTIONS (per motor, x4):`,
+    `• Phase wires: Yellow→U, Blue→V, Green→W (swap any two if motor spins backward)`,
+    `• Hall sensors: Red→+5V, Black→GND, Yellow→HU, Blue→HV, Green→HW`,
+    ``,
+    `CONTROL SIGNALS (via breadboard):`,
+    `• Arduino D2/D3/D4/D5 (PWM 490Hz) → Controller #1/#2/#3/#4 SV (speed 0-5V)`,
+    `• Arduino D22/D23/D24/D25 → Controller #1/#2/#3/#4 F/R (direction HIGH=FWD)`,
+    `• Arduino TX1(18) → [1KΩ+2KΩ divider] → ESP32 GPIO16(RX2)`,
+    `• ESP32 GPIO17(TX2) → Arduino RX1(19) (3.3V direct, safe)`,
+    `• Common ground bus connecting all GND references`,
+    ``,
+    `CRITICAL SAFETY:`,
+    `• Verify buck converter outputs with multimeter BEFORE connecting MCUs`,
+    `• 42V fully-charged 10S battery near LM2596S 40V max — use caution`,
+    `• Never route motor power through breadboard (signal connections only)`,
+    `• Voltage divider required on Arduino TX → ESP32 RX (5V → 3.3V)`,
+    `• Add fuse/BMS to each battery pack`
+  ];
+
+  document.getElementById('prompt-text').textContent = parts.join('\n');
+}
+
+window.copyPrompt = function() {
+  const text = document.getElementById('prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+};
+
+// ─── TAB SWITCHING ───────────────────────────────────────────────────
+window.showTab = function(tabId, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  if (el) el.classList.add('active');
+};
+
+// ─── VIEW PRESETS ────────────────────────────────────────────────────
+window.setView = function(view, btn) {
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const dur = 800;
+  const target = new THREE.Vector3(0, 0, 0);
+
+  switch(view) {
+    case 'perspective':
+      animateCamera(new THREE.Vector3(0, 18, 22), target, dur);
+      break;
+    case 'top':
+      animateCamera(new THREE.Vector3(0, 30, 0.1), target, dur);
+      break;
+    case 'front':
+      animateCamera(new THREE.Vector3(0, 8, 25), target, dur);
+      break;
+    case 'wiring':
+      animateCamera(new THREE.Vector3(0, 25, 8), target, dur);
+      // Show all wires
+      allWireMeshes.forEach(m => { m.visible = true; m.material.opacity = 0.7; });
+      break;
+  }
+};
+
+function animateCamera(pos, target, duration) {
+  const start = camera.position.clone();
+  const startTime = performance.now();
+
+  function tick(now) {
+    const t = Math.min((now - startTime) / duration, 1);
+    const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    camera.position.lerpVectors(start, pos, ease);
+    controls.target.lerp(target, ease * 0.1);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ─── CLICK DETECTION ─────────────────────────────────────────────────
+renderer.domElement.addEventListener('click', (e) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const allMeshes = [];
+  Object.values(meshes).forEach(arr => arr.forEach(m => allMeshes.push(m)));
+  const hits = raycaster.intersectObjects(allMeshes);
+
+  if (hits.length > 0) {
+    const id = hits[0].object.userData.componentId;
+    if (id) showComponentInfo(id);
+  }
+});
+
+// ─── LEGEND ──────────────────────────────────────────────────────────
+function buildLegend() {
+  const items = [
+    { color: '#ff3333', label: 'Power + (DC)' },
+    { color: '#222222', label: 'Ground / Power -' },
+    { color: '#ffd700', label: 'Phase U / Hall U' },
+    { color: '#4169e1', label: 'Phase V / Hall V' },
+    { color: '#32cd32', label: 'Phase W / Hall W' },
+    { color: '#00d4ff', label: 'PWM Speed Signal' },
+    { color: '#9b59b6', label: 'Direction Signal' },
+    { color: '#e67e22', label: 'Serial TX/RX' },
+    { color: '#ff9500', label: 'Regulated Output' }
+  ];
+  const legend = document.getElementById('legend');
+  legend.innerHTML = items.map(i =>
+    `<div class="legend-item"><span class="legend-color" style="background:${i.color}"></span>${i.label}</div>`
+  ).join('');
+}
+
+// ─── RESIZE ──────────────────────────────────────────────────────────
+function onResize() {
+  const rect = viewport.getBoundingClientRect();
+  camera.aspect = rect.width / rect.height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(rect.width, rect.height);
+  labelRenderer.setSize(rect.width, rect.height);
+}
+window.addEventListener('resize', onResize);
+
+// ─── ANIMATION LOOP ─────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────
+onResize();
+renderSteps();
+buildWireList();
+buildSafetyChecks();
+buildLegend();
+updateScene();
+updatePrompt();
+animate();
+
+</script>
+</body>
+</html>

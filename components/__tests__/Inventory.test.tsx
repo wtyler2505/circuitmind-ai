@@ -66,4 +66,35 @@ describe('Inventory', () => {
     expect(screen.getByText('Delete')).toBeInTheDocument();
     expect(screen.getByText('Clear')).toBeInTheDocument();
   });
+
+  it('inventory_fzpzDiagnostics_showsBadgeAndTooltip', async () => {
+    const user = userEvent.setup();
+    const items: ElectronicComponent[] = [
+      {
+        id: 'item-diag-1',
+        name: 'Custom Sensor',
+        type: 'sensor',
+        description: 'Imported sensor with validation findings',
+        quantity: 1,
+        fzpzDiagnostics: [
+          {
+            level: 'error',
+            code: 'INVALID_FOOTPRINT_DIMENSIONS',
+            message: 'Part "Custom Sensor" footprint has invalid dimensions (0 x 0).',
+          },
+        ],
+      },
+    ];
+
+    render(<Inventory onSelect={vi.fn()} />, { inventory: items });
+
+    const badge = screen.getByText('ERR');
+    expect(badge).toBeInTheDocument();
+
+    await user.hover(badge);
+
+    expect(
+      screen.getByText('Part "Custom Sensor" footprint has invalid dimensions (0 x 0).')
+    ).toBeInTheDocument();
+  });
 });

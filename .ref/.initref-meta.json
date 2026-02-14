@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-02-10T04:20:00Z",
+  "git_sha": "66dd5a3610f094381703837b29179076250887e3",
+  "project_root": "/home/wtyler/circuitmind-ai",
+  "files_analyzed": 288,
+  "flags_used": "--update",
+  "file_hashes": {
+    "project-dna.md": "b3d3947b300d064ab90459cd6a26bbe24c09ace012abf49d3a7ebb724567b7cd",
+    "project-map.md": "fadc4b35519feca1e9321a14ca233b7d50a37f416df3fa4d50c07ccacd92d65f"
+  }
+}
