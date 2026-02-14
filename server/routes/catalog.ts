@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { v4 as uuid } from 'uuid';
 import db from '../db/database.js';
-import { validateBody, validateQuery } from '../middleware/validation.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validation.js';
 
 const router = Router();
 
@@ -32,6 +32,10 @@ const catalogCreateSchema = z.object({
 });
 
 const catalogUpdateSchema = catalogCreateSchema.partial();
+
+const idParamSchema = z.object({
+  id: z.string().uuid('Invalid catalog id'),
+});
 
 // --- Routes ---
 
@@ -82,9 +86,12 @@ router.get('/', validateQuery(catalogQuerySchema), (req, res) => {
 });
 
 // GET /api/catalog/:id — Single item
-router.get('/:id', (req, res) => {
+router.get('/:id', validateParams(idParamSchema), (req, res) => {
   try {
-    const item = db.prepare('SELECT * FROM catalog_item WHERE id = ?').get(req.params.id);
+    const { id } = (req as unknown as Record<string, unknown>).validatedParams as z.infer<
+      typeof idParamSchema
+    >;
+    const item = db.prepare('SELECT * FROM catalog_item WHERE id = ?').get(id);
     if (!item) {
       res.status(404).json({ error: 'Catalog item not found' });
       return;
@@ -131,9 +138,12 @@ router.post('/', validateBody(catalogCreateSchema), (req, res) => {
 });
 
 // PUT /api/catalog/:id — Update
-router.put('/:id', validateBody(catalogUpdateSchema), (req, res) => {
+router.put('/:id', validateParams(idParamSchema), validateBody(catalogUpdateSchema), (req, res) => {
   try {
-    const existing = db.prepare('SELECT * FROM catalog_item WHERE id = ?').get(req.params.id);
+    const { id } = (req as unknown as Record<string, unknown>).validatedParams as z.infer<
+      typeof idParamSchema
+    >;
+    const existing = db.prepare('SELECT * FROM catalog_item WHERE id = ?').get(id);
     if (!existing) {
       res.status(404).json({ error: 'Catalog item not found' });
       return;
@@ -156,10 +166,10 @@ router.put('/:id', validateBody(catalogUpdateSchema), (req, res) => {
     if (fields.length > 0) {
       fields.push('updated_at = datetime(\'now\')');
       const sql = `UPDATE catalog_item SET ${fields.join(', ')} WHERE id = ?`;
-      db.prepare(sql).run(...values, req.params.id);
+      db.prepare(sql).run(...values, id);
     }
 
-    const updated = db.prepare('SELECT * FROM catalog_item WHERE id = ?').get(req.params.id);
+    const updated = db.prepare('SELECT * FROM catalog_item WHERE id = ?').get(id);
     res.json(parseJsonFields(updated as Record<string, unknown>));
   } catch (err) {
     console.error('[catalog] update error:', err);
@@ -168,16 +178,19 @@ router.put('/:id', validateBody(catalogUpdateSchema), (req, res) => {
 });
 
 // DELETE /api/catalog/:id
-router.delete('/:id', (req, res) => {
+router.delete('/:id', validateParams(idParamSchema), (req, res) => {
   try {
-    const existing = db.prepare('SELECT * FROM catalog_item WHERE id = ?').get(req.params.id);
+    const { id } = (req as unknown as Record<string, unknown>).validatedParams as z.infer<
+      typeof idParamSchema
+    >;
+    const existing = db.prepare('SELECT * FROM catalog_item WHERE id = ?').get(id);
     if (!existing) {
       res.status(404).json({ error: 'Catalog item not found' });
       return;
     }
 
-    db.prepare('DELETE FROM catalog_item WHERE id = ?').run(req.params.id);
-    res.json({ deleted: true, id: req.params.id });
+    db.prepare('DELETE FROM catalog_item WHERE id = ?').run(id);
+    res.json({ deleted: true, id });
   } catch (err) {
     console.error('[catalog] delete error:', err);
     res.status(500).json({ error: 'Failed to delete catalog item' });

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { v4 as uuid } from 'uuid';
 import db from '../db/database.js';
-import { validateBody } from '../middleware/validation.js';
+import { validateBody, validateQuery } from '../middleware/validation.js';
 
 const router = Router();
 
@@ -13,6 +13,12 @@ const stockMoveCreateSchema = z.object({
   delta: z.number().int().refine((v) => v !== 0, 'delta cannot be zero'),
   reason: z.string().default(''),
   note: z.string().default(''),
+});
+
+const stockMoveListQuerySchema = z.object({
+  lot_id: z.string().min(1, 'lot_id query parameter is required'),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
 // --- Transaction ---
@@ -51,16 +57,12 @@ const createStockMove = db.transaction(
 // --- Routes ---
 
 // GET /api/stock-moves — History for a lot
-router.get('/', (req, res) => {
+router.get('/', validateQuery(stockMoveListQuerySchema), (req, res) => {
   try {
-    const lotId = req.query.lot_id as string | undefined;
-    if (!lotId) {
-      res.status(400).json({ error: 'lot_id query parameter is required' });
-      return;
-    }
-
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const query = (req as unknown as Record<string, unknown>).validatedQuery as z.infer<
+      typeof stockMoveListQuerySchema
+    >;
+    const { lot_id: lotId, page, limit } = query;
     const offset = (page - 1) * limit;
 
     const countRow = db

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { v4 as uuid } from 'uuid';
 import { readFileSync } from 'fs';
 import db from '../db/database.js';
@@ -8,6 +9,10 @@ import { ClaudeVisionProvider } from '../services/claudeVision.js';
 import { transcribeAudio } from '../services/transcriber.js';
 
 const router = Router();
+
+const identifyBodySchema = z.object({
+  provider: z.enum(['gemini', 'claude']).optional().default('gemini'),
+});
 
 function getProvider(name: string): AIProvider {
   switch (name) {
@@ -64,83 +69,81 @@ const createIdentifiedComponent = db.transaction(
   }
 );
 
-const VALID_PROVIDERS = ['gemini', 'claude'] as const;
-type ValidProvider = typeof VALID_PROVIDERS[number];
-
-function isValidProvider(name: string): name is ValidProvider {
-  return (VALID_PROVIDERS as readonly string[]).includes(name);
-}
-
 // POST /api/identify — Multipart: images[], provider?, voiceNote?
 router.post('/', async (req, res) => {
   try {
+    const bodyResult = identifyBodySchema.safeParse(req.body ?? {});
+    if (!bodyResult.success) {
+      res.status(400).json({ error: 'Validation failed', details: bodyResult.error.issues });
+      return;
+    }
+
     const files = req.files as
       | { [fieldname: string]: Express.Multer.File[] }
       | Express.Multer.File[]
       | undefined;
 
-      // Extract image files
-      let imageFiles: Express.Multer.File[] = [];
-      if (Array.isArray(files)) {
-        imageFiles = files.filter((f) => f.fieldname === 'images');
-      } else if (files && 'images' in files) {
-        imageFiles = files.images;
-      }
+    const { provider: providerName } = bodyResult.data;
 
-      if (imageFiles.length === 0) {
-        res.status(400).json({ error: 'At least one image is required' });
-        return;
-      }
+    // Extract image files
+    let imageFiles: Express.Multer.File[] = [];
+    if (Array.isArray(files)) {
+      imageFiles = files.filter((f) => f.fieldname === 'images');
+    } else if (files && 'images' in files) {
+      imageFiles = files.images;
+    }
 
-      // Read image buffers
-      const imageBuffers = imageFiles.map((f) => readFileSync(f.path));
-      const imageUrls = imageFiles.map((f) => `/uploads/${f.filename}`);
+    if (imageFiles.length === 0) {
+      res.status(400).json({ error: 'At least one image is required' });
+      return;
+    }
 
-      // Handle voice note
-      let hints: string | undefined;
-      let voiceNoteUrl = '';
-      let voiceNoteFile: Express.Multer.File | undefined;
+    // Read image buffers
+    const imageBuffers = imageFiles.map((f) => readFileSync(f.path));
+    const imageUrls = imageFiles.map((f) => `/uploads/${f.filename}`);
 
-      if (Array.isArray(files)) {
-        voiceNoteFile = files.find((f) => f.fieldname === 'voiceNote');
-      } else if (files && 'voiceNote' in files) {
-        voiceNoteFile = files.voiceNote[0];
-      }
+    // Handle voice note
+    let hints: string | undefined;
+    let voiceNoteUrl = '';
+    let voiceNoteFile: Express.Multer.File | undefined;
 
-      const rawProvider = (req.body?.provider as string) || 'gemini';
-      const providerName = isValidProvider(rawProvider) ? rawProvider : 'gemini';
+    if (Array.isArray(files)) {
+      voiceNoteFile = files.find((f) => f.fieldname === 'voiceNote');
+    } else if (files && 'voiceNote' in files) {
+      voiceNoteFile = files.voiceNote[0];
+    }
 
-      if (voiceNoteFile) {
-        voiceNoteUrl = `/uploads/${voiceNoteFile.filename}`;
-        const audioBuffer = readFileSync(voiceNoteFile.path);
-        hints = await transcribeAudio(audioBuffer, providerName);
-        console.log(`[identify] Transcribed voice note: "${hints}"`);
-      }
+    if (voiceNoteFile) {
+      voiceNoteUrl = `/uploads/${voiceNoteFile.filename}`;
+      const audioBuffer = readFileSync(voiceNoteFile.path);
+      hints = await transcribeAudio(audioBuffer, providerName);
+      console.log(`[identify] Transcribed voice note: "${hints}"`);
+    }
 
-      // AI identification
-      const provider = getProvider(providerName);
-      console.log(`[identify] Using provider: ${providerName}, images: ${imageFiles.length}`);
-      const result = await provider.identify(imageBuffers, hints);
-      console.log(
-        `[identify] Result: ${result.name} (confidence: ${result.confidence})`
-      );
+    // AI identification
+    const provider = getProvider(providerName);
+    console.log(`[identify] Using provider: ${providerName}, images: ${imageFiles.length}`);
+    const result = await provider.identify(imageBuffers, hints);
+    console.log(
+      `[identify] Result: ${result.name} (confidence: ${result.confidence})`
+    );
 
-      // Store in DB
-      const { catalogId, lotId } = createIdentifiedComponent(
-        result,
-        providerName,
-        imageUrls,
-        voiceNoteUrl
-      );
+    // Store in DB
+    const { catalogId, lotId } = createIdentifiedComponent(
+      result,
+      providerName,
+      imageUrls,
+      voiceNoteUrl
+    );
 
-      res.status(201).json({
-        catalog_id: catalogId,
-        lot_id: lotId,
-        identification: result,
-        images: imageUrls,
-        voice_note: voiceNoteUrl || null,
-        needs_review: result.confidence < 0.7,
-      });
+    res.status(201).json({
+      catalog_id: catalogId,
+      lot_id: lotId,
+      identification: result,
+      images: imageUrls,
+      voice_note: voiceNoteUrl || null,
+      needs_review: result.confidence < 0.7,
+    });
   } catch (err) {
     console.error('[identify] error:', err);
     res.status(500).json({ error: 'Identification failed' });

@@ -20,6 +20,23 @@ export function validateBody(schema: ZodSchema) {
 }
 
 /**
+ * Creates Express middleware that validates request path params against a Zod schema.
+ */
+export function validateParams(schema: ZodSchema) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const result = schema.safeParse(req.params);
+    if (!result.success) {
+      const errors = formatZodError(result.error);
+      res.status(400).json({ error: 'Validation failed', details: errors });
+      return;
+    }
+    // Attach parsed params as a typed property
+    (req as unknown as Record<string, unknown>).validatedParams = result.data;
+    next();
+  };
+}
+
+/**
  * Creates Express middleware that validates request query params against a Zod schema.
  */
 export function validateQuery(schema: ZodSchema) {

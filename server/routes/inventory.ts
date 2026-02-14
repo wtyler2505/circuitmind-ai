@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { v4 as uuid } from 'uuid';
 import db from '../db/database.js';
-import { validateBody } from '../middleware/validation.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validation.js';
 
 const router = Router();
 
@@ -19,17 +19,28 @@ const inventoryCreateSchema = z.object({
 
 const inventoryUpdateSchema = inventoryCreateSchema.partial();
 
+const inventoryListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  catalog_id: z.string().optional(),
+  location_id: z.string().optional(),
+  low_stock: z.enum(['0', '1']).optional(),
+});
+
+const idParamSchema = z.object({
+  id: z.string().uuid('Invalid inventory lot id'),
+});
+
 // --- Routes ---
 
 // GET /api/inventory — List with catalog join
-router.get('/', (req, res) => {
+router.get('/', validateQuery(inventoryListQuerySchema), (req, res) => {
   try {
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const query = (req as unknown as Record<string, unknown>).validatedQuery as z.infer<
+      typeof inventoryListQuerySchema
+    >;
+    const { page, limit, catalog_id: catalogId, location_id: locationId, low_stock: lowStock } = query;
     const offset = (page - 1) * limit;
-    const catalogId = req.query.catalog_id as string | undefined;
-    const locationId = req.query.location_id as string | undefined;
-    const lowStock = req.query.low_stock as string | undefined;
 
     let where = 'WHERE 1=1';
     const params: unknown[] = [];
@@ -73,8 +84,11 @@ router.get('/', (req, res) => {
 });
 
 // GET /api/inventory/:id
-router.get('/:id', (req, res) => {
+router.get('/:id', validateParams(idParamSchema), (req, res) => {
   try {
+    const { id } = (req as unknown as Record<string, unknown>).validatedParams as z.infer<
+      typeof idParamSchema
+    >;
     const item = db
       .prepare(
         `SELECT il.*, ci.name as catalog_name, ci.type as catalog_type,
@@ -85,7 +99,7 @@ router.get('/:id', (req, res) => {
          LEFT JOIN location l ON il.location_id = l.id
          WHERE il.id = ?`
       )
-      .get(req.params.id);
+      .get(id);
 
     if (!item) {
       res.status(404).json({ error: 'Inventory lot not found' });
@@ -135,9 +149,12 @@ router.post('/', validateBody(inventoryCreateSchema), (req, res) => {
 });
 
 // PUT /api/inventory/:id
-router.put('/:id', validateBody(inventoryUpdateSchema), (req, res) => {
+router.put('/:id', validateParams(idParamSchema), validateBody(inventoryUpdateSchema), (req, res) => {
   try {
-    const existing = db.prepare('SELECT * FROM inventory_lot WHERE id = ?').get(req.params.id);
+    const { id } = (req as unknown as Record<string, unknown>).validatedParams as z.infer<
+      typeof idParamSchema
+    >;
+    const existing = db.prepare('SELECT * FROM inventory_lot WHERE id = ?').get(id);
     if (!existing) {
       res.status(404).json({ error: 'Inventory lot not found' });
       return;
@@ -154,11 +171,11 @@ router.put('/:id', validateBody(inventoryUpdateSchema), (req, res) => {
 
     if (fields.length > 0) {
       fields.push('updated_at = datetime(\'now\')');
-      values.push(req.params.id);
+      values.push(id);
       db.prepare(`UPDATE inventory_lot SET ${fields.join(', ')} WHERE id = ?`).run(...values);
     }
 
-    const updated = db.prepare('SELECT * FROM inventory_lot WHERE id = ?').get(req.params.id);
+    const updated = db.prepare('SELECT * FROM inventory_lot WHERE id = ?').get(id);
     res.json(updated);
   } catch (err) {
     console.error('[inventory] update error:', err);
@@ -167,16 +184,19 @@ router.put('/:id', validateBody(inventoryUpdateSchema), (req, res) => {
 });
 
 // DELETE /api/inventory/:id
-router.delete('/:id', (req, res) => {
+router.delete('/:id', validateParams(idParamSchema), (req, res) => {
   try {
-    const existing = db.prepare('SELECT * FROM inventory_lot WHERE id = ?').get(req.params.id);
+    const { id } = (req as unknown as Record<string, unknown>).validatedParams as z.infer<
+      typeof idParamSchema
+    >;
+    const existing = db.prepare('SELECT * FROM inventory_lot WHERE id = ?').get(id);
     if (!existing) {
       res.status(404).json({ error: 'Inventory lot not found' });
       return;
     }
 
-    db.prepare('DELETE FROM inventory_lot WHERE id = ?').run(req.params.id);
-    res.json({ deleted: true, id: req.params.id });
+    db.prepare('DELETE FROM inventory_lot WHERE id = ?').run(id);
+    res.json({ deleted: true, id });
   } catch (err) {
     console.error('[inventory] delete error:', err);
     res.status(500).json({ error: 'Failed to delete inventory lot' });
