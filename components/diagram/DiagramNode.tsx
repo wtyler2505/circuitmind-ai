@@ -12,6 +12,7 @@ import type { PinSide } from './diagramUtils';
 import { useTelemetry } from '../../contexts/TelemetryContext';
 import { useSimulation } from '../../contexts/SimulationContext';
 import { BreadboardVisual } from './parts/Breadboard';
+import BusHighlight from './parts/BusHighlight';
 import { FzpzVisual } from './parts/FzpzVisual';
 import PinTooltip from './PinTooltip';
 
@@ -820,6 +821,25 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
     [onPinLeave]
   );
 
+  // Compute active bus peers and pin position map for BusHighlight
+  const activeBus = useMemo(() => {
+    if (!hoveredPin || !component.internalBuses || component.internalBuses.length === 0) return null;
+    for (const bus of component.internalBuses) {
+      if (bus.includes(hoveredPin)) {
+        return bus; // includes self — BusHighlight will show all members
+      }
+    }
+    return null;
+  }, [hoveredPin, component.internalBuses]);
+
+  const pinPositionMap = useMemo(() => {
+    const map = new Map<string, { x: number; y: number }>();
+    for (const p of pinPositions) {
+      map.set(p.name, { x: p.x, y: p.y });
+    }
+    return map;
+  }, [pinPositions]);
+
   const { liveData } = useTelemetry();
   const hasActiveTelemetry = useMemo(() => {
     return Object.keys(liveData).some(key => key.startsWith(`${component.id}:`));
@@ -1042,10 +1062,14 @@ const DiagramNode = memo<DiagramNodeProps>(function DiagramNode({
               x={pinDef.x}
               y={pinDef.y}
               isRightSide={pinDef.side === 'right'}
+              internalBuses={component.internalBuses}
             />
           )}
         </React.Fragment>
       ))}
+
+      {/* Bus connectivity highlight overlay */}
+      <BusHighlight activeBus={activeBus} pinPositions={pinPositionMap} />
 
       {/* Quantity badge */}
       {component.quantity && component.quantity > 1 && (

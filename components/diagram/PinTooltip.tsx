@@ -13,6 +13,8 @@ interface PinTooltipProps {
   y: number;
   /** Whether pin is on the right side (affects tooltip placement) */
   isRightSide: boolean;
+  /** Internal bus data from the component (optional) */
+  internalBuses?: string[][];
 }
 
 /**
@@ -71,37 +73,66 @@ const PinTooltip = memo<PinTooltipProps>(function PinTooltip({
   x,
   y,
   isRightSide,
+  internalBuses,
 }) {
   const { result } = useSimulation();
 
-  if (!result) return null;
+  // Compute bus membership for this pin (independent of simulation data)
+  let busSize = 0;
+  if (internalBuses) {
+    for (const bus of internalBuses) {
+      if (bus.includes(pin)) {
+        busSize = bus.length - 1; // peers, excluding self
+        break;
+      }
+    }
+  }
+
+  const hasBusInfo = busSize > 0;
+
+  // If no simulation result AND no bus info, nothing to show
+  if (!result && !hasBusInfo) return null;
 
   const pinKey = `${componentId}:${pin}`;
-  const pinState = result.pinStates[pinKey];
+  const pinState = result?.pinStates[pinKey] ?? null;
 
-  if (!pinState) return null;
+  // If no pin state and no bus info, nothing to show
+  if (!pinState && !hasBusInfo) return null;
 
-  const { voltage, current, logicState } = pinState;
+  const voltage = pinState?.voltage ?? 0;
+  const current = pinState?.current ?? 0;
+  const logicState = pinState?.logicState ?? 'FLOATING';
   const stateDisplay = getStateDisplay(logicState);
 
   // Check for MNA-specific data
-  const mnaResult = result as MNASimulationResult;
-  const hasMNA = mnaResult.usedMNA === true;
+  const mnaResult = result as MNASimulationResult | null;
+  const hasMNA = mnaResult?.usedMNA === true;
 
-  // Tooltip dimensions
+  // Tooltip dimensions — grow if bus info or MNA data is present
   const tooltipWidth = 100;
-  const tooltipHeight = hasMNA ? 54 : 28;
+  const busRowHeight = hasBusInfo ? 14 : 0;
+  const tooltipHeight = (pinState ? (hasMNA ? 54 : 28) : 16) + busRowHeight;
 
   // Position: offset from pin, avoid overlapping
   const offsetX = isRightSide ? 16 : -(tooltipWidth + 16);
   const offsetY = -tooltipHeight / 2;
+
+  // Compute vertical offset for bus row (placed below sim data)
+  const busRowY = pinState ? (hasMNA ? 56 : 18) : 16;
+
+  const ariaLabel = pinState
+    ? `${pin}: ${formatVoltage(voltage)}, ${formatCurrent(current)}, ${stateDisplay.label}${hasBusInfo ? `, bus: ${busSize} connected` : ''}`
+    : `${pin}: bus: ${busSize} connected`;
+
+  // Border color: use sim state color if available, otherwise cyan for bus-only
+  const borderColor = pinState ? stateDisplay.color : '#00F3FF';
 
   return (
     <g
       transform={`translate(${x + offsetX}, ${y + offsetY})`}
       pointerEvents="none"
       role="tooltip"
-      aria-label={`${pin}: ${formatVoltage(voltage)}, ${formatCurrent(current)}, ${stateDisplay.label}`}
+      aria-label={ariaLabel}
     >
       {/* Background */}
       <rect
@@ -109,16 +140,16 @@ const PinTooltip = memo<PinTooltipProps>(function PinTooltip({
         height={tooltipHeight}
         rx="3"
         fill="rgba(2, 6, 23, 0.95)"
-        stroke={stateDisplay.color}
+        stroke={borderColor}
         strokeWidth="1"
-        style={{ filter: `drop-shadow(0 0 4px ${stateDisplay.color}40)` }}
+        style={{ filter: `drop-shadow(0 0 4px ${borderColor}40)` }}
       />
 
       {/* Pin name header */}
       <text
         x="6"
         y="12"
-        fill={stateDisplay.color}
+        fill={pinState ? stateDisplay.color : '#00F3FF'}
         fontSize="8"
         fontWeight="700"
         fontFamily="monospace"
@@ -126,29 +157,33 @@ const PinTooltip = memo<PinTooltipProps>(function PinTooltip({
         {pin}
       </text>
 
-      {/* Logic state badge */}
-      <rect
-        x={tooltipWidth - 6 - stateDisplay.label.length * 5.5}
-        y="3"
-        width={stateDisplay.label.length * 5.5 + 4}
-        height="12"
-        rx="2"
-        fill={stateDisplay.color}
-        opacity="0.2"
-      />
-      <text
-        x={tooltipWidth - 4}
-        y="12"
-        textAnchor="end"
-        fill={stateDisplay.color}
-        fontSize="7"
-        fontWeight="600"
-        fontFamily="monospace"
-      >
-        {stateDisplay.label}
-      </text>
+      {/* Logic state badge (only when sim data is present) */}
+      {pinState && (
+        <>
+          <rect
+            x={tooltipWidth - 6 - stateDisplay.label.length * 5.5}
+            y="3"
+            width={stateDisplay.label.length * 5.5 + 4}
+            height="12"
+            rx="2"
+            fill={stateDisplay.color}
+            opacity="0.2"
+          />
+          <text
+            x={tooltipWidth - 4}
+            y="12"
+            textAnchor="end"
+            fill={stateDisplay.color}
+            fontSize="7"
+            fontWeight="600"
+            fontFamily="monospace"
+          >
+            {stateDisplay.label}
+          </text>
+        </>
+      )}
 
-      {hasMNA && (
+      {pinState && hasMNA && (
         <>
           {/* Divider */}
           <line
@@ -229,6 +264,40 @@ const PinTooltip = memo<PinTooltipProps>(function PinTooltip({
               </text>
             </>
           )}
+        </>
+      )}
+
+      {/* Bus membership row */}
+      {hasBusInfo && (
+        <>
+          <line
+            x1="4"
+            y1={busRowY}
+            x2={tooltipWidth - 4}
+            y2={busRowY}
+            stroke="rgba(148, 163, 184, 0.2)"
+            strokeWidth="0.5"
+          />
+          <text
+            x="6"
+            y={busRowY + 10}
+            fill="#5eead4"
+            fontSize="7"
+            fontFamily="monospace"
+          >
+            BUS:
+          </text>
+          <text
+            x={tooltipWidth - 4}
+            y={busRowY + 10}
+            textAnchor="end"
+            fill="#5eead4"
+            fontSize="7"
+            fontWeight="600"
+            fontFamily="monospace"
+          >
+            {busSize} connected
+          </text>
         </>
       )}
     </g>

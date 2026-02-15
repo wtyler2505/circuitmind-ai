@@ -7,20 +7,32 @@ interface BreadboardProps {
   component: ElectronicComponent;
 }
 
-// Logic for Breadboard connectivity
-export const getBreadboardConnectivity = (pinId: string): string[] => {
-    // Expected pinId format: "breadboard1-row1-a" or similar, BUT
-    // Standard Fritzing breadboard just has "connector0", "connector1"...
-    // We need to map connector ID to Row/Column.
-    //
-    // Standard Half+ Breadboard:
-    // Top Power Rails: +, -
-    // Bottom Power Rails: +, -
-    // Terminal Strips: Rows 1-30, Columns A-E and F-J.
+/**
+ * Returns pins that are electrically connected to `pinId` via internal buses.
+ *
+ * For breadboards the buses represent power rails and terminal-strip columns.
+ * The data comes from the FZP `<buses>` XML (or heuristic derivation in
+ * `fzpzLoader.deriveInternalBuses`).
+ *
+ * @param pinId        — The pin to query (e.g. "connector0", "pin_1_3").
+ * @param internalBuses — `component.internalBuses` from the parsed FZPZ data.
+ *                        Each inner array is one bus — a set of electrically
+ *                        connected pin IDs.
+ * @returns The peer pin IDs on the same bus, excluding `pinId` itself.
+ */
+export const getBreadboardConnectivity = (
+  pinId: string,
+  internalBuses?: string[][],
+): string[] => {
+  if (!internalBuses || internalBuses.length === 0) return [];
 
-    // Naive implementation: Assume we know the geometry.
-    // In a real implementation, we'd parse the 'buses' from the FZP file.
-    return [];
+  for (const bus of internalBuses) {
+    if (bus.includes(pinId)) {
+      return bus.filter((id) => id !== pinId);
+    }
+  }
+
+  return [];
 };
 
 export const BreadboardVisual: React.FC<BreadboardProps> = ({ component }) => {

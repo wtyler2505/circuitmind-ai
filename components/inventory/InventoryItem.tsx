@@ -2,6 +2,7 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import { ElectronicComponent } from '../../types';
 import { getTypeIcon } from './inventoryUtils';
 import { partStorageService } from '../../services/partStorageService';
+import SyncStatusBadge from './SyncStatusBadge';
 
 interface InventoryItemProps {
   item: ElectronicComponent;
@@ -118,6 +119,9 @@ const InventoryItem: React.FC<InventoryItemProps> = ({
               {item.pins.length}P
             </span>
           )}
+          {(item.syncStatus || item.provenance) && (
+            <SyncStatusBadge status={item.syncStatus} provenance={item.provenance} size="sm" />
+          )}
           {diagCount > 0 && (
             <span
               ref={diagRef}
@@ -198,6 +202,8 @@ export default memo(InventoryItem, (prev, next) => {
     prev.item.id === next.item.id &&
     prev.item.quantity === next.item.quantity &&
     prev.brokenImage === next.brokenImage &&
-    prev.item.fzpzDiagnostics === next.item.fzpzDiagnostics
+    prev.item.fzpzDiagnostics === next.item.fzpzDiagnostics &&
+    prev.item.syncStatus === next.item.syncStatus &&
+    prev.item.provenance === next.item.provenance
   );
 });
