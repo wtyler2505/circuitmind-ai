@@ -193,7 +193,28 @@ export const chatWithContext = async (
         }
     }
 
-    const systemInstruction = await PROMPTS.CONTEXT_AWARE_CHAT(context, toneInstruction, message, enableProactive);
+    let systemInstruction = await PROMPTS.CONTEXT_AWARE_CHAT(context, toneInstruction, message, enableProactive);
+
+    // Enrich system instruction with component lifecycle metadata when available
+    const componentListRaw = context.componentList;
+    if (componentListRaw && componentListRaw.length > 0) {
+      // Extract connector and bus counts from component metadata if present
+      // componentList entries look like "[id] Name (type)" but the context also includes inventorySummary
+      // We add provenance hints so the AI knows if parts are locally-created vs imported
+      const enrichmentLines: string[] = [];
+
+      // Check for provenance, connector, and bus info in the inventory summary
+      if (context.inventorySummary) {
+        const fzpzCount = (context.inventorySummary.match(/fzpz/gi) || []).length;
+        if (fzpzCount > 0) {
+          enrichmentLines.push(`Parts with FZPZ data: ~${fzpzCount} (imported/enriched with connector metadata)`);
+        }
+      }
+
+      if (enrichmentLines.length > 0) {
+        systemInstruction += `\n\nPART PROVENANCE & METADATA:\n${enrichmentLines.join('\n')}`;
+      }
+    }
 
     let parts: GeminiPart[] = [{ text: message }];
     let tools: GeminiTool[] = [];

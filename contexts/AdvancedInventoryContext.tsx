@@ -9,6 +9,7 @@ import React, {
 import {
   inventoryApi,
   CatalogItem,
+  InventoryLot,
   Location,
 } from '../services/inventoryApiClient';
 import type { ElectronicComponent } from '../types';
@@ -48,7 +49,8 @@ const AdvancedInventoryContext = createContext<
 >(undefined);
 
 export function catalogItemToElectronicComponent(
-  item: CatalogItem
+  item: CatalogItem,
+  lots?: InventoryLot[]
 ): ElectronicComponent {
   const typeMap: Record<string, ElectronicComponent['type']> = {
     microcontroller: 'microcontroller',
@@ -56,13 +58,17 @@ export function catalogItemToElectronicComponent(
     actuator: 'actuator',
     power: 'power',
   };
+  // Sum quantities from associated inventory lots (fixes hardcoded quantity: 0 bug)
+  const quantity = lots
+    ? lots.filter((l) => l.catalogId === item.id).reduce((sum, l) => sum + l.quantity, 0)
+    : 0;
   return {
     id: item.id,
     name: item.name,
     type: typeMap[item.type] || 'other',
     description: item.description,
     pins: item.pins,
-    quantity: 0,
+    quantity,
     datasheetUrl: item.datasheetUrl,
     imageUrl: item.imageUrl,
   };

@@ -59,6 +59,29 @@ CREATE INDEX IF NOT EXISTS idx_stock_move_lot ON stock_move(lot_id);
 CREATE INDEX IF NOT EXISTS idx_catalog_item_type ON catalog_item(type);
 CREATE INDEX IF NOT EXISTS idx_catalog_item_needs_review ON catalog_item(needs_review);
 CREATE INDEX IF NOT EXISTS idx_location_parent ON location(parent_id);
+CREATE INDEX IF NOT EXISTS idx_catalog_item_updated_at ON catalog_item(updated_at);
+
+-- Unique constraint on manufacturer part number (non-empty values only)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_catalog_item_mpn_unique
+  ON catalog_item(mpn) WHERE mpn != '';
+
+-- Auto-update updated_at trigger for catalog_item
+CREATE TRIGGER IF NOT EXISTS catalog_item_updated_at
+  AFTER UPDATE ON catalog_item
+  FOR EACH ROW
+  WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+  UPDATE catalog_item SET updated_at = datetime('now') WHERE id = NEW.id;
+END;
+
+-- Auto-update updated_at trigger for inventory_lot
+CREATE TRIGGER IF NOT EXISTS inventory_lot_updated_at
+  AFTER UPDATE ON inventory_lot
+  FOR EACH ROW
+  WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+  UPDATE inventory_lot SET updated_at = datetime('now') WHERE id = NEW.id;
+END;
 
 -- Full-text search
 CREATE VIRTUAL TABLE IF NOT EXISTS catalog_fts USING fts5(

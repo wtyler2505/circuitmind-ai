@@ -90,15 +90,26 @@ export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: El
       // Check IndexedDB cache
       const cached = await partStorageService.getPart(id);
       if (cached) {
-        const updated = { 
-          ...comp, 
+        const updated = {
+          ...comp,
           fzpzSource: cached.binary,
           footprint: cached.footprint || comp.footprint,
           pins: cached.pins || comp.pins,
           internalBuses: cached.internalBuses || comp.internalBuses,
           fzpzDiagnostics: cached.diagnostics?.length ? cached.diagnostics : comp.fzpzDiagnostics,
+          // Hydrate connector metadata from cache terminal positions
+          connectorMeta: cached.terminalMeta
+            ? Object.entries(cached.terminalMeta).map(([pinId, pos]) => ({
+                id: pinId,
+                name: pinId,
+                type: 'pad' as const,
+                views: {
+                  breadboard: { svgId: pos.svgId, coordinates: { x: pos.x, y: pos.y } },
+                },
+              }))
+            : comp.connectorMeta,
         };
-        
+
         // If any critical parsed metadata is missing, re-parse the binary
         if (!updated.footprint || !updated.pins) {
           const part = await FzpzLoader.load(cached.binary);
@@ -129,12 +140,13 @@ export const InventoryProvider: React.FC<{ children: ReactNode; initialData?: El
         description: part.component.description || comp.description
       };
 
-      // Save to cache
+      // Save to cache (all three SVG views + metadata)
       await partStorageService.savePart({
         id,
         binary: buffer,
         breadboardSvg: part.svgs.breadboard,
         schematicSvg: part.svgs.schematic,
+        pcbSvg: part.svgs.pcb,
         footprint: part.component.footprint,
         pins: part.component.pins,
         internalBuses: part.component.internalBuses,

@@ -70,9 +70,17 @@ const ACTION_LABELS: Record<ActionType, { label: string; description: string; ca
     addInventoryPart: { label: 'Add Inventory Part', description: 'Add a new part to local inventory', category: 'Diagram' },
     updateInventoryPart: { label: 'Update Inventory Part', description: 'Modify an existing inventory part', category: 'Diagram' },
     removeInventoryPart: { label: 'Remove Inventory Part', description: 'Delete a part from local inventory', category: 'Diagram' },
+
+    // Part lifecycle actions
+    importPart: { label: 'Import Part', description: 'Import FZPZ part into catalog', category: 'Parts' },
+    validatePart: { label: 'Validate Part', description: 'Verify part integrity and metadata', category: 'Parts' },
+    createPartFromTemplate: { label: 'Create From Template', description: 'Create new part from existing template', category: 'Parts' },
+    editPartMetadata: { label: 'Edit Part Metadata', description: 'Modify part properties and metadata', category: 'Parts' },
+    deletePartFromCatalog: { label: 'Delete Part', description: 'Remove part from catalog', category: 'Parts' },
+    repairPartDiagnostics: { label: 'Repair Part', description: 'Fix part diagnostic issues', category: 'Parts' },
   };
 
-const CATEGORIES = ['Canvas', 'Navigation', 'Project', 'Diagram', 'Forms', 'System'] as const;
+const CATEGORIES = ['Canvas', 'Navigation', 'Project', 'Diagram', 'Forms', 'System', 'Parts'] as const;
 const INVENTORY_WIDTH_RANGE = { min: 280, max: 520, default: 360 };
 const ASSISTANT_WIDTH_RANGE = { min: 300, max: 560, default: 380 };
 

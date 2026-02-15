@@ -6,6 +6,7 @@
  */
 
 import type { ComponentFootprint } from '../types';
+import { PART_CACHE_VERSION } from '../types';
 
 const DB_NAME = 'CircuitMindPartsDB';
 const STORE_NAME = 'parts';
@@ -17,11 +18,16 @@ export interface CachedPart {
   thumbnail?: string; // Data URL
   breadboardSvg?: string;
   schematicSvg?: string;
+  pcbSvg?: string;
   footprint?: ComponentFootprint;
   pins?: string[];
   internalBuses?: string[][];
   diagnostics?: { level: 'warning' | 'error'; code: string; message: string }[];
   lastUsed: number;
+  cacheVersion?: number;
+  terminalMeta?: Record<string, { svgId: string; x: number; y: number }>;
+  busDefinitions?: Array<{name: string, connectorIds: string[]}>;
+  terminalPositions?: Record<string, Record<string, {x: number, y: number}>>;
 }
 
 export const partStorageService = {
@@ -54,7 +60,7 @@ export const partStorageService = {
   
   async savePart(part: CachedPart): Promise<void> {
     return this.withStore<void>('readwrite', (store) => {
-      store.put(part);
+      store.put({ ...part, cacheVersion: PART_CACHE_VERSION });
     }, undefined);
   },
 
@@ -65,7 +71,15 @@ export const partStorageService = {
         try {
           const tx = db.transaction(STORE_NAME, 'readonly');
           const request = tx.objectStore(STORE_NAME).get(id);
-          request.onsuccess = () => resolve(request.result || null);
+          request.onsuccess = () => {
+            const cached = request.result as CachedPart | undefined;
+            if (cached && cached.cacheVersion !== PART_CACHE_VERSION) {
+              // Stale cache version — force re-parse
+              resolve(null);
+              return;
+            }
+            resolve(cached || null);
+          };
           request.onerror = () => reject(request.error);
         } catch (error) {
           reject(error);

@@ -223,4 +223,54 @@ export const inventoryApi = {
       method: 'POST',
       body: JSON.stringify({ components }),
     }),
+
+  // Idempotent sync (upsert components into backend catalog)
+  migrateSync: (components: Array<{ id: string; name: string; type?: string; [key: string]: unknown }>) =>
+    request<{
+      total: number;
+      created: number;
+      updated: number;
+      mapping: Array<{ localId: string; catalogId: string; action: 'created' | 'updated'; name: string }>;
+    }>('/migrate/sync', {
+      method: 'POST',
+      body: JSON.stringify({ components }),
+    }),
+
+  // Batch sync — get items modified since a timestamp
+  batchSync: (since: string, page = 1, limit = 100) =>
+    request<{
+      items: CatalogItem[];
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      since: string;
+    }>('/catalog/batch-sync', {
+      method: 'POST',
+      body: JSON.stringify({ since, page, limit }),
+    }),
+
+  // Change detection — compare client state vs server
+  detectChanges: (items: Array<{ id: string; updated_at: string }>) =>
+    request<{
+      changed: Array<{ id: string; serverUpdatedAt: string; clientUpdatedAt: string }>;
+      deleted: string[];
+      unchanged: number;
+      total: number;
+    }>('/catalog/changes', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    }),
+
+  // Deduplication — find and optionally merge duplicate catalog entries
+  deduplicateCatalog: (autoMerge = false) =>
+    request<{
+      duplicateGroups: number;
+      totalDuplicates: number;
+      groups?: unknown[];
+      merged?: number;
+      autoMerged: boolean;
+    }>(`/catalog/deduplicate?autoMerge=${autoMerge}`, {
+      method: 'POST',
+    }),
 };

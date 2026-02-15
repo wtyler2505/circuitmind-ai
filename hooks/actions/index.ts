@@ -5,6 +5,7 @@ import * as nav from './navHandlers';
 import * as diagram from './diagramHandlers';
 import * as app from './appControlHandlers';
 import * as inventory from './inventoryHandlers';
+import * as lifecycle from './lifecycleHandlers';
 
 export * from './types';
 
@@ -50,6 +51,14 @@ export const actionHandlers: Partial<Record<ActionType, ActionHandler<any>>> = {
   setUserLevel: app.handleSetUserLevel,
   learnFact: app.handleLearnFact,
   analyzeVisuals: app.handleAnalyzeVisuals,
+
+  // Part Lifecycle (FZPZ pipeline)
+  importPart: lifecycle.handleImportPart,
+  validatePart: lifecycle.handleValidatePart,
+  createPartFromTemplate: lifecycle.handleCreatePartFromTemplate,
+  editPartMetadata: lifecycle.handleEditPartMetadata,
+  deletePartFromCatalog: lifecycle.handleDeletePartFromCatalog,
+  repairPartDiagnostics: lifecycle.handleRepairPartDiagnostics,
 };
 
 /**

@@ -27,7 +27,14 @@ export interface ElectronicComponent {
   fzpzSource?: ArrayBuffer; // Original source if imported
   footprint?: ComponentFootprint;
   internalBuses?: Array<string[]>; // e.g. [['pin1', 'pin2', 'pin3']] for breadboard rails
+  connectorMeta?: ConnectorMeta[];  // Rich per-connector metadata from FZPZ
   fzpzDiagnostics?: { level: 'warning' | 'error'; code: string; message: string }[];
+
+  // Provenance & backend sync tracking
+  provenance?: 'local' | 'backend_synced' | 'imported';
+  backendCatalogId?: string;
+  lastSyncedAt?: string;
+  syncStatus?: 'synced' | 'local_modified' | 'conflict' | 'pending_upload';
 }
 
 // Support for complex paths
@@ -37,6 +44,33 @@ export interface WirePoint {
   handleIn?: { dx: number; dy: number };  // For curvature control
   handleOut?: { dx: number; dy: number };
 }
+
+// Per-view SVG target for a connector pin
+export interface ConnectorViewTarget {
+  svgId: string;      // SVG element id in that view's SVG
+  layer?: string;     // Fritzing layer name (e.g. 'copper0', 'breadboard')
+  terminalId?: string; // Optional terminal sub-element id
+  terminalSvgId?: string; // SVG element ID for terminal sub-element
+  coordinates?: { x: number; y: number }; // Parsed absolute coordinates in view's coordinate system
+}
+
+// Rich connector metadata extracted from FZP XML
+export interface ConnectorMeta {
+  id: string;          // Fritzing connector id (e.g. 'connector0')
+  name: string;        // Human-readable pin name
+  type: 'male' | 'female' | 'pad' | 'unknown';
+  views: {
+    breadboard?: ConnectorViewTarget;
+    schematic?: ConnectorViewTarget;
+    pcb?: ConnectorViewTarget;
+  };
+  terminalId?: string; // Sub-element within SVG connector for precise pin positioning
+  viewCoordinates?: Record<string, { x: number; y: number }>; // Per-view (breadboard/schematic/pcb) coordinate overrides
+  electricalType?: 'input' | 'output' | 'bidirectional' | 'power' | 'ground' | 'passive'; // Electrical hint
+}
+
+// Cache version for invalidation of stale cached parts
+export const PART_CACHE_VERSION = 2;
 
 // Support for detailed component footprints
 export interface ComponentFootprint {
@@ -135,7 +169,15 @@ export type ActionType =
   | 'learnFact'
   
   // Vision
-  | 'analyzeVisuals';
+  | 'analyzeVisuals'
+
+  // Part Lifecycle (FZPZ pipeline)
+  | 'importPart'
+  | 'validatePart'
+  | 'createPartFromTemplate'
+  | 'editPartMetadata'
+  | 'deletePartFromCatalog'
+  | 'repairPartDiagnostics';
 
 // Default safe/unsafe classification for actions
 export const ACTION_SAFETY: Record<ActionType, boolean> = {
@@ -186,6 +228,14 @@ export const ACTION_SAFETY: Record<ActionType, boolean> = {
   
   // Vision - safe (read only)
   analyzeVisuals: true,
+
+  // Part Lifecycle - mostly unsafe (mutating)
+  importPart: false,
+  validatePart: true, // read-only, safe for auto-execute
+  createPartFromTemplate: false,
+  editPartMetadata: false,
+  deletePartFromCatalog: false,
+  repairPartDiagnostics: false,
 };
 
 // Reference to a component mentioned in chat
