@@ -51,6 +51,23 @@
   /* Dynamic Accents */
   --mode-accent: var(--color-neon-cyan);
   --color-mode-accent: var(--mode-accent);
+
+  /* Type Scale — UI-specific sizes (minimum 11px for WCAG) */
+  --font-size-text-ui-xs: 11px;
+  --font-size-text-ui-sm: 12px;
+  --font-size-text-ui-base: 13px;
+
+  /* Z-Index Scale — single source of truth for stacking layers */
+  --z-canvas: 0;
+  --z-header: 10;
+  --z-sidebar: 20;
+  --z-panel: 40;
+  --z-modal: 50;
+  --z-confirm: 60;
+  --z-overlay: 100;
+  --z-toast: 200;
+  --z-omnisearch: 300;
+  --z-gatekeeper: 1000;
 }
 
 /* Adaptive Mode Accents */
@@ -136,7 +153,6 @@ body {
 
 .panel-carbon::before { background-image: url('/assets/ui/pattern-carbon.webp'); opacity: 0.05; }
 .panel-brushed::before { background-image: url('/assets/ui/pattern-brushed.webp'); opacity: 0.04; }
-.panel-circuit::before { background-image: url('/assets/ui/pattern-circuit.webp'); opacity: 0.08; background-size: 512px; }
 .panel-loading::before { background-image: url('/assets/ui/loading.webp'); opacity: 0.15; background-size: 256px; animation: scan 4s linear infinite; }
 
 .loading-tech {
@@ -185,31 +201,6 @@ body {
 
 .panel-frame {
   position: relative;
-}
-
-/* Glass Refraction Beam */
-.panel-frame::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0.01),
-    transparent
-  );
-  transform: skewX(-25deg);
-  pointer-events: none;
-  z-index: 5;
-}
-
-.panel-frame:hover::before {
-  left: 150%;
-  transition: left 0.8s ease-in-out;
 }
 
 /* Subtle corner accents for "technical" look */
@@ -532,11 +523,7 @@ body {
   animation: checkmark 0.5s ease-out forwards;
 }
 
-/* Canvas surface + grid */
-.canvas-surface {
-  background-color: theme('colors.cyber-dark');
-}
-
+/* Canvas grid */
 .canvas-grid {
   background-image:
     radial-gradient(circle at 20% 15%, rgba(0, 243, 255, 0.18), transparent 38%),
@@ -550,23 +537,30 @@ body {
 
 /* Utilities */
 
-@layer base {
-  .theme-high-contrast {
-    --mode-accent: #ffffff;
-    --panel-bg: #000000;
-    --text-primary: #ffffff;
-    --text-secondary: #ffff00;
-    --border-color: #ffffff;
-  }
-}
+/* theme-high-contrast removed — unused, Windows HC handled via @media (forced-colors: active) */
 
 @layer utilities {
 
   .focus-visible-ring {
-
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan/60 focus-visible:ring-offset-2 focus-visible:ring-offset-cyber-black;
-
   }
+
+  /* Type Scale Utilities — use instead of text-[7-10px] */
+  .text-ui-xs { font-size: var(--font-size-text-ui-xs); line-height: 1.4; }
+  .text-ui-sm { font-size: var(--font-size-text-ui-sm); line-height: 1.4; }
+  .text-ui-base { font-size: var(--font-size-text-ui-base); line-height: 1.5; }
+
+  /* Z-Index Utilities — use instead of z-[N] ad-hoc values */
+  .z-canvas { z-index: var(--z-canvas); }
+  .z-header { z-index: var(--z-header); }
+  .z-sidebar { z-index: var(--z-sidebar); }
+  .z-panel { z-index: var(--z-panel); }
+  .z-modal { z-index: var(--z-modal); }
+  .z-confirm { z-index: var(--z-confirm); }
+  .z-overlay { z-index: var(--z-overlay); }
+  .z-toast { z-index: var(--z-toast); }
+  .z-omnisearch { z-index: var(--z-omnisearch); }
+  .z-gatekeeper { z-index: var(--z-gatekeeper); }
 
 }
 

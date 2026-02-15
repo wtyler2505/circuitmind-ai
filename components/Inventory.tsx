@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback, useDeferredValue } from 'react';
-import { ElectronicComponent } from '../types';
+import { ElectronicComponent, ComponentType } from '../types';
 import { useToast } from '../hooks/useToast';
 import { useInventory } from '../contexts/InventoryContext';
 import { useLayout } from '../contexts/LayoutContext';
@@ -11,7 +11,6 @@ import InventoryToolsPanel from './inventory/InventoryToolsPanel';
 import { MacroPanel } from './inventory/MacroPanel';
 
 // Type alias for component types
-type ComponentType = ElectronicComponent['type'];
 
 interface InventoryProps {
   onSelect: (item: ElectronicComponent) => void;
@@ -332,6 +331,10 @@ const Inventory: React.FC<InventoryProps> = ({ onSelect }) => {
       sensor: 0,
       actuator: 0,
       power: 0,
+      passive: 0,
+      connector: 0,
+      ic: 0,
+      module: 0,
       other: 0,
     };
     let totalUnits = 0;

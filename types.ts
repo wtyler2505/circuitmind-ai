@@ -1,8 +1,38 @@
+// Component type union — expanded from original 5 to include CaptureWizard types
+export type ComponentType =
+  | 'microcontroller'
+  | 'sensor'
+  | 'actuator'
+  | 'power'
+  | 'passive'
+  | 'connector'
+  | 'ic'
+  | 'module'
+  | 'other';
+
+// Centralized registry for component type display metadata
+export const COMPONENT_TYPE_REGISTRY: Record<ComponentType, {
+  label: string;
+  icon: string;
+  badgeBg: string;
+  badgeText: string;
+}> = {
+  microcontroller: { label: 'Microcontroller', icon: 'cpu',       badgeBg: 'bg-neon-cyan/20',   badgeText: 'text-neon-cyan' },
+  sensor:         { label: 'Sensor',          icon: 'activity',   badgeBg: 'bg-sensor-blue/20', badgeText: 'text-sensor-blue' },
+  actuator:       { label: 'Actuator',        icon: 'zap',        badgeBg: 'bg-neon-green/20',  badgeText: 'text-neon-green' },
+  power:          { label: 'Power',           icon: 'battery',    badgeBg: 'bg-neon-amber/20',  badgeText: 'text-neon-amber' },
+  passive:        { label: 'Passive',         icon: 'minus',      badgeBg: 'bg-copper/20',      badgeText: 'text-copper' },
+  connector:      { label: 'Connector',       icon: 'plug',       badgeBg: 'bg-neon-purple/20', badgeText: 'text-neon-purple' },
+  ic:             { label: 'IC',              icon: 'square',     badgeBg: 'bg-chip/20',        badgeText: 'text-chip-highlight' },
+  module:         { label: 'Module',          icon: 'box',        badgeBg: 'bg-arduino/20',     badgeText: 'text-arduino' },
+  other:          { label: 'Other',           icon: 'help-circle',badgeBg: 'bg-white/10',       badgeText: 'text-white/70' },
+};
+
 export interface ElectronicComponent {
   id: string;
   sourceInventoryId?: string; // Links diagram instance to inventory source (for sync)
   name: string;
-  type: 'microcontroller' | 'sensor' | 'actuator' | 'power' | 'other';
+  type: ComponentType;
   description: string;
   pins?: string[];
   quantity?: number; // New field

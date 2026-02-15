@@ -262,7 +262,16 @@ const MainLayoutComponent: React.FC = () => {
     setAssistantOpen(false);
   }, [setAssistantPinned, setAssistantOpen]);
 
+  // Skip-link target ID based on active view (WCAG 2.4.1)
+  const skipTargetId = activeView === 'dashboard' ? 'dashboard-main'
+    : activeView === 'inventory-mgmt' ? 'inventory-mgmt-main'
+    : 'canvas-main';
+
   return (
+    <>
+      <a href={`#${skipTargetId}`} className="skip-link">
+        Skip to main content
+      </a>
     <AppLayout
       inventory={
         <Suspense fallback={<div className="w-full h-full" />}>
@@ -351,14 +360,19 @@ const MainLayoutComponent: React.FC = () => {
       </Suspense>
       {activeView === 'inventory-mgmt' ? (
         <Suspense fallback={<div className="flex items-center justify-center h-full text-cyan-400">Loading Inventory Management...</div>}>
-          <InventoryMgmtView onClose={() => setActiveView('canvas')} />
+          <div id="inventory-mgmt-main" tabIndex={-1}>
+            <InventoryMgmtView onClose={() => setActiveView('canvas')} />
+          </div>
         </Suspense>
       ) : isDashboardVisible ? (
         <Suspense fallback={<div className="flex items-center justify-center h-full text-cyan-400">Loading Dashboard...</div>}>
-          <DashboardView />
+          <div id="dashboard-main" tabIndex={-1}>
+            <DashboardView />
+          </div>
         </Suspense>
       ) : (
         <Suspense fallback={<div className="flex items-center justify-center h-full text-cyan-400/50 text-xs font-mono">Initializing canvas...</div>}>
+          <div id="canvas-main" tabIndex={-1}>
           <DiagramCanvas
             ref={setCanvasRef}
             diagram={actions.diagram}
@@ -386,6 +400,7 @@ const MainLayoutComponent: React.FC = () => {
               />
             </Suspense>
           )}
+          </div>
         </Suspense>
       )}
       {actions.contextMenu && (
@@ -415,6 +430,7 @@ const MainLayoutComponent: React.FC = () => {
         />
       </Suspense>
     </AppLayout>
+    </>
   );
 };
 

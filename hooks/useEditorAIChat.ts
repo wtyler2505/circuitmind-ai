@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { ElectronicComponent } from '../types';
+import type { ElectronicComponent, ComponentType } from '../types';
 import { assistComponentEditor } from '../services/geminiService';
-
-type ComponentType = ElectronicComponent['type'];
 
 interface ChatMessage {
   id: string;

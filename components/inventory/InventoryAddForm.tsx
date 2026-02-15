@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ElectronicComponent } from '../../types';
+import { ElectronicComponent, type ComponentType } from '../../types';
 import { useToast } from '../../hooks/useToast';
 import { resizeImage } from './inventoryUtils';
 import {
@@ -7,8 +7,6 @@ import {
   findComponentSpecs,
   generateComponentThumbnail,
 } from '../../services/geminiService';
-
-type ComponentType = ElectronicComponent['type'];
 
 const CATEGORIES = ['microcontroller', 'sensor', 'actuator', 'power', 'other'] as const;
 

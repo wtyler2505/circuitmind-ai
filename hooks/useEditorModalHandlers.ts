@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { ElectronicComponent } from '../types';
+import type { ElectronicComponent, ComponentType } from '../types';
 import { useToast } from './useToast';
 import { useEditorFormState, buildSavePayload } from './useEditorFormState';
 import {
@@ -9,8 +9,6 @@ import {
 } from '../services/geminiService';
 import { datasheetProcessor } from '../services/datasheetProcessor';
 import { resizeImage } from '../components/ComponentEditorModal';
-
-type ComponentType = ElectronicComponent['type'];
 
 interface UseEditorModalHandlersParams {
   component: ElectronicComponent;

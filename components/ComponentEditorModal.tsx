@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, memo } from 'react';
-import { ElectronicComponent } from '../types';
+import { ElectronicComponent, type ComponentType } from '../types';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEditorFormState } from '../hooks/useEditorFormState';
 import { useEditorAIChat } from '../hooks/useEditorAIChat';
@@ -7,8 +7,6 @@ import { useEditorModalHandlers } from '../hooks/useEditorModalHandlers';
 
 // Lazy load Three.js viewer (heavy dependency)
 const ThreeViewer = lazy(() => import('./ThreeViewer'));
-
-type ComponentType = ElectronicComponent['type'];
 
 interface ComponentEditorModalProps {
   component: ElectronicComponent;

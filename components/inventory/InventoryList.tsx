@@ -1,9 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import { VList } from 'virtua';
-import { ElectronicComponent } from '../../types';
+import { ElectronicComponent, type ComponentType } from '../../types';
 import InventoryItem from './InventoryItem';
-
-type ComponentType = ElectronicComponent['type'];
 const CATEGORIES = ['microcontroller', 'sensor', 'actuator', 'power', 'other'] as const;
 
 interface InventoryListProps {
